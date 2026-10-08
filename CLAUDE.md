@@ -25,16 +25,17 @@ Every slice moves through these stages. Each stage has an agent in `.claude/agen
 | 3. Build | `frontend-dev`, `backend-dev` | Code on a feature branch |
 | 4. Test | `test-engineer` | Unit and end-to-end tests; all green |
 | 5. Review | `code-reviewer` | Findings; nothing merges with an open "must fix" |
+| 5b. Merge decision | `lead-reviewer` | Reads the whole change, runs the checks, comments on the pull request, then merges it or sends it back |
 | 6. Pre-production | `preprod-qa` | Go or no-go report against the staging deployment |
 | 7. Ship | `release-manager` | Production release, smoke test, rollback note |
 
-The human approves three things and only the human: merging to `main`, running a migration on production, and promoting a build to production.
+Merging to `main` is `lead-reviewer`'s decision (the founder delegated it on 2026-10-09). The human approves two things and only the human: running a migration on production, and promoting a build to production.
 
 ## Stack (do not swap without asking)
 
-Next.js (static export) + TypeScript + Tailwind, next-intl (en, hi, kn, te), Supabase (Postgres, Auth, Storage, Edge Functions, pg_cron), Cloudflare Pages, PostHog, Sentry. Package manager: pnpm.
+Next.js (static export) + TypeScript + Tailwind, next-intl (en, hi, kn, te), Supabase (Postgres, Auth, Storage, Edge Functions, pg_cron), Vercel hosting, PostHog, Sentry. Package manager: pnpm.
 
-Do not add a dependency that is not listed in `docs/BUILD_PLAN.md` without asking. Hosting is Cloudflare Pages, not Vercel.
+Do not add a dependency that is not listed in `docs/BUILD_PLAN.md` without asking. Hosting is Vercel (the founder moved it from Cloudflare Pages on 2026-10-09), on a `*.vercel.app` domain for now. The app is still a static export: Vercel only serves files; all server work stays in Supabase.
 
 ## Conventions
 
@@ -81,7 +82,9 @@ Full detail in `docs/DESIGN.md`. The ones that are easy to get wrong:
 - `pnpm build` — static export to `out/`
 - `supabase start` / `supabase db reset` — local database
 
-These are set up in slice F1 of the build plan. Until then they do not exist.
+`pnpm test:e2e` and `pnpm size` read the `out/` folder, so run `pnpm build` first.
+
+Next.js here is version 16, which differs from older versions. `AGENTS.md` (written by Next.js itself) says to read the bundled docs in `node_modules/next/dist/docs/` before writing Next.js code. Do that.
 
 ## Secrets
 

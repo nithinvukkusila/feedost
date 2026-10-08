@@ -24,7 +24,7 @@ Append a **Technical plan** section to the slice's spec file:
 
 ## Rules you enforce
 
-- Static export only. Token routes are static shells with a Cloudflare Pages rewrite. Nothing that needs a Next.js server.
+- Static export only. Token routes are static shells with a Vercel rewrite. Nothing that needs a Next.js server.
 - Public pages read and write only through Edge Functions by token.
 - Every tutor-owned table has `tutor_id` and RLS; every new table has an isolation test.
 - Money is integer paise. Receipt numbers come only from the `record_payment` database function.
