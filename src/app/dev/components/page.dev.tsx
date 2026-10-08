@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 import { copy } from "./sample-data";
 import { ButtonSection } from "./sections/button";
 import { RupeeSection } from "./sections/rupee";
+import { SlipSection } from "./sections/slip";
+import { StampSection } from "./sections/stamp";
+import { StatusTagSection } from "./sections/status-tag";
 import { TokensSection } from "./sections/tokens";
 import { TypeSection } from "./sections/type";
 
@@ -25,6 +28,9 @@ export default function DevComponentsPage() {
       <TypeSection />
       <RupeeSection />
       <ButtonSection />
+      <SlipSection />
+      <StatusTagSection />
+      <StampSection />
     </main>
   );
 }

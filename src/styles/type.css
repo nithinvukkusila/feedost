@@ -76,7 +76,7 @@
     --value-leading: 1.5;
 
     --stamp-weight: 700;
-    --stamp-leading: 1.3;
+    --stamp-leading: 1.2;
     --stamp-tracking: 0em;
     --stamp-transform: none;
   }
@@ -113,6 +113,8 @@
   letter-spacing: -0.04em;
   --tw-leading: 0.92;
   line-height: 0.92;
+  /* An amount too wide for the screen at a large system font breaks; it never scrolls the page sideways. */
+  overflow-wrap: anywhere;
 }
 
 /* Row amounts. Always DM Mono (the rupee sign falls to Bricolage, next in the stack). Ignores the script variables. */

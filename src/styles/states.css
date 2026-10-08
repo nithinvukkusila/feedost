@@ -62,20 +62,36 @@
   box-shadow: none;
 }
 
-/* The stamp landing after a payment: once, 200ms. Not defined at all under reduced motion. */
+/*
+ * The stamp landing after a payment: once, 200ms. Not defined at all under reduced motion.
+ * The ring scales from 1.15 to 1 while the words inside settle from -16 to -12 degrees.
+ */
 @utility stamp-land {
   @media (prefers-reduced-motion: no-preference) {
     animation: stamp-land 200ms ease-out 1 both;
   }
 }
 
+@utility stamp-settle {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: stamp-settle 200ms ease-out 1 both;
+  }
+}
+
 @keyframes stamp-land {
   from {
     scale: 1.15;
-    rotate: -16deg;
   }
   to {
     scale: 1;
+  }
+}
+
+@keyframes stamp-settle {
+  from {
+    rotate: -16deg;
+  }
+  to {
     rotate: -12deg;
   }
 }

@@ -126,6 +126,7 @@ describe("amounts never follow the script (criteria 14 and 40)", () => {
     expect(amount["font-family"]).toBe("var(--font-sans)");
     expect(amount["font-weight"]).toBe("800");
     expect(amount["letter-spacing"]).toBe("-0.04em");
+    expect(amount["overflow-wrap"]).toBe("anywhere");
   });
 
   it("row amounts are fixed to DM Mono", () => {
@@ -154,10 +155,13 @@ describe("sizes (criterion 4)", () => {
 });
 
 describe("states (criteria 6, 21 and 69)", () => {
-  it("has exactly one animation, the stamp, and only where motion is allowed", () => {
-    expect([...states.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1])).toEqual(["stamp-land"]);
-    expect(states.match(/animation:/g)).toHaveLength(1);
-    expect(states).toMatch(/prefers-reduced-motion:\s*no-preference\)\s*\{\s*animation: stamp-land 200ms ease-out 1 both;/);
+  it("animates only the stamp (ring and words), once, and only where motion is allowed", () => {
+    expect([...states.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1])).toEqual(["stamp-land", "stamp-settle"]);
+    const animations = [...states.matchAll(/prefers-reduced-motion:\s*no-preference\)\s*\{\s*animation: ([^;]+);/g)].map((m) => m[1]);
+    expect(animations).toEqual(["stamp-land 200ms ease-out 1 both", "stamp-settle 200ms ease-out 1 both"]);
+    // No animation is declared outside the reduced-motion guard, and nothing transitions here.
+    expect(states.match(/animation:/g)).toHaveLength(2);
+    expect(states).not.toMatch(/transition/);
   });
 
   it("the focus ring is 3px, 4px from the edge, blue unless the ground says otherwise", () => {
