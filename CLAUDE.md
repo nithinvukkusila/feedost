@@ -25,10 +25,11 @@ Every slice moves through these stages. Each stage has an agent in `.claude/agen
 | 3. Build | `frontend-dev`, `backend-dev` | Code on a feature branch |
 | 4. Test | `test-engineer` | Unit and end-to-end tests; all green |
 | 5. Review | `code-reviewer` | Findings; nothing merges with an open "must fix" |
+| 5b. Merge decision | `lead-reviewer` | Reads the whole change, runs the checks, comments on the pull request, then merges it or sends it back |
 | 6. Pre-production | `preprod-qa` | Go or no-go report against the staging deployment |
 | 7. Ship | `release-manager` | Production release, smoke test, rollback note |
 
-The human approves three things and only the human: merging to `main`, running a migration on production, and promoting a build to production.
+Merging to `main` is `lead-reviewer`'s decision (the founder delegated it on 2026-10-09). The human approves two things and only the human: running a migration on production, and promoting a build to production.
 
 ## Stack (do not swap without asking)
 

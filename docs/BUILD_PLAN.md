@@ -64,7 +64,7 @@ Staging and production are separate Supabase projects with separate keys. Migrat
 
 - Trunk-based. One short-lived branch per slice, one pull request per slice.
 - CI on every pull request: lint, type-check, unit tests, i18n key parity, bundle size, build, then Playwright against the preview deployment.
-- **Gate A, merge:** CI green, `code-reviewer` has no open must-fix, human approves.
+- **Gate A, merge:** CI green, `code-reviewer` has no open must-fix, and `lead-reviewer` has read the change, run the checks and merged it.
 - **Gate B, staging:** migration applied to staging, `preprod-qa` returns "go".
 - **Gate C, production:** human approves; `release-manager` applies the migration, promotes the build, runs the smoke test, records the rollback step.
 
