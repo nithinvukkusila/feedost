@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "size": "node scripts/size.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
-    "fonts:report": "node scripts/font-report.mjs"
+    "fonts:report": "node scripts/font-report.mjs",
+    "serve:lan": "HOST=0.0.0.0 PORT=4173 node scripts/serve-out.mjs"
   },
   "dependencies": {
     "next": "16.4.0",
