@@ -51,6 +51,36 @@
   --tw-shadow-color: var(--ground-shadow);
 }
 
+/* A field being typed in, or the forced example. Use on the field's wrapper, or as `group-typing/field:` inside it. */
+@custom-variant typing (&:focus-within, &:has([data-force~="focus"]));
+
+/*
+ * The line a field's value is written on. The line is 2, 3 or 4px; padding makes up the rest of a
+ * fixed 4px slot, so the field's height is the same in every state.
+ */
+@utility field-line-2 {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  padding-bottom: 2px;
+}
+
+@utility field-line-3 {
+  border-bottom-style: solid;
+  border-bottom-width: 3px;
+  padding-bottom: 1px;
+}
+
+@utility field-line-4 {
+  border-bottom-style: solid;
+  border-bottom-width: 4px;
+  padding-bottom: 0px;
+}
+
+/* Keeps room for one line of text even when empty, so a message appearing does not move what is below. */
+@utility reserve-line {
+  min-height: 1lh;
+}
+
 /* Moving into the shadow. The offsets match the shadow tokens and stay in px, like the shadows. */
 @utility press-button {
   translate: 5px 5px;

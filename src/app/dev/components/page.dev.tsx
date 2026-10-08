@@ -4,6 +4,8 @@
 import type { Metadata } from "next";
 import { copy } from "./sample-data";
 import { ButtonSection } from "./sections/button";
+import { FieldSection } from "./sections/field";
+import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
@@ -28,7 +30,9 @@ export default function DevComponentsPage() {
       <TypeSection />
       <RupeeSection />
       <ButtonSection />
+      <FieldSection />
       <SlipSection />
+      <RowSection />
       <StatusTagSection />
       <StampSection />
     </main>
