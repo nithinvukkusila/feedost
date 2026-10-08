@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { brand } from "@/config/brand";
+import { fontVariables } from "@/styles/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,8 +16,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={fontVariables}>
+      <body className="bg-page type-body text-ink">{children}</body>
     </html>
   );
 }

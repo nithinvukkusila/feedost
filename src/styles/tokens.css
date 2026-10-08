@@ -61,7 +61,7 @@
  * DM Mono has no rupee sign, so Bricolage Grotesque follows it directly and draws it.
  * 'Anek Latin' is a name only (docs/DESIGN.md); no file is shipped for it.
  */
-@theme inline {
+@theme {
   --font-*: initial;
   --font-sans: var(--font-bricolage), 'Anek Latin', system-ui, sans-serif;
   --font-mono: var(--font-dm-mono), var(--font-bricolage), 'Anek Latin', system-ui, monospace;

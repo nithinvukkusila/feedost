@@ -1,3 +1,5 @@
 @import "tailwindcss" source("..");
 @source not "../**/*.test.*";
 @import "../styles/tokens.css";
+@import "../styles/type.css";
+@import "../styles/states.css";

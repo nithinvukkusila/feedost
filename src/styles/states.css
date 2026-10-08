@@ -1,0 +1,81 @@
+/*
+ * States and grounds shared by the components.
+ * The only motion in the design system is defined here: the button press and the stamp.
+ */
+
+/* Pressed also covers busy (the button stays down) and the forced example on /dev/components. */
+@custom-variant pressed (&:active, &[data-force~="pressed"], &[aria-busy="true"]);
+
+/* Keyboard focus, or the forced example. Never shown on tap. */
+@custom-variant ring (&:focus-visible, &[data-force~="focus"]);
+
+@layer base {
+  :root {
+    --ground-ring: var(--color-blue);
+  }
+
+  /* The page behind an open sheet must not scroll. A modal dialog already makes it inert. */
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+}
+
+/*
+ * Grounds. A surface puts one of these on itself; buttons and focus rings inside read the variables,
+ * so no component needs to be told which ground it sits on.
+ */
+@utility on-cloth-ground {
+  --ground-shadow: var(--color-cloth-deep);
+  --ground-ring: var(--color-highlight);
+}
+
+@utility on-dark-ground {
+  --ground-shadow: initial;
+  --ground-ring: var(--color-highlight);
+}
+
+/* Paper again: a slip that sits on cloth or on the dark sheet ground. */
+@utility on-paper-ground {
+  --ground-shadow: initial;
+  --ground-ring: var(--color-blue);
+}
+
+/* The focus ring: 3px, 4px away from the edge. Use as `ring:ground-ring`. */
+@utility ground-ring {
+  outline: 3px solid var(--ground-ring);
+  outline-offset: 4px;
+}
+
+/* A shadow token's colour, unless the ground names another. Use beside `shadow-button` and the like. */
+@utility ground-shadow {
+  --tw-shadow-color: var(--ground-shadow);
+}
+
+/* Moving into the shadow. The offsets match the shadow tokens and stay in px, like the shadows. */
+@utility press-button {
+  translate: 5px 5px;
+  box-shadow: none;
+}
+
+@utility press-round {
+  translate: 3px 3px;
+  box-shadow: none;
+}
+
+/* The stamp landing after a payment: once, 200ms. Not defined at all under reduced motion. */
+@utility stamp-land {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: stamp-land 200ms ease-out 1 both;
+  }
+}
+
+@keyframes stamp-land {
+  from {
+    scale: 1.15;
+    rotate: -16deg;
+  }
+  to {
+    scale: 1;
+    rotate: -12deg;
+  }
+}
