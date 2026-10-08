@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // FeeDost is a static export: Vercel only serves files, Supabase does all server work.
+  // The app is a static export: Vercel only serves files, Supabase does all server work.
   output: "export",
   trailingSlash: true,
   images: { unoptimized: true },

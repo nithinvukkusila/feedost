@@ -18,9 +18,10 @@ const types = {
 };
 
 async function resolve(urlPath) {
-  const safe = normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, "");
-  let file = join(ROOT, safe);
   try {
+    // decodeURIComponent throws on a malformed escape; treat that as "not found".
+    const safe = normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, "");
+    let file = join(ROOT, safe);
     if ((await stat(file)).isDirectory()) file = join(file, "index.html");
     return file;
   } catch {
@@ -40,4 +41,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end("Not found");
   }
-}).listen(PORT, () => console.log(`Serving ${ROOT}/ on http://localhost:${PORT}`));
+}).listen(PORT, "127.0.0.1", () => console.log(`Serving ${ROOT}/ on http://localhost:${PORT}`));

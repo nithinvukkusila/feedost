@@ -132,7 +132,7 @@ Money is stored as integer paise. All tutor-owned tables carry `tutor_id`.
 | --- | --- |
 | Front end | Next.js (static export) + TypeScript + Tailwind; next-intl for en/hi/kn/te |
 | PWA | Service worker (offline shell + queued writes), web manifest, installable |
-| Hosting | Cloudflare Pages (free tier) |
+| Hosting | Vercel (static export; `*.vercel.app` domain for now) |
 | Backend | Supabase: Postgres, Auth (Google + magic link), Storage, Edge Functions, pg_cron |
 | PDF | Client-side (e.g. pdf-lib or jsPDF) with embedded Noto Sans fonts for Devanagari, Kannada, Telugu |
 | Analytics / errors / email | PostHog, Sentry, Resend (free tiers) |

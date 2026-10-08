@@ -33,10 +33,21 @@ for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
       .filter((m) => !/nomodule/i.test(m[0]))
       .map((m) => m[1].split("?")[0]),
   );
+  // Fail closed: a script we cannot find and measure must not count as zero.
+  if (scripts.size === 0) {
+    console.error(`${page}: no scripts found, so the budget cannot be checked.`);
+    failed = true;
+    continue;
+  }
   let total = 0;
   for (const src of scripts) {
     const file = join(OUT, decodeURIComponent(src));
-    if (existsSync(file)) total += gzipped(file);
+    if (!src.startsWith("/") || !existsSync(file)) {
+      console.error(`${page}: cannot measure script "${src}" (not a file under ${OUT}/).`);
+      failed = true;
+      continue;
+    }
+    total += gzipped(file);
   }
   const kb = (total / 1024).toFixed(1);
   const over = total > LIMIT;
@@ -44,6 +55,6 @@ for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
   console.log(`${over ? "OVER " : "ok   "} ${kb.padStart(7)} KB  ${page}`);
 }
 if (failed) {
-  console.error(`A page loads more than ${LIMIT / 1024} KB of gzipped JavaScript up front.`);
+  console.error(`Budget check failed: limit is ${LIMIT / 1024} KB of gzipped JavaScript per page, and every script must be measurable.`);
   process.exit(1);
 }
