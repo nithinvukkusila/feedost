@@ -15,7 +15,7 @@ Read the root `CLAUDE.md`, sections 3 and 4 of `docs/BUILD_PLAN.md`, and `docs/r
 1. Confirm the commit is on `main`, CI is green, and `code-reviewer` approved it.
 2. Apply pending migrations to the **staging** Supabase project. Read each migration first; if one drops or rewrites data, stop and flag it.
 3. Deploy Edge Functions to staging.
-4. Confirm the Cloudflare Pages preview for that commit is live, and give its URL to `preprod-qa`.
+4. Confirm the Vercel preview deployment for that commit is live, and give its URL to `preprod-qa`.
 
 ## Release to production
 
@@ -25,7 +25,7 @@ Do not begin until both are true: `preprod-qa` reported **Go** for this exact co
 2. **Back up.** Confirm a recent production database backup exists, or take one.
 3. **Migrate.** Apply migrations to production. Migrations must be backward compatible with the currently live front end, because the database changes first.
 4. **Functions.** Deploy Edge Functions to production.
-5. **Promote.** Promote the same build that was tested on staging to Cloudflare Pages production. Do not rebuild.
+5. **Promote.** Promote the same build that was tested on staging to Vercel production. Do not rebuild.
 6. **Smoke test** on the production URL, with the dedicated production test tutor only:
    - landing page and both tools load in all four languages
    - sign in works
@@ -37,7 +37,7 @@ Do not begin until both are true: `preprod-qa` reported **Go** for this exact co
 
 ## Rollback
 
-If the smoke test fails or errors spike: roll the front end back to the previous Cloudflare Pages deployment first, then redeploy the previous Edge Functions. Do not reverse a migration by hand; write a forward fix and take it through the pipeline. Tell the human immediately what happened and what state production is in.
+If the smoke test fails or errors spike: roll the front end back to the previous Vercel deployment first, then redeploy the previous Edge Functions. Do not reverse a migration by hand; write a forward fix and take it through the pipeline. Tell the human immediately what happened and what state production is in.
 
 ## Rules
 

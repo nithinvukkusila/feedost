@@ -32,9 +32,9 @@ The human approves three things and only the human: merging to `main`, running a
 
 ## Stack (do not swap without asking)
 
-Next.js (static export) + TypeScript + Tailwind, next-intl (en, hi, kn, te), Supabase (Postgres, Auth, Storage, Edge Functions, pg_cron), Cloudflare Pages, PostHog, Sentry. Package manager: pnpm.
+Next.js (static export) + TypeScript + Tailwind, next-intl (en, hi, kn, te), Supabase (Postgres, Auth, Storage, Edge Functions, pg_cron), Vercel hosting, PostHog, Sentry. Package manager: pnpm.
 
-Do not add a dependency that is not listed in `docs/BUILD_PLAN.md` without asking. Hosting is Cloudflare Pages, not Vercel.
+Do not add a dependency that is not listed in `docs/BUILD_PLAN.md` without asking. Hosting is Vercel (the founder moved it from Cloudflare Pages on 2026-10-09), on a `*.vercel.app` domain for now. The app is still a static export: Vercel only serves files; all server work stays in Supabase.
 
 ## Conventions
 
@@ -81,7 +81,9 @@ Full detail in `docs/DESIGN.md`. The ones that are easy to get wrong:
 - `pnpm build` — static export to `out/`
 - `supabase start` / `supabase db reset` — local database
 
-These are set up in slice F1 of the build plan. Until then they do not exist.
+`pnpm test:e2e` and `pnpm size` read the `out/` folder, so run `pnpm build` first.
+
+Next.js here is version 16, which differs from older versions. `AGENTS.md` (written by Next.js itself) says to read the bundled docs in `node_modules/next/dist/docs/` before writing Next.js code. Do that.
 
 ## Secrets
 

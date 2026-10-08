@@ -26,3 +26,8 @@ test-results/
 # system
 .DS_Store
 *.log
+
+# next and vercel
+next-env.d.ts
+.vercel
+*.pem

@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Design tokens arrive in slice F2 (docs/DESIGN.md). */
+body {
+  margin: 0;
+}

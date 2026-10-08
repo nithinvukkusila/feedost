@@ -18,7 +18,7 @@ Product metric to watch from day one (PRD §10): **activation = first reminder s
 These are settled unless marked "needs your OK".
 
 1. **Static export, client-rendered app.** `next build` with `output: 'export'`. Marketing and tool pages are prerendered per language for SEO. The signed-in app is client-rendered and talks to Supabase directly under row-level security.
-2. **Token routes on a static host.** `/p/{token}`, `/r/{token}` and `/join/{code}` cannot be prerendered because the tokens are not known at build time. Each is one static shell page; a Cloudflare Pages `_redirects` rule rewrites `/p/*` to that shell, and the page reads the token from the URL and calls an Edge Function. This is the single biggest "static export" trap in the PRD.
+2. **Token routes on a static host.** `/p/{token}`, `/r/{token}` and `/join/{code}` cannot be prerendered because the tokens are not known at build time. Each is one static shell page; a rewrite in the Vercel project config sends `/p/*` to that shell, and the page reads the token from the URL and calls an Edge Function. This is the single biggest "static export" trap in the PRD.
 3. **Public data only through Edge Functions.** `pay-page`, `receipt`, `submit-claim`, `record-consent`. They use the service role, look up by token, and return only the fields that page shows. Tables are never exposed to anonymous users.
 4. **Row-level security everywhere.** `tutor_id = auth.uid()` on every tutor-owned table, with a test per table that a second tutor reads zero rows.
 5. **Money and receipts in the database, not the client.** Recording a payment is one Postgres function: insert payment, take the next receipt number under a lock, update the due's status. The client never computes a receipt number.
@@ -55,8 +55,8 @@ The founder approved adding libraries on 2026-10-09 on one condition: each must 
 | Environment | Front end | Backend | Used for |
 | --- | --- | --- | --- |
 | Local | `pnpm dev` | `supabase start` | Building and unit tests |
-| Preview | Cloudflare Pages preview per branch | Supabase **staging** project | Review, end-to-end tests, pre-production QA |
-| Production | Cloudflare Pages production | Supabase **production** project | Real tutors |
+| Preview | Vercel preview deployment per branch | Supabase **staging** project | Review, end-to-end tests, pre-production QA |
+| Production | Vercel production | Supabase **production** project | Real tutors |
 
 Staging and production are separate Supabase projects with separate keys. Migrations run on staging first, always.
 
@@ -79,7 +79,7 @@ Sizes are relative effort (S about a day, M a few days, L about a week of focuse
 | F1 | Repo and tooling | S | Next.js + TS + Tailwind + pnpm, lint, type-check, Vitest, Playwright, CI, `.env.example`, brand constant |
 | F2 | Design system in code | M | Tailwind tokens from `docs/DESIGN.md`, fonts, core components (Button, Field, Slip, Row, Stamp, Tabs, StatusTag, Sheet), a `/dev/components` page |
 | F3 | Languages | S | next-intl, 4 message files, locale routing, `pnpm i18n:check`, number and date formatters (₹1,23,456, DD MMM YYYY) |
-| F4 | Supabase and environments | S | Local project, staging and production projects, migration workflow, Cloudflare Pages wired to the repo |
+| F4 | Supabase and environments | S | Local project, staging and production projects, migration workflow, Vercel project wired to the repo |
 
 ### Release 0 — free tools
 
@@ -138,7 +138,7 @@ UPI AutoPay, Centre plan, notebook-photo import, public tutor profile, Tamil and
 ## 7. What we need from you
 
 1. A GitHub repository (or permission to `git init` here and push).
-2. Accounts and keys: Supabase (two projects), Cloudflare Pages, Google OAuth client, PostHog, Sentry, Resend.
+2. Accounts and keys: Supabase (two projects), Vercel, Google OAuth client, PostHog, Sentry, Resend.
 3. The final product name, domain and logo, or confirmation to build with the placeholders.
 4. ~~A yes or no on the dependency table in section 2.~~ Approved 2026-10-09, subject to the dependency policy.
 5. Native speakers to review Hindi, Kannada and Telugu before Release 0 ships.
