@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Export to Excel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #2A0709; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+
+<section aria-label="Export to Excel" style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 18px 20px 22px 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+<h1 style="margin: 0; font-size: 36px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em">Take a copy of your book</h1>
+<a href="More.dc.html" style="height: 44px; padding: 0 4px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">Close</a>
+</div>
+<p style="margin: 0; font-size: 15.5px; line-height: 1.4; color: #4A3F1E">One Excel file, with a sheet for each thing you pick. It is your data.</p>
+
+<fieldset style="border: 0; margin: 0; padding: 0; border-top: 2px solid #1A1410">
+<legend style="padding: 0 0 8px 0; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Include</legend>
+<sc-for list="{{sheets}}" as="s" hint-placeholder-count="3">
+<label style="min-height: 60px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #C9B56A">
+<input type="checkbox" checked style="width: 26px; height: 26px; margin: 0; accent-color: #1B2B8F; flex-shrink: 0">
+<span style="flex-grow: 1"><span style="display: block; font-size: 18px; font-weight: 700">{{s.name}}</span><span style="display: block; font-size: 14px; color: #4A3F1E">{{s.what}}</span></span>
+</label>
+</sc-for>
+</fieldset>
+
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">For</legend>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button aria-pressed="false" style="height: 48px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700">This month</button>
+<button aria-pressed="true" style="height: 48px; border: 0; border-left: 2px solid #1A1410; background: #1A1410; color: #FDF6D8; font-size: 15px; font-weight: 700">This year</button>
+<button aria-pressed="false" style="height: 48px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Everything</button>
+</div>
+</fieldset>
+
+<button style="margin: 4px 5px 0 0; height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #6B5B2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>Download Excel file</button>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const sheets = [
+{ name: 'Students', what: 'Names, parents, batch, fee, due day' },
+{ name: 'Payments', what: 'Every payment with its receipt number' },
+{ name: 'Attendance', what: 'One row per student per class' }
+];
+return { sheets };
+}
+}
+</script>
+</body>
+</html>

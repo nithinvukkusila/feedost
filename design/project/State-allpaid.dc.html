@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Everyone has paid</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 18px 20px 0 20px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">October 2026</div>
+</header>
+
+<div style="flex-grow: 1; padding: 6px 22px 0 20px; display: flex; flex-direction: column">
+<div style="position: relative; height: 250px">
+<div role="img" aria-label="Stamped: all paid" style="position: absolute; left: 34px; top: 14px; width: 232px; height: 232px; box-sizing: border-box; border: 8px double #1F6B3C; border-radius: 50%; color: #1F6B3C; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font-weight: 800; line-height: 0.95"><span style="font-size: 30px; letter-spacing: 0.06em">ALL</span><span style="font-size: 62px; letter-spacing: 0.04em">PAID</span><span style="font-family: 'DM Mono',monospace; font-size: 15px; font-weight: 500; margin-top: 6px; letter-spacing: 0.06em">OCT 2026</span></div>
+</div>
+
+<h1 style="margin: 10px 0 0 0; font-size: 44px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Nothing left to collect.</h1>
+<div style="margin-top: 14px; border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<div style="padding: 10px 8px 10px 0; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Collected</div><div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em; color: #1F6B3C">₹49,500</div></div>
+<div style="padding: 10px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Students</div><div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em">23 of 23</div></div>
+</div>
+<p style="margin: 14px 0 0 0; font-size: 16px; line-height: 1.4; color: #4A3F1E">November fees will appear here on each student's due day. You do not need to do anything.</p>
+
+<div style="flex-grow: 1"></div>
+<button style="margin: 0 6px 18px 0; height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; font-size: 18px; font-weight: 700; box-shadow: 5px 5px 0 #1A1410">See October's payments</button>
+</div>
+
+<dc-import name="Nav" active="home" hint-size="360px,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

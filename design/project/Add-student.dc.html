@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add one student</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 12px 20px; overflow: hidden">
+
+<div style="display: flex; align-items: center; justify-content: space-between; margin-left: -12px">
+<a href="Students.dc.html" aria-label="Back to students" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Add a student</h1>
+</div>
+
+<form style="margin-top: 6px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-direction: column"><label for="as-name" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Student's name</label><input id="as-name" value="Varun Hegde" style="height: 48px; border: 0; border-bottom: 2px solid #1B2B8F; outline: 0; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 800; color: #1B2B8F"></div>
+<div style="display: flex; flex-direction: column"><label for="as-parent" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Parent's name</label><input id="as-parent" value="Shanta Hegde" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 19px; font-weight: 700; color: #1B2B8F"></div>
+<div style="display: flex; flex-direction: column"><label for="as-phone" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Parent's WhatsApp number</label><div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #1A1410"><span style="font-family: 'DM Mono',monospace; font-size: 18px; color: #4A3F1E">+91</span><input id="as-phone" type="tel" inputmode="numeric" value="98860 44321" style="flex-grow: 1; min-width: 0; height: 48px; border: 0; outline: 0; background: none; padding: 0; font-family: 'DM Mono',monospace; font-size: 19px; font-weight: 500; color: #1B2B8F"></div></div>
+
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 6px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Send messages in</legend>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button type="button" aria-pressed="false" style="height: 46px; border: 0; background: none; color: #1A1410; font-size: 14px; font-weight: 700; padding: 0">English</button>
+<button type="button" aria-pressed="false" style="height: 46px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 14px; font-weight: 700; padding: 0">Hindi</button>
+<button type="button" aria-pressed="true" style="height: 46px; border: 0; border-left: 2px solid #1A1410; background: #1A1410; color: #FDF6D8; font-size: 14px; font-weight: 700; padding: 0">Kannada</button>
+<button type="button" aria-pressed="false" style="height: 46px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 14px; font-weight: 700; padding: 0">Telugu</button>
+</div>
+</fieldset>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px">
+<div style="display: flex; flex-direction: column"><label for="as-batch" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Batch</label><select id="as-batch" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 17px; font-weight: 700; color: #1B2B8F"><option>Class 8 Science</option><option>Class 10 Maths</option><option>No batch</option></select></div>
+<div style="display: flex; flex-direction: column"><label for="as-day" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Fee due on</label><select id="as-day" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 17px; font-weight: 700; color: #1B2B8F"><option>20th</option><option>1st</option><option>5th</option><option>10th</option></select></div>
+<div style="display: flex; flex-direction: column"><label for="as-fee" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Monthly fee ₹</label><input id="as-fee" inputmode="numeric" value="1,000" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 800; color: #1B2B8F; min-width: 0"></div>
+<div style="display: flex; flex-direction: column"><label for="as-bal" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Already owes ₹</label><input id="as-bal" inputmode="numeric" placeholder="0" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 800; color: #1B2B8F; min-width: 0"></div>
+</div>
+
+<label style="display: flex; align-items: flex-start; gap: 12px; min-height: 44px; font-size: 14.5px; line-height: 1.35">
+<input type="checkbox" checked style="width: 24px; height: 24px; margin: 2px 0 0 0; accent-color: #1B2B8F; flex-shrink: 0">
+<span>I have this parent's permission to save their number.</span>
+</label>
+</form>
+
+<div style="flex-grow: 1"></div>
+<button style="height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; box-shadow: 5px 5px 0 #6B5B2A; margin-right: 5px">Save student</button>
+<button style="margin-top: 6px; height: 44px; border: 0; background: none; color: #1A1410; font-size: 16px; font-weight: 700; text-decoration: underline">Save and add another</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

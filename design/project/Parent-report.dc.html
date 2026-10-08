@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Monthly parent report</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</header>
+
+<div style="padding: 0 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<h1 style="margin: 0; font-size: 36px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Monthly report to parents</h1>
+<button role="switch" aria-checked="true" aria-label="Monthly report" style="width: 76px; height: 44px; flex-shrink: 0; border: 2px solid #1A1410; border-radius: 4px; background: #1F6B3C; padding: 3px; display: flex; justify-content: flex-end; align-items: stretch"><span style="width: 36px; background: #FDF6D8; border: 2px solid #1A1410; box-sizing: border-box; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">ON</span></button>
+</div>
+<p style="margin: 8px 20px 0 20px; font-size: 15.5px; line-height: 1.35; color: #4A3F1E">On the 1st of each month, every parent gets last month's attendance and this month's bill in one message.</p>
+
+<div style="margin: 14px 20px 0 20px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">What Ravi's parent will get on 01 Nov</div>
+<div style="margin: 6px 20px 0 20px; background: #E4F0D2; border: 2px solid #1A1410; border-radius: 2px 16px 16px 16px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; line-height: 1.4"><strong>Ravi's October report</strong> from Meena Iyer</div>
+<div style="background: #FDF6D8; border: 2px solid #1A1410; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr))">
+<div style="padding: 8px 10px; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Attended</div><div style="font-size: 26px; font-weight: 800; letter-spacing: -0.03em">11 of 12</div></div>
+<div style="padding: 8px 10px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Nov fee</div><div style="font-size: 26px; font-weight: 800; letter-spacing: -0.03em; color: #1B2B8F">₹1,200</div></div>
+</div>
+<div style="font-size: 15px; line-height: 1.4">October fee received, thank you. November is due on 01 Nov.</div>
+<div style="height: 48px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center">Pay ₹1,200</div>
+<div style="font-size: 14px; color: #4A3F1E">Reply STOP to stop these messages.</div>
+</div>
+
+<div style="margin: 16px 20px 0 20px; border-top: 2px solid #1A1410">
+<label style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A; font-size: 17px; font-weight: 700"><input type="checkbox" checked style="width: 24px; height: 24px; margin: 0; accent-color: #1B2B8F; flex-shrink: 0">Include attendance</label>
+<label style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A; font-size: 17px; font-weight: 700"><input type="checkbox" checked style="width: 24px; height: 24px; margin: 0; accent-color: #1B2B8F; flex-shrink: 0">Include any unpaid balance</label>
+</div>
+
+<div style="flex-grow: 1"></div>
+<button style="margin: 0 25px 20px 20px; height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; font-size: 17px; font-weight: 700; box-shadow: 5px 5px 0 #1A1410">Send a test to my number</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

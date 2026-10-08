@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Public tutor profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 1000px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="background: #A81C22; color: #F7E7A0; padding: 26px 22px 28px 22px; outline: 2px dashed #E9C95A; outline-offset: -8px; border-bottom: 2px solid #1A1410">
+<div style="display: flex; align-items: center; gap: 14px">
+<div role="img" aria-label="Tutor's photo" style="width: 76px; height: 76px; box-sizing: border-box; background: #FDF6D8; border: 2px solid #1A1410; color: #6B5B2A; font-family: 'DM Mono',monospace; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">PHOTO</div>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.4">Home tutor<br>[YOUR AREA, CITY]</div>
+</div>
+<h1 style="margin: 16px 0 0 0; font-size: 54px; line-height: 0.88; font-weight: 800; letter-spacing: -0.045em">Meena Iyer</h1>
+<div style="margin-top: 8px; font-size: 18px; color: #FBF1C8">Maths and Science, classes 8 to 10</div>
+</header>
+
+<main style="padding: 18px 22px 0 20px; display: flex; flex-direction: column; gap: 20px">
+<p style="margin: 0; font-size: 17px; line-height: 1.45">[A few lines in the tutor's own words: how long they have taught, how they teach, which boards they cover.]</p>
+
+<section>
+<h2 style="margin: 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Batches</h2>
+<div style="margin-top: 6px; border-top: 2px solid #1A1410">
+<sc-for list="{{batches}}" as="b" hint-placeholder-count="2">
+<div style="min-height: 70px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+<div><div style="font-size: 19px; font-weight: 800; letter-spacing: -0.02em">{{b.name}}</div><div style="font-size: 14.5px; color: #4A3F1E">{{b.time}}</div></div>
+<div style="text-align: right"><div style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 17px; font-weight: 500">{{b.fee}}</div><div style="font-size: 14px; color: {{b.seatColor}}; font-weight: 600">{{b.seats}}</div></div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<a href="#" style="margin-right: 5px; height: 66px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 20px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #1A1410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Ask about a seat on WhatsApp</a>
+
+<div style="border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410; padding: 8px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+<span style="font-size: 16px">Already a parent here?</span>
+<a href="PayPage-pro.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 16px; font-weight: 700; color: #1A1410">Open your fee link from WhatsApp</a>
+</div>
+</main>
+
+<div style="flex-grow: 1"></div>
+<footer style="padding: 12px 20px 16px 20px; border-top: 1px solid #C9B56A; font-size: 14px; color: #4A3F1E; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<span>A FeeDost page. Free for tutors.</span>
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-weight: 700; color: #1A1410">Make yours</a>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+const batches = [
+{ name: 'Class 10 Maths', time: 'Mon, Wed, Fri at 5:00 pm', fee: '₹1,200 a month', seats: '3 seats open', seatColor: '#1F6B3C' },
+{ name: 'Class 8 Science', time: 'Tue, Thu, Sat at 6:30 pm', fee: '₹1,000 a month', seats: 'Full, ask to join the list', seatColor: '#A81C22' }
+];
+return { batches };
+}
+}
+</script>
+</body>
+</html>

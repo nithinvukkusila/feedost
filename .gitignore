@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# secrets and local config
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# tests
+coverage/
+playwright-report/
+test-results/
+
+# system
+.DS_Store
+*.log

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add students: paste a list</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 20px 20px; overflow: hidden">
+
+<div style="margin-left: -12px">
+<a href="Setup-add.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</div>
+<h1 style="margin: 4px 0 0 0; font-size: 40px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Paste your list</h1>
+<p style="margin: 8px 0 0 0; font-size: 15.5px; line-height: 1.35; color: #4A3F1E">One student per line: name, parent's phone, monthly fee.</p>
+
+<label for="pl-text" style="margin-top: 14px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Your list</label>
+<textarea id="pl-text" rows="4" style="margin-top: 4px; height: 118px; box-sizing: border-box; resize: none; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; padding: 10px 12px; font-family: 'DM Mono',monospace; font-size: 15px; line-height: 1.55; color: #1B2B8F">Ravi Kumar, 9845012345, 1200
+Ananya Shetty, 99001 12233, 1500
+Imran, 1200
+Pooja Gowda 9880055667 1000</textarea>
+
+<div style="margin-top: 16px; display: flex; align-items: baseline; justify-content: space-between">
+<h2 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em">We found 4 students</h2>
+<span style="font-size: 14px; font-weight: 700; color: #A81C22">1 needs a look</span>
+</div>
+
+<div style="margin-top: 8px; background: #FDF6D8; border: 2px solid #1A1410; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div style="min-height: 56px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 10px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 16px; font-weight: 700">{{r.name}}</div><div style="font-family: 'DM Mono',monospace; font-size: 14px; color: {{r.phoneColor}}">{{r.phone}}</div></div>
+<div style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 15px">{{r.fee}}</div>
+<sc-if value="{{r.fix}}" hint-placeholder-val="{{ false }}"><button style="height: 44px; padding: 0 12px; border: 2px solid #A81C22; border-radius: 4px; background: none; color: #A81C22; font-size: 14px; font-weight: 700">Fix</button></sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+<div style="display: flex; flex-direction: column"><label for="pl-batch" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Batch for all</label><select id="pl-batch" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 17px; font-weight: 700; color: #1B2B8F"><option>Class 10 Maths</option><option>Class 8 Science</option></select></div>
+<div style="display: flex; flex-direction: column"><label for="pl-day" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Fee due on</label><select id="pl-day" style="height: 48px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 17px; font-weight: 700; color: #1B2B8F"><option>1st of the month</option><option>5th of the month</option><option>10th of the month</option></select></div>
+</div>
+
+<div style="flex-grow: 1"></div>
+<a href="Home.dc.html" style="height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 5px 5px 0 #6B5B2A; margin-right: 5px">Add 3 students now</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const ok = '#4A3F1E';
+const rows = [
+{ name: 'Ravi Kumar', phone: '+91 98450 12345', phoneColor: ok, fee: '₹1,200', fix: false },
+{ name: 'Ananya Shetty', phone: '+91 99001 12233', phoneColor: ok, fee: '₹1,500', fix: false },
+{ name: 'Imran', phone: 'PHONE MISSING', phoneColor: '#A81C22', fee: '₹1,200', fix: true },
+{ name: 'Pooja Gowda', phone: '+91 98800 55667', phoneColor: ok, fee: '₹1,000', fix: false }
+];
+return { rows };
+}
+}
+</script>
+</body>
+</html>

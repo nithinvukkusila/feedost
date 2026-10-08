@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Record payment</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #2A0709; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+
+<div style="padding: 24px 24px 18px 24px; color: #F7E7A0">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Class 10 Maths · October</div>
+<div style="font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; margin-top: 4px">Ravi Kumar</div>
+</div>
+
+<section aria-label="Record payment" style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 18px 20px 22px 20px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h1 style="margin: 0; font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -0.03em">Mark paid</h1>
+<a href="Student.dc.html" style="height: 44px; padding: 0 4px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">Cancel</a>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="pay-amount" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Amount received</label>
+<div style="display: flex; align-items: baseline; border-bottom: 3px solid #1B2B8F; color: #1B2B8F; font-size: 72px; line-height: 1; font-weight: 800; letter-spacing: -0.04em">
+<span>₹</span>
+<input id="pay-amount" inputmode="numeric" value="1,200" style="flex-grow: 1; min-width: 0; height: 76px; border: 0; outline: 0; background: none; font: inherit; letter-spacing: inherit; color: inherit; padding: 0">
+</div>
+<div style="display: flex; gap: 8px; margin-top: 4px">
+<button aria-pressed="true" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-radius: 4px; background: #F4C430; color: #1A1410; font-size: 15px; font-weight: 700">Full ₹1,200</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-radius: 4px; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Half ₹600</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-radius: 4px; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Other</button>
+</div>
+</div>
+
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Paid by</legend>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button aria-pressed="true" style="height: 52px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 17px; font-weight: 700">UPI</button>
+<button aria-pressed="false" style="height: 52px; border: 0; background: none; color: #1A1410; font-size: 17px; font-weight: 700">Cash</button>
+</div>
+</fieldset>
+
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Paid on</legend>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button aria-pressed="true" style="height: 48px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 15px; font-weight: 700">Today</button>
+<button aria-pressed="false" style="height: 48px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Yesterday</button>
+<button aria-pressed="false" style="height: 48px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Pick date</button>
+</div>
+</fieldset>
+
+<div style="display: flex; align-items: center; gap: 14px; margin-top: 2px">
+<a href="Receipt.dc.html" style="flex-grow: 1; height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1F6B3C; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 5px 5px 0 #1A1410">Mark as paid</a>
+<span aria-hidden="true" style="width: 66px; height: 66px; box-sizing: border-box; border: 3px double #1F6B3C; border-radius: 50%; color: #1F6B3C; font-size: 16px; font-weight: 800; letter-spacing: 0.04em; display: flex; align-items: center; justify-content: center; transform: rotate(-12deg); flex-shrink: 0">PAID</span>
+</div>
+<div style="font-size: 14px; color: #4A3F1E; margin-top: -8px">Receipt no. 215 is made for you. Send it on WhatsApp next.</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

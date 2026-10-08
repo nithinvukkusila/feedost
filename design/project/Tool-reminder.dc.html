@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Free fee reminder writer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="background-color: #F8ECB8; background-image: repeating-linear-gradient(#F8ECB8 0px, #F8ECB8 43px, #F0E2A6 43px, #F0E2A6 44px); color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; min-height: 1160px">
+
+<header style="background: #A81C22; color: #F7E7A0; outline: 2px dashed #E9C95A; outline-offset: -8px; border-bottom: 2px solid #1A1410">
+<div style="max-width: 1280px; margin: 0 auto; padding: 16px 40px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px">
+<a href="Landing.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #F7E7A0; text-decoration: none">FeeDost</a>
+<nav aria-label="Tools" style="display: flex; flex-wrap: wrap; gap: 4px 24px; font-size: 16px; font-weight: 700">
+<a href="#" style="min-height: 44px; display: flex; align-items: center; color: #F7E7A0">Receipt maker</a>
+<a href="#" aria-current="page" style="min-height: 44px; display: flex; align-items: center; color: #1A1410; background: #F7E7A0; padding: 0 12px; text-decoration: none">Reminder writer</a>
+</nav>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 72px 40px; display: flex; flex-direction: column; gap: 44px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: #A81C22">Free tool no. 02 · no sign-up</div>
+<h1 style="margin: 0; max-width: 980px; font-size: clamp(44px, 8vw, 116px); line-height: 0.86; font-weight: 800; letter-spacing: -0.05em">Write the fee reminder you keep putting off.</h1>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+
+<form style="flex: 1 1 420px; min-width: 0; box-sizing: border-box; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 10px 10px 0 #1A1410; padding: 28px; display: flex; flex-direction: column; gap: 26px">
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Language</legend>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button type="button" aria-pressed="true" style="height: 52px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 16px; font-weight: 700">English</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Hindi</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Kannada</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Telugu</button>
+</div>
+</fieldset>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Tone</legend>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button type="button" aria-pressed="true" style="min-height: 60px; border: 0; background: #1A1410; color: #FDF6D8; padding: 6px 12px; text-align: left"><span style="display: block; font-size: 18px; font-weight: 800">Polite</span><span style="display: block; font-size: 14px">A gentle first nudge</span></button>
+<button type="button" aria-pressed="false" style="min-height: 60px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; padding: 6px 12px; text-align: left"><span style="display: block; font-size: 18px; font-weight: 800">Firm</span><span style="display: block; font-size: 14px; color: #4A3F1E">When it is well overdue</span></button>
+</div>
+</fieldset>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 22px 24px">
+<div style="display: flex; flex-direction: column"><label for="tr-parent" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Parent's name</label><input id="tr-parent" value="Suresh" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 700; color: #1B2B8F"></div>
+<div style="display: flex; flex-direction: column"><label for="tr-month" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Month</label><select id="tr-month" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 700; color: #1B2B8F"><option>October</option><option>November</option></select></div>
+<div style="display: flex; flex-direction: column"><label for="tr-amount" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Amount in ₹</label><input id="tr-amount" inputmode="numeric" value="1,200" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 700; color: #1B2B8F"></div>
+<div style="display: flex; flex-direction: column"><label for="tr-upi" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Your UPI ID</label><input id="tr-upi" value="meena.tuitions@okhdfc" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 700; color: #1B2B8F"></div>
+</div>
+</form>
+
+<section aria-label="Your message" style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 22px">
+<div style="background: #E4F0D2; border: 2px solid #1A1410; border-radius: 2px 24px 24px 24px; padding: 22px 24px; font-size: 20px; line-height: 1.5">Hello Suresh ji, a gentle reminder that the tuition fee of ₹1,200 for October is due. You can pay in one tap with this link:<br><span style="font-family: 'DM Mono',monospace; font-size: 15px; color: #1B2B8F; word-break: break-all">upi://pay?pa=meena.tuitions@okhdfc&amp;am=1200&amp;cu=INR&amp;tn=October fee</span><br>Thank you!</div>
+<div style="display: flex; flex-wrap: wrap; gap: 18px; padding-right: 6px">
+<button style="flex: 1 1 220px; height: 66px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 6px 6px 0 #1A1410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Send on WhatsApp</button>
+<button style="flex: 1 1 140px; height: 66px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; font-size: 19px; font-weight: 700; box-shadow: 6px 6px 0 #1A1410">Copy message</button>
+</div>
+
+<div style="margin: 14px 6px 0 0; background: #F4C430; border: 2px solid #1A1410; box-shadow: 8px 8px 0 #1A1410; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+<div><div style="font-size: 30px; line-height: 0.98; font-weight: 800; letter-spacing: -0.03em">Doing this for 20 parents every month?</div><div style="font-size: 17px; line-height: 1.4; margin-top: 6px">The FeeDost app remembers every student and reminds them all in a minute. Put your name down.</div></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 12px">
+<input aria-label="Your name" placeholder="Your name" style="height: 52px; box-sizing: border-box; border: 2px solid #1A1410; background: #FDF6D8; padding: 0 12px; font: inherit; font-size: 17px">
+<input aria-label="WhatsApp number" type="tel" placeholder="WhatsApp number" style="height: 52px; box-sizing: border-box; border: 2px solid #1A1410; background: #FDF6D8; padding: 0 12px; font: inherit; font-size: 17px">
+<input aria-label="City" placeholder="City" style="height: 52px; box-sizing: border-box; border: 2px solid #1A1410; background: #FDF6D8; padding: 0 12px; font: inherit; font-size: 17px">
+<input aria-label="About how many students" inputmode="numeric" placeholder="How many students?" style="height: 52px; box-sizing: border-box; border: 2px solid #1A1410; background: #FDF6D8; padding: 0 12px; font: inherit; font-size: 17px">
+<button style="grid-column: 1 / -1; height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #F7E7A0; font-size: 18px; font-weight: 800">Join the waitlist</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dues board on desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="background: #A81C22; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; min-height: 900px; box-sizing: border-box; padding: clamp(12px, 2vw, 28px); display: flex; flex-direction: column; gap: 16px">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; color: #F7E7A0; padding: 0 8px">
+<div style="font-size: 28px; font-weight: 800; letter-spacing: -0.03em">FeeDost</div>
+<nav aria-label="Main" style="display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 16px; font-weight: 700">
+<a href="#" aria-current="page" style="height: 44px; padding: 0 16px; background: #F8ECB8; color: #1A1410; text-decoration: none; display: flex; align-items: center; border: 2px solid #1A1410; border-radius: 6px 6px 0 0">Home</a>
+<a href="#" style="height: 44px; padding: 0 16px; color: #F7E7A0; text-decoration: none; display: flex; align-items: center">Students</a>
+<a href="#" style="height: 44px; padding: 0 16px; color: #F7E7A0; text-decoration: none; display: flex; align-items: center">Attendance</a>
+<a href="#" style="height: 44px; padding: 0 16px; color: #F7E7A0; text-decoration: none; display: flex; align-items: center; gap: 8px">To confirm<span style="padding: 1px 8px; background: #F4C430; color: #1A1410; font-family: 'DM Mono',monospace; font-size: 14px">2</span></a>
+<a href="#" style="height: 44px; padding: 0 16px; color: #F7E7A0; text-decoration: none; display: flex; align-items: center">More</a>
+</nav>
+</header>
+
+<div style="flex-grow: 1; display: flex; flex-wrap: wrap; border: 2px solid #1A1410; box-shadow: 10px 10px 0 #5E0D11; background-color: #F8ECB8; background-image: repeating-linear-gradient(#F8ECB8 0px, #F8ECB8 43px, #F0E2A6 43px, #F0E2A6 44px)">
+
+<section style="flex: 1 1 360px; min-width: 0; box-sizing: border-box; padding: clamp(20px, 3vw, 44px); border-right: 2px solid #1A1410; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; align-items: center; gap: 4px; margin-left: -12px">
+<button aria-label="Previous month" style="width: 44px; height: 44px; border: 0; background: none; color: #1A1410; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+<div style="font-family: 'DM Mono',monospace; font-size: 15px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase">October 2026</div>
+<button aria-label="Next month" style="width: 44px; height: 44px; border: 0; background: none; color: #1A1410; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+</div>
+<div>
+<div style="font-size: 20px; font-weight: 700; color: #A81C22">Still to come in</div>
+<div style="font-size: clamp(72px, 9vw, 136px); line-height: 0.88; font-weight: 800; letter-spacing: -0.05em; color: #1B2B8F">₹18,500</div>
+<div style="font-size: 18px; color: #4A3F1E; margin-top: 6px">from 9 of your 23 students</div>
+</div>
+<div>
+<div aria-label="23 students: 14 paid, 4 due, 5 overdue" style="display: grid; grid-template-columns: repeat(23, minmax(0, 1fr)); gap: 4px; align-items: end; height: 40px">
+<sc-for list="{{strip}}" as="s" hint-placeholder-count="23">
+<div style="height: {{s.h}}; box-sizing: border-box; border: 2px solid {{s.border}}; background: {{s.bg}}"></div>
+</sc-for>
+</div>
+<div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 18px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase"><span style="color: #1F6B3C">14 paid</span><span style="color: #4A3F1E">4 due, hollow</span><span style="color: #A81C22">5 overdue, tall</span></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410">
+<div style="padding: 10px 10px 10px 0; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B5B2A">Collected</div><div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em; color: #1F6B3C">₹31,000</div></div>
+<div style="padding: 10px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B5B2A">Parents say paid</div><div style="font-size: 34px; font-weight: 800; letter-spacing: -0.03em">₹2,200</div></div>
+</div>
+<div style="flex-grow: 1"></div>
+<button style="height: 68px; margin-right: 7px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 21px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 7px 7px 0 #1A1410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Remind all 5 on WhatsApp</button>
+</section>
+
+<section style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: clamp(20px, 3vw, 44px); display: flex; flex-direction: column">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px">
+<div role="tablist" style="display: flex; align-items: flex-end; gap: 4px">
+<button role="tab" aria-selected="true" style="height: 52px; padding: 0 18px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #FDF6D8; color: #1A1410; font-size: 17px; font-weight: 700">Overdue 5</button>
+<button role="tab" aria-selected="false" style="height: 46px; padding: 0 18px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 17px; font-weight: 700">Due 4</button>
+<button role="tab" aria-selected="false" style="height: 46px; padding: 0 18px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 17px; font-weight: 700">Paid 14</button>
+</div>
+<select aria-label="Batch" style="height: 44px; border: 0; background: none; font: inherit; font-size: 16px; font-weight: 700; color: #1A1410; text-decoration: underline"><option>All batches</option><option>Class 10 Maths</option><option>Class 8 Science</option></select>
+</div>
+<div style="overflow-x: auto; background: #FDF6D8; border: 2px solid #1A1410">
+<table style="width: 100%; min-width: 700px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A; border-bottom: 2px solid #1A1410">
+<th style="padding: 12px 14px; font-weight: 500">No.</th>
+<th style="padding: 12px 14px; font-weight: 500">Student</th>
+<th style="padding: 12px 14px; font-weight: 500">Status</th>
+<th style="padding: 12px 14px; font-weight: 500">Reminded</th>
+<th style="padding: 12px 14px; font-weight: 500; text-align: right; border-left: 1px solid #C4383D">Amount</th>
+<th style="padding: 12px 14px; font-weight: 500; text-align: right">Do</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<tr style="border-bottom: 1px solid #C9B56A">
+<td style="padding: 12px 14px; font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">{{r.no}}</td>
+<td style="padding: 12px 14px"><div style="font-size: 19px; font-weight: 700">{{r.name}}</div><div style="font-size: 14px; color: #4A3F1E">{{r.parent}}</div></td>
+<td style="padding: 12px 14px"><span style="padding: 4px 8px; border: 2px {{r.line}} {{r.fg}}; color: {{r.fg}}; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap">{{r.status}}</span></td>
+<td style="padding: 12px 14px; color: #4A3F1E">{{r.reminded}}</td>
+<td style="padding: 12px 14px; text-align: right; font-family: 'DM Mono','Anek Latin',monospace; font-size: 18px; font-weight: 500; border-left: 1px solid #C4383D">{{r.amount}}</td>
+<td style="padding: 12px 18px 12px 14px"><div style="display: flex; justify-content: flex-end; gap: 12px"><button style="height: 46px; padding: 0 16px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 15px; font-weight: 700; box-shadow: 3px 3px 0 #1A1410">Remind</button><button style="height: 46px; padding: 0 16px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 15px; font-weight: 700; white-space: nowrap">Mark paid</button></div></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+const red = { fg: '#A81C22', line: 'solid' };
+const blue = { fg: '#1B2B8F', line: 'dashed' };
+const rows = [
+['Ravi Kumar', 'Suresh Kumar · Kannada · 10 Maths', 'Overdue 7 days', red, '2 days ago', '₹1,200'],
+['Ananya Shetty', 'Kavitha Shetty · Hindi · 10 Maths', 'Overdue 7 days', red, '2 days ago', '₹1,500'],
+['Imran Mohammed', 'Salma Mohammed · English · 10 Maths', 'Part paid ₹500', blue, '4 days ago', '₹700'],
+['Pooja Gowda', 'Ramesh Gowda · Kannada · 8 Science', 'Overdue 3 days', red, 'Not yet', '₹1,000'],
+['Suresh Naik', 'Latha Naik · Telugu · 8 Science', 'Overdue 2 months', red, 'Not yet', '₹2,400']
+].map(([name, parent, status, tone, reminded, amount], i) => ({ no: String(i + 1).padStart(2, '0'), name, parent, status, ...tone, reminded, amount }));
+const strip = [];
+for (let i = 0; i < 23; i++) {
+if (i < 14) strip.push({ bg: '#1F6B3C', border: '#1F6B3C', h: '24px' });
+else if (i < 18) strip.push({ bg: '#FDF6D8', border: '#1A1410', h: '24px' });
+else strip.push({ bg: '#A81C22', border: '#A81C22', h: '40px' });
+}
+return { rows, strip };
+}
+}
+</script>
+</body>
+</html>

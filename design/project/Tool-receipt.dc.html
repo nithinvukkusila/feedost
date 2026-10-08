@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Free fee receipt maker</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="background-color: #F8ECB8; background-image: repeating-linear-gradient(#F8ECB8 0px, #F8ECB8 43px, #F0E2A6 43px, #F0E2A6 44px); color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; min-height: 1160px">
+
+<header style="background: #A81C22; color: #F7E7A0; outline: 2px dashed #E9C95A; outline-offset: -8px; border-bottom: 2px solid #1A1410">
+<div style="max-width: 1280px; margin: 0 auto; padding: 16px 40px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px">
+<a href="Landing.dc.html" style="min-height: 44px; display: flex; align-items: center; font-size: 28px; font-weight: 800; letter-spacing: -0.03em; color: #F7E7A0; text-decoration: none">FeeDost</a>
+<nav aria-label="Tools" style="display: flex; flex-wrap: wrap; gap: 4px 24px; font-size: 16px; font-weight: 700">
+<a href="#" aria-current="page" style="min-height: 44px; display: flex; align-items: center; color: #1A1410; background: #F7E7A0; padding: 0 12px; text-decoration: none">Receipt maker</a>
+<a href="Tool-reminder.dc.html" style="min-height: 44px; display: flex; align-items: center; color: #F7E7A0">Reminder writer</a>
+</nav>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 56px 40px 72px 40px; display: flex; flex-direction: column; gap: 44px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.12em; text-transform: uppercase; color: #A81C22">Free tool no. 01 · no sign-up</div>
+<h1 style="margin: 0; max-width: 980px; font-size: clamp(44px, 8vw, 116px); line-height: 0.86; font-weight: 800; letter-spacing: -0.05em">A proper fee receipt, in one minute.</h1>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+
+<form style="flex: 1 1 400px; min-width: 0; box-sizing: border-box; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 10px 10px 0 #1A1410; padding: 28px; display: flex; flex-direction: column; gap: 24px">
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Language</legend>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button type="button" aria-pressed="true" style="height: 52px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 16px; font-weight: 700">English</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Hindi</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Kannada</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Telugu</button>
+</div>
+</fieldset>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 22px 24px">
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column"><label for="{{f.id}}" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">{{f.label}}</label><input id="{{f.id}}" value="{{f.value}}" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 700; color: #1B2B8F; min-width: 0"></div>
+</sc-for>
+</div>
+<fieldset style="border: 0; margin: 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 8px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5B2A">Paid by</legend>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button type="button" aria-pressed="true" style="height: 52px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 16px; font-weight: 700">UPI</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Cash</button>
+<button type="button" aria-pressed="false" style="height: 52px; border: 0; border-left: 2px solid #1A1410; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Bank</button>
+</div>
+</fieldset>
+</form>
+
+<section aria-label="Your receipt" style="flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; gap: 26px">
+<article style="position: relative; margin-right: 10px; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 10px 10px 0 #1A1410; padding: 26px 28px 28px 28px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+<div><div style="font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -0.03em">Meena Iyer</div><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B5B2A; margin-top: 6px">Fee receipt · 08 Oct 2026</div></div>
+<div style="text-align: right; font-family: 'DM Mono',monospace"><div style="font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B5B2A">No.</div><div style="font-size: 30px; color: #A81C22; line-height: 1.1">001</div></div>
+</div>
+<p style="margin: 20px 0 0 0; border-top: 2px solid #1A1410; padding-top: 14px; font-size: 18px; line-height: 2.200; color: #4A3F1E">Received with thanks the sum of rupees <span style="font-size: 21px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">one thousand two hundred only</span> by <span style="font-size: 21px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">UPI</span> towards the tuition fee of <span style="font-size: 21px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">Ravi Kumar</span> for <span style="font-size: 21px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">October 2026</span>.</p>
+<div style="margin-top: 22px; display: inline-block; border: 2px solid #1A1410; padding: 6px 16px 4px 16px; font-size: 52px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹1,200<span style="font-size: 30px">/-</span></div>
+<div role="img" aria-label="Stamped paid" style="position: absolute; right: 22px; bottom: 18px; width: 136px; height: 136px; box-sizing: border-box; border: 5px double #1F6B3C; border-radius: 50%; color: #1F6B3C; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-14deg); font-weight: 800; line-height: 1"><span style="font-size: 38px; letter-spacing: 0.06em">PAID</span><span style="font-family: 'DM Mono',monospace; font-size: 14px; margin-top: 5px">08 OCT 2026</span></div>
+</article>
+
+<div style="display: flex; flex-wrap: wrap; gap: 18px; padding-right: 6px">
+<button style="flex: 1 1 200px; height: 66px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 6px 6px 0 #6B5B2A"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>Download PDF</button>
+<button style="flex: 1 1 200px; height: 66px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 6px 6px 0 #1A1410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Share on WhatsApp</button>
+</div>
+
+<div style="margin: 8px 6px 0 0; background: #F4C430; border: 2px solid #1A1410; box-shadow: 8px 8px 0 #1A1410; padding: 22px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px">
+<div style="flex: 1 1 260px"><div style="font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: -0.03em">Writing these every month?</div><div style="font-size: 16.5px; line-height: 1.4; margin-top: 6px">The FeeDost app numbers and sends receipts for you, the moment a fee is marked paid.</div></div>
+<a href="Landing.dc.html#waitlist" style="height: 56px; padding: 0 22px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #F7E7A0; font-size: 18px; font-weight: 800; text-decoration: none; display: flex; align-items: center">Join the waitlist</a>
+</div>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+renderVals() {
+const fields = [
+{ id: 'rc-tutor', label: 'Your name', value: 'Meena Iyer' },
+{ id: 'rc-student', label: 'Student\'s name', value: 'Ravi Kumar' },
+{ id: 'rc-amount', label: 'Amount in ₹', value: '1,200' },
+{ id: 'rc-month', label: 'Fee month', value: 'October 2026' }
+];
+return { fields };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<title>Dues board in Hindi</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Anek+Latin:wght@400..800&amp;family=Anek+Devanagari:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Anek Devanagari','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 0 8px">
+<div style="display: flex; align-items: center">
+<button aria-label="पिछला महीना" style="width: 44px; height: 44px; border: 0; background: none; color: #1A1410; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+<div style="font-size: 16px; font-weight: 600; min-width: 110px; text-align: center">अक्टूबर 2026</div>
+<button aria-label="अगला महीना" style="width: 44px; height: 44px; border: 0; background: none; color: #1A1410; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+</div>
+<a href="#" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-radius: 4px; background: #F4C430; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: none; display: flex; align-items: center; box-shadow: 3px 3px 0 #1A1410; margin-right: 8px">2 पुष्टि बाकी</a>
+</header>
+
+<section style="padding: 10px 20px 0 20px; display: flex; flex-direction: column">
+<div style="font-size: 17px; font-weight: 700; color: #A81C22; line-height: 1.4">अभी आना बाकी</div>
+<div style="font-family: 'Bricolage Grotesque','Anek Latin',sans-serif; font-size: 68px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹18,500</div>
+<div style="font-size: 16px; line-height: 1.5; color: #4A3F1E">23 में से 9 छात्रों से</div>
+
+<div aria-label="23 छात्र: 14 जमा, 4 बाकी, 5 देर से" style="margin-top: 10px; display: grid; grid-template-columns: repeat(23, minmax(0, 1fr)); gap: 3px; align-items: end; height: 24px">
+<sc-for list="{{strip}}" as="s" hint-placeholder-count="23">
+<div style="height: {{s.h}}; box-sizing: border-box; border: 1.5px solid {{s.border}}; background: {{s.bg}}"></div>
+</sc-for>
+</div>
+<div style="margin-top: 4px; display: flex; gap: 14px; font-size: 15px; font-weight: 600; line-height: 1.5"><span style="color: #1F6B3C">14 जमा</span><span style="color: #4A3F1E">4 बाकी</span><span style="color: #A81C22">5 देर से</span></div>
+
+<a href="#" style="margin-top: 12px; min-height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 18px; font-weight: 700; line-height: 1.3; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #1A1410"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>सभी 5 को WhatsApp पर याद दिलाएँ</a>
+</section>
+
+<div role="tablist" style="display: flex; align-items: flex-end; gap: 4px; padding: 20px 16px 0 16px">
+<button role="tab" aria-selected="true" style="height: 48px; padding: 0 12px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #FDF6D8; color: #1A1410; font-size: 16px; font-weight: 700">देर से 5</button>
+<button role="tab" aria-selected="false" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 16px; font-weight: 700">बाकी 4</button>
+<button role="tab" aria-selected="false" style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 16px; font-weight: 700">जमा 14</button>
+<div style="flex-grow: 1"></div>
+<button style="height: 44px; padding: 0 4px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">सभी बैच</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div style="min-height: 70px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 8px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 18px; font-weight: 700; line-height: 1.35">{{r.name}}</div><div style="font-size: 15px; font-weight: 600; line-height: 1.4; color: #A81C22">{{r.meta}}</div></div>
+<div style="font-family: 'Bricolage Grotesque','Anek Latin',sans-serif; font-size: 17px; font-weight: 700; flex-shrink: 0">{{r.amount}}</div>
+<button aria-label="{{r.name}} के अभिभावक को WhatsApp पर याद दिलाएँ" style="width: 48px; height: 48px; box-sizing: border-box; border: 2px solid #1A1410; border-radius: 50%; background: #1B2B8F; color: #FDF6D8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 3px 3px 0 #1A1410; margin-right: 3px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg></button>
+</div>
+</sc-for>
+</div>
+
+<nav aria-label="मुख्य" style="height: 64px; box-sizing: border-box; background: #FDF6D8; border-top: 2px solid #1A1410; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-size: 15px; font-weight: 700">
+<a href="#" style="display: flex; align-items: center; justify-content: center; text-decoration: none; color: #1A1410; border-top: 5px solid #A81C22">होम</a>
+<a href="#" style="display: flex; align-items: center; justify-content: center; text-decoration: none; color: #6B5B2A; border-top: 5px solid transparent">छात्र</a>
+<a href="#" style="display: flex; align-items: center; justify-content: center; text-decoration: none; color: #6B5B2A; border-top: 5px solid transparent">हाज़िरी</a>
+<a href="#" style="display: flex; align-items: center; justify-content: center; text-decoration: none; color: #6B5B2A; border-top: 5px solid transparent">और</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const rows = [
+{ name: 'रवि कुमार', meta: '7 दिन देर · कक्षा 10 गणित', amount: '₹1,200' },
+{ name: 'अनन्या शेट्टी', meta: '7 दिन देर · 2 दिन पहले याद दिलाया', amount: '₹1,500' },
+{ name: 'इमरान मोहम्मद', meta: '₹500 जमा · 5 दिन देर', amount: '₹700' },
+{ name: 'पूजा गौड़ा', meta: '3 दिन देर · कक्षा 8 विज्ञान', amount: '₹1,000' }
+];
+const strip = [];
+for (let i = 0; i < 23; i++) {
+if (i < 14) strip.push({ bg: '#1F6B3C', border: '#1F6B3C', h: '14px' });
+else if (i < 18) strip.push({ bg: '#FDF6D8', border: '#1A1410', h: '14px' });
+else strip.push({ bg: '#A81C22', border: '#A81C22', h: '24px' });
+}
+return { rows, strip };
+}
+}
+</script>
+</body>
+</html>

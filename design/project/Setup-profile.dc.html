@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup: name and subjects</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 22px 20px; overflow: hidden">
+
+<div style="display: flex; align-items: center; justify-content: space-between; margin-left: -12px">
+<a href="Signin.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase">Step 1 of 3</div>
+</div>
+
+<h1 style="margin: 14px 0 0 0; font-size: 46px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">What should parents call you?</h1>
+<p style="margin: 10px 0 0 0; font-size: 16px; line-height: 1.4; color: #4A3F1E">This name goes on every reminder, pay page and receipt.</p>
+
+<div style="margin-top: 24px; display: flex; flex-direction: column; gap: 4px">
+<label for="sp-name" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Your name</label>
+<input id="sp-name" value="Meena Iyer" style="height: 56px; border: 0; border-bottom: 3px solid #1B2B8F; outline: 0; background: none; padding: 0; font: inherit; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: #1B2B8F">
+</div>
+
+<fieldset style="border: 0; margin: 26px 0 0 0; padding: 0">
+<legend style="padding: 0; margin-bottom: 10px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">What do you teach?</legend>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{subjects}}" as="s" hint-placeholder-count="7">
+<button onClick="{{s.toggle}}" aria-pressed="{{s.on}}" style="height: 48px; padding: 0 14px; border: 2px solid #1A1410; border-radius: 4px; background: {{s.bg}}; color: {{s.fg}}; font-size: 16px; font-weight: 700">{{s.name}}</button>
+</sc-for>
+<button style="height: 48px; padding: 0 14px; border: 2px dashed #1A1410; border-radius: 4px; background: none; color: #1A1410; font-size: 16px; font-weight: 700">+ Other</button>
+</div>
+</fieldset>
+
+<button style="margin-top: 26px; min-height: 64px; border: 0; border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410; background: none; color: #1A1410; padding: 8px 0; display: flex; align-items: center; gap: 14px; text-align: left">
+<span aria-hidden="true" style="width: 48px; height: 48px; box-sizing: border-box; border: 2px dashed #1A1410; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>
+<span><span style="display: block; font-size: 17px; font-weight: 700">Add your photo</span><span style="display: block; font-size: 14px; color: #4A3F1E">Optional. Parents trust a face they know.</span></span>
+</button>
+
+<div style="flex-grow: 1"></div>
+<a href="Setup-upi.dc.html" style="height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #6B5B2A; margin-right: 5px">Next: your UPI ID<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const picked = (this.state && this.state.picked) || { Maths: true, Science: true };
+const subjects = ['Maths', 'Science', 'English', 'Hindi', 'Physics', 'Chemistry', 'Accounts'].map((name) => {
+const on = !!picked[name];
+return { name, on, bg: on ? '#1A1410' : 'transparent', fg: on ? '#FDF6D8' : '#1A1410', toggle: () => this.setState({ picked: { ...picked, [name]: !on } }) };
+});
+return { subjects };
+}
+}
+</script>
+</body>
+</html>

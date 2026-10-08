@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Attendance register</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 18px 20px 0 20px; display: flex; align-items: flex-end; justify-content: space-between">
+<div>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Register · October 2026</div>
+<h1 style="margin: 0; font-size: 44px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em">Attendance</h1>
+</div>
+<div style="text-align: right"><div style="font-size: 40px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">{{present}}<span style="font-size: 20px; color: #4A3F1E">/{{total}}</span></div><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">present</div></div>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 14px 16px 0 16px; border: 2px solid #1A1410; background: #FDF6D8">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<button aria-pressed="{{d.on}}" style="height: 56px; border: 0; border-right: 1px solid #1A1410; background: {{d.bg}}; color: {{d.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0"><span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase">{{d.dow}}</span><span style="font-size: 20px; font-weight: 800; line-height: 1.1">{{d.num}}</span></button>
+</sc-for>
+</div>
+
+<div style="display: flex; align-items: flex-end; gap: 4px; padding: 16px 16px 0 16px">
+<button aria-pressed="true" style="height: 52px; padding: 0 12px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #FDF6D8; color: #1A1410; text-align: left"><span style="display: block; font-size: 15px; font-weight: 700">10 Maths</span><span style="display: block; font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">5:00 PM</span></button>
+<button aria-pressed="false" style="height: 48px; padding: 0 12px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; text-align: left"><span style="display: block; font-size: 15px; font-weight: 700">8 Science</span><span style="display: block; font-family: 'DM Mono',monospace; font-size: 14px">6:30 PM</span></button>
+<div style="flex-grow: 1"></div>
+<button onClick="{{allPresent}}" style="height: 44px; padding: 0 4px; border: 0; background: none; color: #1B2B8F; font-size: 14.5px; font-weight: 700; text-decoration: underline">All present</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 0 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+<div style="min-height: 60px; display: flex; align-items: stretch; border-bottom: 1px solid #C9B56A">
+<div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center"><div style="font-size: 17px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.name}}</div><div style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">{{r.month}} this month</div></div>
+<button onClick="{{r.toggle}}" aria-pressed="{{r.present}}" aria-label="{{r.name}}: {{r.label}}, tap to change" style="width: 128px; border: 0; border-left: 1px solid #1A1410; background: {{r.bg}}; color: {{r.fg}}; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0"><span style="width: 34px; height: 34px; flex-shrink: 0; box-sizing: border-box; border: 2.500px solid {{r.ring}}; border-radius: 50%; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center">{{r.letter}}</span><span style="font-size: 15px; font-weight: 700">{{r.label}}</span></button>
+</div>
+</sc-for>
+</div>
+
+<dc-import name="Nav" active="attendance" hint-size="360px,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const absent = (this.state && this.state.absent) || { 'Imran Mohammed': true, 'Suresh Naik': true, 'Fatima Ali': true };
+const names = [['Ananya Shetty', '4 of 4'], ['Divya Rao', '4 of 4'], ['Fatima Ali', '2 of 4'], ['Imran Mohammed', '3 of 4'], ['Lakshmi Devi', '4 of 4'], ['Neha Bhat', '4 of 4'], ['Ravi Kumar', '3 of 4'], ['Suresh Naik', '1 of 4']];
+const rows = names.map(([name, month]) => {
+const present = !absent[name];
+return {
+name, month, present,
+letter: present ? 'P' : 'A',
+label: present ? 'Present' : 'Absent',
+bg: present ? '#FDF6D8' : '#F7DAD3',
+fg: present ? '#1B2B8F' : '#A81C22',
+ring: present ? 'transparent' : '#A81C22',
+toggle: () => this.setState({ absent: { ...absent, [name]: present } })
+};
+});
+const total = 12;
+const present = total - rows.filter((r) => !r.present).length;
+const days = [['Mon', 5], ['Tue', 6], ['Wed', 7], ['Thu', 8], ['Fri', 9], ['Sat', 10], ['Sun', 11]].map(([dow, num]) => {
+const on = num === 8;
+return { dow, num, on, bg: on ? '#1A1410' : 'transparent', fg: on ? '#FDF6D8' : '#1A1410' };
+});
+return { rows, days, present, total, allPresent: () => this.setState({ absent: {} }) };
+}
+}
+</script>
+</body>
+</html>

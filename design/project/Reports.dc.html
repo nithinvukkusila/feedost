@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reports</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 1000px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<div style="display: flex; align-items: center">
+<button aria-label="Previous year" style="width: 44px; height: 44px; border: 0; background: none; color: #1A1410; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em">APR 2026 – MAR 2027</span>
+<button aria-label="Next year" disabled style="width: 44px; height: 44px; border: 0; background: none; color: #C9B56A; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+</div>
+</header>
+
+<section style="padding: 6px 20px 0 20px">
+<div style="font-size: 16px; font-weight: 700; color: #1F6B3C">Collected this year</div>
+<div style="font-size: 72px; line-height: 0.92; font-weight: 800; letter-spacing: -0.045em; color: #1B2B8F">₹3,21,400</div>
+<div style="font-size: 15.5px; color: #4A3F1E; margin-top: 2px">in 7 months, from 268 payments</div>
+</section>
+
+<div style="display: flex; align-items: flex-end; gap: 4px; padding: 18px 16px 0 16px">
+<button aria-pressed="true" style="height: 48px; padding: 0 14px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #FDF6D8; color: #1A1410; font-size: 15px; font-weight: 700">By month</button>
+<button aria-pressed="false" style="height: 44px; padding: 0 14px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 15px; font-weight: 700">By batch</button>
+</div>
+
+<div style="margin: 0 16px; background: #FDF6D8; border: 2px solid #1A1410">
+<table style="width: 100%; border-collapse: collapse; font-size: 16px">
+<thead><tr style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A; border-bottom: 2px solid #1A1410"><th style="padding: 8px 12px; text-align: left; font-weight: 500">Month</th><th style="padding: 8px 12px; text-align: right; font-weight: 500; border-left: 1px solid #C4383D">Collected</th><th style="padding: 8px 12px; text-align: right; font-weight: 500">Unpaid</th></tr></thead>
+<tbody>
+<sc-for list="{{months}}" as="m" hint-placeholder-count="7">
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 0 12px; height: 44px; font-weight: 700">{{m.name}}</td><td style="padding: 0 12px; text-align: right; font-family: 'DM Mono','Anek Latin',monospace; border-left: 1px solid #C4383D">{{m.got}}</td><td style="padding: 0 12px; text-align: right; font-family: 'DM Mono','Anek Latin',monospace; color: {{m.dueColor}}">{{m.due}}</td></tr>
+</sc-for>
+<tr style="border-top: 2px solid #1A1410"><td style="padding: 0 12px; height: 48px; font-weight: 800">Total</td><td style="padding: 0 12px; text-align: right; font-family: 'DM Mono','Anek Latin',monospace; font-weight: 500; border-left: 1px solid #C4383D">₹3,21,400</td><td style="padding: 0 12px; text-align: right; font-family: 'DM Mono','Anek Latin',monospace; color: #A81C22">₹19,700</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="margin: 16px 20px 0 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410">
+<div style="padding: 8px 8px 8px 0; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Class 10 Maths</div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em">₹1,78,200</div></div>
+<div style="padding: 8px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Class 8 Science</div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em">₹1,43,200</div></div>
+</div>
+
+<div style="flex-grow: 1"></div>
+<div style="padding: 0 25px 20px 20px; display: flex; flex-direction: column; gap: 6px">
+<button style="height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #6B5B2A"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>Yearly statement, PDF</button>
+<button style="height: 48px; border: 0; background: none; color: #1A1410; font-size: 16px; font-weight: 700; text-decoration: underline">Full history as Excel</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+const months = [
+['April', '₹44,500', '₹0'], ['May', '₹45,700', '₹0'], ['June', '₹46,200', '₹0'], ['July', '₹47,900', '₹0'],
+['August', '₹48,300', '₹1,200'], ['September', '₹48,300', '₹0'], ['October', '₹40,500', '₹18,500']
+].map(([name, got, due]) => ({ name, got, due, dueColor: due === '₹0' ? '#4A3F1E' : '#A81C22' }));
+return { months };
+}
+}
+</script>
+</body>
+</html>

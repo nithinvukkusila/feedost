@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Automatic reminders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</header>
+
+<div style="padding: 0 20px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<h1 style="margin: 0; font-size: 36px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Automatic reminders</h1>
+<button role="switch" aria-checked="true" aria-label="Automatic reminders" style="width: 76px; height: 44px; flex-shrink: 0; border: 2px solid #1A1410; border-radius: 4px; background: #1F6B3C; padding: 3px; display: flex; justify-content: flex-end; align-items: stretch"><span style="width: 36px; background: #FDF6D8; border: 2px solid #1A1410; box-sizing: border-box; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center">ON</span></button>
+</div>
+<p style="margin: 8px 20px 0 20px; font-size: 15.5px; line-height: 1.35; color: #4A3F1E">Sent on WhatsApp in your name. They stop the moment a fee is marked paid.</p>
+
+<fieldset style="border: 0; margin: 14px 16px 0 16px; padding: 0 12px; background: #FDF6D8; border: 2px solid #1A1410">
+<legend style="padding: 0 6px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Send at 9:00 am</legend>
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="3">
+<label style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A">
+<input type="checkbox" checked style="width: 24px; height: 24px; margin: 0; accent-color: #1B2B8F; flex-shrink: 0">
+<span style="flex-grow: 1; font-size: 17px; font-weight: 700">{{s.when}}</span>
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #4A3F1E">{{s.tone}}</span>
+</label>
+</sc-for>
+</fieldset>
+
+<div style="margin: 14px 20px 0 20px; background: #E4F0D2; border: 2px solid #1A1410; border-radius: 2px 16px 16px 16px; padding: 10px 14px; font-size: 15px; line-height: 1.45">Hello Suresh ji, Ravi's tuition fee of ₹1,200 for October is due. Pay here: <span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #1B2B8F">feedost.in/p/x7Kq…</span><br>Meena Iyer<br><span style="color: #4A3F1E">Reply STOP to stop these messages.</span></div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 16px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 10px 12px 0 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Pause for a student</h2><span style="font-size: 14px; color: #4A3F1E">1 paused</span></div>
+<sc-for list="{{students}}" as="st" hint-placeholder-count="3">
+<div style="min-height: 58px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 10px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 17px; font-weight: 700">{{st.name}}</div><div style="font-size: 14px; color: {{st.noteColor}}">{{st.note}}</div></div>
+<button role="switch" aria-checked="{{st.on}}" aria-label="Reminders for {{st.name}}" style="width: 88px; height: 44px; border: 2px solid #1A1410; border-radius: 4px; background: {{st.bg}}; color: {{st.fg}}; font-size: 14px; font-weight: 700">{{st.label}}</button>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const steps = [
+{ when: 'On the due day', tone: 'POLITE' },
+{ when: '3 days after', tone: 'POLITE' },
+{ when: '7 days after', tone: 'FIRM' }
+];
+const students = [
+{ name: 'Ananya Shetty', note: 'Next: tomorrow, 7 days after', on: true },
+{ name: 'Suresh Naik', note: 'Paused by you. Family asked for time.', on: false },
+{ name: 'Pooja Gowda', note: 'Parent replied STOP. Remind by hand.', on: false, locked: true }
+].map((s) => ({ ...s, label: s.locked ? 'Opted out' : (s.on ? 'Sending' : 'Paused'), bg: s.on ? '#1F6B3C' : 'transparent', fg: s.on ? '#FDF6D8' : '#1A1410', noteColor: s.locked ? '#A81C22' : '#4A3F1E' }));
+return { steps, students };
+}
+}
+</script>
+</body>
+</html>

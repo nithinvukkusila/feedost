@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>More</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<section style="background: #A81C22; color: #F7E7A0; padding: 22px 20px 26px 20px; outline: 2px dashed #E9C95A; outline-offset: -8px; border-bottom: 2px solid #1A1410">
+<div style="background: #FDF6D8; color: #1A1410; border: 2px solid #1A1410; padding: 12px 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px">
+<div style="min-width: 0">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Your profile</div>
+<div style="font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -0.03em">Meena Iyer</div>
+<div style="font-size: 14px; color: #4A3F1E; margin-top: 2px">Maths, Science</div>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; color: #1B2B8F; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">meena.tuitions@okhdfc</div>
+</div>
+<button style="height: 44px; padding: 0 4px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">Edit</button>
+</div>
+</section>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; padding: 18px 22px 0 16px; display: flex; flex-direction: column; gap: 18px">
+
+<section style="background: #F4C430; border: 2px solid #1A1410; box-shadow: 5px 5px 0 #1A1410; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 22px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em">Know another tutor? Share FeeDost.</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<div style="flex-grow: 1; min-width: 0; height: 48px; box-sizing: border-box; padding: 0 10px; background: #FDF6D8; border: 2px solid #1A1410; display: flex; align-items: center; font-family: 'DM Mono',monospace; font-size: 14px">feedost.in/join/MEENA24</div>
+<button style="height: 48px; padding: 0 16px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 16px; font-weight: 700">Share</button>
+</div>
+</section>
+
+<a href="#" style="min-height: 60px; box-sizing: border-box; padding: 8px 14px; border: 2px solid #1A1410; background: #1A1410; color: #FDF6D8; text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+<span><span style="display: block; font-size: 18px; font-weight: 800">Try Pro</span><span style="display: block; font-size: 14px; color: #F7E7A0">Reminders go out on their own. ₹149 a month.</span></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</a>
+
+<nav aria-label="Settings" style="background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 12px; flex-grow: 1">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+<a href="#" style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-decoration: none; color: {{it.color}}; border-bottom: 1px solid #C9B56A">
+<span style="font-size: 17px; font-weight: 700">{{it.label}}</span>
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">{{it.value}}</span>
+</a>
+</sc-for>
+</nav>
+</div>
+
+<dc-import name="Nav" active="more" hint-size="360px,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const items = [
+['Language', 'ENGLISH'],
+['Batches', '2'],
+['Reports', 'PRO'],
+['Export to Excel', ''],
+['Help on WhatsApp', ''],
+['Privacy and parent consent', ''],
+['Delete my account', '']
+].map(([label, value]) => ({ label, value, color: label === 'Delete my account' ? '#A81C22' : '#1A1410' }));
+return { items };
+}
+}
+</script>
+</body>
+</html>

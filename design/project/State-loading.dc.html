@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home while loading</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div aria-busy="true" style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 18px 20px 0 20px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">October 2026</div>
+</header>
+
+<section style="padding: 14px 20px 0 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 16px; font-weight: 700; color: #A81C22">Still to come in</div>
+<div style="width: 230px; height: 58px; background: #E6D38A"></div>
+<div style="width: 170px; height: 16px; background: #E6D38A"></div>
+<div style="height: 22px; background: #E6D38A; margin-top: 6px"></div>
+<div style="height: 58px; border: 2px solid #C9B56A; border-radius: 4px; margin-top: 8px"></div>
+</section>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 26px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="height: 66px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 10px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 8px"><div style="width: {{r.w}}; height: 16px; background: #E6D38A"></div><div style="width: 90px; height: 12px; background: #EFE2AA"></div></div>
+<div style="width: 52px; height: 16px; background: #E6D38A"></div>
+<div style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #C9B56A; box-sizing: border-box"></div>
+</div>
+</sc-for>
+</div>
+
+<div role="status" style="background: #FDF6D8; border-top: 2px solid #1A1410; height: 64px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #4A3F1E">Opening your book…</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return { rows: ['120px', '150px', '100px', '140px', '116px'].map((w) => ({ w })) };
+}
+}
+</script>
+</body>
+</html>

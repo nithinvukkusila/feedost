@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pay page with online payment and tutor logo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 1000px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="background: #A81C22; color: #F7E7A0; padding: 20px 20px 70px 20px; outline: 2px dashed #E9C95A; outline-offset: -8px; display: flex; align-items: center; gap: 14px">
+<div role="img" aria-label="Tutor's logo" style="width: 64px; height: 64px; box-sizing: border-box; background: #FDF6D8; border: 2px solid #1A1410; color: #6B5B2A; font-family: 'DM Mono',monospace; font-size: 14px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; flex-shrink: 0">YOUR LOGO</div>
+<div style="min-width: 0">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Fee request from</div>
+<div style="font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; margin-top: 2px">Iyer Maths Classes</div>
+<div style="font-size: 15px; color: #FBF1C8">Meena Iyer</div>
+</div>
+</header>
+
+<main style="margin: -50px 22px 0 16px; display: flex; flex-direction: column; gap: 20px">
+<section style="background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 7px 7px 0 #1A1410; padding: 18px 18px 18px 18px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: baseline; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A"><span>October 2026</span><span>Tuition fee</span></div>
+<div style="font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-top: 6px">for Ravi Kumar</div>
+<div style="font-size: 104px; line-height: 0.9; font-weight: 800; letter-spacing: -0.05em; color: #1B2B8F; margin-top: 6px">₹1,200</div>
+
+<a href="#" style="margin-top: 18px; height: 72px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 24px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #1A1410">Pay online<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<div style="margin-top: 12px; font-size: 14.5px; line-height: 1.4; color: #4A3F1E">UPI, card or netbanking. <strong style="color: #1F6B3C">Your receipt arrives the moment you pay.</strong> No need to tell the tutor.</div>
+
+<div style="margin-top: 16px; display: flex; align-items: center; gap: 10px; font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A"><span style="flex-grow: 1; height: 1px; background: #1A1410"></span>or<span style="flex-grow: 1; height: 1px; background: #1A1410"></span></div>
+
+<a href="PayPage.dc.html" style="margin-top: 12px; height: 56px; border: 2px solid #1A1410; border-radius: 4px; color: #1A1410; font-size: 18px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center">Pay direct by UPI app</a>
+<div style="margin-top: 8px; font-size: 14px; line-height: 1.4; color: #4A3F1E">Goes to <span style="font-family: 'DM Mono',monospace; color: #1B2B8F">meena.tuitions@okhdfc</span>. Then tap "I've already paid".</div>
+</section>
+
+<section style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410; padding: 10px 2px">
+<div><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Attendance · October</div><div style="font-size: 18px; font-weight: 800">Ravi came to 3 of 4 classes</div></div>
+</section>
+
+<section style="background: #1A1410; color: #FDF6D8; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div><div style="font-size: 18px; font-weight: 800">Never miss a month</div><div style="font-size: 14px; color: #F7E7A0">Set up UPI AutoPay once. Cancel any time.</div></div>
+<a href="Autopay.dc.html" style="height: 48px; padding: 0 14px; border: 2px solid #FDF6D8; border-radius: 4px; color: #FDF6D8; font-size: 15px; font-weight: 700; text-decoration: none; display: flex; align-items: center; flex-shrink: 0">Set up</a>
+</section>
+</main>
+
+<div style="flex-grow: 1"></div>
+<footer style="padding: 12px 20px 16px 20px; border-top: 1px solid #C9B56A; font-size: 14px; color: #4A3F1E; display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<span>Made with FeeDost. Free for tutors.</span>
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-weight: 700; color: #1A1410">Start yours</a>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

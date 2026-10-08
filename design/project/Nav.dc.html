@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bottom navigation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;display=swap">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<nav aria-label="Main" style="width: 360px; height: 64px; box-sizing: border-box; background: #FDF6D8; border-top: 2px solid #1A1410; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-family: 'Bricolage Grotesque',system-ui,sans-serif; font-size: 14px; font-weight: 700">
+<a href="Home.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: {{c.home}}; border-top: 5px solid {{b.home}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h11a2 2 0 012 2v16H6a2 2 0 01-2-2V5a2 2 0 012-2zM8 3v18M11.500 9h4.500M11.500 13h4.500"/></svg>Home</a>
+<a href="Students.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: {{c.students}}; border-top: 5px solid {{b.students}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0113 0M16 4.800a3.500 3.500 0 010 6.400M18 14.200a6.500 6.500 0 013.500 5.800"/></svg>Students</a>
+<a href="Attendance.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: {{c.attendance}}; border-top: 5px solid {{b.attendance}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M4 10h16M8 3v4M16 3v4M9 15l2 2 4-4"/></svg>Attendance</a>
+<a href="More.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: {{c.more}}; border-top: 5px solid {{b.more}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>More</a>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["home","students","attendance","more"],"default":"home"},"$preview":{"width":360,"height":64}}'>
+class Component extends DCLogic {
+renderVals() {
+const active = this.props.active ?? 'home';
+const c = {};
+const b = {};
+['home', 'students', 'attendance', 'more'].forEach((k) => {
+c[k] = k === active ? '#1A1410' : '#6B5B2A';
+b[k] = k === active ? '#A81C22' : 'transparent';
+});
+return { c, b };
+}
+}
+</script>
+</body>
+</html>

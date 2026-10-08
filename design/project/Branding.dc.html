@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Branding</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</header>
+
+<div style="padding: 0 22px 20px 20px; display: flex; flex-direction: column; flex-grow: 1">
+<h1 style="margin: 0; font-size: 40px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">Put your name on the book.</h1>
+<p style="margin: 10px 0 0 0; font-size: 15.5px; line-height: 1.4; color: #4A3F1E">Your logo and class name go on every pay page and receipt.</p>
+
+<div style="margin-top: 18px; display: flex; align-items: center; gap: 16px">
+<button aria-label="Upload your logo" style="width: 96px; height: 96px; flex-shrink: 0; border: 2px dashed #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 14px; font-weight: 700"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Logo</button>
+<div style="font-size: 14.5px; line-height: 1.4; color: #4A3F1E">A square picture works best. PNG or JPG, up to 1 MB.</div>
+</div>
+
+<div style="margin-top: 16px; display: flex; flex-direction: column"><label for="br-name" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Class or institute name</label><input id="br-name" value="Iyer Maths Classes" style="height: 52px; border: 0; border-bottom: 2px solid #1B2B8F; outline: 0; background: none; padding: 0; font: inherit; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; color: #1B2B8F"></div>
+
+<h2 style="margin: 22px 0 8px 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">How a receipt will look</h2>
+<div style="margin-right: 6px; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 6px 6px 0 #1A1410; padding: 14px 16px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 52px; height: 52px; box-sizing: border-box; border: 2px solid #1A1410; background: #FAF3D3; color: #6B5B2A; font-family: 'DM Mono',monospace; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0">LOGO</div>
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 20px; line-height: 1.05; font-weight: 800; letter-spacing: -0.02em">Iyer Maths Classes</div><div style="font-size: 14px; color: #4A3F1E">Meena Iyer</div></div>
+<div style="text-align: right; font-family: 'DM Mono',monospace"><div style="font-size: 14px; color: #6B5B2A">NO.</div><div style="font-size: 22px; color: #A81C22; line-height: 1">215</div></div>
+</div>
+<div style="margin-top: 12px; border-top: 2px solid #1A1410; padding-top: 10px; display: flex; align-items: flex-end; justify-content: space-between">
+<div style="font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹1,200/-</div>
+<div style="width: 60px; height: 60px; box-sizing: border-box; border: 3px double #1F6B3C; border-radius: 50%; color: #1F6B3C; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; transform: rotate(-12deg)">PAID</div>
+</div>
+<div style="margin-top: 10px; border-top: 1px dashed #1A1410; padding-top: 6px; font-size: 14px; color: #4A3F1E">Made with FeeDost</div>
+</div>
+<div style="margin-top: 14px; font-size: 14px; line-height: 1.35; color: #4A3F1E">The small "Made with FeeDost" line stays on every plan.</div>
+
+<div style="flex-grow: 1"></div>
+<button style="margin-right: 5px; height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; box-shadow: 5px 5px 0 #6B5B2A">Save</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

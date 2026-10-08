@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>First reminder sent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 24px 22px 22px 20px; overflow: hidden">
+
+<div style="position: relative; height: 210px">
+<div role="img" aria-label="Stamped: sent" style="position: absolute; left: 44px; top: 8px; width: 196px; height: 196px; box-sizing: border-box; border: 7px double #1B2B8F; border-radius: 50%; color: #1B2B8F; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-12deg); font-weight: 800; line-height: 0.95"><span style="font-size: 58px; letter-spacing: 0.04em">SENT</span><span style="font-family: 'DM Mono',monospace; font-size: 15px; font-weight: 500; margin-top: 6px; letter-spacing: 0.06em">1 OF 5</span></div>
+</div>
+
+<h1 style="margin: 12px 0 0 0; font-size: 48px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">That's your first reminder.</h1>
+<p style="margin: 12px 0 0 0; font-size: 17px; line-height: 1.4; color: #4A3F1E">Ravi's parent has the message and a pay link. No awkward call needed.</p>
+
+<div style="margin-top: 20px; border-top: 2px solid #1A1410">
+<div style="min-height: 60px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A; flex-shrink: 0">NEXT</span><span style="font-size: 16px; line-height: 1.3">When they pay, they can tell you from the pay page, or you tap <strong>Mark paid</strong>.</span></div>
+<div style="min-height: 60px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1A1410"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A; flex-shrink: 0">THEN</span><span style="font-size: 16px; line-height: 1.3">A numbered receipt is made for you to send.</span></div>
+</div>
+
+<div style="flex-grow: 1"></div>
+<a href="Remind.dc.html" style="height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #1A1410; margin-right: 5px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Remind the other 4</a>
+<a href="Home.dc.html" style="margin-top: 10px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #1A1410">Not now, go to home</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

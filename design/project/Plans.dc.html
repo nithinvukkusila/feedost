@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plans and trial</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 6px 20px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<span style="padding: 4px 8px; background: #F4C430; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Pro trial · 9 days left</span>
+</header>
+
+<div style="padding: 6px 22px 0 20px; display: flex; flex-direction: column; flex-grow: 1">
+<h1 style="margin: 0; font-size: 42px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">Let the book do the chasing.</h1>
+
+<ul style="list-style: none; margin: 16px 0 0 0; padding: 0; border-top: 2px solid #1A1410; font-size: 16px; line-height: 1.3">
+<sc-for list="{{perks}}" as="p" hint-placeholder-count="4">
+<li style="min-height: 52px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F6B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg><span><strong>{{p.head}}</strong> {{p.rest}}</span></li>
+</sc-for>
+</ul>
+
+<div role="radiogroup" aria-label="Plan" style="margin: 18px 6px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{plans}}" as="pl" hint-placeholder-count="2">
+<button role="radio" aria-checked="{{pl.on}}" onClick="{{pl.pick}}" style="min-height: 128px; border: 2px solid #1A1410; border-radius: 4px; background: {{pl.bg}}; color: #1A1410; padding: 10px 12px; text-align: left; display: flex; flex-direction: column; box-shadow: {{pl.shadow}}">
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">{{pl.name}}</span>
+<span style="font-size: 40px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; margin-top: 4px">{{pl.price}}</span>
+<span style="font-size: 14px; color: #4A3F1E">{{pl.per}}</span>
+<span style="margin-top: auto; font-size: 14px; font-weight: 700; color: #1F6B3C">{{pl.note}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1"></div>
+<button style="margin-right: 5px; height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; box-shadow: 5px 5px 0 #6B5B2A">{{cta}}</button>
+<div style="margin: 12px 0 14px 0; font-size: 14px; line-height: 1.35; color: #4A3F1E">Starts after your trial. Cancel any time. Free stays free: one-tap reminders, receipts and attendance never go away.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const picked = (this.state && this.state.plan) || 'year';
+const perks = [
+{ head: 'Reminders send themselves', rest: 'on the due day, then 3 and 7 days later.' },
+{ head: 'Online payments confirm themselves', rest: 'and the receipt goes out.' },
+{ head: 'A monthly report to parents', rest: 'with attendance and the bill.' },
+{ head: 'Income reports and your logo', rest: 'on every receipt.' }
+];
+const plans = [
+{ id: 'year', name: 'Yearly', price: '₹999', per: 'a year', note: 'Saves ₹789' },
+{ id: 'month', name: 'Monthly', price: '₹149', per: 'a month', note: '' }
+].map((p) => {
+const on = p.id === picked;
+return { ...p, on, bg: on ? '#F4C430' : '#FDF6D8', shadow: on ? '5px 5px 0 #1A1410' : 'none', pick: () => this.setState({ plan: p.id }) };
+});
+return { perks, plans, cta: picked === 'year' ? 'Go Pro for ₹999 a year' : 'Go Pro for ₹149 a month' };
+}
+}
+</script>
+</body>
+</html>

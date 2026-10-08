@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Direction B: Night market</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#FFB800}a:hover{color:#FFD057}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="position: relative; width: 1440px; height: 900px; box-sizing: border-box; background-color: #0B1026; background-image: radial-gradient(#1D2552 1.5px, transparent 1.5px); background-size: 28px 28px; color: #FFFFFF; font-family: 'Anek Latin',system-ui,sans-serif; overflow: hidden">
+
+<div aria-hidden="true" style="position: absolute; right: 150px; top: 150px; width: 620px; height: 620px; border-radius: 50%; background: #FFB800"></div>
+
+<section style="position: absolute; left: 72px; top: 56px; bottom: 56px; width: 640px; display: flex; flex-direction: column; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 16px">
+<div style="font-size: 30px; font-weight: 800; font-stretch: 80%">FeeDost</div>
+<div style="font-size: 13px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.14em; text-transform: uppercase; color: #A9B0D6">Fee collection for home tutors</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 28px">
+<h1 style="margin: 0; font-size: 148px; line-height: 0.82; white-space: nowrap; font-weight: 800; font-stretch: 75%; letter-spacing: -0.02em; text-transform: uppercase">Two taps.<br><span style="color: #FFB800">Fees in.</span></h1>
+<p style="margin: 0; max-width: 470px; font-size: 21px; line-height: 1.4; color: #C7CCEA">You tap Remind. The parent taps Pay. The money lands in your UPI, and you never have to ask twice.</p>
+<div style="display: flex; align-items: center; gap: 22px">
+<a href="#" style="height: 66px; padding: 0 32px; border-radius: 999px; background: #19C37D; color: #06281A; font-size: 21px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px">Start free<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<div style="font-size: 16px; color: #A9B0D6">Free for tutors.<br>Nothing for parents to install.</div>
+</div>
+</div>
+<div style="font-size: 13px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.14em; text-transform: uppercase; color: #A9B0D6">English · Hindi · Kannada · Telugu</div>
+</section>
+
+<div style="position: absolute; left: 770px; top: 70px; width: 316px; height: 680px; box-sizing: border-box; background: #121838; border: 2px solid #2D356B; border-radius: 40px; padding: 26px 20px 20px 20px; display: flex; flex-direction: column; box-shadow: 0 40px 80px rgba(0,0,0,0.5)">
+<div style="font-size: 12px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.14em; text-transform: uppercase; color: #A9B0D6">Pending · October</div>
+<div style="font-size: 92px; line-height: 0.9; font-weight: 800; font-stretch: 75%; color: #FFB800; margin-top: 6px">₹18,500</div>
+<div style="font-size: 15px; color: #C7CCEA; margin-top: 4px">9 parents still owe you</div>
+
+<div aria-label="23 students: 14 paid, 4 due, 5 overdue" style="margin-top: 16px; display: grid; grid-template-columns: repeat(23, minmax(0, 1fr)); gap: 3px">
+<sc-for list="{{strip}}" as="s" hint-placeholder-count="23">
+<div style="height: 26px; border-radius: 3px; background: {{s.bg}}; border: 1.5px solid {{s.border}}; box-sizing: border-box"></div>
+</sc-for>
+</div>
+<div style="margin-top: 8px; display: flex; gap: 12px; font-size: 13.5px; font-weight: 600"><span style="color: #4BE0A0">14 paid</span><span style="color: #FFB800">4 due</span><span style="color: #FF8A78">5 overdue</span></div>
+
+<div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<div style="min-height: 64px; box-sizing: border-box; background: #1B2250; border-radius: 18px; padding: 8px 8px 8px 16px; display: flex; align-items: center; gap: 10px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 17px; font-weight: 600">{{r.name}}</div><div style="font-size: 13.5px; font-weight: 500; color: #FF8A78">{{r.late}}</div></div>
+<div style="font-size: 22px; font-weight: 800; font-stretch: 75%">{{r.amount}}</div>
+<button aria-label="Remind parent of {{r.name}}" style="width: 48px; height: 48px; border: 0; border-radius: 50%; background: #19C37D; color: #06281A; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg></button>
+</div>
+</sc-for>
+</div>
+<div style="flex-grow: 1"></div>
+<button style="height: 60px; border: 0; border-radius: 999px; background: #FFB800; color: #0B1026; font-size: 18px; font-weight: 800">Remind all 5 overdue</button>
+</div>
+
+<div style="position: absolute; left: 1066px; top: 170px; width: 316px; height: 680px; box-sizing: border-box; background: #FFFFFF; color: #0B1026; border: 2px solid #0B1026; border-radius: 40px; padding: 26px 20px 20px 20px; display: flex; flex-direction: column; box-shadow: 0 40px 80px rgba(0,0,0,0.45); transform: rotate(4deg)">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="width: 48px; height: 48px; border-radius: 50%; background: #0B1026; color: #FFB800; font-size: 18px; font-weight: 800; display: flex; align-items: center; justify-content: center">MI</div>
+<div><div style="font-size: 12px; font-weight: 600; font-stretch: 125%; letter-spacing: 0.12em; text-transform: uppercase; color: #5A6079">Fee request from</div><div style="font-size: 20px; font-weight: 700; line-height: 1.1">Meena Iyer</div></div>
+</div>
+<div style="margin-top: 34px; font-size: 16px; font-weight: 600">Ravi Kumar · October</div>
+<div style="font-size: 132px; line-height: 0.84; font-weight: 800; font-stretch: 75%; letter-spacing: -0.02em">₹1,200</div>
+<div style="margin-top: 8px; font-size: 14.5px; color: #5A6079">Goes straight to meena.tuitions@okhdfc</div>
+<div style="flex-grow: 1"></div>
+<button style="height: 76px; border: 0; border-radius: 999px; background: #0B1026; color: #FFB800; font-size: 23px; font-weight: 800">Pay with UPI</button>
+<a href="#" style="margin-top: 8px; min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #0B1026">I've already paid</a>
+<div style="margin-top: 6px; border-top: 1.5px solid #E1E4EC; padding-top: 12px; display: flex; justify-content: space-between; font-size: 14px; color: #5A6079"><span>Attended 3 of 4 classes</span><span style="font-weight: 700; color: #0A7A4C">Sept paid</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+const strip = [];
+for (let i = 0; i < 23; i++) {
+if (i < 14) strip.push({ bg: '#19C37D', border: '#19C37D' });
+else if (i < 18) strip.push({ bg: 'transparent', border: '#FFB800' });
+else strip.push({ bg: '#FF5A45', border: '#FF5A45' });
+}
+const rows = [
+{ name: 'Ravi Kumar', late: '7 days late', amount: '₹1,200' },
+{ name: 'Ananya Shetty', late: '7 days late', amount: '₹1,500' },
+{ name: 'Pooja Gowda', late: '3 days late', amount: '₹1,000' }
+];
+return { strip, rows };
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Online payments setup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</header>
+
+<div style="padding: 0 22px 18px 20px; display: flex; flex-direction: column; flex-grow: 1">
+<h1 style="margin: 0; font-size: 40px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">Payments that confirm themselves.</h1>
+<p style="margin: 10px 0 0 0; font-size: 15.5px; line-height: 1.4; color: #4A3F1E">Parents pay through a payment company. The fee is marked paid and the receipt goes out with no tap from you.</p>
+
+<section aria-label="What it costs" style="margin: 16px 6px 0 0; background: #F4C430; border: 2px solid #1A1410; box-shadow: 5px 5px 0 #1A1410; padding: 14px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Know the cost first</div>
+<div style="font-size: 22px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px">The payment company keeps about 2%.</div>
+<div style="margin-top: 10px; background: #FDF6D8; border: 2px solid #1A1410; font-size: 16px">
+<div style="min-height: 40px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #C9B56A"><span>Parent pays</span><span style="font-family: 'DM Mono','Anek Latin',monospace">₹1,200</span></div>
+<div style="min-height: 40px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #C9B56A"><span>Payment company keeps</span><span style="font-family: 'DM Mono','Anek Latin',monospace; color: #A81C22">about ₹24</span></div>
+<div style="min-height: 44px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-weight: 800"><span>You receive</span><span style="font-family: 'DM Mono','Anek Latin',monospace">about ₹1,176</span></div>
+</div>
+<div style="font-size: 14px; line-height: 1.35; margin-top: 8px">FeeDost takes nothing from this. Direct UPI stays free and stays on your pay page.</div>
+</section>
+
+<ol style="list-style: none; margin: 18px 0 0 0; padding: 0; border-top: 2px solid #1A1410; font-size: 16px">
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">01</span>Your PAN and bank account</li>
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">02</span>The payment company checks them, 1 to 2 days</li>
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1A1410"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">03</span>"Pay online" appears on your pay page</li>
+</ol>
+
+<label style="margin-top: 12px; display: flex; align-items: flex-start; gap: 12px; min-height: 44px; font-size: 15px; line-height: 1.35">
+<input type="checkbox" style="width: 24px; height: 24px; margin: 2px 0 0 0; accent-color: #1B2B8F; flex-shrink: 0">
+<span>I understand about 2% is kept from each online payment.</span>
+</label>
+
+<div style="flex-grow: 1"></div>
+<button style="margin-right: 5px; height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; box-shadow: 5px 5px 0 #6B5B2A">Start setup, about 5 minutes</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

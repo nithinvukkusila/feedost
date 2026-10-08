@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bulk remind</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;family=Anek+Devanagari:wght@400..700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin','Anek Devanagari',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 6px 12px 0 20px; display: flex; align-items: center; justify-content: space-between">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase">Reminder 2 of 5</div>
+<a href="Home.dc.html" style="height: 44px; padding: 0 8px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">Stop</a>
+</header>
+<div aria-hidden="true" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 0 20px">
+<div style="height: 10px; border: 2px solid #1A1410; background: #1F6B3C"></div>
+<div style="height: 10px; border: 2px solid #1A1410; background: #1B2B8F"></div>
+<div style="height: 10px; border: 2px solid #1A1410; background: #FDF6D8"></div>
+<div style="height: 10px; border: 2px solid #1A1410; background: #FDF6D8"></div>
+<div style="height: 10px; border: 2px solid #1A1410; background: #FDF6D8"></div>
+</div>
+<div style="padding: 8px 20px 0 20px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; color: #1F6B3C">Sent to Ravi Kumar's parent</div>
+
+<section style="margin: 12px 22px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 6px 6px 0 #1A1410; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 10px">
+<div style="min-width: 0">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">To Kavitha Shetty · Hindi</div>
+<div style="font-size: 26px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em">Ananya Shetty</div>
+<div style="font-size: 14px; font-weight: 600; color: #A81C22">October · 7 days late</div>
+</div>
+<div style="font-size: 40px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹1,500</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 2px solid #1A1410; border-radius: 4px; overflow: hidden">
+<button aria-pressed="true" style="height: 44px; border: 0; background: #1A1410; color: #FDF6D8; font-size: 15px; font-weight: 700">Polite</button>
+<button aria-pressed="false" style="height: 44px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700">Firm</button>
+</div>
+
+<div lang="hi" style="background: #E4F0D2; border: 2px solid #1A1410; border-radius: 2px 16px 16px 16px; padding: 12px 14px; font-size: 16px; line-height: 1.5">नमस्ते कविता जी, अनन्या की अक्टूबर की फ़ीस ₹1,500 बाकी है। नीचे दिए लिंक से एक टैप में भुगतान कर सकते हैं।<br><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #1B2B8F; word-break: break-all">feedost.in/p/x7Kq2mVt9LbR4nWz8cYh3A</span><br>धन्यवाद, मीना मैम</div>
+
+<button style="height: 64px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 20px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #1A1410"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Open WhatsApp</button>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<div style="font-size: 14px; color: #4A3F1E">Press send there, then come back. The next parent will be ready.</div>
+<button style="height: 44px; padding: 0 6px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">Skip</button>
+</div>
+</section>
+
+<section style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 20px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 10px 12px 0 12px">
+<h2 style="margin: 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Up next</h2>
+<div style="min-height: 44px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #C9B56A"><span style="font-size: 16px; font-weight: 700">Imran Mohammed</span><span style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 15px">₹700</span></div>
+<div style="min-height: 44px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #C9B56A"><span style="font-size: 16px; font-weight: 700">Pooja Gowda</span><span style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 15px">₹1,000</span></div>
+<div style="min-height: 44px; display: flex; align-items: center; justify-content: space-between"><span style="font-size: 16px; font-weight: 700">Suresh Naik</span><span style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 15px">₹2,400</span></div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

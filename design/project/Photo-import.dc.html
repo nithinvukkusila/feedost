@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Notebook photo import</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 20px 20px; overflow: hidden">
+
+<div style="margin-left: -12px">
+<a href="Setup-add.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</div>
+<h1 style="margin: 4px 0 0 0; font-size: 38px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">We read your notebook. Please check it.</h1>
+
+<div style="margin-top: 14px; display: flex; align-items: center; gap: 14px">
+<div role="img" aria-label="Your photo of the notebook page" style="width: 84px; height: 104px; flex-shrink: 0; box-sizing: border-box; border: 2px solid #1A1410; background-color: #FDF6D8; background-image: repeating-linear-gradient(#FDF6D8 0px, #FDF6D8 12px, #C9B56A 12px, #C9B56A 13px); display: flex; align-items: flex-end; justify-content: center; font-family: 'DM Mono',monospace; font-size: 14px; color: #1A1410; transform: rotate(-3deg)"><span style="background: #FDF6D8; padding: 0 4px">PHOTO</span></div>
+<div>
+<div style="font-size: 20px; font-weight: 800; letter-spacing: -0.02em">5 students found</div>
+<div style="font-size: 15px; line-height: 1.35; color: #4A3F1E">Handwriting is hard to read. 2 rows need your eye.</div>
+<button style="height: 44px; padding: 0; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">Take the photo again</button>
+</div>
+</div>
+
+<div style="margin-top: 10px; background: #FDF6D8; border: 2px solid #1A1410; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div style="min-height: 64px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 10px; background: {{r.bg}}; margin: 0 -12px; padding: 4px 12px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 17px; font-weight: 700">{{r.name}}</div><div style="font-size: 14px; font-weight: 600; color: {{r.noteColor}}">{{r.note}}</div></div>
+<div style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 16px">{{r.fee}}</div>
+<button style="height: 44px; padding: 0 12px; border: 2px solid #1A1410; border-radius: 4px; background: {{r.btnBg}}; color: {{r.btnFg}}; font-size: 14px; font-weight: 700">{{r.btn}}</button>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top: 12px; font-size: 14px; line-height: 1.35; color: #4A3F1E">The photo is used only to read these rows, then deleted. Phone numbers are added next.</div>
+
+<div style="flex-grow: 1"></div>
+<button disabled style="margin-right: 5px; height: 60px; border: 2px dashed #6B5B2A; border-radius: 4px; background: none; color: #4A3F1E; font-size: 19px; font-weight: 800">Add 5 students</button>
+<div style="margin-top: 8px; font-size: 14px; font-weight: 600; color: #A81C22; text-align: center">Check the 2 marked rows first.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const ok = { bg: 'transparent', noteColor: '#1F6B3C', btn: 'Edit', btnBg: 'transparent', btnFg: '#1A1410' };
+const check = { bg: '#F4C430', noteColor: '#1A1410', btn: 'Check', btnBg: '#1A1410', btnFg: '#FDF6D8' };
+const rows = [
+{ name: 'Ravi Kumar', note: 'Read clearly', fee: '₹1,200', ...ok },
+{ name: 'Ananya Shetty', note: 'Read clearly', fee: '₹1,500', ...ok },
+{ name: 'Imran M.', note: 'Is the fee 1,200 or 1,700?', fee: '₹1,200', ...check },
+{ name: 'Pooja Gowda', note: 'Read clearly', fee: '₹1,000', ...ok },
+{ name: 'Sures? Naik', note: 'Is the name right?', fee: '₹1,200', ...check }
+];
+return { rows };
+}
+}
+</script>
+</body>
+</html>

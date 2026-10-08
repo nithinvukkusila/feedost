@@ -1,0 +1,639 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-10-08T12:00:00Z"
+ },
+ "title": "FeeDost — Product Design",
+ "launch": {
+  "view": "canvas",
+  "page": "tutor"
+ },
+ "pages": [
+  {
+   "id": "directions",
+   "name": "00 Directions (A chosen)"
+  },
+  {
+   "id": "system",
+   "name": "01 Foundations"
+  },
+  {
+   "id": "onboarding",
+   "name": "02 Onboarding"
+  },
+  {
+   "id": "tutor",
+   "name": "03 Tutor app"
+  },
+  {
+   "id": "parent",
+   "name": "04 Parent"
+  },
+  {
+   "id": "web",
+   "name": "05 Website and desktop"
+  },
+  {
+   "id": "pro",
+   "name": "06 Pro (Release 2)"
+  },
+  {
+   "id": "scale",
+   "name": "07 Scale (Release 3)"
+  }
+ ],
+ "boards": {
+  "Dir-A-Bahi.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "A Bahi-khata",
+   "page": "directions"
+  },
+  "Dir-B-Night.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "B Night market",
+   "page": "directions"
+  },
+  "Dir-C-Loud.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "C Loud minimal",
+   "page": "directions"
+  },
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "title": "Design system",
+   "page": "system"
+  },
+  "Nav.dc.html": {
+   "x": 0,
+   "y": 1120,
+   "w": 360,
+   "h": 64,
+   "title": "Bottom nav",
+   "page": "system"
+  },
+  "Language.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "1 Language picker",
+   "page": "onboarding",
+   "is_interactive": true
+  },
+  "Signin.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "2 Sign in",
+   "page": "onboarding"
+  },
+  "Setup-upi.dc.html": {
+   "x": 1320,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "3 Setup: UPI ID",
+   "page": "onboarding"
+  },
+  "Setup-add.dc.html": {
+   "x": 1760,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "3 Setup: add students",
+   "page": "onboarding"
+  },
+  "Home.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "4 Home: dues board",
+   "page": "tutor",
+   "is_interactive": true
+  },
+  "Student.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "5 Student detail",
+   "page": "tutor"
+  },
+  "Pay-sheet.dc.html": {
+   "x": 880,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "6 Record payment",
+   "page": "tutor"
+  },
+  "Remind.dc.html": {
+   "x": 1320,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Bulk remind",
+   "page": "tutor"
+  },
+  "Claims.dc.html": {
+   "x": 1760,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "12 Notifications",
+   "page": "tutor"
+  },
+  "Students.dc.html": {
+   "x": 0,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "7 Students",
+   "page": "tutor"
+  },
+  "Attendance.dc.html": {
+   "x": 440,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "9 Attendance",
+   "page": "tutor",
+   "is_interactive": true
+  },
+  "More.dc.html": {
+   "x": 880,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "11 More",
+   "page": "tutor"
+  },
+  "PayPage.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 1240,
+   "title": "P Pay page",
+   "page": "parent"
+  },
+  "Claim-sheet.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "P I've paid",
+   "page": "parent"
+  },
+  "Receipt.dc.html": {
+   "x": 880,
+   "y": 0,
+   "w": 360,
+   "h": 880,
+   "title": "R Receipt",
+   "page": "parent"
+  },
+  "Consent.dc.html": {
+   "x": 1320,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "P First visit: consent",
+   "page": "parent"
+  },
+  "Landing.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 3700,
+   "title": "Landing page",
+   "page": "web",
+   "expand": "fill"
+  },
+  "Tool-reminder.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 1160,
+   "title": "Tool: fee reminder",
+   "page": "web",
+   "expand": "fill"
+  },
+  "Home-desktop.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "title": "Dues board on desktop",
+   "page": "web",
+   "expand": "fill"
+  },
+  "Type-indic.dc.html": {
+   "x": 0,
+   "y": 1304,
+   "w": 1440,
+   "h": 900,
+   "title": "Type in Hindi, Kannada, Telugu",
+   "page": "system"
+  },
+  "Home-hi.dc.html": {
+   "x": 1520,
+   "y": 1304,
+   "w": 360,
+   "h": 800,
+   "title": "Dues board in Hindi",
+   "page": "system"
+  },
+  "Setup-profile.dc.html": {
+   "x": 880,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "3 Setup: name and subjects",
+   "page": "onboarding",
+   "is_interactive": true
+  },
+  "Paste-list.dc.html": {
+   "x": 2200,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Add: paste a list",
+   "page": "onboarding"
+  },
+  "Csv-map.dc.html": {
+   "x": 2640,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Add: match Excel columns",
+   "page": "onboarding"
+  },
+  "Sent.dc.html": {
+   "x": 3080,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "First reminder sent",
+   "page": "onboarding"
+  },
+  "Add-student.dc.html": {
+   "x": 1320,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "Add one student",
+   "page": "tutor"
+  },
+  "Batch.dc.html": {
+   "x": 1760,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "8 Batch detail",
+   "page": "tutor"
+  },
+  "Export.dc.html": {
+   "x": 2200,
+   "y": 920,
+   "w": 360,
+   "h": 800,
+   "title": "Export",
+   "page": "tutor"
+  },
+  "State-empty.dc.html": {
+   "x": 0,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: no students yet",
+   "page": "tutor"
+  },
+  "State-offline.dc.html": {
+   "x": 440,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: offline, waiting to sync",
+   "page": "tutor"
+  },
+  "State-undo.dc.html": {
+   "x": 880,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: marked paid, undo",
+   "page": "tutor"
+  },
+  "State-allpaid.dc.html": {
+   "x": 1320,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: everyone has paid",
+   "page": "tutor"
+  },
+  "Tool-receipt.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 1160,
+   "title": "Tool: fee receipt",
+   "page": "web",
+   "expand": "fill"
+  },
+  "State-loading.dc.html": {
+   "x": 1760,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: loading",
+   "page": "tutor"
+  },
+  "State-error.dc.html": {
+   "x": 2200,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "State: errors",
+   "page": "tutor"
+  },
+  "Home-scrolled.dc.html": {
+   "x": 2640,
+   "y": 2140,
+   "w": 360,
+   "h": 800,
+   "title": "Home: scrolled, header collapsed",
+   "page": "tutor"
+  },
+  "Interaction.dc.html": {
+   "x": 0,
+   "y": 2324,
+   "w": 1440,
+   "h": 560,
+   "title": "Press, focus, disabled, error",
+   "page": "system"
+  },
+  "Landing-m.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 360,
+   "h": 3800,
+   "title": "Landing on a phone",
+   "page": "web"
+  },
+  "Tool-reminder-m.dc.html": {
+   "x": 6520,
+   "y": 0,
+   "w": 360,
+   "h": 1760,
+   "title": "Reminder tool on a phone",
+   "page": "web"
+  },
+  "Plans.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Plans and trial",
+   "page": "pro",
+   "is_interactive": true
+  },
+  "Plan-ended.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Trial ended: back to Free",
+   "page": "pro"
+  },
+  "Auto-reminders.dc.html": {
+   "x": 880,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Automatic reminders",
+   "page": "pro"
+  },
+  "Parent-report.dc.html": {
+   "x": 1320,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Monthly parent report",
+   "page": "pro"
+  },
+  "Online-pay-setup.dc.html": {
+   "x": 1760,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Online payments: setup",
+   "page": "pro"
+  },
+  "PayPage-pro.dc.html": {
+   "x": 2200,
+   "y": 0,
+   "w": 360,
+   "h": 1000,
+   "title": "Pay page with online payment and logo",
+   "page": "pro"
+  },
+  "Reports.dc.html": {
+   "x": 2640,
+   "y": 0,
+   "w": 360,
+   "h": 1000,
+   "title": "10 Reports",
+   "page": "pro"
+  },
+  "Branding.dc.html": {
+   "x": 3080,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Branding",
+   "page": "pro"
+  },
+  "Language-6.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Language picker with Tamil and Malayalam",
+   "page": "scale"
+  },
+  "Photo-import.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Notebook photo import",
+   "page": "scale"
+  },
+  "Autopay.dc.html": {
+   "x": 880,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "UPI AutoPay for parents",
+   "page": "scale"
+  },
+  "Centre.dc.html": {
+   "x": 1320,
+   "y": 0,
+   "w": 360,
+   "h": 800,
+   "title": "Centre plan: teachers",
+   "page": "scale"
+  },
+  "Tutor-profile.dc.html": {
+   "x": 1760,
+   "y": 0,
+   "w": 360,
+   "h": 1000,
+   "title": "Public tutor profile",
+   "page": "scale"
+  }
+ },
+ "order": [
+  "Dir-A-Bahi.dc.html",
+  "Dir-B-Night.dc.html",
+  "Dir-C-Loud.dc.html",
+  "Main.dc.html",
+  "Nav.dc.html",
+  "Type-indic.dc.html",
+  "Home-hi.dc.html",
+  "Language.dc.html",
+  "Signin.dc.html",
+  "Setup-profile.dc.html",
+  "Setup-upi.dc.html",
+  "Setup-add.dc.html",
+  "Paste-list.dc.html",
+  "Csv-map.dc.html",
+  "Sent.dc.html",
+  "Home.dc.html",
+  "Student.dc.html",
+  "Pay-sheet.dc.html",
+  "Remind.dc.html",
+  "Claims.dc.html",
+  "Students.dc.html",
+  "Attendance.dc.html",
+  "More.dc.html",
+  "Add-student.dc.html",
+  "Batch.dc.html",
+  "Export.dc.html",
+  "State-empty.dc.html",
+  "State-offline.dc.html",
+  "State-undo.dc.html",
+  "State-allpaid.dc.html",
+  "PayPage.dc.html",
+  "Claim-sheet.dc.html",
+  "Receipt.dc.html",
+  "Consent.dc.html",
+  "Landing.dc.html",
+  "Tool-reminder.dc.html",
+  "Home-desktop.dc.html",
+  "Tool-receipt.dc.html",
+  "State-loading.dc.html",
+  "State-error.dc.html",
+  "Home-scrolled.dc.html",
+  "Interaction.dc.html",
+  "Landing-m.dc.html",
+  "Tool-reminder-m.dc.html",
+  "Plans.dc.html",
+  "Plan-ended.dc.html",
+  "Auto-reminders.dc.html",
+  "Parent-report.dc.html",
+  "Online-pay-setup.dc.html",
+  "PayPage-pro.dc.html",
+  "Reports.dc.html",
+  "Branding.dc.html",
+  "Language-6.dc.html",
+  "Photo-import.dc.html",
+  "Autopay.dc.html",
+  "Centre.dc.html",
+  "Tutor-profile.dc.html"
+ ],
+ "notes": {
+  "t-dir": {
+   "x": 0,
+   "y": -300,
+   "text": "Three directions: A Bahi-khata, B Night market, C Loud minimal",
+   "kind": "title1",
+   "maxW": 4480,
+   "page": "directions"
+  },
+  "t-onb": {
+   "x": 0,
+   "y": -300,
+   "text": "Onboarding: first reminder in 5 minutes",
+   "kind": "title1",
+   "maxW": 3440,
+   "page": "onboarding"
+  },
+  "t-tutor": {
+   "x": 0,
+   "y": -300,
+   "text": "Tutor app: the monthly cycle",
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "tutor"
+  },
+  "t-parent": {
+   "x": 0,
+   "y": -300,
+   "text": "Parent: pay in one tap",
+   "kind": "title1",
+   "maxW": 1680,
+   "page": "parent"
+  },
+  "t-web": {
+   "x": 0,
+   "y": -300,
+   "text": "Website, free tools and desktop",
+   "kind": "title1",
+   "maxW": 6880,
+   "page": "web"
+  },
+  "t-states": {
+   "x": 0,
+   "y": 1840,
+   "text": "States: empty, offline, undo, all paid, loading, errors, scrolled",
+   "kind": "title1",
+   "maxW": 3000,
+   "page": "tutor"
+  },
+  "t-pro": {
+   "x": 0,
+   "y": -300,
+   "text": "Pro: reminders and payments that run themselves",
+   "kind": "title1",
+   "maxW": 3440,
+   "page": "pro"
+  },
+  "t-scale": {
+   "x": 0,
+   "y": -300,
+   "text": "Scale: AutoPay, centres, photo import, public profile",
+   "kind": "title1",
+   "maxW": 2120,
+   "page": "scale"
+  }
+ },
+ "designSystems": []
+}

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Centre plan: teachers</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="padding: 18px 20px 0 20px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Centre · October 2026</div>
+<h1 style="margin: 2px 0 0 0; font-size: 36px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Iyer Maths Classes</h1>
+</header>
+
+<section style="padding: 14px 20px 0 20px">
+<div style="font-size: 16px; font-weight: 700; color: #A81C22">Still to come in, all teachers</div>
+<div style="font-size: 68px; line-height: 0.92; font-weight: 800; letter-spacing: -0.045em; color: #1B2B8F">₹61,300</div>
+<div style="margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410">
+<div style="padding: 8px 8px 8px 0; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Collected</div><div style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em; color: #1F6B3C">₹1,94,200</div></div>
+<div style="padding: 8px; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Students</div><div style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">214<span style="font-size: 14px; color: #4A3F1E"> /300</span></div></div>
+<div style="padding: 8px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; text-transform: uppercase; color: #6B5B2A">Teachers</div><div style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">4<span style="font-size: 14px; color: #4A3F1E"> /5</span></div></div>
+</div>
+</section>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 18px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 10px 12px 0 12px">
+<h2 style="margin: 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">By teacher</h2>
+<sc-for list="{{teachers}}" as="t" hint-placeholder-count="4">
+<a href="Home.dc.html" style="min-height: 72px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1A1410; border-bottom: 1px solid #C9B56A">
+<span style="flex-grow: 1; min-width: 0"><span style="display: block; font-size: 18px; font-weight: 700">{{t.name}}</span><span style="display: block; font-size: 14px; color: #4A3F1E">{{t.subject}} · {{t.students}} students</span></span>
+<span style="text-align: right"><span style="display: block; font-family: 'DM Mono','Anek Latin',monospace; font-size: 16px; font-weight: 500; color: #A81C22">{{t.pending}}</span><span style="display: block; font-size: 14px; color: #4A3F1E">{{t.count}} pending</span></span>
+</a>
+</sc-for>
+</div>
+
+<div style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 12px 21px 14px 16px">
+<button style="width: 100%; height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 17px; font-weight: 800; box-shadow: 5px 5px 0 #6B5B2A">Invite a teacher, 1 place left</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const teachers = [
+{ name: 'Meena Iyer (you)', subject: 'Maths', students: 62, pending: '₹18,500', count: 9 },
+{ name: 'Prakash Rao', subject: 'Physics', students: 58, pending: '₹21,600', count: 14 },
+{ name: 'Sunita Pai', subject: 'Chemistry', students: 51, pending: '₹12,000', count: 8 },
+{ name: 'Joseph D\'Souza', subject: 'English', students: 43, pending: '₹9,200', count: 7 }
+];
+return { teachers };
+}
+}
+</script>
+</body>
+</html>

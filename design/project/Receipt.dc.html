@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Receipt</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 880px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 22px 0 0 0; overflow: hidden">
+
+<article style="position: relative; margin: 0 24px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 7px 7px 0 #1A1410; padding: 18px 18px 20px 18px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: flex-start">
+<div>
+<div style="font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: -0.03em">Meena Iyer</div>
+<div style="font-size: 14px; color: #4A3F1E">Maths, Science tuition</div>
+</div>
+<div style="text-align: right; font-family: 'DM Mono',monospace"><div style="font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Receipt no.</div><div style="font-size: 26px; font-weight: 500; color: #A81C22; line-height: 1.1">215</div></div>
+</div>
+
+<div style="margin-top: 14px; border-top: 2px solid #1A1410; border-bottom: 1px solid #1A1410; padding: 6px 0; display: flex; justify-content: space-between; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase"><span>Fee receipt</span><span>Date 08 Oct 2026</span></div>
+
+<p style="margin: 18px 0 0 0; font-size: 16px; line-height: 2.300; color: #4A3F1E">Received with thanks from <span style="font-size: 19px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">Suresh Kumar</span> the sum of rupees <span style="font-size: 19px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">one thousand two hundred only</span> by <span style="font-size: 19px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">UPI</span> towards the tuition fee of <span style="font-size: 19px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">Ravi Kumar</span> for <span style="font-size: 19px; font-weight: 700; color: #1B2B8F; border-bottom: 1.500px dotted #1A1410; padding: 0 6px">October 2026</span>.</p>
+
+<div style="margin-top: 24px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="border: 2px solid #1A1410; padding: 6px 14px 4px 14px; font-size: 44px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹1,200<span style="font-size: 26px">/-</span></div>
+<div style="text-align: right"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Balance</div><div style="font-size: 20px; font-weight: 800">Nil</div></div>
+</div>
+
+<div role="img" aria-label="Stamped paid on 08 Oct 2026" style="position: absolute; right: 10px; top: 150px; width: 132px; height: 132px; box-sizing: border-box; border: 5px double #1F6B3C; border-radius: 50%; color: #1F6B3C; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-14deg); font-weight: 800; line-height: 1; opacity: 0.9"><span style="font-size: 36px; letter-spacing: 0.06em">PAID</span><span style="font-family: 'DM Mono',monospace; font-size: 14px; margin-top: 5px; letter-spacing: 0.06em">08 OCT 2026</span></div>
+</article>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 28px 21px 0 16px">
+<button style="height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; font-size: 16px; font-weight: 700; box-shadow: 4px 4px 0 #1A1410">Download PDF</button>
+<button style="height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 4px 4px 0 #1A1410"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Share</button>
+</div>
+
+<div style="flex-grow: 1"></div>
+<footer style="background: #A81C22; color: #F7E7A0; padding: 16px 20px 20px 20px; outline: 2px dashed #E9C95A; outline-offset: -8px">
+<div style="font-size: 15px; color: #FBF1C8">Made with FeeDost. Free for tutors, 60 seconds to start.</div>
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-family: 'DM Mono',monospace; font-size: 14px; color: #F7E7A0">feedost.in/join/MEENA24</a>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":880}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

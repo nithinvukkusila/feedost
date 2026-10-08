@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Parent first visit: privacy consent</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #A81C22; color: #1A1410; outline: 2px dashed #E9C95A; outline-offset: -8px; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+
+<div style="padding: 28px 24px 22px 24px; color: #F7E7A0">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px">
+<div>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Fee request from</div>
+<div style="font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; margin-top: 2px">Meena Iyer</div>
+<div style="font-size: 16px; color: #FBF1C8; margin-top: 4px">Maths, Science tuition · for Ravi Kumar</div>
+</div>
+<button style="height: 44px; padding: 0 10px; border: 2px solid #F7E7A0; border-radius: 4px; background: none; color: #F7E7A0; font-size: 14px; font-weight: 700">English</button>
+</div>
+</div>
+
+<section aria-label="Privacy notice" style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 22px 20px 22px 20px; display: flex; flex-direction: column; gap: 16px">
+<h1 style="margin: 0; font-size: 34px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em">Before you see the fee, a word on privacy.</h1>
+<p style="margin: 0; font-size: 16px; line-height: 1.4; color: #4A3F1E">Meena Iyer uses FeeDost to share fee details with you. This is what is kept:</p>
+
+<ul style="list-style: none; margin: 0; padding: 0; border-top: 2px solid #1A1410; font-size: 16.5px">
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F6B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>Your phone number</li>
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F6B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>Your child's name, fee and attendance</li>
+<li style="min-height: 48px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1A1410"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A81C22" stroke-width="3" stroke-linecap="round" style="flex-shrink: 0"><path d="M6 6l12 12M18 6L6 18"/></svg><span><strong>Never:</strong> ads, or tracking of children</span></li>
+</ul>
+
+<a href="PayPage.dc.html" style="margin: 4px 5px 0 0; height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 20px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 5px 5px 0 #6B5B2A">I agree, show the fee</a>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<a href="#" style="min-height: 44px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">Read the full notice</a>
+<span style="font-size: 14px; color: #4A3F1E">Asked only once</span>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

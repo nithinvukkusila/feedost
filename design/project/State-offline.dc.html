@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home while offline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<div role="status" style="background: #1A1410; color: #FDF6D8; padding: 12px 20px; display: flex; align-items: center; gap: 12px">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4C430" stroke-width="2.200" stroke-linecap="round" style="flex-shrink: 0"><path d="M3 9a14 14 0 0118 0M6.500 12.500a9 9 0 0111 0M10 16a4 4 0 014 0M4 4l16 16"/></svg>
+<div><div style="font-size: 16px; font-weight: 700">You are offline</div><div style="font-size: 14px; color: #F7E7A0">3 changes are saved on this phone. They will sync when the network is back.</div></div>
+</div>
+
+<section style="padding: 16px 20px 0 20px">
+<div style="font-size: 16px; font-weight: 700; color: #A81C22">Still to come in</div>
+<div style="font-size: 68px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹16,300</div>
+<div style="font-size: 15.5px; color: #4A3F1E; margin-top: 2px">from 7 of your 23 students</div>
+<div style="margin-top: 12px; padding: 10px 12px; border: 2px dashed #1A1410; font-size: 15px; line-height: 1.35">Reminders need the internet, because they open WhatsApp. Marking payments and attendance works offline.</div>
+</section>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 18px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 10px 12px 0 12px">
+<h2 style="margin: 0; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Waiting to sync</h2>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="3">
+<div style="min-height: 64px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 10px">
+<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6B5B2A" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0"><circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/></svg>
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 17px; font-weight: 700">{{r.name}}</div><div style="font-size: 14px; color: #4A3F1E">{{r.what}}</div></div>
+<div style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 15px">{{r.amount}}</div>
+</div>
+</sc-for>
+<div style="padding: 12px 0; font-size: 14px; color: #4A3F1E">If the same entry was changed on another phone, the latest change is kept.</div>
+</div>
+
+<dc-import name="Nav" active="home" hint-size="360px,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const rows = [
+{ name: 'Ravi Kumar', what: 'Marked paid by cash, today', amount: '₹1,200' },
+{ name: 'Pooja Gowda', what: 'Marked paid by UPI, today', amount: '₹1,000' },
+{ name: 'Class 10 Maths', what: 'Attendance for 08 Oct, 9 present', amount: '' }
+];
+return { rows };
+}
+}
+</script>
+</body>
+</html>

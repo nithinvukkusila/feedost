@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Parent: I've paid</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #2A0709; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden">
+
+<div style="padding: 24px 24px 18px 24px; color: #F7E7A0">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Ravi Kumar · October 2026</div>
+<div style="font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; margin-top: 4px">₹1,200 to Meena Iyer</div>
+</div>
+
+<section aria-label="Tell the tutor you have paid" style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 18px 20px 22px 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px">
+<h1 style="margin: 0; font-size: 34px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em">Paid already? Tell Meena.</h1>
+<a href="PayPage.dc.html" style="height: 44px; padding: 0 4px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">Close</a>
+</div>
+<p style="margin: 0; font-size: 15.5px; line-height: 1.4; color: #4A3F1E">Give her one proof so she can match it. Your receipt comes once she confirms.</p>
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<label for="cl-ref" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">UPI reference number · 12 digits</label>
+<input id="cl-ref" inputmode="numeric" value="6281 0473 9915" style="height: 60px; box-sizing: border-box; border: 0; border-bottom: 3px solid #1B2B8F; background: none; padding: 0; font-family: 'DM Mono',monospace; font-size: 30px; font-weight: 500; color: #1B2B8F">
+<div style="font-size: 14px; color: #4A3F1E; margin-top: 4px">In your UPI app it is shown as UTR or UPI Ref No.</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A"><span style="flex-grow: 1; height: 1px; background: #1A1410"></span>or<span style="flex-grow: 1; height: 1px; background: #1A1410"></span></div>
+
+<button style="min-height: 64px; border: 2px dashed #1A1410; border-radius: 4px; background: none; color: #1A1410; padding: 8px 14px; display: flex; align-items: center; gap: 12px; text-align: left">
+<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 16l4.500-4.500 3.500 3.500 2.500-2.500L20 18"/></svg>
+<span><span style="display: block; font-size: 18px; font-weight: 700">Attach payment screenshot</span><span style="display: block; font-size: 14px; color: #4A3F1E">Only Meena can see it</span></span>
+</button>
+
+<button style="margin: 4px 5px 0 0; height: 62px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 20px; font-weight: 800; box-shadow: 5px 5px 0 #1A1410">Send to Meena</button>
+<div style="font-size: 14px; color: #4A3F1E">This does not move any money. It only tells the tutor.</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

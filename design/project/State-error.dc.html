@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="display: flex; align-items: center; gap: 4px; padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<h1 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Your profile</h1>
+</header>
+
+<div style="padding: 14px 22px 0 20px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column"><label for="er-name" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Your name</label><input id="er-name" value="Meena Iyer" style="height: 52px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 800; color: #1B2B8F"></div>
+
+<div style="display: flex; flex-direction: column">
+<label for="er-upi" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #A81C22">Your UPI ID · needs fixing</label>
+<div style="display: flex; align-items: center; gap: 8px; border-bottom: 3px solid #A81C22">
+<input id="er-upi" value="meena.tuitions" aria-invalid="true" aria-describedby="er-upi-msg" style="flex-grow: 1; min-width: 0; height: 52px; border: 0; outline: 0; background: none; padding: 0; font: inherit; font-size: 22px; font-weight: 800; color: #1A1410">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A81C22" stroke-width="2.600" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.500v5.500M12 16.500v.500"/></svg>
+</div>
+<div id="er-upi-msg" style="margin-top: 8px; font-size: 15.5px; line-height: 1.35; color: #A81C22; font-weight: 600">This is missing the part after @. A UPI ID looks like <span style="font-family: 'DM Mono',monospace; font-weight: 500">name@bank</span></div>
+<button style="align-self: flex-start; height: 44px; padding: 0; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">Where do I find it?</button>
+</div>
+
+<div style="padding: 12px 14px; border: 2px dashed #1A1410; font-size: 15px; line-height: 1.4"><strong>How errors are written:</strong> say what is wrong, then how to fix it, in the words a tutor would use. Never a code, never "invalid input".</div>
+</div>
+
+<div style="flex-grow: 1"></div>
+
+<div role="alert" style="margin: 0 12px 16px 12px; background: #FDF6D8; border: 2px solid #A81C22; box-shadow: 5px 5px 0 #A81C22; padding: 14px 14px 14px 16px; display: flex; flex-direction: column; gap: 10px">
+<div><div style="font-size: 18px; font-weight: 800; color: #A81C22">Couldn't save just now</div><div style="font-size: 15px; line-height: 1.35; color: #4A3F1E">The network dropped. Nothing is lost. Your changes are kept on this phone.</div></div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 10px">
+<button style="height: 48px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 16px; font-weight: 700">Try again</button>
+<button style="height: 48px; border: 2px solid #1A1410; border-radius: 4px; background: none; color: #1A1410; font-size: 16px; font-weight: 700">Later</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

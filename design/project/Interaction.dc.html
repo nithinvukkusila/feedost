@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Interaction states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+button{font:inherit}
+</style>
+</helmet>
+<div style="width: 1440px; height: 560px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; padding: 44px 56px; display: flex; flex-direction: column; gap: 28px; overflow: hidden">
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px">
+<h1 style="margin: 0; font-size: 52px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">How things respond.</h1>
+<p style="margin: 0; max-width: 620px; font-size: 16.5px; line-height: 1.45; color: #4A3F1E">A button is a stamp block: pressing pushes it into its own shadow, in 80 milliseconds, with no fade. Focus is a thick blue ring set off from the edge so it shows on yellow, red and black alike.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px; border-top: 2px solid #1A1410; padding-top: 24px">
+<div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Rest</div><div style="height: 64px; padding-right: 5px"><button style="width: 100%; height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 18px; font-weight: 700; box-shadow: 5px 5px 0 #1A1410">Remind</button></div><div style="font-size: 15px; color: #4A3F1E">Shadow 5px right and down.</div></div>
+<div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Pressed</div><div style="height: 64px; padding-right: 5px"><button style="width: 100%; height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #14206B; color: #FDF6D8; font-size: 18px; font-weight: 700; transform: translate(5px, 5px)">Remind</button></div><div style="font-size: 15px; color: #4A3F1E">Moves into the shadow. A short buzz on phones that support it.</div></div>
+<div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Keyboard focus</div><div style="height: 64px; padding-right: 5px"><button style="width: 100%; height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 18px; font-weight: 700; box-shadow: 5px 5px 0 #1A1410; outline: 3px solid #1B2B8F; outline-offset: 4px">Remind</button></div><div style="font-size: 15px; color: #4A3F1E">3px blue ring, 4px away from the edge. On blue or black grounds the ring is yellow.</div></div>
+<div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Working</div><div style="height: 64px; padding-right: 5px"><button aria-busy="true" style="width: 100%; height: 58px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 18px; font-weight: 700; transform: translate(5px, 5px)">Opening WhatsApp…</button></div><div style="font-size: 15px; color: #4A3F1E">Stays pressed and says what is happening. No spinner.</div></div>
+<div style="display: flex; flex-direction: column; gap: 14px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Not available</div><div style="height: 64px; padding-right: 5px"><button disabled style="width: 100%; height: 58px; border: 2px dashed #6B5B2A; border-radius: 4px; background: none; color: #4A3F1E; font-size: 18px; font-weight: 700">Remind</button></div><div style="font-size: 15px; color: #4A3F1E">Dashed outline, no shadow, and a line beneath saying why.</div></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px">
+<div style="display: flex; flex-direction: column"><span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Field, empty</span><div style="height: 48px; border-bottom: 2px solid #1A1410; display: flex; align-items: center; font-size: 20px; color: #6B5B2A">name@bank</div></div>
+<div style="display: flex; flex-direction: column"><span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #1B2B8F">Field, typing</span><div style="height: 48px; border-bottom: 4px solid #1B2B8F; display: flex; align-items: center; font-size: 20px; font-weight: 700; color: #1B2B8F">meena.tui</div></div>
+<div style="display: flex; flex-direction: column"><span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #1F6B3C">Field, correct</span><div style="height: 48px; border-bottom: 2px solid #1F6B3C; display: flex; align-items: center; justify-content: space-between; font-size: 20px; font-weight: 700; color: #1B2B8F">meena.tuitions@okhdfc<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F6B3C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg></div></div>
+<div style="display: flex; flex-direction: column"><span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #A81C22">Field, needs fixing</span><div style="height: 48px; border-bottom: 3px solid #A81C22; display: flex; align-items: center; font-size: 20px; font-weight: 700">meena.tuitions</div></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":560}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

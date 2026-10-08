@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="position: relative; width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 14px 22px 22px 40px; overflow: hidden">
+<div aria-hidden="true" style="position: absolute; top: 0; bottom: 0; left: 22px; width: 4px; border-left: 1.500px solid #C4383D; border-right: 1.500px solid #C4383D"></div>
+
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em; color: #A81C22">FeeDost</div>
+<a href="Language.dc.html" style="height: 44px; padding: 0 4px; display: flex; align-items: center; font-size: 15px; font-weight: 700; color: #1A1410">English</a>
+</div>
+
+<h1 style="margin: 22px 0 0 0; font-size: 60px; line-height: 0.86; font-weight: 800; letter-spacing: -0.045em">Fees collected. <span style="color: #A81C22">Not chased.</span></h1>
+
+<ol style="list-style: none; margin: 26px 0 0 0; padding: 0; border-top: 2px solid #1A1410">
+<li style="min-height: 64px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">TAP 1</span><span style="font-size: 17px; line-height: 1.25"><strong>You tap Remind.</strong> WhatsApp opens, message ready.</span></li>
+<li style="min-height: 64px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #C9B56A"><span style="font-family: 'DM Mono',monospace; font-size: 14px; color: #6B5B2A">TAP 2</span><span style="font-size: 17px; line-height: 1.25"><strong>The parent taps Pay.</strong> UPI opens, amount filled.</span></li>
+<li style="min-height: 64px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1A1410"><span style="width: 56px; height: 56px; box-sizing: border-box; border: 3px double #1F6B3C; border-radius: 50%; color: #1F6B3C; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; transform: rotate(-12deg); flex-shrink: 0">PAID</span><span style="font-size: 17px; line-height: 1.25"><strong>Straight to your UPI.</strong> We never hold it.</span></li>
+</ol>
+
+<div style="flex-grow: 1"></div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+<a href="Setup-profile.dc.html" style="height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 5px 5px 0 #6B5B2A"><span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; color: #1A1410; font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center">G</span>Continue with Google</a>
+<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 4px">
+<label for="si-email" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Or write your email</label>
+<div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #1A1410">
+<input id="si-email" type="email" placeholder="you@example.com" style="flex-grow: 1; min-width: 0; height: 52px; border: 0; outline: 0; background: none; padding: 0; font: inherit; font-size: 19px; font-weight: 600; color: #1B2B8F">
+<button style="height: 44px; padding: 0 4px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline; white-space: nowrap">Send link</button>
+</div>
+</div>
+<div style="font-size: 14px; color: #4A3F1E">Free for tutors. No password, no OTP.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

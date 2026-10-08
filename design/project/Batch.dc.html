@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Batch detail</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 0 8px">
+<a href="More.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<button style="height: 44px; padding: 0 12px; border: 0; background: none; color: #1A1410; font-size: 15px; font-weight: 700; text-decoration: underline">Rename</button>
+</header>
+
+<div style="padding: 4px 20px 0 20px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Batch</div>
+<h1 style="margin: 2px 0 0 0; font-size: 44px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Class 10 Maths</h1>
+<div style="margin-top: 10px; display: flex; flex-direction: column"><label for="bt-time" style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Timings</label><input id="bt-time" value="Mon, Wed, Fri at 5:00 pm" style="height: 44px; border: 0; border-bottom: 2px solid #1A1410; background: none; padding: 0; font: inherit; font-size: 18px; font-weight: 700; color: #1B2B8F"></div>
+</div>
+
+<div style="margin: 16px 16px 0 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid #1A1410; border-bottom: 2px solid #1A1410">
+<div style="padding: 8px 8px 8px 4px; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Students</div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em">12</div></div>
+<div style="padding: 8px; border-right: 1px solid #1A1410"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Monthly</div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em">₹15,000</div></div>
+<div style="padding: 8px"><div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A">Pending</div><div style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em; color: #A81C22">₹4,600</div></div>
+</div>
+
+<div style="margin: 16px 22px 0 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<a href="Attendance.dc.html" style="height: 52px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 16px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 4px 4px 0 #6B5B2A">Take attendance</a>
+<button style="height: 52px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; font-size: 16px; font-weight: 700; box-shadow: 4px 4px 0 #1A1410">Move students</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 20px 16px 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<a href="Student.dc.html" style="min-height: 58px; display: flex; align-items: center; gap: 10px; text-decoration: none; color: #1A1410; border-bottom: 1px solid #C9B56A">
+<span style="flex-grow: 1; min-width: 0"><span style="display: block; font-size: 17px; font-weight: 700">{{r.name}}</span><span style="display: block; font-size: 14px; color: #4A3F1E">₹{{r.fee}} on the {{r.day}}</span></span>
+<span style="padding: 3px 7px; border: 2px {{r.line}} {{r.fg}}; background: {{r.bg}}; color: {{r.fg}}; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; text-transform: uppercase; flex-shrink: 0">{{r.status}}</span>
+</a>
+</sc-for>
+</div>
+
+<div style="background: #FDF6D8; border-top: 2px solid #1A1410; padding: 4px 20px; display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 14px; color: #4A3F1E">Deleting keeps the students.</span>
+<button style="height: 48px; padding: 0 4px; border: 0; background: none; color: #A81C22; font-size: 15px; font-weight: 700; text-decoration: underline">Delete batch</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const tone = {
+Overdue: { fg: '#A81C22', bg: 'transparent', line: 'solid' },
+Due: { fg: '#1A1410', bg: '#F4C430', line: 'solid' },
+'Part paid': { fg: '#1B2B8F', bg: 'transparent', line: 'dashed' },
+Paid: { fg: '#1F6B3C', bg: 'transparent', line: 'double' }
+};
+const rows = [
+['Ananya Shetty', '1,500', '1st', 'Overdue'],
+['Divya Rao', '1,200', '10th', 'Due'],
+['Fatima Ali', '1,200', '15th', 'Due'],
+['Imran Mohammed', '1,200', '3rd', 'Part paid'],
+['Lakshmi Devi', '1,500', '1st', 'Paid'],
+['Neha Bhat', '1,200', '5th', 'Paid']
+].map(([name, fee, day, status]) => ({ name, fee, day, status, ...tone[status] }));
+return { rows };
+}
+}
+</script>
+</body>
+</html>

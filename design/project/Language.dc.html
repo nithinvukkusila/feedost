@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose your language</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;family=Anek+Devanagari:wght@400..800&amp;family=Anek+Kannada:wght@400..800&amp;family=Anek+Telugu:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #A81C22; color: #F7E7A0; outline: 2px dashed #E9C95A; outline-offset: -12px; font-family: 'Bricolage Grotesque','Anek Latin','Anek Devanagari','Anek Kannada','Anek Telugu',system-ui,sans-serif; display: flex; flex-direction: column; padding: 40px 28px 30px 28px; overflow: hidden">
+
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<div style="font-size: 28px; font-weight: 800; letter-spacing: -0.03em">FeeDost</div>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Fee register</div>
+</div>
+
+<h1 style="margin: 28px 0 0 0; font-size: 46px; line-height: 0.88; font-weight: 800; letter-spacing: -0.04em">Choose your language</h1>
+<div style="margin-top: 12px; font-size: 19px; font-weight: 700; line-height: 1.5; color: #FBF1C8">अपनी भाषा चुनें<br>ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ<br>మీ భాషను ఎంచుకోండి</div>
+
+<div style="margin-top: 22px; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{langs}}" as="l" hint-placeholder-count="4">
+<button onClick="{{l.pick}}" aria-pressed="{{l.on}}" lang="{{l.code}}" style="height: 64px; border: 2px solid #1A1410; border-radius: 4px; background: {{l.bg}}; color: #1A1410; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; text-align: left; box-shadow: {{l.shadow}}; transform: {{l.shift}}">
+<span style="font-size: 28px; font-weight: 800; line-height: 1.2">{{l.native}}</span>
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">{{l.tag}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1"></div>
+<a href="Signin.dc.html" style="height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #F7E7A0; font-size: 20px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px">{{cta}}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const picked = (this.state && this.state.lang) || 'en';
+const cta = { en: 'Continue', hi: 'आगे बढ़ें', kn: 'ಮುಂದುವರಿಸಿ', te: 'కొనసాగించండి' }[picked];
+const langs = [['en', 'English', 'English'], ['hi', 'हिन्दी', 'Hindi'], ['kn', 'ಕನ್ನಡ', 'Kannada'], ['te', 'తెలుగు', 'Telugu']].map(([code, native, english]) => {
+const on = code === picked;
+return {
+code, native, on,
+tag: on ? 'Chosen' : english,
+bg: on ? '#F4C430' : '#FDF6D8',
+shadow: on ? '0 0 0 #5E0D11' : '5px 5px 0 #5E0D11',
+shift: on ? 'translate(5px, 5px)' : 'none',
+pick: () => this.setState({ lang: code })
+};
+});
+return { langs, cta };
+}
+}
+</script>
+</body>
+</html>

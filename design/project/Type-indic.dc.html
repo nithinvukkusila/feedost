@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Type settings for Hindi, Kannada and Telugu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;family=Anek+Devanagari:wght@400..800&amp;family=Anek+Kannada:wght@400..800&amp;family=Anek+Telugu:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; padding: 48px 56px; display: flex; flex-direction: column; gap: 28px; overflow: hidden">
+
+<div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px">
+<h1 style="margin: 0; font-size: 64px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">One book, four scripts.</h1>
+<p style="margin: 0; max-width: 560px; font-size: 17px; line-height: 1.45; color: #4A3F1E">Bricolage Grotesque has no Indian scripts, so Hindi, Kannada and Telugu are set in Anek. The settings below keep vowel marks from clipping and keep all four languages at the same visual weight.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px">
+<sc-for list="{{scripts}}" as="s" hint-placeholder-count="4">
+<section lang="{{s.code}}" style="background: #FDF6D8; border: 2px solid #1A1410; box-shadow: 6px 6px 0 #1A1410; padding: 18px 18px 20px 18px; display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #A81C22">{{s.name}}</div>
+<div style="font-family: {{s.family}}; font-size: {{s.h1}}; line-height: {{s.h1lh}}; font-weight: {{s.h1w}}; letter-spacing: {{s.track}}">{{s.headline}}</div>
+<div style="font-family: {{s.family}}; font-size: {{s.label}}; font-weight: 600; color: #A81C22">{{s.pending}}</div>
+<div style="font-size: 56px; line-height: 0.95; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹18,500</div>
+<div style="font-family: {{s.family}}; font-size: {{s.body}}; line-height: {{s.bodylh}}; color: #4A3F1E">{{s.sentence}}</div>
+<div style="font-family: {{s.family}}; height: 56px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: {{s.btn}}; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 4px">{{s.remind}}</div>
+</section>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; border-top: 2px solid #1A1410; padding-top: 20px">
+<table style="border-collapse: collapse; font-size: 16px; align-self: start; width: 100%">
+<thead><tr style="text-align: left; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A; border-bottom: 2px solid #1A1410"><th style="padding: 8px 12px 8px 0; font-weight: 500">Setting</th><th style="padding: 8px 12px; font-weight: 500">English</th><th style="padding: 8px 0 8px 12px; font-weight: 500">Hindi, Kannada, Telugu</th></tr></thead>
+<tbody>
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 10px 12px 10px 0; font-weight: 700">Typeface</td><td style="padding: 10px 12px">Bricolage Grotesque</td><td style="padding: 10px 0 10px 12px">Anek Devanagari, Kannada, Telugu</td></tr>
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 10px 12px 10px 0; font-weight: 700">Headline weight</td><td style="padding: 10px 12px">800</td><td style="padding: 10px 0 10px 12px">700</td></tr>
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 10px 12px 10px 0; font-weight: 700">Headline line-height</td><td style="padding: 10px 12px">0.9 to 0.95</td><td style="padding: 10px 0 10px 12px">1.25 or more</td></tr>
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 10px 12px 10px 0; font-weight: 700">Letter-spacing</td><td style="padding: 10px 12px">-0.04em on headlines</td><td style="padding: 10px 0 10px 12px">0, always</td></tr>
+<tr style="border-bottom: 1px solid #C9B56A"><td style="padding: 10px 12px 10px 0; font-weight: 700">Reading text</td><td style="padding: 10px 12px">16px, line-height 1.4</td><td style="padding: 10px 0 10px 12px">17px, line-height 1.6</td></tr>
+<tr><td style="padding: 10px 12px 10px 0; font-weight: 700">Small labels</td><td style="padding: 10px 12px">Mono capitals, 14px</td><td style="padding: 10px 0 10px 12px">Anek 600, 15px, no capitals</td></tr>
+</tbody>
+</table>
+<ul style="margin: 0; padding: 0 0 0 20px; font-size: 16.5px; line-height: 1.5; display: flex; flex-direction: column; gap: 8px">
+<li><strong>Amounts stay in Bricolage with 0 to 9 digits</strong> in every language, so ₹ figures look identical everywhere and match what UPI apps show.</li>
+<li><strong>Buttons and rows grow in height</strong>, never truncate. Translated labels run 20 to 40 percent longer than English.</li>
+<li><strong>Each language loads only its own script font.</strong> English users never download the Indian-script files.</li>
+<li><strong>The ₹ sign falls back to Anek Latin</strong> if Bricolage lacks it. This must be checked on a real phone before build.</li>
+<li><strong>A native speaker reviews every string.</strong> The samples here are drafts.</li>
+</ul>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+const indic = { h1: '32px', h1lh: '1.25', h1w: 700, track: '0', label: '16px', body: '17px', bodylh: '1.6', btn: '18px' };
+const scripts = [
+{ code: 'en', name: 'English', family: "'Bricolage Grotesque',sans-serif", h1: '36px', h1lh: '0.95', h1w: 800, track: '-0.04em', label: '15px', body: '16px', bodylh: '1.4', btn: '18px', headline: 'Fees collected. Not chased.', pending: 'Still to come in', sentence: 'from 9 of your 23 students', remind: 'Remind' },
+{ code: 'hi', name: 'Hindi', family: "'Anek Devanagari',sans-serif", ...indic, headline: 'फ़ीस समय पर, बिना माँगे।', pending: 'अभी आना बाकी', sentence: '23 में से 9 छात्रों से', remind: 'याद दिलाएँ' },
+{ code: 'kn', name: 'Kannada', family: "'Anek Kannada',sans-serif", ...indic, headline: 'ಶುಲ್ಕ ಸಮಯಕ್ಕೆ ಸರಿಯಾಗಿ.', pending: 'ಇನ್ನೂ ಬರಬೇಕಾದದ್ದು', sentence: '23 ರಲ್ಲಿ 9 ವಿದ್ಯಾರ್ಥಿಗಳಿಂದ', remind: 'ನೆನಪಿಸಿ' },
+{ code: 'te', name: 'Telugu', family: "'Anek Telugu',sans-serif", ...indic, headline: 'ఫీజు సమయానికి.', pending: 'ఇంకా రావలసినది', sentence: '23 మందిలో 9 మంది నుండి', remind: 'గుర్తు చేయండి' }
+];
+return { scripts };
+}
+}
+</script>
+</body>
+</html>

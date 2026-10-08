@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup: add students</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 22px 20px; overflow: hidden">
+
+<div style="display: flex; align-items: center; justify-content: space-between; margin-left: -12px">
+<a href="Setup-upi.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+<div style="font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase">Step 3 of 3</div>
+</div>
+
+<h1 style="margin: 14px 0 0 0; font-size: 46px; line-height: 0.9; font-weight: 800; letter-spacing: -0.04em">Add your students</h1>
+<p style="margin: 10px 0 0 0; font-size: 16px; line-height: 1.4; color: #4A3F1E">Bring your students in whichever way is quickest.</p>
+
+<button style="margin: 20px 6px 0 0; min-height: 124px; border: 2px solid #1A1410; border-radius: 4px; background: #FDF6D8; color: #1A1410; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; text-align: left; box-shadow: 6px 6px 0 #1A1410">
+<span style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 24px; font-weight: 800; letter-spacing: -0.03em">Paste a list</span><span style="padding: 3px 8px; background: #F4C430; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase">Fastest</span></span>
+<span style="font-family: 'DM Mono',monospace; font-size: 14px; line-height: 1.5; color: #1B2B8F">Ravi, 9845012345, 1200<br>Ananya, 9900112233, 1500</span>
+</button>
+
+<div style="margin: 20px 0 0 0; border-top: 2px solid #1A1410">
+<sc-for list="{{ways}}" as="w" hint-placeholder-count="3">
+<button style="width: 100%; min-height: 66px; border: 0; border-bottom: 1px solid #C9B56A; background: none; color: #1A1410; padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left">
+<span><span style="display: block; font-size: 19px; font-weight: 700">{{w.title}}</span><span style="display: block; font-size: 14px; color: #4A3F1E">{{w.sub}}</span></span>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</button>
+</sc-for>
+</div>
+
+<label style="margin-top: 16px; display: flex; align-items: flex-start; gap: 12px; min-height: 44px; font-size: 15px; line-height: 1.35">
+<input type="checkbox" style="width: 24px; height: 24px; margin: 2px 0 0 0; accent-color: #1B2B8F; flex-shrink: 0">
+<span>I have the parents' permission to save their phone numbers.</span>
+</label>
+
+<div style="flex-grow: 1"></div>
+<a href="Home.dc.html" style="min-height: 48px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #1A1410">Just looking? Try with sample data</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const ways = [
+{ title: 'Pick from contacts', sub: 'Choose parents from your phone' },
+{ title: 'Upload Excel or CSV', sub: 'We match the columns with you' },
+{ title: 'Add one by one', sub: 'Good for a few students' }
+];
+return { ways };
+}
+}
+</script>
+</body>
+</html>

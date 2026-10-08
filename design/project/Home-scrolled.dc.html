@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home scrolled, header collapsed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<header style="background: #FAF3D3; border-bottom: 2px solid #1A1410; padding: 10px 14px 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px">
+<div>
+<div style="font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -0.04em; color: #1B2B8F">₹18,500</div>
+<div style="font-size: 14px; color: #4A3F1E">pending from 9 · October</div>
+</div>
+<a href="Remind.dc.html" style="height: 48px; padding: 0 14px; border: 2px solid #1A1410; border-radius: 4px; background: #1B2B8F; color: #FDF6D8; font-size: 15px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; box-shadow: 3px 3px 0 #1A1410; margin-right: 3px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg>Remind all 5</a>
+</header>
+
+<div role="tablist" style="display: flex; align-items: flex-end; gap: 4px; padding: 12px 16px 0 16px">
+<button role="tab" aria-selected="true" style="height: 48px; padding: 0 14px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #FDF6D8; color: #1A1410; font-size: 15px; font-weight: 700">Overdue 5</button>
+<button role="tab" aria-selected="false" style="height: 44px; padding: 0 14px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 15px; font-weight: 700">Due 4</button>
+<button role="tab" aria-selected="false" style="height: 44px; padding: 0 14px; border: 2px solid #1A1410; border-bottom: 0; border-radius: 6px 6px 0 0; background: #E6D38A; color: #4A3F1E; font-size: 15px; font-weight: 700">Paid 14</button>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; overflow: hidden; margin: 0 16px; background: #FDF6D8; border: 2px solid #1A1410; border-bottom: 0; padding: 0 12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div style="min-height: 66px; border-bottom: 1px solid #C9B56A; display: flex; align-items: center; gap: 8px">
+<div style="flex-grow: 1; min-width: 0"><div style="font-size: 17px; font-weight: 700">{{r.name}}</div><div style="font-size: 14px; font-weight: 600; color: #A81C22">{{r.meta}}</div></div>
+<div style="font-family: 'DM Mono','Anek Latin',monospace; font-size: 16px; font-weight: 500">{{r.amount}}</div>
+<button aria-label="Remind parent of {{r.name}} on WhatsApp" style="width: 48px; height: 48px; box-sizing: border-box; border: 2px solid #1A1410; border-radius: 50%; background: #1B2B8F; color: #FDF6D8; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 3px 3px 0 #1A1410; margin-right: 3px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linejoin="round"><path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg></button>
+</div>
+</sc-for>
+<div style="padding: 14px 0; font-size: 14px; color: #4A3F1E; text-align: center">That is everyone who is overdue.</div>
+</div>
+
+<dc-import name="Nav" active="home" hint-size="360px,64px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const rows = [
+['Ravi Kumar', '7 days late · Class 10 Maths', '₹1,200'],
+['Ananya Shetty', '7 days late · reminded 2 days ago', '₹1,500'],
+['Imran Mohammed', 'Part paid ₹500 · 5 days late', '₹700'],
+['Pooja Gowda', '3 days late · Class 8 Science', '₹1,000'],
+['Suresh Naik', '3 days late · 2 months pending', '₹2,400']
+].map(([name, meta, amount]) => ({ name, meta, amount }));
+return { rows };
+}
+}
+</script>
+</body>
+</html>

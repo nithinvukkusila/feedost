@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Add students: match Excel columns</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=DM+Mono:wght@400;500&amp;family=Anek+Latin:wght@400..800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1B2B8F}a:hover{color:#101A5C}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 360px; height: 800px; box-sizing: border-box; background: #FAF3D3; color: #1A1410; font-family: 'Bricolage Grotesque','Anek Latin',system-ui,sans-serif; display: flex; flex-direction: column; padding: 6px 22px 20px 20px; overflow: hidden">
+
+<div style="margin-left: -12px">
+<a href="Setup-add.dc.html" aria-label="Back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #1A1410"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></a>
+</div>
+<h1 style="margin: 4px 0 0 0; font-size: 40px; line-height: 0.92; font-weight: 800; letter-spacing: -0.04em">Match your columns</h1>
+<div style="margin-top: 8px; font-family: 'DM Mono',monospace; font-size: 14px; color: #4A3F1E">students-oct.xlsx · 23 rows</div>
+<p style="margin: 8px 0 0 0; font-size: 15.5px; line-height: 1.35; color: #4A3F1E">We guessed these from your file. Change any that look wrong.</p>
+
+<div style="margin-top: 14px; background: #FDF6D8; border: 2px solid #1A1410; padding: 0 12px">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 8px 0; border-bottom: 2px solid #1A1410; font-family: 'DM Mono',monospace; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: #6B5B2A"><span>We need</span><span>Your column</span></div>
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="7">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: center; min-height: 56px; border-bottom: 1px solid #C9B56A">
+<label for="{{f.id}}" style="font-size: 16px; font-weight: 700">{{f.label}}<span style="display: block; font-family: 'DM Mono',monospace; font-size: 14px; font-weight: 400; color: #4A3F1E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{f.sample}}</span></label>
+<select id="{{f.id}}" style="height: 44px; box-sizing: border-box; border: 2px solid #1A1410; border-radius: 4px; background: {{f.bg}}; padding: 0 6px; font: inherit; font-size: 15px; font-weight: 700; color: #1A1410"><option>{{f.col}}</option></select>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top: 12px; padding: 10px 12px; background: #F4C430; border: 2px solid #1A1410; font-size: 15px; line-height: 1.35"><strong>Due day is not in your file.</strong> We will use the 1st for everyone. You can change it per student later.</div>
+
+<div style="flex-grow: 1"></div>
+<a href="Home.dc.html" style="height: 60px; border: 2px solid #1A1410; border-radius: 4px; background: #1A1410; color: #FDF6D8; font-size: 19px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 5px 5px 0 #6B5B2A; margin-right: 5px">Bring in 23 students</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+const fields = [
+['Student name', 'Ravi Kumar', 'Name'],
+['Parent phone', '9845012345', 'Mobile'],
+['Monthly fee', '1200', 'Fees'],
+['Parent name', 'Suresh Kumar', 'Father name'],
+['Batch', '10 Maths', 'Class'],
+['Balance so far', '0', 'Pending'],
+['Due day', 'Not found', 'Not in file']
+].map(([label, sample, col], i) => ({ id: 'cm-' + i, label, sample, col, bg: col === 'Not in file' ? '#F4C430' : '#FDF6D8' }));
+return { fields };
+}
+}
+</script>
+</body>
+</html>
