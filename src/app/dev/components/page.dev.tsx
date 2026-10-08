@@ -3,6 +3,7 @@
 // production build has no such route and ships none of this folder.
 import type { Metadata } from "next";
 import { copy } from "./sample-data";
+import { ButtonSection } from "./sections/button";
 import { RupeeSection } from "./sections/rupee";
 import { TokensSection } from "./sections/tokens";
 import { TypeSection } from "./sections/type";
@@ -23,6 +24,7 @@ export default function DevComponentsPage() {
       <TokensSection />
       <TypeSection />
       <RupeeSection />
+      <ButtonSection />
     </main>
   );
 }
