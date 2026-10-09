@@ -1116,6 +1116,43 @@ test.describe("Field: criteria 26 to 32", () => {
     expect(await control.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
   });
 
+  test("review M2: a wrapped field that is reset, or given a value by script, is not left cut off", async ({ page }) => {
+    const root = field(page, "correct");
+    const control = root.getByRole("textbox");
+    const fits = () => control.evaluate((el) => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth);
+    const oneLineHeight = (await docBox(control)).height;
+    // The page has no form, so the test puts one round the field, in place.
+    await root.evaluate((el) => {
+      const form = document.createElement("form");
+      form.setAttribute("data-e2e", "reset-form");
+      el.replaceWith(form);
+      form.append(el);
+    });
+
+    // Typed until it wraps, then reset: back to the one-line starting value, at one line's height.
+    await control.fill(LONG_VALUE);
+    const wrapped = (await docBox(control)).height;
+    expect(wrapped).toBeGreaterThan(oneLineHeight);
+    expect(await fits()).toBe(true);
+    await page.evaluate(() => (document.querySelector('[data-e2e="reset-form"]') as HTMLFormElement).reset());
+    await expect(control).toHaveValue("meena.tuitions@okhdfc");
+    await expect.poll(async () => (await docBox(control)).height).toBe(oneLineHeight);
+    expect(await fits()).toBe(true);
+
+    // A long value assigned by script fires no event; the field still grows to show all of it.
+    await control.evaluate((el, value) => {
+      (el as HTMLTextAreaElement).value = value;
+    }, LONG_VALUE);
+    await expect.poll(async () => (await docBox(control)).height).toBe(wrapped);
+    expect(await fits()).toBe(true);
+
+    // And a reset from there, which now has to shrink the field again.
+    await page.evaluate(() => (document.querySelector('[data-e2e="reset-form"]') as HTMLFormElement).reset());
+    await expect.poll(async () => (await docBox(control)).height).toBe(oneLineHeight);
+    expect(await fits()).toBe(true);
+    expect(await textProblems(page, '[data-e2e="reset-form"]')).toEqual([]);
+  });
+
   test("Enter in a field inside a form submits the form once and never adds a line", async ({ page }) => {
     const root = field(page, "empty");
     const control = root.getByRole("textbox");

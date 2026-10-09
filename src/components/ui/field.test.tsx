@@ -1,8 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useState } from "react";
+import { act, createRef, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Field, oneLine } from "./field";
+import { Button } from "./button";
+import { Field, oneLine, submitOnEnter } from "./field";
 
 afterEach(cleanup);
 
@@ -333,5 +334,265 @@ describe("oneLine", () => {
     expect(oneLine("a\nb")).toBe("a b");
     expect(oneLine("a \r\n\r\n b")).toBe("a b");
     expect(oneLine("a\rb\nc")).toBe("a b c");
+  });
+});
+
+describe("Field keeps its copy in step with the control (review M2)", () => {
+  const mirrorOf = (input: Element) => input.parentElement!.querySelector("[data-field-mirror]")!;
+  const tick = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 5)));
+
+  it("follows a defaultValue that arrives after the first render", () => {
+    const { rerender } = render(<Field label="Your UPI ID" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(mirrorOf(input).textContent).toBe("\u200B");
+    rerender(<Field label="Your UPI ID" defaultValue="a.very.long.upi.id.that.arrived.late@okhdfcbank" />);
+    expect(input.value).toBe("a.very.long.upi.id.that.arrived.late@okhdfcbank");
+    expect(mirrorOf(input).textContent).toBe("a.very.long.upi.id.that.arrived.late@okhdfcbank\u200B");
+  });
+
+  it("follows a form reset, back to the starting value", async () => {
+    const user = userEvent.setup();
+    render(
+      <form data-testid="form">
+        <Field label="Your UPI ID" defaultValue="meena@okhdfc" />
+        <button type="reset">Reset</button>
+      </form>,
+    );
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.type(input, ".and.a.great.deal.more.typed.after.it");
+    expect(mirrorOf(input).textContent).toContain("great.deal");
+    await user.click(screen.getByRole("button", { name: "Reset" }));
+    await tick();
+    expect(input.value).toBe("meena@okhdfc");
+    expect(mirrorOf(input).textContent).toBe("meena@okhdfc\u200B");
+  });
+
+  it("follows form.reset() called from script", async () => {
+    render(
+      <form data-testid="form">
+        <Field label="Your UPI ID" />
+      </form>,
+    );
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await userEvent.setup().type(input, "a.long.value.typed.in");
+    (screen.getByTestId("form") as HTMLFormElement).reset();
+    await tick();
+    expect(input.value).toBe("");
+    expect(mirrorOf(input).textContent).toBe("\u200B");
+  });
+
+  it("follows a value assigned by script, which fires no event", () => {
+    render(<Field label="Your UPI ID" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    act(() => {
+      input.value = "set.by.script.and.much.longer.than.one.line@okhdfcbank";
+    });
+    expect(input.value).toBe("set.by.script.and.much.longer.than.one.line@okhdfcbank");
+    expect(mirrorOf(input).textContent).toBe("set.by.script.and.much.longer.than.one.line@okhdfcbank\u200B");
+  });
+
+  it("still reports typing after a value was assigned by script", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Field label="Your UPI ID" onChange={onChange} />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    act(() => {
+      input.value = "abc";
+    });
+    await user.type(input, "d");
+    expect(input.value).toBe("abcd");
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(mirrorOf(input).textContent).toBe("abcd\u200B");
+  });
+
+  it("looks again when focus arrives, for changes nothing announced", async () => {
+    const user = userEvent.setup();
+    render(<Field label="Your UPI ID" defaultValue="abcdef" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    // setRangeText changes the value with no event and without going through the value setter.
+    act(() => input.setRangeText("XYZ", 0, 3));
+    await user.click(input);
+    expect(mirrorOf(input).textContent).toBe(`${input.value}\u200B`);
+  });
+
+  it("puts the element back as it found it when the field goes away", () => {
+    const { unmount } = render(<Field label="Your UPI ID" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    unmount();
+    expect(() => {
+      input.value = "after";
+    }).not.toThrow();
+    expect(input.value).toBe("after");
+  });
+});
+
+describe("Field mirror is kept out of translation and recording tools (review S4)", () => {
+  it("marks the copy of the value as not to be translated, captured or shown in a replay", () => {
+    render(<Field label="Parent's phone" defaultValue="+91 98450 12345" />);
+    const mirror = screen.getByRole("textbox").parentElement!.querySelector("[data-field-mirror]")!;
+    expect(mirror.textContent).toContain("98450");
+    expect(mirror.getAttribute("translate")).toBe("no");
+    expect(mirror.hasAttribute("data-ph-no-capture")).toBe(true);
+    expect(mirror.hasAttribute("data-sentry-mask")).toBe(true);
+    expect(mirror.getAttribute("aria-hidden")).toBe("true");
+  });
+});
+
+describe("Field: Enter presses the form's default button (review S1)", () => {
+  const setup = (buttons: React.ReactNode, onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault())) => {
+    render(
+      <form onSubmit={onSubmit}>
+        <Field label="Your UPI ID" name="upi" />
+        {buttons}
+      </form>,
+    );
+    return onSubmit;
+  };
+  const pressEnter = async () => {
+    const user = userEvent.setup();
+    await user.type(screen.getByRole("textbox"), "meena@okhdfc{Enter}");
+  };
+
+  it("submits through the submit button, so the form knows which button it was", async () => {
+    const onSubmit = setup(
+      <>
+        <button type="button">Other</button>
+        <button type="submit" name="action" value="save">
+          Save
+        </button>
+      </>,
+    );
+    await pressEnter();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const submitter = (onSubmit.mock.calls[0][0].nativeEvent as SubmitEvent).submitter;
+    expect(submitter?.textContent).toBe("Save");
+  });
+
+  it("does nothing when the submit button is disabled", async () => {
+    const onSubmit = setup(
+      <button type="submit" disabled>
+        Save
+      </button>,
+    );
+    await pressEnter();
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("meena@okhdfc");
+  });
+
+  it("does nothing when the submit button is aria-disabled", async () => {
+    const onSubmit = setup(
+      <button type="submit" aria-disabled="true">
+        Save
+      </button>,
+    );
+    await pressEnter();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when our own disabled Button is the submit button", async () => {
+    const onSubmit = setup(
+      <Button variant="record" type="submit" disabled>
+        Save
+      </Button>,
+    );
+    await pressEnter();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("cannot submit past a busy Button, which is no longer a submit button while it works", async () => {
+    const onSubmit = setup(
+      <Button variant="record" type="submit" busy busyLabel="Saving…">
+        Save
+      </Button>,
+    );
+    expect(screen.getByRole("button").getAttribute("type")).toBe("button");
+    await pressEnter();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("uses the first submit button when there are several", async () => {
+    const onSubmit = setup(
+      <>
+        <button type="submit" disabled>
+          First
+        </button>
+        <button type="submit">Second</button>
+      </>,
+    );
+    await pressEnter();
+    // The default button is the first one; it is disabled, so Enter does nothing, as in a native field.
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("ignores reset buttons and submits a form that has no submit button at all", async () => {
+    const onSubmit = setup(<button type="reset">Clear</button>);
+    await pressEnter();
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("accepts an input of type submit as the default button", () => {
+    const form = document.createElement("form");
+    form.innerHTML = '<input type="submit" disabled value="Save">';
+    document.body.append(form);
+    const requestSubmit = vi.spyOn(form, "requestSubmit").mockImplementation(() => {});
+    submitOnEnter(form);
+    expect(requestSubmit).not.toHaveBeenCalled();
+    form.remove();
+  });
+
+  it("leaves Enter to an IME that is composing, including Safari's keyCode 229", () => {
+    const onSubmit = setup(<button type="submit">Save</button>);
+    const input = screen.getByRole("textbox");
+    const composing = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, isComposing: true });
+    input.dispatchEvent(composing);
+    expect(composing.defaultPrevented).toBe(false);
+    const safari = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, keyCode: 229 });
+    input.dispatchEvent(safari);
+    expect(safari.defaultPrevented).toBe(false);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+describe("Field small things", () => {
+  it("keeps the caret after pasted text when line breaks are removed from the middle of a value", async () => {
+    const user = userEvent.setup();
+    render(<Field label="Name" defaultValue="abcdef" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.click(input);
+    input.setSelectionRange(3, 3);
+    await user.paste("X\nY");
+    expect(input.value).toBe("abcX Ydef");
+    expect([input.selectionStart, input.selectionEnd]).toEqual([6, 6]);
+    await user.keyboard("!");
+    expect(input.value).toBe("abcX Y!def");
+  });
+
+  it("tells the phone keyboard that Enter finishes, and lets a screen say otherwise", () => {
+    render(
+      <>
+        <Field label="A" />
+        <Field label="B" enterKeyHint="next" />
+      </>,
+    );
+    expect(screen.getByLabelText("A").getAttribute("enterkeyhint")).toBe("done");
+    expect(screen.getByLabelText("B").getAttribute("enterkeyhint")).toBe("next");
+  });
+
+  it("hands the control to a ref, as an object or a function", () => {
+    const object = createRef<HTMLTextAreaElement>();
+    const fn = vi.fn();
+    render(
+      <>
+        <Field label="A" ref={object} />
+        <Field label="B" ref={fn} />
+      </>,
+    );
+    expect(object.current).toBe(screen.getByLabelText("A"));
+    expect(fn).toHaveBeenCalledWith(screen.getByLabelText("B"));
+  });
+
+  it("passes data attributes to the control", () => {
+    render(<Field label="A" data-autofocus="" />);
+    expect(screen.getByLabelText("A").hasAttribute("data-autofocus")).toBe(true);
   });
 });

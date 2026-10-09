@@ -10,11 +10,13 @@
 import {
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   type ChangeEvent,
   type KeyboardEvent,
   type ReactNode,
+  type Ref,
   type TextareaHTMLAttributes,
 } from "react";
 import { cx } from "@/lib/cx";
@@ -42,6 +44,8 @@ export type FieldProps = Stated & {
   value?: string;
   /** Starting value when the field is not controlled. */
   defaultValue?: string;
+  /** The control itself, for example to focus it. */
+  ref?: Ref<HTMLTextAreaElement>;
 } & Native;
 
 const labelTone: Record<FieldState, string> = {
@@ -75,6 +79,31 @@ const textBox =
 /** A field holds one line of text however it arrives: line breaks become single spaces. */
 export function oneLine(text: string): string {
   return /[\r\n]/.test(text) ? text.replace(/[ \t]*[\r\n]+[ \t]*/g, " ") : text;
+}
+
+type Submitter = HTMLButtonElement | HTMLInputElement;
+
+/**
+ * What Enter does in a single-line field: it presses the form's default button, which is the first
+ * submit button the form owns. `form.requestSubmit()` alone is not the same thing: it would submit
+ * a form whose button is disabled.
+ */
+export function submitOnEnter(form: HTMLFormElement): void {
+  const controls = Array.from(form.elements);
+  // A Button that is working turns itself into type="button" and sets aria-busy. Enter must not
+  // submit past it, or a save could be sent twice.
+  if (controls.some((el) => el instanceof HTMLButtonElement && el.getAttribute("aria-busy") === "true")) return;
+  const submitter = controls.find(
+    (el): el is Submitter =>
+      (el instanceof HTMLButtonElement && el.type === "submit") ||
+      (el instanceof HTMLInputElement && (el.type === "submit" || el.type === "image")),
+  );
+  if (!submitter) {
+    form.requestSubmit();
+    return;
+  }
+  if (submitter.disabled || submitter.getAttribute("aria-disabled") === "true") return;
+  form.requestSubmit(submitter);
 }
 
 function Tick() {
@@ -125,6 +154,7 @@ export function Field(props: FieldProps) {
     value,
     defaultValue,
     placeholder,
+    ref,
     id: givenId,
     "aria-describedby": describedBy,
     onChange,
@@ -140,34 +170,101 @@ export function Field(props: FieldProps) {
   const hasNote = note != null;
 
   const controlled = value !== undefined;
-  const element = useRef<HTMLTextAreaElement>(null);
-  // What the control currently shows, when the screen does not hold the value itself.
+  const element = useRef<HTMLTextAreaElement | null>(null);
+  // What the control currently shows, when the screen does not hold the value itself. The invisible
+  // copy below is drawn from this, so it must follow every way the control's value can change.
   const [typed, setTyped] = useState(() => oneLine(defaultValue ?? ""));
   const shown = controlled ? oneLine(value) : typed;
 
-  // The browser may have filled or restored the value before this code ran.
+  /** Bring the copy back in step with what the control really holds. */
+  function sync() {
+    const el = element.current;
+    if (el && !controlled) setTyped((before) => (before === el.value ? before : el.value));
+  }
+
+  // After every render, before the browser paints: covers a `defaultValue` that arrives late and a
+  // value the browser filled or restored before this code ran.
+  useLayoutEffect(sync);
+
   useEffect(() => {
     const el = element.current;
-    if (!controlled && el && el.value !== typed) setTyped(oneLine(el.value));
-    // Runs once, on arrival in the browser.
+    if (!el) return;
+
+    // A form reset changes the value without a change event. The reset event fires before the
+    // values are put back, so read them a moment later. It is heard at the document, because the
+    // form the field belongs to can change after the field is first drawn.
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const onReset = (event: Event) => {
+      if (event.target === el.form) pending = setTimeout(sync, 0);
+    };
+    document.addEventListener("reset", onReset);
+
+    // Script that assigns `el.value = ...` fires no event at all. Watch the assignment itself, by
+    // wrapping the element's own `value` accessor (React's own, when it has one) and passing through.
+    const inherited =
+      Object.getOwnPropertyDescriptor(el, "value") ?? Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value");
+    const hadOwn = Object.prototype.hasOwnProperty.call(el, "value");
+    if (inherited?.get && inherited.set) {
+      const { get, set } = inherited;
+      Object.defineProperty(el, "value", {
+        configurable: true,
+        enumerable: inherited.enumerable,
+        get() {
+          return get.call(el);
+        },
+        set(next: string) {
+          set.call(el, next);
+          sync();
+        },
+      });
+    }
+
+    // A last net for anything else (setRangeText, an extension): look again when focus arrives and leaves.
+    el.addEventListener("focusin", sync);
+    el.addEventListener("focusout", sync);
+
+    return () => {
+      if (pending !== undefined) clearTimeout(pending);
+      document.removeEventListener("reset", onReset);
+      el.removeEventListener("focusin", sync);
+      el.removeEventListener("focusout", sync);
+      if (inherited && hadOwn) Object.defineProperty(el, "value", inherited);
+      else if (inherited) delete (el as { value?: string }).value;
+    };
+    // The listeners belong to the element, which lives as long as the field does.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [controlled]);
 
   function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const el = event.currentTarget;
-    const clean = oneLine(el.value);
-    if (clean !== el.value) el.value = clean;
+    const dirty = el.value;
+    const clean = oneLine(dirty);
+    if (clean !== dirty) {
+      // Keep the caret where the person is typing: "abc|def" plus a pasted "X\nY" ends after the Y.
+      const caret = oneLine(dirty.slice(0, el.selectionStart)).length;
+      el.value = clean;
+      el.setSelectionRange(caret, caret);
+    }
     if (!controlled) setTyped(clean);
     onChange?.(event);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     onKeyDown?.(event);
-    // Enter does what it does in a single-line field: it submits the form. It never adds a line.
-    // (While an IME is composing, Enter belongs to the IME.)
-    if (event.key !== "Enter" || event.defaultPrevented || event.nativeEvent.isComposing) return;
+    if (event.key !== "Enter" || event.defaultPrevented) return;
+    // While an IME is composing, Enter belongs to the IME. Safari reports the Enter that ends a
+    // composition with keyCode 229 and isComposing already false.
+    if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+    // Enter never adds a line. In a form it does what it does in a single-line field.
     event.preventDefault();
-    event.currentTarget.form?.requestSubmit();
+    const form = event.currentTarget.form;
+    if (form) submitOnEnter(form);
+  }
+
+  function attach(el: HTMLTextAreaElement | null) {
+    element.current = el;
+    if (typeof ref === "function") return ref(el);
+    if (ref) ref.current = el;
   }
 
   return (
@@ -197,15 +294,26 @@ export function Field(props: FieldProps) {
           An invisible copy of the value in the same grid cell as the control. It wraps as the control
           does and sets the cell's height, so the control grows with its value by layout alone and
           stays right when the width or the font changes. The zero-width space keeps one line of
-          height when there is nothing to copy.
+          height when there is nothing to copy. See sync() for how the copy follows the control.
         */}
-        <span aria-hidden="true" data-field-mirror="" className={cx(textBox, "invisible")}>
+        <span
+          aria-hidden="true"
+          data-field-mirror=""
+          // The copy holds whatever is typed, which can be a phone number or a UPI ID. Keep it out of
+          // page translation, PostHog session replay and Sentry replay, as the control itself is.
+          translate="no"
+          data-ph-no-capture=""
+          data-sentry-mask=""
+          className={cx(textBox, "invisible")}
+        >
           {shown === "" ? placeholder : shown}
           {"​"}
         </span>
         <textarea
+          // The key on the phone's keyboard says "done", not "return": Enter does not add a line.
+          enterKeyHint="done"
           {...control}
-          ref={element}
+          ref={attach}
           id={id}
           rows={1}
           value={controlled ? shown : undefined}
