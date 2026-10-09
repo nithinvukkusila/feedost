@@ -440,12 +440,21 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
     expect([...new Set(radii)]).toEqual(["0px", "4px", "6px", "full"]);
   });
 
-  // Text at 130% the plan's way: the root font size is scaled, so every rem (text, box minimums,
-  // stamp rings) grows together. A run that set `text-size-adjust: 130%` on <html> by hand was removed
-  // in review (S2): the page's base styles pin that property to 100%, so the hand-set value showed what
-  // CSS inheritance does, not what a phone does. A phone's own text-scaling setting is hand check H4.
+  // Two ways of making text 130%.
+  //
+  // The plan's way scales the root font size, so every rem (text, box minimums, stamp rings) grows
+  // together. Everything on the page is held to it, fitted amounts included.
+  //
+  // The second is a layout stress, not a claim about phones: `text-size-adjust: 130%` set on <html>
+  // by hand enlarges text only and leaves every rem-sized box as it was, so it is the one run where
+  // text outgrows its boxes. It covers everything except fitted headline amounts. Those are sized by
+  // CSS from their container before the enlargement is applied, so under this stress they overflow:
+  // on this build "₹1,23,456" ends at about 417px on the 360px screen. Whether a real phone's
+  // text-scaling setting does the same is hand check H4b. The run hides the `amount-box` elements
+  // (and with them the sideways scroll they alone cause) and checks the rest of the page.
   const scales = [
     { name: "root font size 130% (the plan's method)", boxesGrow: true, apply: () => document.documentElement.style.setProperty("font-size", "130%") },
+    { name: "layout stress, text only at 130% with boxes left alone, fitted amounts excluded", boxesGrow: false, apply: () => document.documentElement.style.setProperty("text-size-adjust", "130%") },
   ];
   for (const scale of scales) {
     test(`63: ${scale.name}: nothing clipped, overlapped or truncated and no sideways scroll`, async ({ page }, testInfo) => {
@@ -464,6 +473,19 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       await expect.poll(async () => (await css(body, ["font-size"]))["font-size"]).toBe("20.8px");
       await fontsSettled(page);
 
+      if (!scale.boxesGrow) {
+        // The known limit this run leaves out: the fitted six-digit amount runs past the screen edge.
+        // If this stops being true, the exclusion below is no longer needed and should be removed.
+        const inkRight = await sixDigits.evaluate((el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect().right;
+        });
+        expect(inkRight, "the fitted six-digit amount under the text-only stress").toBeGreaterThan(360);
+        await page.addStyleTag({ content: ".amount-box { display: none !important; }" });
+        await expect(sixDigits).toBeHidden();
+      }
+
       expect(await sidewaysScroll(page)).toBe(0);
       // A value cut off inside a field is checked by the next test, so that one fault does not hide the rest.
       expect((await textProblems(page, "main")).filter((p) => !p.what.startsWith("value "))).toEqual([]);
@@ -480,7 +502,8 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       expect((await css(sixDigits, ["white-space"]))["white-space"]).toBe("nowrap");
       const amounts = page.locator('[data-rupee="headline"], [data-role="amount"]');
       await expect(amounts).toHaveCount(9);
-      for (const amount of await amounts.all()) {
+      // Fitted amounts are held to this in the root-scaling run only; the stress run has hidden them.
+      for (const amount of scale.boxesGrow ? await amounts.all() : []) {
         const text = (await amount.textContent()) ?? "";
         const token = await amount.evaluate((el) => (el.classList.contains("amount-size-7xl") ? 72 : el.classList.contains("amount-size-6xl") ? 60 : 0));
         expect(token, text).not.toBe(0);
@@ -1649,8 +1672,9 @@ test.describe("Stamp: criteria 44, 45, 47, 48", () => {
       for (const stamp of await page.getByTestId(`stamp-${size}`).locator("[data-size]").all()) {
         const b = await box(stamp);
         // A ring is sized by its word as well as by its token: it is a circle of at least the token
-        // size. Text is not set to the same width on every platform (headless Linux gave "PAID" 6px
-        // more than macOS at 14px), so the size is held to within STAMP_TOLERANCE, not to the pixel.
+        // size. One CI run on Linux measured the small "PAID" ring at 53.25px against 52px on macOS.
+        // That was not reproduced; the likely cause, inferred from that one figure, is that headless
+        // Linux set the word about 6px wider. So the size is held to within STAMP_TOLERANCE, not to the pixel.
         expect(Math.abs(b.width - b.height), `${size} is a circle`).toBeLessThanOrEqual(0.5);
         expect(b.width, size).toBeGreaterThanOrEqual(px);
         expect(b.width, size).toBeLessThanOrEqual(px * (1 + STAMP_TOLERANCE));
