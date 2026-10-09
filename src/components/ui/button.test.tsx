@@ -106,6 +106,21 @@ describe("Button element and content (criteria 18 and 19)", () => {
     );
     expect(classes(screen.getByRole("button"))).toContain("w-full");
   });
+
+  it("is 48px high, or 56px when large (one height class, never both)", () => {
+    render(
+      <>
+        <Button variant="send">Normal</Button>
+        <Button variant="send" size="large">
+          Large
+        </Button>
+      </>,
+    );
+    expect(classes(screen.getByRole("button", { name: "Normal" }))).toContain("min-h-control");
+    const large = classes(screen.getByRole("button", { name: "Large" }));
+    expect(large).toContain("min-h-14");
+    expect(large).not.toContain("min-h-control");
+  });
 });
 
 describe("Button busy (criterion 22)", () => {

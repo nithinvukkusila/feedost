@@ -5,7 +5,7 @@
   "landing": {
     "meta": {
       "title": "{brand}: హోమ్ ట్యూటర్ల కోసం ఉచిత ఫీజు రిజిస్టర్",
-      "description": "TODO-translate: Remind parents on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Join the waitlist."
+      "description": "TODO-translate: Send fee reminders on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Get on the waitlist."
     },
     "header": {
       "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
@@ -37,7 +37,7 @@
       "title": "TODO-translate: Asking for money is awkward. So don't ask.",
       "accent": "ట్యాప్ చేయండి.",
       "s1": {
-        "title": "TODO-translate: You tap Remind",
+        "title": "మీరు గుర్తు చేయండి నొక్కుతారు",
         "body": "TODO-translate: WhatsApp opens with a polite message in the parent's language. You only press send."
       },
       "s2": {
@@ -51,7 +51,7 @@
       "stamp": "చెల్లించారు"
     },
     "tools": {
-      "title": "TODO-translate: Two free tools. Coming soon.",
+      "title": "రెండు ఉచిత సాధనాలు. త్వరలో వస్తాయి.",
       "tag": "త్వరలో వస్తుంది",
       "t1": {
         "no": "సాధనం నం. 01",

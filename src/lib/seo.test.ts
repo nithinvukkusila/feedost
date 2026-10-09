@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { brand } from "@/config/brand";
 import { locales } from "@/config/locales";
-import { alternateUrls, canonicalUrl } from "./seo";
+import { alternateUrls, canonicalUrl, ogLocale } from "./seo";
 
 describe("canonicalUrl", () => {
   it.each(locales)("%s is absolute, https, built from the brand domain, with a trailing slash", (locale) => {
@@ -31,5 +31,11 @@ describe("alternateUrls", () => {
 
   it("is absolute with a trailing slash throughout", () => {
     for (const url of Object.values(urls)) expect(url).toMatch(/^https:\/\/[^/]+\/[a-z]{2}\/$/);
+  });
+});
+
+describe("ogLocale", () => {
+  it("is a language_REGION code for each language", () => {
+    expect(locales.map(ogLocale)).toEqual(["en_IN", "hi_IN", "kn_IN", "te_IN"]);
   });
 });

@@ -5,7 +5,7 @@
   "landing": {
     "meta": {
       "title": "{brand}: ಹೋಮ್ ಟ್ಯೂಟರ್‌ಗಳಿಗೆ ಉಚಿತ ಶುಲ್ಕ ಪುಸ್ತಕ",
-      "description": "TODO-translate: Remind parents on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Join the waitlist."
+      "description": "TODO-translate: Send fee reminders on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Get on the waitlist."
     },
     "header": {
       "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
@@ -37,7 +37,7 @@
       "title": "TODO-translate: Asking for money is awkward. So don't ask.",
       "accent": "ಟ್ಯಾಪ್ ಮಾಡಿ.",
       "s1": {
-        "title": "TODO-translate: You tap Remind",
+        "title": "ನೀವು ನೆನಪಿಸಿ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡುತ್ತೀರಿ",
         "body": "TODO-translate: WhatsApp opens with a polite message in the parent's language. You only press send."
       },
       "s2": {
@@ -51,7 +51,7 @@
       "stamp": "ಪಾವತಿಯಾಗಿದೆ"
     },
     "tools": {
-      "title": "TODO-translate: Two free tools. Coming soon.",
+      "title": "ಎರಡು ಉಚಿತ ಉಪಕರಣಗಳು. ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ.",
       "tag": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
       "t1": {
         "no": "ಉಪಕರಣ ಸಂ. 01",
