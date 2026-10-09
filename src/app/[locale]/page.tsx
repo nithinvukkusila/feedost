@@ -3,11 +3,11 @@ import { useTranslations } from "next-intl";
 import { brand } from "@/config/brand";
 
 export default function LocaleHome() {
-  const t = useTranslations("home");
+  const t = useTranslations("landing.hero");
   return (
     <main className="p-5">
       <h1 className="type-headline text-3xl">{brand.name}</h1>
-      <p className="type-body mt-3">{t("placeholder")}</p>
+      <p className="type-body mt-3">{t("kicker")}</p>
     </main>
   );
 }

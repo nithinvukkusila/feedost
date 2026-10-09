@@ -32,7 +32,7 @@ function messages(lang: Lang): Tree {
 }
 /** The words a page shows for a key, the way the app shows them (an untranslated value reads as its English text). */
 function placeholderOf(lang: Lang): string {
-  const value = (messages(lang).home as Tree).placeholder as string;
+  const value = ((messages(lang).landing as Tree).hero as Tree).kicker as string;
   return value.startsWith(MARKER) ? value.slice(MARKER.length) : value;
 }
 function leaves(node: Tree, out: string[] = []): string[] {
