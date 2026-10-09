@@ -2,7 +2,7 @@
 // F4 criterion 43: `pnpm smoke:env`, with a fake network.
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { checkKeyShape, resolveTarget, smoke } from "../../scripts/smoke-env-lib.mjs";
 
 const REF = "abcdefghijklmnopqrst";
@@ -105,5 +105,85 @@ describe("the command", () => {
     const r = spawnSync("node", [join(process.cwd(), "scripts", "smoke-env.mjs"), "staging"], { encoding: "utf8" });
     expect(r.status).toBe(1);
     expect(r.stderr).toContain("no project recorded for staging");
+  });
+});
+
+describe("gaps found by mutation (criterion 43)", () => {
+  afterEach(() => vi.useRealTimers());
+  const good = '{"ok":true,"env":"staging"}';
+
+  it("a non-200 status fails even when the body is perfect, and names the status", async () => {
+    for (const status of [201, 202, 301, 401, 403]) {
+      const r = await run(reply(status, good));
+      expect(r.ok, String(status)).toBe(false);
+      expect(r.message, String(status)).toContain(String(status));
+    }
+  });
+  it("the content type must be JSON: text/json, text/html and none fail; a charset is fine", async () => {
+    for (const type of ["text/json", "text/plain", "application/x-json", ""]) {
+      const r = await run(reply(200, good, type));
+      expect(r.ok, type).toBe(false);
+      expect(r.message).toContain("did not answer JSON");
+    }
+    expect((await run(reply(200, good, "application/json; charset=utf-8"))).ok).toBe(true);
+  });
+  it("each failure has its own message: not JSON, wrong shape, wrong environment", async () => {
+    expect((await run(reply(200, "nope"))).message).toContain("not JSON");
+    for (const body of ['{"ok":1,"env":"staging"}', '{"ok":"true","env":"staging"}', '{"ok":true,"env":5}', '{"ok":true,"env":null}', "[]", "null", '{"ok":true,"environment":"staging"}']) {
+      const r = await run(reply(200, body));
+      expect(r.ok, body).toBe(false);
+      expect(r.message, body).toContain("wrong shape");
+    }
+    const long = await run(reply(200, `{"ok":true,"env":"${"x".repeat(300)}"}`));
+    expect(long.ok).toBe(false);
+    expect(long.message.length).toBeLessThan(120);
+  });
+  it("gives up after 8 seconds by default, not before", async () => {
+    vi.useFakeTimers();
+    const hang = (_u: unknown, init?: RequestInit) =>
+      new Promise<Response>((_res, rej) => init?.signal?.addEventListener("abort", () => rej(new Error("aborted"))));
+    let settled = false;
+    const pending = smoke({ url: URL_, expect: "staging", fetchImpl: hang as unknown as typeof fetch }).then((r) => {
+      settled = true;
+      return r;
+    });
+    await vi.advanceTimersByTimeAsync(7999);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(2);
+    const r = await pending;
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain("cannot reach");
+  });
+  it("a secret-style key is named as such, a four-part token is not a JWT, and a JWT without a ref is accepted", () => {
+    const secret = ["sb", "secret"].join("_") + "_abcdefghijklmnop";
+    expect(checkKeyShape(secret, URL_)).toContain("secret-style key");
+    expect(checkKeyShape(`${jwt({ role: "anon", ref: REF })}.extra`, URL_)).toContain("neither a JWT");
+    expect(checkKeyShape("a.b", URL_)).toContain("neither a JWT");
+    expect(checkKeyShape(jwt({ role: "anon" }), URL_)).toBeNull();
+    expect(checkKeyShape(jwt({ role: "anon", ref: OTHER }), URL_)).toContain("different project");
+  });
+  it("never echoes the key in any message", async () => {
+    const key = "hunter2-" + "k".repeat(20);
+    const r = await run(reply(200, good), { anonKey: key });
+    expect(r.ok).toBe(false);
+    expect(r.message).not.toContain(key);
+  });
+  it("resolving: a missing, empty, absent or non-string ref is 'no project recorded' or 'not 20 characters', never a URL", () => {
+    expect(() => resolveTarget(["staging"], {})).toThrow(/no project recorded for staging/);
+    expect(() => resolveTarget(["staging"], { staging: {} })).toThrow(/no project recorded for staging/);
+    expect(() => resolveTarget(["staging"], { staging: { ref: "" } })).toThrow(/no project recorded for staging/);
+    expect(() => resolveTarget(["staging"], { staging: { ref: 12345678901234567890 } })).toThrow(/not a 20-character/);
+    expect(() => resolveTarget(["staging"], { staging: { ref: REF.toUpperCase() } })).toThrow(/not a 20-character/);
+    expect(() => resolveTarget(["staging"], { staging: { ref: `${REF}x` } })).toThrow(/not a 20-character/);
+    expect(() => resolveTarget(["staging"], { staging: { ref: REF.slice(1) } })).toThrow(/not a 20-character/);
+  });
+  it("resolving: local needs a url and loses a trailing slash; --url needs its own value", () => {
+    expect(() => resolveTarget(["local"], {})).toThrow(/no local url/);
+    expect(() => resolveTarget(["local"], { local: {} })).toThrow(/no local url/);
+    expect(resolveTarget(["local"], { local: { url: "http://127.0.0.1:54321//" } }).url).toBe("http://127.0.0.1:54321");
+    expect(() => resolveTarget(["--url", "--expect", "staging"], envs)).toThrow(/--url needs a value/);
+    expect(() => resolveTarget(["staging", "--expect", "staging"], envs)).toThrow(/--url needs a value/);
+    expect(() => resolveTarget(["--url", "https://x.test", "--expect", "prod"], envs)).toThrow(/--expect must be one of/);
+    expect(() => resolveTarget(["--url", "https://x.test", "--expect"], envs)).toThrow(/--expect must be one of/);
   });
 });

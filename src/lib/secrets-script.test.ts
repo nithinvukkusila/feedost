@@ -120,6 +120,101 @@ describe("scope", () => {
   });
 });
 
+describe("gaps found by mutation (criteria 30 and 31)", () => {
+  const sbSecret = ["sb", "secret"].join("_");
+  const outsideGit = (files: Record<string, string>): string => {
+    const cwd = mkdtempSync(join(tmpdir(), "check-secrets-plain-"));
+    made.push(cwd);
+    for (const [path, text] of Object.entries(files)) {
+      mkdirSync(dirname(join(cwd, path)), { recursive: true });
+      writeFileSync(join(cwd, path), text);
+    }
+    return cwd;
+  };
+
+  it("S2 starts at exactly 16 characters after the prefix", () => {
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}_${"a".repeat(15)}"` })).code).toBe(0);
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}_${"a".repeat(16)}"` })).code).toBe(1);
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}_${"a".repeat(17)}"` })).code).toBe(1);
+  });
+
+  it("S2 needs the underscore after the prefix, and counts hyphens and underscores as token characters", () => {
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}${"a".repeat(30)}"` })).code).toBe(0);
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}_aaaaaaaa-aaaaaaaa"` })).code).toBe(1);
+    expect(run(folder({ "src/a.ts": `x = "${sbSecret}_aaaaaaaa_aaaaaaaa"` })).code).toBe(1);
+  });
+
+  it("S3 finds an admin token that follows an anon token on the same line", () => {
+    const r = run(folder({ "src/a.ts": `a="${jwt("anon")}"; b="${jwt(word)}"` }));
+    expect(r.code).toBe(1);
+    expect(r.out).toContain("src/a.ts:1  S3");
+  });
+
+  it("S4 matches in any letter case, and is not applied to markdown", () => {
+    expect(run(folder({ "src/a.ts": `x = "${publicName("db").toLowerCase()}_${"sec" + "ret"}"` })).code).toBe(1);
+    expect(run(folder({ "src/a.ts": `x = ${publicName("db")}_${"SERV" + "ICE"}` })).code).toBe(1);
+    expect(run(folder({ "docs/rules.md": `never name a ${publicName("SECRET")}` })).code).toBe(0);
+    expect(run(folder({ "notes.md": `never name a ${publicName("PASSWORD")}` })).code).toBe(0);
+  });
+
+  it("the secret-key token (S2) and the admin JWT (S3) are caught even in docs, markdown and function code", () => {
+    for (const path of ["docs/a.md", "README.md", "supabase/functions/h/index.ts", "supabase/tests/a.sql", ".claude/agents/x.md", "design/x.html"]) {
+      expect(run(folder({ [path]: `k = ${secretKey}` })).code, `S2 in ${path}`).toBe(1);
+      expect(run(folder({ [path]: `k = ${jwt(word)}` })).code, `S3 in ${path}`).toBe(1);
+    }
+  });
+
+  it("the word (S1) is allowed under docs/ whatever the file type, but not in a folder merely named docs", () => {
+    expect(run(folder({ "docs/a.txt": word })).code).toBe(0);
+    expect(run(folder({ "src/docs/a.ts": word })).code).toBe(1);
+    expect(run(folder({ "src/supabase/functions/a.ts": word })).code).toBe(1);
+    expect(run(folder({ "src/design/a.ts": word })).code).toBe(1);
+    expect(run(folder({ "x/.claude/a.ts": word })).code).toBe(1);
+  });
+
+  it("skips a binary file whose first zero byte is not at the start", () => {
+    expect(run(folder({ "src/img.bin": `${"a".repeat(100)}\0${word}` })).code).toBe(0);
+  });
+
+  it("scans a committed file, and a file in a folder called .next only if it is real source (it is not)", () => {
+    const cwd = folder({ "src/a.ts": `x = "${word}"` });
+    spawnSync("git", ["add", "-A"], { cwd });
+    spawnSync("git", ["-c", "user.email=t@example.test", "-c", "user.name=t", "commit", "-q", "-m", "x"], { cwd });
+    expect(run(cwd).code).toBe(1);
+    expect(run(folder({ ".next/server/a.js": word })).code).toBe(0);
+  });
+
+  it("does not scan a file that git ignores (a local .env file), unless it is under out/", () => {
+    expect(run(folder({ ".gitignore": ".env.local\n", ".env.local": word })).code).toBe(0);
+  });
+
+  it("still works outside a git repository: scans files and out/, skips node_modules, .git and .next", () => {
+    expect(run(outsideGit({ "src/a.ts": word })).code).toBe(1);
+    expect(run(outsideGit({ "out/a.js": word })).code).toBe(1);
+    const skipped = outsideGit({ "node_modules/x/a.js": word, ".git/config": word, ".next/a.js": word, "src/ok.ts": "export {};" });
+    const r = run(skipped);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain("1 files scanned");
+  });
+
+  it("a tracked file that was deleted from disk does not stop the scan", () => {
+    const cwd = folder({ "src/a.ts": "export {};", "src/gone.ts": "export {};" });
+    spawnSync("git", ["add", "-A"], { cwd });
+    rmSync(join(cwd, "src", "gone.ts"));
+    const r = run(cwd);
+    expect(r.code).toBe(0);
+    expect(r.out).toContain("1 files scanned");
+  });
+
+  it("prints the path, line, rule and the explanation, exactly, and counts text files only", () => {
+    const r = run(folder({ "src/a.ts": `line\nconst k = process.env.${upperWord};`, "src/img.bin": "\0abc" }));
+    expect(r.out).toContain("src/a.ts:2  S1  the admin key's name must not appear here");
+    expect(r.out).toContain("check:secrets: 1 problem");
+    const ok = run(folder({ "src/a.ts": "export {};", "src/b.ts": "export {};", "src/img.bin": "\0abc" }));
+    expect(ok.out).toContain("2 files scanned, no admin-key material");
+  });
+});
+
 describe("the repository itself", () => {
   it("passes on the real tree", () => {
     const r = run(process.cwd());

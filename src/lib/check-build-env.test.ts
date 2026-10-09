@@ -164,3 +164,56 @@ describe("the command", () => {
     expect(pkg.scripts["check:build-env"]).toBe("node scripts/check-build-env.mjs");
   });
 });
+
+describe("gaps found by mutation (criterion 32)", () => {
+  it("applies only when VERCEL is exactly 1, and only for the two named environments (no prototype names)", () => {
+    expect(guardApplies({ VERCEL: "", VERCEL_ENV: "preview" })).toBe(false);
+    expect(guardApplies({ VERCEL: "0", VERCEL_ENV: "production" })).toBe(false);
+    for (const name of ["toString", "constructor", "__proto__", "hasOwnProperty", "Preview", "PRODUCTION", ""]) {
+      expect(guardApplies({ VERCEL: "1", VERCEL_ENV: name }), name).toBe(false);
+    }
+  });
+  it("a preview build is held to staging and a production build to production, whatever the other is", () => {
+    const prodUrl = `https://${PROD}.supabase.co`;
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_URL: prodUrl }))).toHaveLength(1);
+    expect(problems(good({ VERCEL_ENV: "production", NEXT_PUBLIC_SUPABASE_URL: prodUrl }))).toEqual([]);
+  });
+  it("the host must be exactly <ref>.supabase.co: no extra labels before or after", () => {
+    for (const host of [`${STAGING}.supabase.co.evil.example`, `evil.${STAGING}.supabase.co`, `a.b.supabase.co`, `${STAGING}.supabase.co.`, `${STAGING}.supabase.com`, `${STAGING}-supabase.co`]) {
+      expect(problems(good({ NEXT_PUBLIC_SUPABASE_URL: `https://${host}` })).length, host).toBeGreaterThan(0);
+    }
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_URL: "https://a.b.supabase.co" })).join()).toContain("<project-ref>.supabase.co");
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_URL: `https://${STAGING}.supabase.co.evil.example` })).join()).toContain("<project-ref>.supabase.co");
+  });
+  it("a recorded ref in capitals is not a ref", () => {
+    expect(problems(good(), { ...envs, staging: { ref: STAGING.toUpperCase() } }).join()).toMatch(/not a 20-character/);
+  });
+  it("a missing URL gives one URL problem and nothing else (no 'wrong project' on top)", () => {
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_URL: "" }))).toEqual(["NEXT_PUBLIC_SUPABASE_URL is missing"]);
+  });
+  it("an absent or empty recorded ref says 'record the project ref first', not 'malformed'", () => {
+    for (const staging of [{}, { ref: undefined }, { ref: "" }, { ref: null }]) {
+      const out = problems(good(), { ...envs, staging } as Envs);
+      expect(out.join(), JSON.stringify(staging)).toContain("record the project ref first");
+      expect(out.join()).not.toContain("not a 20-character");
+    }
+    expect(problems(good(), { local: envs.local } as Envs).join()).toContain("record the project ref first");
+  });
+  it("both refs still null is one problem, not also 'must differ'", () => {
+    const out = problems(good(), { ...envs, staging: { ref: null }, production: { ref: null } });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("record the project ref first");
+    expect(out.join()).not.toContain("must differ");
+  });
+  it("key messages name the variable and the rule, in plain words", () => {
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_ANON_KEY: "hello" }))).toEqual(["NEXT_PUBLIC_SUPABASE_ANON_KEY: is neither a JWT nor a publishable key"]);
+    expect(problems(good({ NEXT_PUBLIC_SUPABASE_ANON_KEY: adminStyle }))).toEqual(["NEXT_PUBLIC_SUPABASE_ANON_KEY: variable holds a secret-style key"]);
+  });
+  it("the forbidden-name rule is not case-sensitive, and leaves legitimate private variables alone", () => {
+    const lower = ["next_public_db", "sec" + "ret"].join("_");
+    const mixed = ["NEXT_PUBLIC_db", "serv" + "ice"].join("_");
+    expect(problems(good({ [lower]: "x" })).join()).toContain(`${lower} must not exist`);
+    expect(problems(good({ [mixed]: "x" })).join()).toContain("must not exist");
+    expect(problems(good({ VERCEL_AUTOMATION_BYPASS_SECRET: "x", SUPABASE_DB_PASSWORD: "x", NEXT_PUBLIC_POSTHOG_KEY: "x" }))).toEqual([]);
+  });
+});

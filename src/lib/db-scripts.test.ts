@@ -210,3 +210,133 @@ describe("no schema change outside supabase/migrations (criterion 17a)", () => {
     expect(r.out).not.toContain("hunter2");
   });
 });
+
+describe("gaps found by mutation (criteria 8, 16 and 17a)", () => {
+  it("rejects names that only contain a good name: a prefix, a suffix, a digit-first or hyphenated word", () => {
+    for (const name of ["x20261010000000_thing.sql", "20261010000000_thing.sql.bak", "20261010000000_2fast.sql", "20261010000000_a-b.sql", "20261010000000__x.sql"]) {
+      const cwd = repo();
+      put(cwd, `${M}/${name}`, "select 1;\n");
+      commit(cwd);
+      const r = run(cwd, "--base", "main");
+      expect(r.status, name).toBe(1);
+      expect(r.out, name).toContain(name);
+    }
+  });
+
+  it("a new migration older than the newest, but newer than the oldest, fails", () => {
+    const cwd = repo();
+    git(cwd, "checkout", "-q", "main");
+    put(cwd, `${M}/20261020000000_later_thing.sql`, "select 1;\n");
+    commit(cwd);
+    git(cwd, "checkout", "-q", "work");
+    git(cwd, "merge", "-q", "main");
+    put(cwd, `${M}/20261010000000_in_between.sql`, "select 1;\n");
+    commit(cwd);
+    const r = run(cwd, "--base", "main");
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("20261020000000");
+  });
+
+  it("two new migrations added together, in order, pass", () => {
+    const cwd = repo();
+    put(cwd, `${M}/20261011000000_first_new.sql`, "select 1;\n");
+    put(cwd, `${M}/20261012000000_second_new.sql`, "select 1;\n");
+    commit(cwd);
+    expect(run(cwd, "--base", "main").status).toBe(0);
+  });
+
+  it("a rename names both the old and the new file", () => {
+    const cwd = repo();
+    git(cwd, "mv", `${M}/${OLD}`, `${M}/20261001000000_renamed_thing.sql`);
+    commit(cwd);
+    const r = run(cwd, "--base", "main");
+    expect(r.out).toContain(`${OLD} -> ${M}/20261001000000_renamed_thing.sql`);
+  });
+
+  it("a base whose name merely ends in zeros does not skip the history rules", () => {
+    const cwd = repo();
+    git(cwd, "branch", "v10", "main");
+    put(cwd, `${M}/${OLD}`, "select 2;\n");
+    commit(cwd);
+    const r = run(cwd, "--base", "v10");
+    expect(r.status).toBe(1);
+    expect(r.out).not.toContain("skipped");
+  });
+
+  it("a base that is not a commit (a tree) cannot be resolved", () => {
+    const r = run(repo(), "--base", "HEAD^{tree}");
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("cannot be resolved");
+  });
+
+  it("a base with no history in common fails, and says the diff failed", () => {
+    const cwd = repo();
+    git(cwd, "checkout", "-q", "--orphan", "other");
+    git(cwd, "rm", "-rfq", ".");
+    put(cwd, "README.md", "x\n");
+    git(cwd, "add", "-A");
+    git(cwd, "commit", "-q", "-m", "orphan");
+    git(cwd, "checkout", "-q", "work");
+    const r = run(cwd, "--base", "other");
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("git diff against");
+  });
+
+  it("flags every statement kind and every modifier, in any letter case", () => {
+    const nouns = ["table", "policy", "function", "schema", "extension", "trigger", "index", "type", "view"];
+    const cases: string[] = [];
+    for (const verb of ["create", "alter", "drop"]) for (const noun of nouns) cases.push(`${verb} ${noun} y`);
+    // Joined from pieces so this file does not trip the rule it tests.
+    for (const parts of [["create", "unique", "index"], ["create", "materialized", "view"], ["create", "or", "replace", "view"], ["CREATE", "TABLE"], ["Drop", "Schema"]]) cases.push(`${parts.join(" ")} y`);
+    const cwd = repo();
+    cases.forEach((text, i) => put(cwd, `src/lib/q${i}.ts`, `const q = "${text}";\n`));
+    commit(cwd);
+    const r = run(cwd, "--base", "main");
+    expect(r.status).toBe(1);
+    cases.forEach((text, i) => expect(r.out, text).toContain(`src/lib/q${i}.ts:1`));
+  });
+
+  it("does not flag ordinary words that contain a keyword", () => {
+    const cwd = repo();
+    put(cwd, "src/lib/w.ts", 'const a = "recreate table of fees"; const b = "create tablespace"; const c = "dropping tables"; const d = "recreate indexes";\n');
+    commit(cwd);
+    expect(run(cwd, "--base", "main").status).toBe(0);
+  });
+
+  it("scans every source file type under src and functions, and skips node_modules and dot folders", () => {
+    const exts = ["ts", "tsx", "js", "jsx", "mjs", "cjs", "sql", "json"];
+    const found = repo();
+    for (const ext of exts) put(found, `supabase/functions/x/a.${ext}`, ddl("create", "table") + "\n");
+    commit(found);
+    const r = run(found, "--base", "main");
+    expect(r.status).toBe(1);
+    for (const ext of exts) expect(r.out, ext).toContain(`supabase/functions/x/a.${ext}:1`);
+    const cwd = repo();
+    put(cwd, "src/node_modules/x/a.ts", ddl("create", "table") + "\n");
+    put(cwd, "src/.cache/a.ts", ddl("create", "table") + "\n");
+    put(cwd, "src/notes.md", ddl("create", "table") + "\n");
+    put(cwd, "src/notes.txt", ddl("create", "table") + "\n");
+    commit(cwd);
+    expect(run(cwd, "--base", "main").status).toBe(0);
+  });
+
+  it("reports the right line after a multi-line block comment, and sees code after a URL on the same line", () => {
+    const cwd = repo();
+    put(cwd, "src/lib/b.ts", `/*\n\n ${ddl("create", "table")}\n*/\nconst q = "${ddl("drop", "table")}";\n`);
+    put(cwd, "src/lib/u.ts", `const u = "http://a.test"; const q = "${ddl("alter", "table")}";\n`);
+    commit(cwd);
+    const r = run(cwd, "--base", "main");
+    expect(r.status).toBe(1);
+    expect(r.out).toContain("src/lib/b.ts:5");
+    expect(r.out).not.toContain("src/lib/b.ts:3");
+    expect(r.out).toContain("src/lib/u.ts:1");
+  });
+
+  it("ignores a trailing comment in SQL and in TypeScript", () => {
+    const cwd = repo();
+    put(cwd, "supabase/seed.sql", `select 1; -- ${ddl("create", "table")}\n`);
+    put(cwd, "src/lib/t.ts", `const a = 1; // ${ddl("drop", "table")}\n`);
+    commit(cwd);
+    expect(run(cwd, "--base", "main").status).toBe(0);
+  });
+});

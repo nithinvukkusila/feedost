@@ -38,11 +38,17 @@ describe("OPTIONS", () => {
 });
 
 describe("other methods", () => {
-  it.each(["POST", "PUT", "PATCH", "DELETE"])("%s answers 405 with Allow", async (method) => {
-    const res = handle(new Request("http://x.test/", { method, body: "{}" }), "staging");
+  it.each(["POST", "PUT", "PATCH", "DELETE", "HEAD"])("%s answers 405 with Allow", async (method) => {
+    const res = handle(new Request("http://x.test/", { method, body: method === "HEAD" ? undefined : "{}" }), "staging");
     expect(res.status).toBe(405);
     expect(res.headers.get("allow")).toBe("GET, OPTIONS");
     expect(await res.text()).toBe('{"ok":false}');
+  });
+});
+
+describe("method is checked before the environment", () => {
+  it("a POST with APP_ENV unset is still 405, not 500", () => {
+    expect(handle(new Request("http://x.test/", { method: "POST", body: "{}" }), undefined).status).toBe(405);
   });
 });
 

@@ -242,3 +242,71 @@ describe("the /dev/supabase sentinels in ci.yml (criteria 44 and 45)", () => {
     expect(ci.match(/pnpm check:secrets/g)).toHaveLength(2);
   });
 });
+
+describe("the shape of ci.yml, gaps found by mutation (criteria 5, 14, 15, 34, 44 and 45)", () => {
+  const ci = read(".github/workflows/ci.yml");
+  const check = ci.slice(ci.indexOf("\n  check:"), ci.indexOf("\n  database:"));
+  const database = ci.slice(ci.indexOf("\n  database:"));
+  const at = (text: string, needle: string) => {
+    const i = text.indexOf(needle);
+    expect(i, `missing: ${needle}`).toBeGreaterThan(-1);
+    return i;
+  };
+
+  it("runs on pull requests and on pushes to main only (no temporary branch trigger)", () => {
+    const head = ci.slice(0, ci.indexOf("\npermissions:"));
+    expect(head).toMatch(/\n {2}pull_request:\n/);
+    expect(head).toMatch(/\n {2}push:\n {4}branches: \[main\]\n/);
+    expect(head.match(/branches:/g)).toHaveLength(1);
+    expect(ci).toMatch(/\npermissions:\n {2}contents: read\n/);
+    expect(ci).toContain("cancel-in-progress: true");
+  });
+
+  it("the check job runs every gate, in order, and stops after 15 minutes", () => {
+    expect(check).toMatch(/timeout-minutes: 15/);
+    const steps = [
+      "pnpm install --frozen-lockfile",
+      "pnpm lint",
+      "pnpm typecheck",
+      "pnpm test\n",
+      "pnpm i18n:check",
+      "run: pnpm build",
+      "The dev-page sentinels are in a normal build",
+      "pnpm size",
+      "pnpm check:leak",
+      "pnpm check:secrets",
+      "playwright install --with-deps chromium",
+      "pnpm test:e2e",
+      "Production build leaves out the dev routes",
+    ];
+    const positions = steps.map((s) => at(check, s));
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+  });
+
+  it("the normal build looks for all four sentinels", () => {
+    const normal = check.slice(at(check, "The dev-page sentinels"), at(check, "pnpm size"));
+    for (const s of ["Venkatasubrahmanyalakshminarasimharao", "Which Supabase does this build talk to?", "env-check-result", "banner-live-taps"]) {
+      expect(normal, s).toContain(`grep -rqF "${s}"`);
+    }
+  });
+
+  it("the production build step sets VERCEL_ENV, refuses out/dev and all five sentinels, then scans for secrets", () => {
+    const production = check.slice(at(check, "Production build leaves out the dev routes"));
+    expect(production).toContain("VERCEL_ENV=production pnpm build");
+    expect(production).toContain("[ -e out/dev ]");
+    const list = /for sentinel in (.*); do/.exec(production)?.[1] ?? "";
+    expect(list.split('" "').map((s) => s.replace(/"/g, "")).sort()).toEqual(
+      ["Venkatasubrahmanyalakshminarasimharao", "banner-live-taps", "Which Supabase does this build talk to?", "env-check-result", "TODO-translate"].sort(),
+    );
+    expect(production.indexOf("pnpm check:secrets")).toBeGreaterThan(production.indexOf("for sentinel in"));
+    expect(production).toContain("exit 1");
+  });
+
+  it("the database job fetches full history, stops the stack even after a failure, and runs db:reset before db:test", () => {
+    expect(database).toMatch(/timeout-minutes: 15/);
+    expect(database).toMatch(/if: always\(\)\n\s+run: pnpm db:stop/);
+    expect(at(database, "pnpm check:db")).toBeLessThan(at(database, "pnpm db:start"));
+    expect(at(database, "pnpm db:start")).toBeLessThan(at(database, "pnpm db:reset"));
+    expect(at(database, "pnpm db:reset")).toBeLessThan(at(database, "pnpm db:test"));
+  });
+});
