@@ -69,6 +69,8 @@ export type SheetProps = {
 export function Sheet({ open, onClose, title, closeLabel, context, children }: SheetProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  // How many `close` events are on their way that this component caused itself by tidying up.
+  const ownCloses = useRef(0);
 
   // Keep the native dialog in step with the `open` prop.
   useEffect(() => {
@@ -87,10 +89,18 @@ export function Sheet({ open, onClose, title, closeLabel, context, children }: S
 
   // If the sheet is removed while it is open, close it first. Closing is what makes the browser
   // hand focus back to the control that opened it and let the page behind be used again.
+  //
+  // In development React StrictMode runs this cleanup once on a sheet that is staying: it cleans up,
+  // then sets up again, and the effect above reopens the dialog. The browser sends the `close` event
+  // for that first close a moment later, after the dialog is open again. That event is ours, not the
+  // person's, so it is counted here and skipped when it arrives.
   useLayoutEffect(() => {
     const el = dialog.current;
     return () => {
-      if (el?.open) el.close();
+      if (el?.open) {
+        ownCloses.current += 1;
+        el.close();
+      }
     };
   }, []);
 
@@ -101,6 +111,10 @@ export function Sheet({ open, onClose, title, closeLabel, context, children }: S
       // Every way of closing ends in the native `close` event. When the screen itself set open to
       // false there is nothing to report back.
       onClose={() => {
+        if (ownCloses.current > 0) {
+          ownCloses.current -= 1;
+          return;
+        }
         if (open) onClose();
       }}
       className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-sheet-ground p-0 backdrop:bg-sheet-ground"

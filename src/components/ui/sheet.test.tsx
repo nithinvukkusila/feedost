@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { act, StrictMode } from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { Field } from "./field";
 import { Sheet, SheetFrame } from "./sheet";
@@ -239,5 +240,66 @@ describe("Sheet focus (review S3)", () => {
     const close = vi.spyOn(dialog, "close");
     unmount();
     expect(close).not.toHaveBeenCalled();
+  });
+});
+
+describe("Sheet under React StrictMode, with the close event arriving later as in a browser (review N1)", () => {
+  // A browser queues the `close` event; the stand-in above fires it at once, which hides this case.
+  function lateClose() {
+    return vi.spyOn(HTMLDialogElement.prototype, "close").mockImplementation(function close(this: HTMLDialogElement) {
+      if (!this.hasAttribute("open")) return;
+      this.removeAttribute("open");
+      setTimeout(() => this.dispatchEvent(new Event("close")), 0);
+    });
+  }
+  const later = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 10)));
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it("a sheet mounted already open stays open and does not report a close", async () => {
+    lateClose();
+    const onClose = vi.fn();
+    render(
+      <StrictMode>
+        <Sheet open onClose={onClose} title="Mark paid" closeLabel="Cancel">
+          <p>Body</p>
+        </Sheet>
+      </StrictMode>,
+    );
+    await later();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.querySelector("dialog")!.hasAttribute("open")).toBe(true);
+    expect(screen.getByText("Body")).toBeTruthy();
+  });
+
+  it("still reports the person closing it afterwards, once", async () => {
+    lateClose();
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <StrictMode>
+        <Sheet open onClose={onClose} title="Mark paid" closeLabel="Cancel">
+          <p>Body</p>
+        </Sheet>
+      </StrictMode>,
+    );
+    await later();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await later();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("still reports a close outside StrictMode when the event arrives later", async () => {
+    lateClose();
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <Sheet open onClose={onClose} title="Mark paid" closeLabel="Cancel">
+        <p>Body</p>
+      </Sheet>,
+    );
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await later();
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
