@@ -1,6 +1,5 @@
 // @vitest-environment node
 // F4 criteria 1, 4, 5, 26, 28, 29, 36 and 48: the Supabase project files are what the spec says.
-// functions/health is checked when step 5 lands it.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -68,7 +67,9 @@ describe("the migrations, functions and tests folders (criteria 1, 7 and 10)", (
     for (const dir of ["supabase/migrations", "supabase/tests", "supabase/functions"]) {
       expect(existsSync(join(root, dir)), dir).toBe(true);
     }
-    // functions/ holds only .gitkeep until step 5 adds health/ and removes it.
+    for (const file of ["index.ts", "handler.ts", "handler.test.ts"]) {
+      expect(existsSync(join(root, "supabase", "functions", "health", file)), file).toBe(true);
+    }
     const inFunctions = spawnSync("git", ["ls-files", "supabase/functions"], { cwd: root, encoding: "utf8" });
     expect(inFunctions.stdout.trim()).not.toBe("");
     for (const file of readdirSync(join(root, "supabase", "migrations"))) {
@@ -216,5 +217,28 @@ describe("the database job in ci.yml (criteria 14, 15 and 34)", () => {
   it("picks the base by event: the pull request target, or the push's previous commit", () => {
     expect(job).toContain("origin/$BASE_REF");
     expect(job).toContain("github.event.before");
+  });
+});
+
+describe("the /dev/supabase sentinels in ci.yml (criteria 44 and 45)", () => {
+  const ci = read(".github/workflows/ci.yml");
+  const sentence = "Which Supabase does this build talk to?";
+
+  it("looks for the page sentence and the test id in a normal build, and refuses both in a production build", () => {
+    expect(ci).toContain(`grep -rqF "${sentence}" out`);
+    expect(ci).toContain('grep -rqF "env-check-result" out/_next');
+    const production = ci.slice(ci.indexOf("for sentinel in"));
+    expect(production).toContain(`"${sentence}"`);
+    expect(production).toContain('"env-check-result"');
+  });
+
+  it("gives the fake project address to the normal build only", () => {
+    expect(ci.match(/NEXT_PUBLIC_SUPABASE_URL/g)).toHaveLength(1);
+    expect(ci.indexOf("NEXT_PUBLIC_SUPABASE_URL")).toBeLessThan(ci.indexOf("VERCEL_ENV=production pnpm build"));
+    expect(ci).toContain("https://cicicicicicicicicici.supabase.co");
+  });
+
+  it("keeps exactly two check:secrets runs", () => {
+    expect(ci.match(/pnpm check:secrets/g)).toHaveLength(2);
   });
 });

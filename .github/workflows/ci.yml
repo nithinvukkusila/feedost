@@ -28,13 +28,20 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm i18n:check
-      - run: pnpm build
-      # The two strings the production check looks for must be in this build, or that check proves nothing:
-      # one sample name from the dev page's markup, and one test id that only its client chunk carries.
+      - name: Build
+        # A made-up project address (20 letters): nothing answers there, and the browser test
+        # intercepts it. The production-build step further down sets none, on purpose.
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://cicicicicicicicicici.supabase.co
+      # The strings the production check looks for must be in this build, or that check proves nothing:
+      # per dev page, one sentence or sample name from its markup, and one test id that only its client chunk carries.
       - name: The dev-page sentinels are in a normal build
         run: |
           test -f out/index.html || { echo "no build in out/"; exit 1; }
           grep -rqF "Venkatasubrahmanyalakshminarasimharao" out || { echo "the sample-name sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "Which Supabase does this build talk to?" out || { echo "the Supabase page sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "env-check-result" out/_next || { echo "the Supabase chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
           grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm size
       - run: pnpm check:leak
@@ -52,7 +59,7 @@ jobs:
             echo "out/dev exists in a production build"
             exit 1
           fi
-          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "TODO-translate"; do
+          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "Which Supabase does this build talk to?" "env-check-result" "TODO-translate"; do
             if grep -rqF "$sentinel" out; then
               echo "the production build must not contain this text: found $sentinel"
               exit 1
