@@ -1,7 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
-import { Field } from "./field";
+import { useState } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { Field, oneLine } from "./field";
 
 afterEach(cleanup);
 
@@ -12,7 +13,9 @@ describe("Field label and line (criteria 26 and 27)", () => {
   it("ties a visible label to the input", () => {
     render(<Field label="Your UPI ID" />);
     const input = screen.getByLabelText("Your UPI ID");
-    expect(input.tagName).toBe("INPUT");
+    // A one-row textarea, so a long value can wrap; see the "one line of text" tests below.
+    expect(input.tagName).toBe("TEXTAREA");
+    expect(input.getAttribute("rows")).toBe("1");
     const label = screen.getByText("Your UPI ID");
     expect(label.tagName).toBe("LABEL");
     expect(label.getAttribute("for")).toBe(input.id);
@@ -35,16 +38,17 @@ describe("Field label and line (criteria 26 and 27)", () => {
 
   it("passes native input attributes through", () => {
     render(<Field label="Your UPI ID" name="upi" defaultValue="meena@okhdfc" inputMode="email" autoCapitalize="none" />);
-    const input = screen.getByLabelText("Your UPI ID") as HTMLInputElement;
+    const input = screen.getByLabelText("Your UPI ID") as HTMLTextAreaElement;
     expect(input.name).toBe("upi");
     expect(input.value).toBe("meena@okhdfc");
     expect(input.getAttribute("inputmode")).toBe("email");
+    expect(input.getAttribute("autocapitalize")).toBe("none");
   });
 
   it("can be typed in", async () => {
     const user = userEvent.setup();
     render(<Field label="Your UPI ID" />);
-    const input = screen.getByLabelText("Your UPI ID") as HTMLInputElement;
+    const input = screen.getByLabelText("Your UPI ID") as HTMLTextAreaElement;
     await user.type(input, "meena.tui");
     expect(input.value).toBe("meena.tui");
   });
@@ -180,5 +184,154 @@ describe("Field height and helper (criteria 31 and 32)", () => {
     const label = screen.getByText("A very long translated label for a field");
     expect(classes(label)).toContain("wrap-anywhere");
     expect(label.className).not.toMatch(/truncate|nowrap/);
+  });
+});
+
+describe("Field holds one line of text that wraps (criterion 63)", () => {
+  const mirrorOf = (input: Element) => input.parentElement!.querySelector("[data-field-mirror]")!;
+
+  it("wraps a long value instead of cutting it off, with no scrolling inside the control", () => {
+    render(<Field label="Your UPI ID" defaultValue="meena.tuitions@okhdfc" />);
+    const input = screen.getByRole("textbox");
+    expect(classes(input)).toEqual(
+      expect.arrayContaining(["whitespace-pre-wrap", "wrap-anywhere", "resize-none", "overflow-hidden", "w-full"]),
+    );
+    expect(input.className).not.toMatch(/truncate|nowrap|text-ellipsis|overflow-x/);
+  });
+
+  it("grows by layout: an invisible copy of the value shares the control's grid cell and text box", () => {
+    render(<Field label="Your UPI ID" defaultValue="meena.tuitions@okhdfc" />);
+    const input = screen.getByRole("textbox");
+    const mirror = mirrorOf(input);
+    expect(mirror.getAttribute("aria-hidden")).toBe("true");
+    expect(classes(mirror)).toContain("invisible");
+    expect(mirror.textContent).toBe("meena.tuitions@okhdfc\u200B");
+    for (const name of ["type-value", "col-start-1", "row-start-1", "min-h-tap", "py-2", "whitespace-pre-wrap", "wrap-anywhere"]) {
+      expect(classes(mirror), name).toContain(name);
+      expect(classes(input), name).toContain(name);
+    }
+    expect(classes(input.parentElement!)).toContain("grid");
+  });
+
+  it("keeps the copy in step while typing", async () => {
+    const user = userEvent.setup();
+    render(<Field label="Your UPI ID" />);
+    const input = screen.getByRole("textbox");
+    expect(mirrorOf(input).textContent).toBe("\u200B");
+    await user.type(input, "meena.tuitions@okhdfc");
+    expect(mirrorOf(input).textContent).toBe("meena.tuitions@okhdfc\u200B");
+  });
+
+  it("sizes an empty field by its placeholder, so a long placeholder is not cut off either", () => {
+    render(<Field label="Your UPI ID" placeholder="name@bank" />);
+    expect(mirrorOf(screen.getByRole("textbox")).textContent).toBe("name@bank\u200B");
+  });
+
+  it("keeps the tick beside the value, in its own column", () => {
+    render(<Field label="Your UPI ID" defaultValue="meena.tuitions@okhdfc" state="correct" stateLabel="correct" />);
+    const tick = lineOf(screen.getByRole("textbox")).querySelector("svg")!;
+    expect(tick.getAttribute("class")).toMatch(/col-start-2/);
+    expect(tick.getAttribute("class")).toMatch(/self-center/);
+    expect(tick.getAttribute("class")).toMatch(/shrink-0/);
+  });
+
+  it("tells screen readers it is a single line of text", () => {
+    render(<Field label="Your UPI ID" />);
+    expect(screen.getByRole("textbox").getAttribute("aria-multiline")).toBe("false");
+  });
+
+  it("Enter never adds a line; it submits the form, as in a single-line field", async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    const user = userEvent.setup();
+    render(
+      <form onSubmit={onSubmit}>
+        <Field label="Your UPI ID" name="upi" />
+      </form>,
+    );
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.type(input, "meena@okhdfc{Enter}");
+    expect(input.value).toBe("meena@okhdfc");
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  it("Enter outside a form does nothing", async () => {
+    const user = userEvent.setup();
+    render(<Field label="Your UPI ID" />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.type(input, "a{Enter}b");
+    expect(input.value).toBe("ab");
+  });
+
+  it("lets the screen handle Enter itself", async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    const user = userEvent.setup();
+    render(
+      <form onSubmit={onSubmit}>
+        <Field label="Your UPI ID" onKeyDown={(event) => event.preventDefault()} />
+      </form>,
+    );
+    await user.type(screen.getByRole("textbox"), "a{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("turns pasted line breaks into spaces", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Field label="Name" onChange={onChange} />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    await user.click(input);
+    await user.paste("Ravi\nKumar \r\n Sharma");
+    expect(input.value).toBe("Ravi Kumar Sharma");
+    expect(onChange.mock.lastCall![0].target.value).toBe("Ravi Kumar Sharma");
+    expect(mirrorOf(input).textContent).toBe("Ravi Kumar Sharma\u200B");
+  });
+
+  it("removes line breaks from a starting value", () => {
+    render(<Field label="Name" defaultValue={"Ravi\nKumar"} />);
+    expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("Ravi Kumar");
+  });
+
+  it("works as a controlled field", async () => {
+    function Controlled() {
+      const [value, setValue] = useState("meena");
+      return <Field label="Your UPI ID" value={value} onChange={(event) => setValue(event.target.value.toLowerCase())} />;
+    }
+    const user = userEvent.setup();
+    render(<Controlled />);
+    const input = screen.getByRole("textbox") as HTMLTextAreaElement;
+    expect(input.value).toBe("meena");
+    await user.type(input, "@OK");
+    expect(input.value).toBe("meena@ok");
+    expect(mirrorOf(input).textContent).toBe("meena@ok\u200B");
+  });
+
+  it("submits its value with the form under its name", () => {
+    render(
+      <form data-testid="form">
+        <Field label="Your UPI ID" name="upi" defaultValue="meena@okhdfc" />
+      </form>,
+    );
+    const data = new FormData(screen.getByTestId("form") as HTMLFormElement);
+    expect(data.get("upi")).toBe("meena@okhdfc");
+  });
+
+  it("has no input type: the keyboard is chosen with inputMode", () => {
+    // @ts-expect-error a textarea has no type; use inputMode="numeric", "email" or "tel"
+    render(<Field label="Amount" type="number" inputMode="numeric" />);
+    expect(screen.getByRole("textbox").getAttribute("inputmode")).toBe("numeric");
+  });
+});
+
+describe("oneLine", () => {
+  it("leaves a single line alone", () => {
+    expect(oneLine("meena.tuitions@okhdfc")).toBe("meena.tuitions@okhdfc");
+    expect(oneLine("two  spaces")).toBe("two  spaces");
+    expect(oneLine("")).toBe("");
+  });
+
+  it("joins lines with one space", () => {
+    expect(oneLine("a\nb")).toBe("a b");
+    expect(oneLine("a \r\n\r\n b")).toBe("a b");
+    expect(oneLine("a\rb\nc")).toBe("a b c");
   });
 });
