@@ -730,7 +730,7 @@ Playwright in the existing `phone` project at 360px against `out/`. Criteria 58,
 | Criteria | Proved by | How |
 | --- | --- | --- |
 | 70 | Vitest + Playwright | Renders one radio per option, exactly one checked. Computed fill and text colour of checked and unchecked; 2px lines between; equal widths. |
-| 71, 72 | Playwright | Every segment ≥ 44px; long and two-line labels: all segments in a row share one height, no overflow. Four options at 360px: two rows of two (compare bounding boxes). |
+| 71, 72 | Playwright | Every segment ≥ 48px and its radio target ≥ 44 by 44; long and two-line labels: all segments in a row share one height, no overflow. Four options at 360px: two rows of two (compare bounding boxes). |
 | 73 | Vitest | `fieldset` named by its legend; radios share `name`; clicking and arrow keys call `onChange` with the value. |
 | 74 | Playwright | Tab to the group: outline is 3px and inside the segment's box, on a selected and on a forced unselected segment. Greyscale: computed fills differ (`ink` against none); screenshot attached for a person. |
 | 75 | Vitest + Playwright | One span per block with its kind; computed heights 14px and 24px, fills, the hollow one has a 2px border; bottoms equal. |
@@ -797,7 +797,7 @@ Added by `product-manager` after the build, from pull request #3 and the code at
 4. **How criterion 63 is checked (`e2e/helpers.ts`).** The cut-off-text check (`textProblems`) no longer treats a radio or a checkbox as a control that shows a value. Because of point 2, a segment's radio covers its own label, and counted as a "value" it was reported as overlapping that label. A radio's words are its label's, and the label is still walked as text. This is a change to a test helper only; criterion 63 itself is unchanged.
 5. **Criteria 8, 80 and 81, one contrast number under 3:1.** The switch knob's `ink` edge on the green (`stamp`) track is 2.80:1. The knob's `slip` fill on that track is 6.00:1 and is what shows the knob's shape. The pair is listed in `src/styles/contrast.ts` under `reportedPairs`, with `slip` on `stamp` and `ink` on `tab-idle` added to the pairs that must pass. No token was changed, as criterion 8 requires. It is Open question 21 for the founder.
 
-Not yet matched by a test: the Playwright check for criterion 71 still asserts 44px for the segment and for its target. It passes, but it would also pass if segments went back to 44px. A unit test does assert the `min-h-control` class. `test-engineer` should raise the segment figure in the Playwright check to 48.
+The Playwright check for criterion 71 first asserted 44px for the segment, so it would have passed if segments went back to 44px. It now asserts 48px for the segment and 44 by 44 for the radio target (commit `8109731`); it was shown to fail when segments were forced to 46px.
 
 ### 10. One correction for the F2a plan
 
