@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, f4-supabase-environments] # TEMP: F4a step 4 CI loop, removed in the last commit of step 4
+    branches: [main]
 
 permissions:
   contents: read
