@@ -10,6 +10,7 @@ src/app/[locale]/(app)/        signed-in tutor app — client-rendered
 src/app/p/, src/app/r/, src/app/join/   static shells for token routes
 src/components/ui/             design-system components from docs/DESIGN.md
 src/components/<feature>/      feature components
+src/styles/                    design tokens, fonts and type roles (the only place hex values live)
 src/lib/                       supabase client, formatters, outbox, analytics
 src/config/brand.ts            product name and domain, the only place they appear
 ```

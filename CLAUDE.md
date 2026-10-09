@@ -58,7 +58,7 @@ Full detail in `docs/DESIGN.md`. The ones that are easy to get wrong:
 - Blue is for sending and paying. Black is for recording. Red is never a button: it is the cloth cover and it marks overdue.
 - Status is always a word plus a mark, never colour alone.
 - No text below 14px. Rows and buttons grow in height; they never truncate a translated label.
-- Hindi, Kannada and Telugu use Anek with their own line-height and no letter-spacing. Amounts stay in the headline face with 0–9 digits.
+- Hindi, Kannada and Telugu use Anek with their own line-height and no letter-spacing. Amounts never use Anek and always use 0–9 digits: the headline face for headline amounts, DM Mono for amounts in rows.
 - Buttons have a solid offset shadow and move into it when pressed. No blur shadows, no gradients, corners 4px at most.
 
 ## Definition of Done (per slice)

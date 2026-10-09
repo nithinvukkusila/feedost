@@ -77,7 +77,7 @@ Sizes are relative effort (S about a day, M a few days, L about a week of focuse
 | ID | Slice | Size | Notes |
 | --- | --- | --- | --- |
 | F1 | Repo and tooling | S | Next.js + TS + Tailwind + pnpm, lint, type-check, Vitest, Playwright, CI, `.env.example`, brand constant |
-| F2 | Design system in code | M | Tailwind tokens from `docs/DESIGN.md`, fonts, core components (Button, Field, Slip, Row, Stamp, Tabs, StatusTag, Sheet), a `/dev/components` page |
+| F2 | Design system in code | L | Tailwind tokens from `docs/DESIGN.md`, fonts, all thirteen components in `docs/DESIGN.md`, a `/dev/components` page. Two pull requests: F2a (tokens, fonts, Button, Field, Slip, Row, Stamp, Tabs, StatusTag, Sheet, the page) and F2b (Segmented, StudentStrip, Switch, BottomNav, Banner) |
 | F3 | Languages | S | next-intl, 4 message files, locale routing, `pnpm i18n:check`, number and date formatters (₹1,23,456, DD MMM YYYY) |
 | F4 | Supabase and environments | S | Local project, staging and production projects, migration workflow, Vercel project wired to the repo |
 

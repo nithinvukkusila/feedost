@@ -45,7 +45,7 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 | Hindi, Kannada, Telugu | Anek Devanagari / Kannada / Telugu | headline weight 700, line-height ≥1.25, letter-spacing 0, reading text 17px at 1.6, labels 15px weight 600, no uppercase |
 
 - Minimum size 14px anywhere.
-- Amounts are always Bricolage with 0–9 digits and Indian grouping, in every language.
+- Amounts never use Anek and always use 0–9 digits and Indian grouping, in every language: Bricolage for headline amounts, DM Mono for amounts in rows (decided 2026-10-09).
 - Font stacks end in `'Anek Latin', system-ui` so a missing ₹ glyph falls back cleanly.
 
 ## Shape and depth
@@ -54,9 +54,9 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 - Corners: 4px on buttons, 0 on slips, 6px on the top of index tabs. Stamps and the round remind button are circles.
 - Shadow: solid, offset, no blur. Buttons `5px 5px 0 ink` (black buttons use `ink-label` as the shadow colour); slips `6px 6px 0 ink`.
 - Cloth surfaces carry a 2px dashed `stitch` outline inset 8–14px.
-- Rotation is for stamps only (about -12°).
+- Rotation is for stamps only (about -12°). In code the stamp's ring stays unrotated and only its words tilt, so a large stamp cannot cause sideways scroll.
 
-## Components (build these in slice F2)
+## Components (build these in slice F2: F2a builds the first eight in the build plan, F2b the other five)
 
 | Component | Notes |
 | --- | --- |
