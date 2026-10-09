@@ -133,10 +133,26 @@ describe("amounts never follow the script (criteria 14 and 40)", () => {
 
   it("can shrink to fit its container, with the token as the maximum and 14px as the floor", () => {
     expect(rule(type, "@utility amount-box")).toEqual({ "container-type": "inline-size" });
-    const fit = /@utility amount-size-\* \{([^}]*)\}/.exec(type)![1];
-    expect(fit).toContain("font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));");
+    expect(rule(type, "@utility amount-size-6xl")).toEqual({
+      "font-size": "max(0.875rem, min(var(--text-6xl), calc(100cqi / var(--amount-em, 5.3))))",
+    });
+    expect(rule(type, "@utility amount-size-7xl")).toEqual({
+      "font-size": "max(0.875rem, min(var(--text-7xl), calc(100cqi / var(--amount-em, 5.3))))",
+    });
     // No text-size-adjust here: the page already has 100% from Tailwind's base styles, so it changed nothing.
     expect(type).not.toMatch(/text-size-adjust/);
+  });
+
+  it("fits at the two headline sizes only, never a row or reading-text size (criterion 95)", () => {
+    const sizes = [...type.matchAll(/@utility amount-size-([\w*-]+)/g)].map((m) => m[1]);
+    expect(sizes).toEqual(["6xl", "7xl"]);
+    // No wildcard form, which would make every text size fittable.
+    expect(type).not.toMatch(/amount-size-\*/);
+    // The row amount role and the reading roles do not read the container or the amount width.
+    for (const name of ["type-amount-row", "type-body", "type-body-sm", "type-body-lg", "type-caption", "type-label"]) {
+      const declared = Object.values(utility(name)).join(" ");
+      expect(declared, name).not.toMatch(/cqi|--amount-em/);
+    }
   });
 
   it("row amounts are fixed to DM Mono", () => {

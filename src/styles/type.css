@@ -118,20 +118,27 @@
 }
 
 /*
- * Shrink to fit, for amounts that may be wider than their space. Three parts:
+ * Shrink to fit, for headline amounts that may be wider than their space. Three parts:
  *   amount-box       on a wrapper: it becomes the space the amount must fit (a size container).
  *   amount-size-7xl  on the amount, in place of text-7xl: the token size is the maximum.
  *   --amount-em      on the amount: its width in em, from amountFit() in src/lib/amount-fit.ts.
  * The size is the token, or the container's width divided by the amount's width, whichever is
  * smaller, and never under 14px. Nothing changes when the amount fits at the token size.
  * Without --amount-em it assumes a wide seven-digit amount.
+ *
+ * Fitting is for headline amounts only (spec F2, criterion 95), so these exist at the two headline
+ * sizes, 60px and 72px, and nowhere else. Row amounts and amounts in reading text are never fitted.
  */
 @utility amount-box {
   container-type: inline-size;
 }
 
-@utility amount-size-* {
-  font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));
+@utility amount-size-6xl {
+  font-size: max(0.875rem, min(var(--text-6xl), calc(100cqi / var(--amount-em, 5.3))));
+}
+
+@utility amount-size-7xl {
+  font-size: max(0.875rem, min(var(--text-7xl), calc(100cqi / var(--amount-em, 5.3))));
 }
 
 /* Row amounts. Always DM Mono (the rupee sign falls to Bricolage, next in the stack). Ignores the script variables. */
