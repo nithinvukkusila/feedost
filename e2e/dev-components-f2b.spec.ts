@@ -7,7 +7,7 @@
 // failed on the Linux CI runner in F2a. Exact checks are kept for things CSS fixes outright
 // (border widths, colours, a min-height with short text).
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, shadow, sidewaysScroll } from "./helpers";
+import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, shadow, sidewaysScroll, textProblems } from "./helpers";
 
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
@@ -1166,4 +1166,327 @@ test.describe("Banner and its flat buttons: criteria 89, 90, 91, 92, 93 (and 88 
       }
     });
   }
+});
+
+// The whole page, now with thirteen components. The whole-page tests in dev-components.spec.ts walk
+// `body` and `main`, so they already cover these sections; the tests here prove that the five new
+// sections are really in what gets walked (each has things to find) and hold them to the same rules
+// one section at a time, so a failure names the component.
+test.describe("whole page with thirteen components: criteria 58, 59, 61, 62, 63, 64 and 4, 8, 69 as rendered", () => {
+  const F2A = ["button", "field", "slip", "row", "status-tag", "stamp", "tabs", "sheet"];
+  const F2B = ["segmented", "switch", "student-strip", "bottom-nav", "banner"];
+  const sel = (id: string) => `[data-testid="section-${id}"]`;
+  const TARGETS = 'a[href], button, input, select, textarea, [role="tab"], [role="link"], [role="button"], [role="switch"], [tabindex]:not([tabindex="-1"])';
+
+  /** Interactive elements under `scope` smaller than 44 by 44, and how many were measured. */
+  const smallTargets = (page: Page, scope: string) =>
+    page.evaluate(
+      ([root, selector]) => {
+        const small: string[] = [];
+        let found = 0;
+        for (const el of document.querySelector(root)!.querySelectorAll(selector)) {
+          const r = el.getBoundingClientRect();
+          if (r.width === 0 && r.height === 0) continue;
+          found++;
+          if (r.width < 43.99 || r.height < 43.99) small.push(`${el.tagName.toLowerCase()} "${(el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 30)}" is ${r.width.toFixed(1)} by ${r.height.toFixed(1)}`);
+        }
+        return { found, small };
+      },
+      [scope, TARGETS] as const,
+    );
+
+  /** Text under `scope` below 14px, and how many pieces of text were measured. */
+  const smallText = (page: Page, scope: string) =>
+    page.evaluate((root) => {
+      const small: string[] = [];
+      let seen = 0;
+      const walker = document.createTreeWalker(document.querySelector(root)!, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const el = node.parentElement;
+        if (!el || (node.textContent ?? "").trim() === "") continue;
+        seen++;
+        const size = parseFloat(getComputedStyle(el).fontSize);
+        if (size < 14) small.push(`${size}px: ${(node.textContent ?? "").trim().slice(0, 40)}`);
+      }
+      return { seen, small };
+    }, scope);
+
+  /** Text colour against the ground it sits on, for every piece of visible text under `scope`: the pairs under 4.5:1. */
+  const lowContrast = (page: Page, scope: string) =>
+    page.evaluate((root) => {
+      const lum = (colour: string) => {
+        const m = /^rgb\((\d+), (\d+), (\d+)\)$/.exec(colour);
+        if (!m) throw new Error(`Not an opaque colour: ${colour}`);
+        const [r, g, b] = [m[1], m[2], m[3]].map((v) => {
+          const c = Number(v) / 255;
+          return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const pairs = new Map<string, string>();
+      const walker = document.createTreeWalker(document.querySelector(root)!, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const el = node.parentElement;
+        if (!el || (node.textContent ?? "").trim() === "" || el.getClientRects().length === 0) continue;
+        if (getComputedStyle(el).visibility === "hidden") continue;
+        let ground = "";
+        for (let up: Element | null = el; up; up = up.parentElement) {
+          const bg = getComputedStyle(up).backgroundColor;
+          if (/^rgb\(/.test(bg)) {
+            ground = bg;
+            break;
+          }
+        }
+        const key = `${getComputedStyle(el).color} on ${ground}`;
+        if (!pairs.has(key)) pairs.set(key, (node.textContent ?? "").trim().slice(0, 30));
+      }
+      const failing: string[] = [];
+      for (const [pair, sample] of pairs) {
+        const [fg, bg] = pair.split(" on ");
+        const [hi, lo] = [lum(fg), lum(bg)].sort((a, b) => b - a);
+        const ratio = (hi + 0.05) / (lo + 0.05);
+        if (ratio < 4.5) failing.push(`${pair} is ${ratio.toFixed(2)}:1 ("${sample}")`);
+      }
+      return { pairs: pairs.size, failing };
+    }, scope);
+
+  test("58: the page has a section for each of the thirteen components, in the plan's order, the five new ones after Sheet", async ({ page }) => {
+    for (const id of [...F2A, ...F2B]) {
+      const s = section(page, id);
+      await expect(s, id).toBeVisible();
+      await expect(s.getByRole("heading", { level: 2 }).first(), id).toBeVisible();
+      await expect(s, id).toHaveAccessibleName(/\S/);
+    }
+    const order = await page.locator('[data-testid^="section-"]').evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!.replace("section-", "")));
+    expect(order).toEqual(["tokens", "type", "rupee", "button", "field", "slip", "row", "status-tag", "stamp", "tabs", "sheet", "segmented", "switch", "student-strip", "bottom-nav", "banner"]);
+  });
+
+  test("58: every variant and state of the five new components is on the page without anyone touching it", async ({ page }) => {
+    // Segmented: two, three and four choices, two-line segments, long text, and both frozen focus rings.
+    for (const id of ["two-en", "two-line-en", "three-en", "four-en", "long-en", "focus-chosen", "focus-other", "live"]) await expect(page.getByTestId(`segmented-${id}`), `segmented ${id}`).toBeVisible();
+    await expect(page.getByTestId("segmented-two-en").getByRole("radio")).toHaveCount(2);
+    await expect(page.getByTestId("segmented-three-en").getByRole("radio")).toHaveCount(3);
+    await expect(page.getByTestId("segmented-four-en").getByRole("radio")).toHaveCount(4);
+    await expect(section(page, "segmented").locator('input[data-force="focus"]')).toHaveCount(2);
+
+    // Switch: on, off, long words, named by visible text, frozen focus.
+    for (const id of ["en-on", "en-off", "en-long-on", "en-long-off", "en-labelled", "focus-on", "focus-off"]) await expect(page.getByTestId(`switch-${id}`), `switch ${id}`).toBeVisible();
+    await expect(page.getByTestId("switch-en-on")).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByTestId("switch-en-off")).toHaveAttribute("aria-checked", "false");
+
+    // StudentStrip: 1, 23 and 60 students, a long legend, on a slip, and the empty one.
+    for (const id of ["1", "23-en", "60", "long-en", "on-slip"]) await expect(page.getByTestId(`strip-${id}`).getByRole("img"), `strip ${id}`).toBeVisible();
+    await expect(page.getByTestId("strip-0")).toBeAttached();
+    for (const kind of ["paid", "due", "overdue"]) await expect(page.getByTestId("strip-23-en").locator(`[data-kind="${kind}"]`).first()).toBeVisible();
+
+    // BottomNav: all four positions of the current item, long labels, frozen focus.
+    for (const id of ["en", "hi", "kn", "te", "long-en", "focus"]) await expect(page.getByTestId(`nav-${id}`).getByRole("navigation"), `nav ${id}`).toBeVisible();
+    const currents = await section(page, "bottom-nav").locator('[aria-current="page"]').evaluateAll((els) => [...new Set(els.map((el) => el.getAttribute("data-item")))].sort());
+    expect(currents).toEqual(["attendance", "home", "more", "students"]);
+
+    // Banner: the three kinds; error with two, one and no actions; undo with a link and icon; pressed and focus frozen; working.
+    for (const id of ["offline-en", "error-en", "undo-en", "long-en", "error-one", "error-none", "pressed", "focus", "live"]) await expect(page.getByTestId(`banner-${id}`).locator("[data-kind]").first(), `banner ${id}`).toBeVisible();
+    await expect(section(page, "banner").locator('[data-force="pressed"]')).toHaveCount(4);
+    await expect(section(page, "banner").locator('[data-force="focus"]')).toHaveCount(3);
+    await expect(page.getByTestId("banner-undo-en").locator("a[href] svg")).toHaveCount(1);
+  });
+
+  test("59: each of the five new sections repeats in English, Hindi, Kannada and Telugu, each block marked with its lang and holding its script", async ({ page }) => {
+    for (const id of F2B) {
+      await expect(section(page, id).getByTestId("lang-en"), id).toHaveAttribute("lang", "en");
+      for (const lang of indicLangs) {
+        const block = section(page, id).getByTestId(`lang-${lang}`);
+        await expect(block, `${id} ${lang}`).toHaveCount(1);
+        await expect(block, `${id} ${lang}`).toHaveAttribute("lang", lang);
+        await expect(block, `${id} ${lang} holds text in its script`).toContainText(scriptPattern[lang]);
+      }
+    }
+  });
+
+  for (const lang of langs) {
+    test(`59: ${lang} has one deliberately long label in each of the five, and each takes more than one line`, async ({ page }) => {
+      expect(await lineCount(page.getByTestId(`segmented-long-${lang}`).locator("legend")), "segmented label").toBeGreaterThanOrEqual(2);
+      expect(await lineCount(page.getByTestId(`segmented-long-${lang}`).locator("label span").first()), "segment").toBeGreaterThanOrEqual(2);
+      const list = page.getByTestId(`strip-long-${lang}`).getByRole("list");
+      expect((await box(list)).height, "strip legend").toBeGreaterThan(parseFloat((await css(list, ["line-height"]))["line-height"]) * 1.8);
+      expect(await lineCount(page.getByTestId(`nav-long-${lang}`).getByRole("link").nth(2).locator("> span").nth(1)), "nav label").toBeGreaterThanOrEqual(2);
+      expect(await lineCount(page.getByTestId(`banner-long-${lang}`).locator('[data-kind="error"] p').nth(1)), "banner detail").toBeGreaterThanOrEqual(3);
+      // A switch's long word does not wrap: the switch is wider instead.
+      expect((await box(page.getByTestId(`switch-${lang}-long-on`))).width, "switch").toBeGreaterThan((await box(page.getByTestId(`switch-${lang}-on`))).width + 10);
+    });
+  }
+
+  test("61: no sideways scroll at 360px with thirteen components, also while a flat button is held down", async ({ page }) => {
+    expect(page.viewportSize()).toEqual({ width: 360, height: 740 });
+    expect(await sidewaysScroll(page)).toBe(0);
+    await page.evaluate(() => window.scrollTo(500, 0));
+    expect(await page.evaluate(() => window.scrollX)).toBe(0);
+    // Nothing in the five sections reaches past the screen.
+    for (const id of F2B) {
+      const past = await section(page, id).evaluate((el) => [...el.querySelectorAll("*")].filter((n) => n.getBoundingClientRect().right > 360.5 || n.getBoundingClientRect().left < -0.5).length);
+      expect(past, id).toBe(0);
+    }
+    const button = page.getByTestId("banner-live").getByRole("button", { name: "Later" });
+    await button.scrollIntoViewIfNeeded();
+    const b = await box(button);
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    await expect.poll(async () => (await css(button, ["translate"])).translate).toBe("2px 2px");
+    expect(await sidewaysScroll(page)).toBe(0);
+    await page.mouse.up();
+  });
+
+  test("62: every interactive element in each of the five sections is at least 44 by 44, and the page as a whole has none smaller", async ({ page }) => {
+    // What each section has to be measured: radios, switches, nothing (the strip is a picture), links, buttons.
+    const expected: Record<string, number> = { segmented: 60, switch: 20, "student-strip": 0, "bottom-nav": 36, banner: 40 };
+    for (const id of F2B) {
+      const result = await smallTargets(page, sel(id));
+      if (expected[id] === 0) expect(result.found, `${id}: a picture has no targets`).toBe(0);
+      else expect(result.found, `${id}: targets found`).toBeGreaterThanOrEqual(expected[id]);
+      expect(result.small, id).toEqual([]);
+    }
+    const whole = await smallTargets(page, "body");
+    // 280 on this build. The floor only proves the walk is not empty-handed; it is not a count to keep.
+    expect(whole.found).toBeGreaterThan(250);
+    expect(whole.small).toEqual([]);
+  });
+
+  test("4: no text in any of the five sections is below 14px", async ({ page }) => {
+    for (const id of F2B) {
+      const result = await smallText(page, sel(id));
+      expect(result.seen, `${id}: text found`).toBeGreaterThan(20);
+      expect(result.small, id).toEqual([]);
+    }
+  });
+
+  test("8, as rendered: every piece of text in the five sections reaches 4.5:1 against its ground", async ({ page }) => {
+    const seen: Record<string, number> = {};
+    for (const id of F2B) {
+      const result = await lowContrast(page, sel(id));
+      seen[id] = result.pairs;
+      expect(result.failing, id).toEqual([]);
+    }
+    // Each section really has its own pairs: slip on ink in a segment, the knob word, the three
+    // legend colours, the two nav label colours, and the banners' five.
+    expect(seen.segmented).toBeGreaterThanOrEqual(4);
+    expect(seen.switch).toBeGreaterThanOrEqual(3);
+    expect(seen["student-strip"]).toBeGreaterThanOrEqual(5);
+    expect(seen["bottom-nav"]).toBeGreaterThanOrEqual(4);
+    expect(seen.banner).toBeGreaterThanOrEqual(7);
+  });
+
+  test("nothing in the five sections is truncated, clipped or overlapping at the default text size", async ({ page }) => {
+    for (const id of F2B) expect(await textProblems(page, sel(id)), id).toEqual([]);
+  });
+
+  test("63: at root 130% nothing in the five sections is clipped, overlapped or truncated, targets stay 44px, and there is no sideways scroll", async ({ page }, testInfo) => {
+    const before = {
+      segment: (await box(page.getByTestId("segmented-two-en").locator("label").first())).height,
+      switch: (await box(page.getByTestId("switch-en-on"))).width,
+      strip: (await box(page.getByTestId("strip-23-en").locator('[data-kind="overdue"]').first())).height,
+      nav: (await box(page.getByTestId("nav-en").getByRole("navigation"))).height,
+      banner: (await box(page.getByTestId("banner-error-en").locator("[data-kind]"))).height,
+    };
+    const probe = page.getByTestId("banner-offline-en").locator("[data-kind] p").first();
+    expect((await css(probe, ["font-size"]))["font-size"]).toBe("16px");
+    await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+    await expect.poll(async () => (await css(probe, ["font-size"]))["font-size"]).toBe("20.8px");
+
+    expect(await sidewaysScroll(page)).toBe(0);
+    for (const id of F2B) {
+      expect(await textProblems(page, sel(id)), id).toEqual([]);
+      expect((await smallTargets(page, sel(id))).small, id).toEqual([]);
+      expect((await smallText(page, sel(id))).small, id).toEqual([]);
+    }
+
+    // Everything is sized in rem, so each grows with the text and is not clipped at its old size.
+    expect((await box(page.getByTestId("segmented-two-en").locator("label").first())).height).toBeGreaterThan(before.segment + 8);
+    expect((await box(page.getByTestId("switch-en-on"))).width).toBeGreaterThan(before.switch + 8);
+    expect((await box(page.getByTestId("strip-23-en").locator('[data-kind="overdue"]').first())).height).toBeCloseTo(before.strip * 1.3, 0);
+    expect((await box(page.getByTestId("nav-en").getByRole("navigation"))).height).toBeGreaterThan(before.nav + 8);
+    expect((await box(page.getByTestId("banner-error-en").locator("[data-kind]"))).height).toBeGreaterThan(before.banner + 8);
+
+    // The strip still fits: 23 and 60 blocks, none past the screen, hollow ones still hollow.
+    for (const id of ["23-en", "60"]) {
+      const blocks = await boxes(page.getByTestId(`strip-${id}`).locator("span[data-kind]"));
+      for (const b of blocks) {
+        expect(b.x + b.width, id).toBeLessThanOrEqual(360);
+        expect(b.width, id).toBeGreaterThanOrEqual(8);
+      }
+    }
+    await page.getByTestId("banner-long-te").scrollIntoViewIfNeeded();
+    await attachScreenshot(testInfo, "130-percent-telugu-banner.png", await page.screenshot());
+  });
+
+  test("64: with reduce motion on, nothing in the five sections animates or eases, and a flat button's press is instant [own page]", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await openDevPage(page);
+    expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(true);
+    for (const id of F2B) {
+      const moving = await section(page, id).evaluate((el) => {
+        const out: string[] = [];
+        for (const node of [el, ...el.querySelectorAll("*")]) {
+          const s = getComputedStyle(node);
+          if (s.animationName !== "none") out.push(`animation ${s.animationName} on ${node.tagName}`);
+          if (s.transitionDuration.split(",").some((d) => parseFloat(d) > 0)) out.push(`transition ${s.transitionDuration} on ${node.tagName}`);
+        }
+        return out;
+      });
+      expect(moving, id).toEqual([]);
+    }
+    const button = page.getByTestId("banner-live").getByRole("button", { name: "Try again" });
+    await button.scrollIntoViewIfNeeded();
+    const rest = await box(button);
+    await page.mouse.move(rest.x + rest.width / 2, rest.y + rest.height / 2);
+    await page.mouse.down();
+    // No polling: the move is finished the moment the press lands.
+    expect((await css(button, ["translate"])).translate).toBe("2px 2px");
+    expect((await box(button)).x - rest.x).toBe(2);
+    await page.mouse.up();
+
+    // State changes still happen, at once: a switch flips and a segment is chosen.
+    await page.getByTestId("switch-en-off").tap();
+    await expect(page.getByTestId("switch-en-off")).toHaveAttribute("aria-checked", "true");
+    await page.getByTestId("segmented-two-en").getByRole("radio").nth(1).tap();
+    await expect(page.getByTestId("segmented-two-en").getByRole("radio").nth(1)).toBeChecked();
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+  });
+
+  test("69, as rendered: the only motion in the five sections is the 80ms press of a banner's buttons", async ({ page }) => {
+    const found: Record<string, string[]> = {};
+    for (const id of F2B) {
+      found[id] = await section(page, id).evaluate((el) => {
+        const out = new Set<string>();
+        for (const node of [el, ...el.querySelectorAll("*")]) {
+          const s = getComputedStyle(node);
+          if (s.animationName !== "none") out.add(`animation ${s.animationName}`);
+          if (s.transitionDuration.split(",").some((d) => parseFloat(d) > 0)) {
+            out.add(`${node.matches("[data-kind] button, [data-kind] a") ? "banner action" : node.tagName.toLowerCase()}|${s.transitionProperty}|${s.transitionDuration}|${s.transitionTimingFunction}`);
+          }
+        }
+        return [...out];
+      });
+    }
+    expect(found).toEqual({
+      segmented: [],
+      switch: [],
+      "student-strip": [],
+      "bottom-nav": [],
+      banner: ["banner action|transform, translate, scale, rotate|0.08s|linear"],
+    });
+  });
+
+  test("the dev page with thirteen components loads with no console error and no failed request [own page]", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    page.on("pageerror", (error) => errors.push(String(error)));
+    page.on("requestfailed", (request) => errors.push(`failed: ${request.url()}`));
+    await openDevPage(page);
+    await page.getByTestId("section-banner").scrollIntoViewIfNeeded();
+    await page.getByTestId("switch-en-off").tap();
+    await page.getByTestId("banner-live").getByRole("button", { name: "Undo" }).tap();
+    expect(errors).toEqual([]);
+  });
 });
