@@ -265,3 +265,10 @@ CI: `pnpm size` at 150 KB or less per route (22); `pnpm check:leak` (31).
 
 ### Hand-off
 `frontend-dev` starts with task 1 (`src/lib/seo.ts` and its test), then tasks 2 to 6 in order; `test-engineer` takes task 7 after the build is green.
+
+## Build record — frontend-dev (tasks 1 to 6)
+- `TODO-translate` values: 46 (hi 2, kn 22, te 22; en 0). 56 keys in each file. Flagged values show their English text in the page and in the 404, never the marker.
+- Initial JS, gzipped (`pnpm size`): `/en/` 132.1 KB, `/hi/` 132.1 KB, `/kn/` 132.1 KB, `/te/` 132.1 KB, `/` 132.1 KB. No Client Component was added. `out/404.html` also 132.1 KB.
+- `experimental.globalNotFound` was proven in a build: `out/404.html` has `<html lang="en">`, the five font variables, four `<section lang>` blocks, four links and `noindex`. `pnpm check:404` guards it in CI.
+- Rule found while drafting: `check:leak` matches by substring, so a flagged (English) sentence in hi/kn/te must not contain a short English value that another key has translated (for example "Remind" or "Coming soon"). Such sentences were reworded or drafted.
+- `Button` gained `size="large"` (56px) for criterion 11.
