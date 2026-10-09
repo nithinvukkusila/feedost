@@ -121,6 +121,11 @@
   box-shadow: none;
 }
 
+/* A flat button (inside a banner) has no shadow to move into: a 2px move, in the same 80ms. */
+@utility press-flat {
+  translate: 2px 2px;
+}
+
 /*
  * The stamp landing after a payment: once, 200ms. Not defined at all under reduced motion.
  * The ring scales from 1.15 to 1 while the words inside settle from -16 to -12 degrees.

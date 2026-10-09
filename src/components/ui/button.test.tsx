@@ -1,7 +1,9 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Button, RoundButton, type ButtonVariant } from "./button";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { Button, FlatButton, RoundButton, type ButtonVariant, type FlatLook } from "./button";
 
 afterEach(cleanup);
 
@@ -311,5 +313,121 @@ describe("RoundButton (criterion 24)", () => {
     render(<RoundButton label="Remind" icon={<svg />} onClick={onClick} />);
     await user.click(screen.getByRole("button"));
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("FlatButton (spec open question 6: the shadowless form, for Banner only)", () => {
+  const looks: [FlatLook, string[]][] = [
+    ["record", ["border-ink", "bg-ink", "text-slip"]],
+    ["outline", ["border-ink", "bg-transparent", "text-ink"]],
+    ["outline-on-dark", ["border-slip", "bg-transparent", "text-slip"]],
+    ["slip-on-dark", ["border-slip", "bg-slip", "text-ink"]],
+  ];
+
+  it.each(looks)("%s has its border, fill and text", (look, expected) => {
+    render(<FlatButton look={look}>Later</FlatButton>);
+    const button = screen.getByRole("button", { name: "Later" });
+    expect(classes(button)).toEqual(expect.arrayContaining(expected));
+  });
+
+  it.each(looks)("%s has no shadow, and no red, blue or green", (look) => {
+    render(<FlatButton look={look}>Later</FlatButton>);
+    const name = screen.getByRole("button").className;
+    expect(name).not.toMatch(/shadow/);
+    expect(name).not.toMatch(/cloth|blue|stamp/);
+  });
+
+  it("has four looks and no others", () => {
+    // @ts-expect-error there is no send, green or red flat button
+    render(<FlatButton look="send">Send</FlatButton>);
+    expect(screen.getByRole("button").className).not.toMatch(/\bbg-/);
+  });
+
+  it("shares the button's box, wrapping text, 80ms move and focus ring", () => {
+    render(<FlatButton look="record">Try again</FlatButton>);
+    const flat = classes(screen.getByRole("button", { name: "Try again" }));
+    cleanup();
+    render(<Button variant="record">Save</Button>);
+    const button = classes(screen.getByRole("button", { name: "Save" }));
+    const shared = ["inline-flex", "min-h-control", "rounded-sm", "border-2", "whitespace-normal", "wrap-anywhere", "transition-transform", "duration-80", "ease-linear", "motion-reduce:transition-none", "motion-reduce:duration-0", "ring:ground-ring"];
+    expect(flat).toEqual(expect.arrayContaining(shared));
+    expect(button).toEqual(expect.arrayContaining(shared));
+  });
+
+  it("moves 2px when pressed instead of 5px into a shadow", () => {
+    render(<FlatButton look="outline">Later</FlatButton>);
+    const flat = classes(screen.getByRole("button"));
+    expect(flat).toContain("pressed:press-flat");
+    expect(flat).not.toContain("pressed:press-button");
+  });
+
+  it("is a real button that does not submit a form unless asked, and reports a tap", async () => {
+    const onClick = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <FlatButton look="record" onClick={onClick}>
+        Try again
+      </FlatButton>,
+    );
+    const button = screen.getByRole("button", { name: "Try again" });
+    expect(button.tagName).toBe("BUTTON");
+    expect(button.getAttribute("type")).toBe("button");
+    await user.click(button);
+    await user.tab();
+    await user.tab({ shift: true });
+    await user.keyboard("{Enter}");
+    expect(onClick).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders as a link with the same look when given an href", () => {
+    render(
+      <FlatButton look="slip-on-dark" href="/receipt">
+        Send receipt
+      </FlatButton>,
+    );
+    const link = screen.getByRole("link", { name: "Send receipt" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe("/receipt");
+    expect(classes(link)).toEqual(expect.arrayContaining(["bg-slip", "text-ink", "min-h-control"]));
+  });
+
+  it("puts its icon before the label, hidden from screen readers", () => {
+    render(
+      <FlatButton look="slip-on-dark" icon={<svg data-testid="icon" />}>
+        Send receipt
+      </FlatButton>,
+    );
+    const button = screen.getByRole("button", { name: "Send receipt" });
+    const [iconWrap, label] = [...button.children];
+    expect(iconWrap.getAttribute("aria-hidden")).toBe("true");
+    expect(iconWrap.contains(screen.getByTestId("icon"))).toBe(true);
+    expect(label.textContent).toBe("Send receipt");
+  });
+
+  it("has no disabled and no busy form", () => {
+    // @ts-expect-error no disabled state was drawn (spec open question 18)
+    render(<FlatButton look="record" disabled>Try again</FlatButton>);
+    cleanup();
+    // @ts-expect-error busy belongs to Button
+    render(<FlatButton look="record" busy busyLabel="Saving">Try again</FlatButton>);
+  });
+
+  it("is not offered to screens: only Banner, the tests and the dev page mention it", () => {
+    const root = process.cwd();
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name);
+        return statSync(path).isDirectory() ? walk(path) : [path];
+      });
+    const allowed = (path: string) =>
+      ["src/components/ui/button.tsx", "src/components/ui/button.test.tsx", "src/components/ui/banner.tsx", "src/components/ui/banner.test.tsx"].includes(path) ||
+      path.startsWith("src/app/dev/");
+    const mentions = walk(join(root, "src"))
+      .filter((path) => /\.(tsx?|mts|mjs|jsx?)$/.test(path))
+      .filter((path) => readFileSync(path, "utf8").includes("FlatButton"))
+      .map((path) => path.slice(root.length + 1).replaceAll("\\", "/"));
+    expect(mentions.filter((path) => !allowed(path))).toEqual([]);
+    // The check can see it at all: Banner does use it.
+    expect(mentions).toContain("src/components/ui/banner.tsx");
   });
 });

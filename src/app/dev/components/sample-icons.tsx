@@ -85,3 +85,12 @@ export function NavMoreIcon() {
     </svg>
   );
 }
+
+/** A message: on "Send receipt" in the undo banner, as on the canvas. */
+export function MessageIcon() {
+  return (
+    <svg {...common} strokeWidth={2.2}>
+      <path d="M5 5h14a1 1 0 011 1v10a1 1 0 01-1 1h-8l-5 4v-4H5a1 1 0 01-1-1V6a1 1 0 011-1z" />
+    </svg>
+  );
+}

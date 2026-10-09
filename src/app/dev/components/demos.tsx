@@ -2,6 +2,7 @@
 
 // The few examples on the dev page that need state.
 import { useEffect, useId, useRef, useState } from "react";
+import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Row, Rows } from "@/components/ui/row";
@@ -11,6 +12,7 @@ import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
 import { Switch } from "@/components/ui/switch";
 import { tabId, Tabs, type TabItem } from "@/components/ui/tabs";
+import { MessageIcon } from "./sample-icons";
 
 /** A button that goes busy for a moment when tapped, to show that a second tap does nothing. */
 export function BusyDemo({ label, busyLabel }: { label: string; busyLabel: string }) {
@@ -216,4 +218,48 @@ export function SwitchDemo({
     );
   }
   return <Switch {...shared} label={label ?? ""} />;
+}
+
+/** An error banner and an undo banner whose actions report back: each tap is counted beneath. */
+export function BannerDemo({
+  error,
+  undo,
+  tapsLabel,
+}: {
+  error: { title: string; detail: string; retry: string; later: string };
+  undo: { message: string; undo: string; send: string };
+  tapsLabel: string;
+}) {
+  const [taps, setTaps] = useState({ retry: 0, later: 0, undo: 0, send: 0 });
+  const count = (name: keyof typeof taps) => () => setTaps((t) => ({ ...t, [name]: t[name] + 1 }));
+  return (
+    <div className="flex flex-col gap-4">
+      {/* 5px of room on the right for the error banner's shadow. */}
+      <div className="pr-1.5">
+        <Banner
+          kind="error"
+          title={error.title}
+          detail={error.detail}
+          actions={[
+            { label: error.retry, onClick: count("retry") },
+            { label: error.later, onClick: count("later") },
+          ]}
+        />
+      </div>
+      <Banner
+        kind="undo"
+        message={undo.message}
+        actions={[
+          { label: undo.undo, onClick: count("undo") },
+          { label: undo.send, onClick: count("send"), icon: <MessageIcon /> },
+        ]}
+      />
+      <p className="type-caption text-ink-soft">
+        {tapsLabel}{" "}
+        <span data-testid="banner-live-taps">
+          {taps.retry} {taps.later} {taps.undo} {taps.send}
+        </span>
+      </p>
+    </div>
+  );
 }

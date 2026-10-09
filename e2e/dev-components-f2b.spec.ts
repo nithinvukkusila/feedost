@@ -7,7 +7,7 @@
 // failed on the Linux CI runner in F2a. Exact checks are kept for things CSS fixes outright
 // (border widths, colours, a min-height with short text).
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, sidewaysScroll } from "./helpers";
+import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, shadow, sidewaysScroll } from "./helpers";
 
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
@@ -881,6 +881,289 @@ test.describe("BottomNav: criteria 84, 85, 86, 87", () => {
         "letter-spacing": "normal",
         "text-transform": "none",
       });
+    });
+  }
+});
+
+test.describe("Banner and its flat buttons: criteria 89, 90, 91, 92, 93 (and 88 in a real browser)", () => {
+  const banner = (page: Page, id: string, kind?: string) => page.getByTestId(`banner-${id}`).locator(kind ? `[data-kind="${kind}"]` : "[data-kind]");
+  const actions = (b: Locator) => b.locator("button, a");
+  const ring = ["outline-style", "outline-width", "outline-offset", "outline-color"] as const;
+
+  test("88, in the browser: offline and undo are polite statuses, error is an alert; the page shows no fourth kind", async ({ page }) => {
+    await expect(banner(page, "offline-en")).toHaveRole("status");
+    await expect(banner(page, "undo-en")).toHaveRole("status");
+    await expect(banner(page, "error-en")).toHaveRole("alert");
+    const kinds = await section(page, "banner").locator("[data-kind]").evaluateAll((els) => [...new Set(els.map((el) => el.getAttribute("data-kind")))].sort());
+    expect(kinds).toEqual(["error", "offline", "undo"]);
+    // Shape, not colour: a square strip with no border, a bordered square box with a shadow, a rounded block.
+    const shape = async (b: Locator) => ({ ...(await css(b, ["border-top-width", "border-top-left-radius"])), shadow: (await shadow(b)) !== "none" });
+    expect(await shape(banner(page, "offline-en"))).toEqual({ "border-top-width": "0px", "border-top-left-radius": "0px", shadow: false });
+    expect(await shape(banner(page, "error-en"))).toEqual({ "border-top-width": "2px", "border-top-left-radius": "0px", shadow: true });
+    expect(await shape(banner(page, "undo-en"))).toEqual({ "border-top-width": "0px", "border-top-left-radius": "4px", shadow: false });
+  });
+
+  test("89: offline is a full-width ink strip with a highlight mark, a slip title at 16px bold and an on-cloth detail, and no actions", async ({ page }) => {
+    const b = banner(page, "offline-en");
+    const strip = await box(b);
+    expect(strip.x).toBe(0);
+    expect(strip.width).toBe(360);
+    expect((await css(b, ["background-color"]))["background-color"]).toBe(rgb("ink"));
+    const [title, detail] = [b.locator("p").first(), b.locator("p").nth(1)];
+    await expect(title).toHaveText("You are offline");
+    expect(await css(title, ["color", "font-size", "font-weight"])).toEqual({ color: rgb("slip"), "font-size": "16px", "font-weight": "700" });
+    expect((await css(detail, ["color"])).color).toBe(rgb("on-cloth"));
+    expect(parseFloat((await css(detail, ["font-size"]))["font-size"])).toBeGreaterThanOrEqual(14);
+    // The mark leads, is 24px, is drawn in highlight, and is hidden from screen readers.
+    const mark = b.locator("svg");
+    const m = await box(mark);
+    expect(m.width).toBe(24);
+    expect(m.x + m.width).toBeLessThanOrEqual((await box(title)).x);
+    expect((await css(mark, ["stroke"])).stroke).toBe(rgb("highlight"));
+    await expect(b.locator("> span").first()).toHaveAttribute("aria-hidden", "true");
+    await expect(actions(b)).toHaveCount(0);
+    expect(await b.evaluate((el) => el.querySelectorAll("[tabindex], input").length)).toBe(0);
+  });
+
+  test("90: error is slip with a 2px red border and a solid red offset shadow; red title at 18px/800, soft-ink detail", async ({ page }) => {
+    const b = banner(page, "error-en");
+    expect(await css(b, ["background-color", "border-top-width", "border-top-style", "border-top-color", "border-left-color", "border-bottom-color", "border-right-color"])).toEqual({
+      "background-color": rgb("slip"),
+      "border-top-width": "2px",
+      "border-top-style": "solid",
+      "border-top-color": rgb("cloth"),
+      "border-left-color": rgb("cloth"),
+      "border-bottom-color": rgb("cloth"),
+      "border-right-color": rgb("cloth"),
+    });
+    // 5px right, 5px down, zero blur, zero spread, in cloth.
+    expect(await shadow(b)).toBe(`${rgb("cloth")} 5px 5px 0px 0px`);
+    const [title, detail] = [b.locator("p").first(), b.locator("p").nth(1)];
+    expect(await css(title, ["color", "font-size", "font-weight"])).toEqual({ color: rgb("cloth"), "font-size": "18px", "font-weight": "800" });
+    expect((await css(detail, ["color"])).color).toBe(rgb("ink-soft"));
+    expect(parseFloat((await css(detail, ["font-size"]))["font-size"])).toBeGreaterThanOrEqual(14);
+    // It says what happened and what is safe.
+    await expect(detail).toContainText("Nothing is lost");
+    // The shadow stays on the screen.
+    const outer = await box(b);
+    expect(outer.x + outer.width + 5).toBeLessThanOrEqual(360);
+    expect(await sidewaysScroll(page)).toBe(0);
+  });
+
+  test("90: up to two actions, each at least 48px tall: the main one black, the other outlined, neither with a shadow, none red", async ({ page }) => {
+    const [main, other] = await actions(banner(page, "error-en")).all();
+    expect(await css(main, ["background-color", "color", "border-top-color", "border-top-width", "border-top-left-radius"])).toEqual({
+      "background-color": rgb("ink"),
+      color: rgb("slip"),
+      "border-top-color": rgb("ink"),
+      "border-top-width": "2px",
+      "border-top-left-radius": "4px",
+    });
+    expect(await css(other, ["background-color", "color", "border-top-color", "border-top-width"])).toEqual({
+      "background-color": TRANSPARENT,
+      color: rgb("ink"),
+      "border-top-color": rgb("ink"),
+      "border-top-width": "2px",
+    });
+    for (const action of [main, other]) {
+      expect((await box(action)).height).toBeGreaterThanOrEqual(48);
+      expect(await shadow(action)).toBe("none");
+    }
+    await expect(actions(banner(page, "error-one"))).toHaveCount(1);
+    await expect(actions(banner(page, "error-none"))).toHaveCount(0);
+    await expect(banner(page, "error-none")).toBeVisible();
+
+    // Red is never a button, in any banner on the page.
+    const redControls = await section(page, "banner")
+      .locator("button, a")
+      .evaluateAll(
+        (els, red) =>
+          els.filter((el) => {
+            const s = getComputedStyle(el);
+            return s.backgroundColor === red || s.color === red || s.borderTopColor === red;
+          }).length,
+        rgb("cloth"),
+      );
+    expect(redControls).toBe(0);
+  });
+
+  test("91: undo is an ink block with 4px corners and a slip message at 16px bold; one action outlined in slip, one filled slip with ink text", async ({ page }) => {
+    const b = banner(page, "undo-en");
+    expect(await css(b, ["background-color", "border-top-left-radius", "border-bottom-right-radius"])).toEqual({
+      "background-color": rgb("ink"),
+      "border-top-left-radius": "4px",
+      "border-bottom-right-radius": "4px",
+    });
+    const message = b.locator("p");
+    await expect(message).toHaveText("Ravi Kumar marked paid, ₹1,200");
+    expect(await css(message, ["color", "font-size", "font-weight"])).toEqual({ color: rgb("slip"), "font-size": "16px", "font-weight": "700" });
+    const [first, second] = await actions(b).all();
+    expect(await css(first, ["background-color", "color", "border-top-color", "border-top-width"])).toEqual({
+      "background-color": TRANSPARENT,
+      color: rgb("slip"),
+      "border-top-color": rgb("slip"),
+      "border-top-width": "2px",
+    });
+    expect(await css(second, ["background-color", "color", "border-top-color"])).toEqual({ "background-color": rgb("slip"), color: rgb("ink"), "border-top-color": rgb("slip") });
+    for (const action of [first, second]) {
+      expect((await box(action)).height).toBeGreaterThanOrEqual(48);
+      expect(await shadow(action)).toBe("none");
+    }
+    // The second is a link with an icon before its words.
+    expect(await second.evaluate((el) => el.tagName)).toBe("A");
+    await expect(second).toHaveAttribute("href", "#top");
+    const icon = await box(second.locator("svg"));
+    expect(icon.x + icon.width).toBeLessThanOrEqual((await box(second.locator("> span").nth(1))).x + 0.5);
+    await expect(second).toHaveAccessibleName("Send receipt");
+    expect(await first.evaluate((el) => el.tagName)).toBe("BUTTON");
+  });
+
+  test("the actions report back: each tap on the working banners is counted once", async ({ page }) => {
+    const live = page.getByTestId("banner-live");
+    const taps = page.getByTestId("banner-live-taps");
+    await expect(taps).toHaveText("0 0 0 0");
+    await live.getByRole("button", { name: "Try again" }).tap();
+    await expect(taps).toHaveText("1 0 0 0");
+    await live.getByRole("button", { name: "Later" }).tap();
+    await live.getByRole("button", { name: "Undo" }).tap();
+    await live.getByRole("button", { name: "Send receipt" }).tap();
+    await live.getByRole("button", { name: "Send receipt" }).tap();
+    await expect(taps).toHaveText("1 1 1 2");
+    // The banners are still there: they never close themselves.
+    await expect(live.locator("[data-kind]")).toHaveCount(2);
+  });
+
+  for (const lang of langs) {
+    test(`92: ${lang}: side by side the two actions share one height; long text and labels wrap, nothing is cut, also at 130%`, async ({ page }) => {
+      // Side by side: the two-action error banner in every language has short labels.
+      const pair = await boxes(actions(banner(page, `error-${lang}`)));
+      expect(pair).toHaveLength(2);
+      expect(Math.abs(pair[0].y - pair[1].y), "on one row").toBeLessThanOrEqual(0.5);
+      expect(Math.abs(pair[0].height - pair[1].height), "one height").toBeLessThanOrEqual(0.5);
+      expect(pair[0].width, "the main action takes the spare width").toBeGreaterThan(pair[1].width);
+      expect(pair[1].width, "the lesser action keeps a thumb's width").toBeGreaterThanOrEqual(96);
+
+      const check = async (when: string) => {
+        for (const kind of ["error", "undo"]) {
+          const b = banner(page, `long-${lang}`, kind);
+          const outer = await box(b);
+          for (const text of await b.locator("p").all()) {
+            expect(await holdsItsContent(text), `${when} ${kind}: text is whole`).toBe(true);
+            expect(await css(text, ["text-overflow", "white-space", "overflow-x"]), when).toEqual({ "text-overflow": "clip", "white-space": "normal", "overflow-x": "visible" });
+          }
+          const row = await boxes(actions(b));
+          expect(row, `${when} ${kind}`).toHaveLength(2);
+          for (const [i, a] of row.entries()) {
+            expect(a.height, `${when} ${kind}: at least 48px`).toBeGreaterThanOrEqual(48);
+            // Inside the banner, and inside the screen.
+            expect(a.x, `${when} ${kind}`).toBeGreaterThanOrEqual(outer.x);
+            expect(a.x + a.width, `${when} ${kind}: the action is inside its banner`).toBeLessThanOrEqual(outer.x + outer.width + 0.5);
+            expect(a.x + a.width, `${when} ${kind}: the action is on the screen`).toBeLessThanOrEqual(360);
+            expect(a.y + a.height, `${when} ${kind}: the banner grows with its actions`).toBeLessThanOrEqual(outer.y + outer.height + 0.5);
+            const control = actions(b).nth(i);
+            expect(await holdsItsContent(control), `${when} ${kind}: the label is whole`).toBe(true);
+            expect((await css(control.locator("span").last(), ["text-overflow", "white-space"])), when).toEqual({ "text-overflow": "clip", "white-space": "normal" });
+          }
+          // Either they share a row and a height, or the second has dropped below the first, whole.
+          const sameRow = Math.abs(row[0].y - row[1].y) <= 0.5;
+          if (sameRow) expect(Math.abs(row[0].height - row[1].height), `${when} ${kind}: one height on one row`).toBeLessThanOrEqual(0.5);
+          else {
+            expect(row[1].y, `${when} ${kind}: the second is below, not overlapping`).toBeGreaterThanOrEqual(row[0].y + row[0].height);
+            expect(Math.abs(row[0].width - row[1].width), `${when} ${kind}: both fill the row`).toBeLessThanOrEqual(0.5);
+          }
+        }
+        expect(await sidewaysScroll(page), when).toBe(0);
+      };
+
+      const longDetail = banner(page, `long-${lang}`, "error").locator("p").nth(1);
+      expect(await lineCount(longDetail), "the long detail wraps").toBeGreaterThanOrEqual(3);
+      if (lang !== "en") await expect(longDetail).toContainText(scriptPattern[lang]);
+      const before = (await box(banner(page, `long-${lang}`, "error"))).height;
+      expect(before, "a banner with long text is taller").toBeGreaterThan((await box(banner(page, `error-${lang}`))).height + 20);
+      await check("default size");
+
+      await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+      await expect.poll(async () => parseFloat((await css(longDetail, ["font-size"]))["font-size"])).toBeGreaterThan(19);
+      expect((await box(banner(page, `long-${lang}`, "error"))).height, "taller again at 130%").toBeGreaterThan(before + 20);
+      await check("130%");
+    });
+  }
+
+  test("93: Tab reaches both undo actions and rings them in yellow on the dark ground; in the error banner the ring is blue; a tap rings nothing", async ({ page }) => {
+    const [first, second] = await actions(banner(page, "undo-en")).all();
+    await tabTo(page, first);
+    const yellow = { "outline-style": "solid", "outline-width": "3px", "outline-offset": "4px", "outline-color": rgb("highlight") };
+    expect(await css(first, ring)).toEqual(yellow);
+    await page.keyboard.press("Tab");
+    await expect(second).toBeFocused();
+    expect(await css(second, ring)).toEqual(yellow);
+
+    const main = actions(banner(page, "error-en")).first();
+    await tabTo(page, main);
+    expect(await css(main, ring)).toEqual({ ...yellow, "outline-color": rgb("blue") });
+    await page.keyboard.press("Tab");
+    await expect(actions(banner(page, "error-en")).nth(1)).toBeFocused();
+
+    // The frozen examples: yellow in the undo banner, blue in the error banner.
+    const forced = page.getByTestId("banner-focus");
+    for (const control of await forced.locator('[data-kind="undo"] [data-force="focus"]').all()) expect(await css(control, ring)).toEqual(yellow);
+    expect(await css(forced.locator('[data-kind="error"] [data-force="focus"]'), ring)).toEqual({ ...yellow, "outline-color": rgb("blue") });
+
+    await page.getByTestId("banner-live").getByRole("button", { name: "Undo" }).tap();
+    expect((await css(page.getByTestId("banner-live").getByRole("button", { name: "Undo" }), ["outline-style"]))["outline-style"]).toBe("none");
+  });
+
+  test("93: no banner has a timer: after a wait every one of them is still on the page, unchanged", async ({ page }) => {
+    const count = await section(page, "banner").locator("[data-kind]").count();
+    expect(count).toBeGreaterThan(20);
+    const before = await section(page, "banner").locator("[data-kind]").evaluateAll((els) => els.map((el) => el.outerHTML).join("|"));
+    await page.waitForTimeout(6000);
+    await expect(section(page, "banner").locator("[data-kind]")).toHaveCount(count);
+    expect(await section(page, "banner").locator("[data-kind]").evaluateAll((els) => els.map((el) => el.outerHTML).join("|"))).toBe(before);
+    // The page's working examples set no timer of their own until something is tapped.
+    expect(await page.evaluate(() => document.getAnimations().filter((a) => (a.effect instanceof KeyframeEffect ? a.effect.target?.closest("[data-kind]") : null)).length)).toBe(0);
+  });
+
+  test("FlatButton: pressed, it moves 2px right and down in 80ms with no shadow before or after", async ({ page }) => {
+    const button = page.getByTestId("banner-live").getByRole("button", { name: "Try again" });
+    await button.scrollIntoViewIfNeeded();
+    expect(await css(button, ["transition-duration", "transition-timing-function"])).toEqual({ "transition-duration": "0.08s", "transition-timing-function": "linear" });
+    expect((await css(button, ["translate"])).translate).toBe("none");
+    const rest = await box(button);
+    await page.mouse.move(rest.x + rest.width / 2, rest.y + rest.height / 2);
+    await page.mouse.down();
+    await expect.poll(async () => (await box(button)).x - rest.x).toBe(2);
+    expect((await css(button, ["translate"])).translate).toBe("2px 2px");
+    expect((await box(button)).y - rest.y).toBe(2);
+    expect(await shadow(button)).toBe("none");
+    await page.mouse.up();
+    await expect.poll(async () => (await box(button)).x - rest.x).toBe(0);
+
+    // The frozen examples show all four looks pressed.
+    const pressed = page.getByTestId("banner-pressed").locator('[data-force="pressed"]');
+    await expect(pressed).toHaveCount(4);
+    for (const control of await pressed.all()) {
+      expect((await css(control, ["translate"])).translate).toBe("2px 2px");
+      expect(await shadow(control)).toBe("none");
+    }
+  });
+
+  for (const lang of indicLangs) {
+    test(`${lang}: banner text and action labels are the script's own face with no letter-spacing and no capitals, 14px or larger`, async ({ page }) => {
+      const texts = [
+        banner(page, `offline-${lang}`).locator("p").first(),
+        banner(page, `offline-${lang}`).locator("p").nth(1),
+        banner(page, `error-${lang}`).locator("p").first(),
+        banner(page, `error-${lang}`).locator("p").nth(1),
+        actions(banner(page, `error-${lang}`)).first(),
+        banner(page, `undo-${lang}`).locator("p"),
+      ];
+      for (const text of texts) {
+        const style = await css(text, ["font-size", "letter-spacing", "text-transform"]);
+        expect(parseFloat(style["font-size"])).toBeGreaterThanOrEqual(14);
+        expect({ "letter-spacing": style["letter-spacing"], "text-transform": style["text-transform"] }).toEqual({ "letter-spacing": "normal", "text-transform": "none" });
+        await expect(text).toContainText(scriptPattern[lang]);
+      }
     });
   }
 });

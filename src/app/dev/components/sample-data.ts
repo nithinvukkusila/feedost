@@ -125,6 +125,23 @@ export type Sample = {
   /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
   strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
   nav: { label: string; home: string; students: string; attendance: string; more: string; longStudents: string; longAttendance: string };
+  /** `{amount}` in `undoMessage` is filled with a sample amount by the banner section. */
+  banner: {
+    offlineTitle: string;
+    offlineDetail: string;
+    errorTitle: string;
+    errorDetail: string;
+    longErrorDetail: string;
+    retry: string;
+    later: string;
+    longRetry: string;
+    longLater: string;
+    undoMessage: string;
+    undo: string;
+    sendReceipt: string;
+    longUndo: string;
+    longSend: string;
+  };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -251,6 +268,22 @@ export const sample: Record<Lang, Sample> = {
       longStudents: "Students and batches",
       longAttendance: "Attendance register",
     },
+    banner: {
+      offlineTitle: "You are offline",
+      offlineDetail: "3 changes are saved on this phone. They will sync when the network is back.",
+      errorTitle: "Couldn't save just now",
+      errorDetail: "The network dropped. Nothing is lost. Your changes are kept on this phone.",
+      longErrorDetail: "The network dropped. Nothing is lost. Your changes are kept on this phone. Try again when the network is back, or do it later: you will not have to enter anything again.",
+      retry: "Try again",
+      later: "Later",
+      longRetry: "Try saving all three changes again",
+      longLater: "Not now, remind me later",
+      undoMessage: "Ravi Kumar marked paid, {amount}",
+      undo: "Undo",
+      sendReceipt: "Send receipt",
+      longUndo: "Undo this payment",
+      longSend: "Send the receipt on WhatsApp",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -374,6 +407,22 @@ export const sample: Record<Lang, Sample> = {
       more: "और",
       longStudents: "छात्र और बैच",
       longAttendance: "हाज़िरी का रजिस्टर",
+    },
+    banner: {
+      offlineTitle: "आप ऑफ़लाइन हैं",
+      offlineDetail: "3 बदलाव इस फ़ोन पर सुरक्षित हैं। नेटवर्क लौटते ही वे सिंक हो जाएँगे।",
+      errorTitle: "अभी सेव नहीं हो सका",
+      errorDetail: "नेटवर्क चला गया। कुछ भी खोया नहीं है। आपके बदलाव इस फ़ोन पर सुरक्षित हैं।",
+      longErrorDetail: "नेटवर्क चला गया। कुछ भी खोया नहीं है। आपके बदलाव इस फ़ोन पर सुरक्षित हैं। नेटवर्क लौटने पर फिर कोशिश करें, या बाद में करें: आपको कुछ भी दोबारा भरना नहीं पड़ेगा।",
+      retry: "फिर कोशिश करें",
+      later: "बाद में",
+      longRetry: "तीनों बदलाव फिर से सेव करने की कोशिश करें",
+      longLater: "अभी नहीं, बाद में याद दिलाएँ",
+      undoMessage: "रवि कुमार का {amount} जमा दर्ज हुआ",
+      undo: "वापस लें",
+      sendReceipt: "रसीद भेजें",
+      longUndo: "यह भुगतान वापस लें",
+      longSend: "रसीद WhatsApp पर भेजें",
     },
   },
   kn: {
@@ -499,6 +548,22 @@ export const sample: Record<Lang, Sample> = {
       longStudents: "ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಬ್ಯಾಚ್‌ಗಳು",
       longAttendance: "ಹಾಜರಾತಿ ಪುಸ್ತಕ",
     },
+    banner: {
+      offlineTitle: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ",
+      offlineDetail: "3 ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ. ನೆಟ್‌ವರ್ಕ್ ಮರಳಿದಾಗ ಅವು ಸಿಂಕ್ ಆಗುತ್ತವೆ.",
+      errorTitle: "ಈಗ ಉಳಿಸಲು ಆಗಲಿಲ್ಲ",
+      errorDetail: "ನೆಟ್‌ವರ್ಕ್ ಕಡಿತವಾಯಿತು. ಏನೂ ಕಳೆದುಹೋಗಿಲ್ಲ. ನಿಮ್ಮ ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ.",
+      longErrorDetail: "ನೆಟ್‌ವರ್ಕ್ ಕಡಿತವಾಯಿತು. ಏನೂ ಕಳೆದುಹೋಗಿಲ್ಲ. ನಿಮ್ಮ ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ. ನೆಟ್‌ವರ್ಕ್ ಮರಳಿದಾಗ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ, ಅಥವಾ ನಂತರ ಮಾಡಿ: ನೀವು ಏನನ್ನೂ ಮತ್ತೆ ತುಂಬಬೇಕಾಗಿಲ್ಲ.",
+      retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+      later: "ನಂತರ",
+      longRetry: "ಮೂರೂ ಬದಲಾವಣೆಗಳನ್ನು ಮತ್ತೆ ಉಳಿಸಲು ಪ್ರಯತ್ನಿಸಿ",
+      longLater: "ಈಗ ಬೇಡ, ನಂತರ ನೆನಪಿಸಿ",
+      undoMessage: "ರವಿ ಕುಮಾರ್ {amount} ಪಾವತಿ ದಾಖಲಾಗಿದೆ",
+      undo: "ರದ್ದುಮಾಡಿ",
+      sendReceipt: "ರಸೀದಿ ಕಳುಹಿಸಿ",
+      longUndo: "ಈ ಪಾವತಿಯನ್ನು ರದ್ದುಮಾಡಿ",
+      longSend: "ರಸೀದಿಯನ್ನು WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -622,6 +687,22 @@ export const sample: Record<Lang, Sample> = {
       more: "మరిన్ని",
       longStudents: "విద్యార్థులు మరియు బ్యాచ్‌లు",
       longAttendance: "హాజరు పుస్తకం",
+    },
+    banner: {
+      offlineTitle: "మీరు ఆఫ్‌లైన్‌లో ఉన్నారు",
+      offlineDetail: "3 మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి. నెట్‌వర్క్ తిరిగి వచ్చినప్పుడు అవి సింక్ అవుతాయి.",
+      errorTitle: "ఇప్పుడు సేవ్ కాలేదు",
+      errorDetail: "నెట్‌వర్క్ పోయింది. ఏదీ పోలేదు. మీ మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి.",
+      longErrorDetail: "నెట్‌వర్క్ పోయింది. ఏదీ పోలేదు. మీ మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి. నెట్‌వర్క్ తిరిగి వచ్చినప్పుడు మళ్లీ ప్రయత్నించండి, లేదా తర్వాత చేయండి: మీరు ఏదీ మళ్లీ నింపాల్సిన అవసరం లేదు.",
+      retry: "మళ్లీ ప్రయత్నించండి",
+      later: "తర్వాత",
+      longRetry: "మూడు మార్పులనూ మళ్లీ సేవ్ చేయడానికి ప్రయత్నించండి",
+      longLater: "ఇప్పుడు వద్దు, తర్వాత గుర్తు చేయండి",
+      undoMessage: "రవి కుమార్ {amount} చెల్లింపు నమోదైంది",
+      undo: "రద్దు చేయండి",
+      sendReceipt: "రసీదు పంపండి",
+      longUndo: "ఈ చెల్లింపును రద్దు చేయండి",
+      longSend: "రసీదును WhatsApp లో పంపండి",
     },
   },
 };
@@ -776,5 +857,19 @@ export const copy = {
     long: "Long labels: they wrap and the bar grows",
     focus: "Keyboard focus: the ring is inside the item",
     longSuffix: "(long)",
+  },
+  banner: {
+    title: "Banner",
+    note: "Three kinds. Each says what happened in plain words; the error one also says what is safe. With a screen reader, all of them may be read out when this page loads: that happens on this page only.",
+    offline: "Offline: a full-width strip, no actions",
+    error: "Error: red outline and shadow, a black and an outlined button",
+    errorOne: "Error with one action",
+    errorNone: "Error with no action",
+    undo: "Undo: two actions, the second a link with an icon",
+    long: "Long text and long action labels",
+    live: "Try it: each tap is counted",
+    taps: "Taps:",
+    pressed: "Flat buttons pressed: a 2px move, no shadow",
+    focus: "Keyboard focus: yellow on the dark banner, blue on the paper one",
   },
 };
