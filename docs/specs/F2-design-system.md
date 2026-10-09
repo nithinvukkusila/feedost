@@ -26,9 +26,17 @@ Each criterion is marked with how it is proved: **[unit]** Vitest, **[e2e]** Pla
 ### Fonts
 9. Bricolage Grotesque, DM Mono, Anek Devanagari, Anek Kannada and Anek Telugu are served from our own origin. Loading any page makes no request to a third-party font host. [e2e]
 10. Fonts are subset at build time. `tech-lead` records each file's size in this spec once measured (see Open question 10). [manual: read the recorded sizes]
+    - **Measured on the F2a build:** 14 font files, 730,604 bytes in all.
+    - Preloaded on the home page: 59,976 bytes (Bricolage Grotesque latin 41,236 and latin-ext 18,740).
+    - DM Mono 500: latin 8,724 and latin-ext 5,700. Not preloaded.
+    - Anek Devanagari: 257,340 + 45,388 + 2,936 = 305,664.
+    - Anek Kannada: 113,420 + 39,608 + 2,920 = 155,948.
+    - Anek Telugu: 139,724 + 43,400 + 2,816 = 185,940.
+    - The remaining 8,652 bytes match the Bricolage Grotesque Vietnamese file in the technical plan's table, which no page is expected to request.
+    - No ceiling is set yet (Open question 10).
 11. The home page (English) requests no Hindi, Kannada or Telugu font file. An Indian-script font file is requested only when text in that script is on the page. [e2e]
-12. Text shows straight away in a fallback face and swaps when the font arrives; nothing is invisible while a font loads on a throttled connection. [e2e]
-13. Inside an element marked `lang="hi"`, `lang="kn"` or `lang="te"`: the face is the matching Anek font, letter-spacing is 0 everywhere, nothing is uppercased, headlines are weight 700 with line-height ≥1.25, reading text is 17px at line-height 1.6, and small labels are Anek 600 at 15px. [e2e, computed styles]
+12. Text shows straight away in a fallback face and swaps when the font arrives; nothing is invisible while a font loads on a throttled connection. Every web font is declared `swap`. The one generated local fallback face is exempt: it is not downloaded, so it has nothing to wait for. [e2e]
+13. Inside an element marked `lang="hi"`, `lang="kn"` or `lang="te"`: the face is the matching Anek font, letter-spacing is 0 on all text except amounts (which keep -0.04em under criterion 14), nothing is uppercased, headlines are weight 700 with line-height ≥1.25, reading text is 17px at line-height 1.6, and small labels are Anek 600 at 15px. [e2e, computed styles]
 14. An amount keeps the headline face (Bricolage Grotesque, -0.04em, digits 0–9) when it sits inside Hindi, Kannada or Telugu text. [e2e, computed styles]
 15. Font stacks end in `'Anek Latin', system-ui`, as `docs/DESIGN.md` says, so a missing ₹ falls back cleanly. [unit]
 16. The ₹ sign and the digits 0–9 render correctly at headline size (about 68px), at reading size and in a ledger row, on a real Android phone. The result, and which face actually drew the ₹, is written into this spec. [manual: check H3]
@@ -37,21 +45,23 @@ Each criterion is marked with how it is proved: **[unit]** Vitest, **[e2e]** Pla
 17. Three variants and no others: `send` (fill `blue`, text `slip`, shadow `ink`), `record` (fill `ink`, text `slip`, shadow `ink-label`), `outline` (fill `slip`, text `ink`, shadow `ink`). All have a 2px `ink` border and 4px corners. There is no red variant. [unit + e2e]
 18. Height is at least 48px. A label that does not fit on one line wraps and the button grows taller; it is never cut off and never shrinks its text. [e2e]
 19. A button can carry an icon before or after its label, and can render as a link with the same look (the canvas uses both). [unit]
-20. Pressed: the button moves into its shadow (5px right and down) and the shadow disappears, in 80ms. [e2e]
-21. Keyboard focus: a 3px ring, 4px away from the edge, `blue` on `page` and `slip` grounds and yellow on cloth, blue and dark grounds. The ring shows on keyboard focus, not on tap. [e2e]
+20. Pressed: the shadow disappears at once and the button moves into its place (5px right and down). Only the move takes 80ms. [e2e]
+21. Keyboard focus: a 3px ring, 4px away from the edge, `blue` on `page` and `slip` grounds and yellow on cloth, blue and dark grounds. The ring shows on keyboard focus, not on tap. Tested in F2a on `page`, `slip`, cloth and the dark ground. The blue-ground case has nothing to be tested on: neither F2a nor the Direction A canvas has a surface with a blue ground. The rule stands, and the first slice that puts a focusable control on a blue ground adds the test. [e2e]
 22. Busy: the button stays in the pressed position, shows the busy label it was given, sets `aria-busy`, shows no spinner, and ignores further taps. [unit + e2e]
 23. Disabled: 2px dashed `ink-label` outline, no fill, no shadow, text `ink-soft`, does not respond to tap or keyboard. An optional line of text beneath says why, and is tied to the button for screen readers. [unit + e2e]
 24. A round icon-only form exists for the row action: 48px circle, `send` colours, 3px shadow. It cannot be rendered without an accessible name. [unit]
 25. On a cloth ground the shadow colour is `cloth-deep`. [e2e]
 
 ### Field
-26. A visible label sits above the input and is programmatically tied to it. The value is written on a 2px `ink` line with no box. The field is at least 48px tall. [unit + e2e]
+The field as built is a one-line field that wraps: it holds one line of meaning, but a value too long for the width continues on the next line so the tutor can see all of it.
+
+26. A visible label sits above the input and is programmatically tied to it. The value is written on a 2px `ink` line with no box. The field is at least 48px tall. A long value (a long UPI ID, a long name) wraps and the field grows; it is never cut off or scrolled out of view sideways. Enter never adds a line: it submits the form the field is in. Line breaks in pasted text become spaces. [unit + e2e]
 27. Empty: 2px `ink` line, placeholder in `ink-label`. [e2e]
 28. Typing (focused): 4px `blue` line, label and value in `blue`. [e2e]
-29. Correct: `stamp` green line, a tick mark, and an optional message beneath. The tick is not the only signal for a screen reader. [unit + e2e]
-30. Needs fixing: 3px `cloth` line, an error mark, the label in `cloth` with the words it was given for "needs fixing", and a message beneath that says how to fix it. The input is marked invalid and tied to the message. [unit + e2e]
-31. The field's outer height and the position of everything below it do not change between the four states. [e2e]
-32. Optional helper text beneath, 14px or larger. A long label or message wraps. [e2e]
+29. Correct: `stamp` green line, a tick mark beside the value, and an optional message beneath. The tick stays beside the value when the value wraps. The tick is not the only signal for a screen reader. [unit + e2e]
+30. Needs fixing: 3px `cloth` line, an error mark beside the value, the label in `cloth` with the words it was given for "needs fixing", and a message beneath that says how to fix it. The mark stays beside the value when the value wraps. The input is marked invalid and tied to the message. [unit + e2e]
+31. The field's outer height and the position of everything below it do not change between the four states, for a value that fits on one line and a message that fits on one line. A wrapped value or a wrapped message makes the field taller; that is intended. [e2e]
+32. One line of text beneath, 14px or larger: the state's message when there is one, otherwise the helper text, never both. A long label, helper or message wraps. [e2e]
 
 ### Slip
 33. `slip` surface, 2px `ink` border, square corners, `6px 6px 0 ink` shadow. [e2e]
@@ -61,9 +71,10 @@ Each criterion is marked with how it is proved: **[unit]** Vitest, **[e2e]** Pla
 ### Row
 36. A ledger row is at least 64px tall, with a 1px `rule` divider below: name and a meta line on the left, an optional amount on the right, and an optional trailing item (round action button, small stamp, or status tag). [unit + e2e]
 37. The meta line takes a tone: overdue (`cloth`), due (`ink-soft`), paid (`stamp`). The tone never carries meaning by itself; the meta text always says it in words. [unit]
-38. The name and meta wrap and the row grows. Neither is truncated. The amount and the trailing item never shrink or wrap. [e2e]
+38. The name and meta wrap and the row grows. Neither is truncated. A word too long for the space may break in the middle. The amount and the trailing item never shrink or wrap. [e2e]
 39. When the row is a link and also has an action, they are two separate targets, each at least 44px tall, and each reachable by keyboard. [e2e]
 40. The row amount is set in DM Mono in every language, including inside Hindi, Kannada and Telugu rows, with digits 0–9. Headline amounts stay in Bricolage Grotesque (criterion 14). [e2e]
+94. (Added after the F2a build; numbered 94 so earlier numbers do not move.) A row does not carry both an amount and a status tag. Together they squeeze the name into a narrow column at large font sizes, and no canvas screen combines them: the dues board rows have an amount and an action or stamp, the students list rows have a tag and no amount. A screen that needs both puts the status in the meta line as words. [review; unit if the component can refuse the combination]
 
 ### StatusTag
 41. Four statuses and no others: Overdue (2px solid `cloth` outline, `cloth` text), Due (`highlight` fill, `ink` text), Part paid (2px dashed `blue` outline, `blue` text), Paid (double `stamp` outline, `stamp` text). [unit + e2e]
@@ -71,7 +82,7 @@ Each criterion is marked with how it is proved: **[unit]** Vitest, **[e2e]** Pla
 43. The tag text is passed in, so it can carry detail ("Overdue 7 days", "Due 12 Oct"). Label style in English; Anek 600, 15px, no capitals, no letter-spacing in the Indian scripts. A long tag wraps; it is never truncated. [e2e]
 
 ### Stamp
-44. A double-ring circle, rotated about -12°, in three sizes: sm, md, lg (exact sizes: Open question 5). [unit + e2e]
+44. A double-ring circle in three sizes: sm, md, lg (Open question 5). The ring itself is not rotated; only the words inside tilt about -12°. Sizes are set in rem (52, 132 and 232px at the default text size), so the stamp grows with the text. A word too long for the ring makes the stamp larger; it stays a circle and the word is not cut or shrunk. [unit + e2e]
 45. Text is passed in (PAID, SENT, ALL PAID). PAID and ALL PAID are `stamp` green; SENT is `blue`, as on the canvas. An optional second line (a date, or "1 of 5") shows on md and lg only and is 14px or larger; sm has no second line. [unit + e2e]
 46. The stamp has a text alternative that says what it means (for example "Stamped paid on 08 Oct 2026"), or is hidden from screen readers when the same words are already beside it. [unit]
 47. When asked to animate, it plays once: 200ms, scale 1.15 to 1 with a slight rotation settle. By default it does not animate. [e2e]
@@ -81,14 +92,14 @@ Each criterion is marked with how it is proved: **[unit]** Vitest, **[e2e]** Pla
 49. Folder tabs joined to the slip below: 2px `ink` border on three sides, 6px top corners. The selected tab is 48px tall, `slip` coloured, `ink` text. Unselected tabs are 44px tall, `tab-idle`, `ink-soft` text. [e2e]
 50. Each tab shows a label and an optional count. The selected tab is marked by height and fill, not colour alone, and is exposed to screen readers as selected. [unit + e2e]
 51. Tabs work by tap and by keyboard, and report the chosen tab to the screen that uses them. [unit]
-52. Three tabs with long translated labels at 360px: no label is truncated and the page does not scroll sideways (behaviour: Open question 7). [e2e]
+52. Three tabs with long translated labels at 360px: no label is truncated and the page does not scroll sideways (behaviour: Open question 7). A word too long for its tab may break in the middle. [e2e]
 
 ### Sheet
 53. A bottom sheet: a `slip` panel with a 2px `ink` top edge, anchored to the bottom of the screen, on the dark ground. [e2e]
 54. It has an optional context header on the dark ground (a small label and a title in `on-cloth`), a title inside the panel, and a text close control at least 44px tall whose words are passed in ("Cancel", "Close"). [unit + e2e]
-55. It is announced as a dialog with a name. Focus moves into it on open, stays inside while open, and returns to the control that opened it on close. The page behind cannot be reached or scrolled. Escape closes it. [unit + e2e]
+55. It is announced as a dialog with a name. Focus moves into it on open and returns to the control that opened it on close. While it is open, focus never lands on anything in the page behind (it may pass through the browser's own controls, as with any modal dialog). The page behind cannot be reached or scrolled. Escape closes it. [unit + e2e]
 56. When the content is taller than the screen, the panel scrolls inside itself and the close control stays reachable. [e2e]
-57. Focus rings inside the context header area (dark ground) are yellow. [e2e]
+57. The context header on the dark ground holds text only; nothing in it takes focus. The dark ground still carries the yellow-ring rule of criterion 21 for anything a later screen places on it; the first real focusable controls on a dark ground are the undo banner's (criterion 93). [unit: the header contains no focusable element]
 
 ### Five more components (added 2026-10-09; numbered from 70 so that 1 to 69 keep their numbers)
 
@@ -139,20 +150,25 @@ The rules already stated apply to these too: text is passed in (66), no text und
 60. It shows the ₹ sign with digits 0–9 at headline size, reading size and row size, alone and inside each Indian script. [e2e + manual]
 61. At 360px wide the page has no sideways scroll. [e2e]
 62. Every interactive element on the page is at least 44px by 44px. [e2e]
-63. With text scaled to 130% at 360px wide, nothing is clipped, overlapped or truncated, and there is still no sideways scroll. [e2e + manual: check H4]
+63. With text scaled to 130% at 360px wide, nothing is clipped, overlapped or truncated, and there is still no sideways scroll. A headline amount never breaks inside the number: it stays on one line and shrinks to fit its container, never below 14px. [e2e + manual: check H4]
 64. With "reduce motion" on: the stamp does not animate and nothing else moves except state changes. [e2e]
 65. The page is marked `noindex` and is not linked from the home page. It is in local, CI and preview builds and is left out of the production build: a production build has no `/dev/components` route and requesting it gives "not found". [e2e for noindex; build check for production]
 
 ### Whole slice
 66. The thirteen components contain no user-visible words of their own: every label, message and screen-reader name is passed in. The product name is not typed anywhere outside `src/config/brand.ts`. `pnpm i18n:check` still passes. [unit]
 67. `pnpm size` passes for `/` and `/dev/components`. The home page loads no component code it does not use; its JavaScript does not grow by more than a few KB over the F1 figure of about 132 KB. `tech-lead` records both numbers here. [`pnpm size`]
+    - **Measured on the F2a build:** `/` 132.1 KB and `/dev/components` 136.4 KB of gzipped JavaScript, against the 200 KB limit.
+95. (Added after the F2a build.) Fitting an amount to its container is for headline amounts only. The `amount-size-*` classes exist only at headline sizes; row amounts and amounts in reading text are never fitted and always grow with the phone's font-size setting. Reason: a fitted amount opts out of the phone's text scaling (Open question 19), which is tolerable for a 60 to 72px figure and wrong for small text. [unit]
 68. No runtime dependency is added. If `tech-lead` finds one is needed (for example for font subsetting or the sheet's focus handling), the dependency-policy check is written into this spec and the founder is asked first. [review]
 69. The only motion in the slice is the button press and the stamp. [review]
 
 ## Edge cases
 - **Long translated labels.** Translations run 20 to 40 percent longer than English. Buttons, tabs, tags, row text, field labels and messages wrap and grow in height. No ellipsis anywhere in the thirteen components. Segments, bottom-nav labels, switch words and banner actions follow the same rule. The canvas truncates row text in English (`Home.dc.html`, `Students.dc.html`); this spec follows the rule in `CLAUDE.md` instead (Open question 3).
-- **A very long single word or name** (a 40-character student name, a long UPI ID in a field): it breaks rather than pushing the amount or the action off screen.
+- **A very long single word or name** (a 40-character student name, a long UPI ID in a field): it breaks in the middle of the word rather than pushing the amount or the action off screen. Breaking mid-word is allowed; cutting off is not.
 - **Large system font.** Covered by criterion 63 and hand check H4. Headlines with line-height 0.9 must not overlap when they wrap at 130%.
+- **A headline amount that does not fit** (₹1,23,456 at 68px in a 320px column, or any amount at 130% text). It never breaks inside the number and never runs off the screen: it stays on one line and gets smaller until it fits, down to 14px at the least. Only headline amounts do this (criterion 95). Whether they also ignore the phone's font-size setting is Open question 19.
+- **Typing a long value in a field.** The field grows a line at a time as the value wraps; the mark stays beside the value; Enter submits and never adds a line; pasted line breaks become spaces.
+- **A row with both an amount and a tag.** Not allowed (criterion 94).
 - **14px floor.** Covered by criterion 4. The 10px date on the stamp in `Main.dc.html` is not built (criterion 45).
 - **44px targets.** Unselected tabs are exactly 44px; the sheet's close link and the row's link area must not fall below it when text is small.
 - **Status without colour.** Red and green are close in lightness. Tags, row meta, field states, the selected tab, the selected segment, the student strip, the switch, the current bottom-nav item and the three banners must all read correctly in a greyscale screenshot.
@@ -170,7 +186,7 @@ The rules already stated apply to these too: text is passed in (66), no text und
 - **Supabase, environments, Vercel project**: F4.
 - **Product screens**: R0 and R1. F2 builds no landing page, tool, dues board, pay page or receipt.
 - **Things near the five added components that F2 does not build**: the wide text switch on the Pro screen ("Sending / Paused / Opted out", `Auto-reminders.dc.html`, Release 2); the larger student strip on the desktop dues board (`Home-desktop.dc.html`; no slice owns it yet); the "Opening your book…" loading strip (`State-loading.dc.html`, R1-6); where banners sit on a screen, when they appear and when they go (R1-7 for undo, R1-12 for offline and save errors); the routes the bottom nav points to (R1).
-- **Field variants seen on the canvas**: the large ₹ amount entry (`Pay-sheet`, R1-7), the mono reference-number entry (`Claim-sheet`, R1-10), search (`Students`, R1-3), multi-line paste (`Paste-list`, R1-4), checkboxes (`Export`, R1-13). F2 builds the single-line text field only.
+- **Field variants seen on the canvas**: the large ₹ amount entry (`Pay-sheet`, R1-7), the mono reference-number entry (`Claim-sheet`, R1-10), search (`Students`, R1-3), multi-line paste (`Paste-list`, R1-4), checkboxes (`Export`, R1-13). F2 builds one field only: the one-line field that wraps (criteria 26 to 32).
 - **Chips and small buttons seen on the canvas**: the yellow "2 to confirm" chip, "Full / Half / Other" amount chips, the language button on cloth. Built with the screens that need them.
 - **Cloth surfaces with the stitched outline, the ruled website background, loading blocks**: tokens exist after F2; the surfaces are built in R0-1 and later.
 - **Native-speaker review of the sample strings**: they are the canvas drafts. Review happens before Release 0 ships (build plan §7 item 5).
@@ -204,14 +220,18 @@ Use a real Android phone with Chrome, a low-end one if there is one. Open `/dev/
 - **H1. First look.** The page is yellow paper, black ink, blue buttons, hard shadows. No blurry shadow, no rounded pill, no red button anywhere.
 - **H2. Press.** Tap each button variant. It drops into its shadow and comes back, quickly, with no fade. The busy example stays down and shows its working label. The disabled example does nothing and has a dashed outline.
 - **H3. ₹ and digits.** Look at "₹1,23,456" at the large size, at reading size and in the ledger row, in English and inside the Hindi, Kannada and Telugu blocks. The ₹ must look like part of the same typeface (same weight, sitting on the same line as the digits), not a thin or boxy substitute. Digits must be 0–9 everywhere. Take a screenshot and tell us which sizes, if any, look wrong.
-- **H4. Large font.** In Android Settings set font size to the largest, reopen the page. Nothing is cut off, nothing overlaps, no "…", no sideways scroll. Buttons and rows are taller, not clipped.
+- **H4. Large font.** First, at the normal font size, take a screenshot of the top of the page and of the large "₹1,23,456". Then in Android Settings set font size to the largest and reopen the page. Nothing is cut off, nothing overlaps, no "…", no sideways scroll. Buttons and rows are taller, not clipped. Then answer these two questions separately, comparing with the first screenshots (they settle Open question 19):
+  - **H4a. Did ordinary text get bigger?** Look at a button label, a row name and a paragraph. If they look exactly the same size as before, tell us: it may mean the whole site is ignoring the phone's font-size setting, which would be a fault. If so, also try Chrome's own setting (Chrome menu, Settings, Accessibility, text scaling) at its largest and say whether that one changes the text.
+  - **H4b. Did the large headline amount change size?** Say whether "₹1,23,456" at the top got bigger, stayed the same or got smaller, and whether all of it is still on one line and on the screen.
 - **H5. Status without colour.** Turn on greyscale (Digital Wellbeing "Bedtime mode" or the colour-correction setting). You can still tell Overdue, Due, Part paid and Paid apart, and the Paid tag's outline shows as two lines.
 - **H6. Indian scripts.** In the Hindi, Kannada and Telugu blocks, no vowel mark is clipped at the top or bottom of a headline, button, tab or tag. Lines do not touch each other.
 - **H7. Tabs.** Tap each tab: the chosen one is taller and joins the slip below with no line between.
 - **H8. Field.** Tap into the field: the line turns thick blue and the keyboard does not cover it. Look at the correct and needs-fixing examples: each has a mark and words, not just a colour.
+  - **H8a. A long UPI ID with the keyboard open.** Type a long UPI ID, for example `meena.iyer.maths.tuitions@okhdfcbank`. When it reaches the edge it continues on a second line and the field grows; you can see every character; the field stays above the keyboard and the page does not jump. Press Enter on the keyboard: no blank line is added. Paste two lines of text from a note: they arrive as one line with a space between.
 - **H9. Sheet.** Open the sheet. The page behind is dark and does not scroll. Close it with the close control and with the phone's back gesture (see Open question 8).
 - **H10. Reduce motion.** Turn on "Remove animations" in Accessibility. The stamp example appears without the pop.
 - **H11. Slow network.** If possible, on mobile data: text appears at once and the fonts follow; nothing jumps badly.
+  - **H11a. Labels on a first load.** The small capital labels (DM Mono) are no longer loaded ahead of time, so on a first visit they appear in another face and then change. Clear Chrome's data for the site, or use an incognito tab, and load the page on mobile data. Watch the small labels: say whether you notice the change, and whether anything near them moves when it happens.
 - **H12. Segmented.** Tap each choice in the two-, three- and four-part groups. The chosen one turns black with light text; only one is chosen at a time. The four-language group shows as two rows of two and nothing is cut off.
 - **H13. Student strip.** With greyscale still on from H5, you can pick out paid (short, filled), due (short, hollow) and overdue (tall) blocks, and the words under the strip say the same. Look at the 60-student example: hollow blocks still look hollow.
 - **H14. Switch.** Tap it. The knob jumps to the other side and its word changes. You can tell on from off without relying on the green.
@@ -237,7 +257,7 @@ Only the founder can settle these. Each has a recommendation. Until answered, th
 7. **Tabs that do not fit.** Three long translated tab labels at 360px with large font. Recommendation: the labels wrap inside their tabs and all tabs grow to the same height; no sideways scrolling strip.
 8. **How a sheet closes.** The canvas shows only a Cancel or Close link. Recommendation: the close control, Escape and the phone's back gesture close it; tapping the dark ground does not, so a tutor cannot lose a half-entered amount by a stray tap. If back-gesture handling is costly in a static export, it may move to R1-7 where the first real sheet appears.
 9. **Spacing scale.** `docs/DESIGN.md` defines no spacing tokens. Recommendation: use Tailwind's default 4px scale and add named sizes only for the three minimums (44, 48, 64).
-10. **Fonts: Anek Latin and a size ceiling.** The build plan lists five self-hosted families; `docs/DESIGN.md` ends the font stacks in Anek Latin, which is a sixth. Recommendation: do the phone check (H3) first; ship Anek Latin only if ₹ is missing or wrong in Bricolage or DM Mono, and then only the ₹ glyph. The PRD sets no limit on font bytes (the 200 KB limit is JavaScript only). Recommendation: `tech-lead` measures the subset files, and the founder then sets a per-language ceiling so a tutor on slow 4G is not left waiting.
+10. **Fonts: Anek Latin and a size ceiling.** The build plan lists five self-hosted families; `docs/DESIGN.md` ends the font stacks in Anek Latin, which is a sixth. Recommendation: do the phone check (H3) first; ship Anek Latin only if ₹ is missing or wrong in Bricolage or DM Mono, and then only the ₹ glyph. The PRD sets no limit on font bytes (the 200 KB limit is JavaScript only). Recommendation: `tech-lead` measures the subset files, and the founder then sets a per-language ceiling so a tutor on slow 4G is not left waiting. **Update after the F2a build:** Anek Latin is not shipped; Bricolage Grotesque has the ₹ sign and supplies it where DM Mono lacks it, pending phone check H3. Sizes are now measured (under criterion 10): an English first visit preloads about 60 KB of fonts and fetches about 9 KB more for labels; Hindi adds up to about 306 KB, Kannada about 156 KB, Telugu about 186 KB. Recommendation: accept these for F2 and set the ceilings just above today's figures (English 80 KB; each Indian script no more than 310 KB on top of English) so that CI catches any growth; look again at the Hindi figure before Release 0 ships, when a first load can be timed on a real slow connection.
 11. **Details the docs leave out.** (a) Which yellow is the focus ring on dark grounds: recommend `highlight`, and use it on cloth as well as on blue and black. (b) The pressed blue on the canvas is `#14206B` and the sheet ground is `#2A0709`; neither is in the token table, and components may not use raw hex. Recommend adding both as tokens (`blue-pressed`, `sheet-ground`) to `docs/DESIGN.md`. (c) `Interaction.dc.html` mentions "a short buzz on phones that support it"; it is not in `docs/DESIGN.md`. Recommend leaving it out for now. (d) Under reduced motion, recommend the button still moves into its shadow but instantly. (e) `CLAUDE.md` says corners are 4px at most while index tabs are 6px; recommend naming the tab tops as the one exception. (f) `Main.dc.html` labels `#F8ECB8` "Page" and `#E6D38A` "Rule"; this spec follows the names in `docs/DESIGN.md`. (g) Field line weights differ between the boards (`Interaction` 4px typing and 2px green correct; `Setup-upi` 3px blue with a tick); this spec follows `docs/DESIGN.md` and `Interaction.dc.html`.
 12. Decided. See the list above.
 13. **Split.** With thirteen components the slice is L, not M. Recommendation: split it into two pull requests. **F2a** is criteria 1 to 69: tokens, fonts, the first eight components, `/dev/components`, and leaving the page out of production. **F2b** is criteria 70 to 93: `Segmented`, `StudentStrip`, `Switch`, `BottomNav`, `Banner`, added to the same page. Reasons: F2a is what F3 and the phone check of the ₹ sign wait on; the five added components carry all the unsettled design points (questions 6 and 14 to 18); and none of them is used before R0-2 (`Segmented` in the reminder tool), with `Switch` not used until Release 2. F2b depends only on F2a and can be built alongside F3 and F4. Cost: one more review round, and criteria 58, 61, 62, 63 and 66 are checked again in F2b. If the founder prefers one pull request, the slice still holds together as a single L slice, but the review will be large.
@@ -246,9 +266,23 @@ Only the founder can settle these. Each has a recommendation. Until answered, th
 16. **BottomNav: icons or words only.** `Nav.dc.html` has an icon above each label at 14px; `Home-hi.dc.html` shows the Hindi bar with words only at 15px. Recommendation: icon and word in every language, Indian-script labels at 15px, and the bar grows past 64px when it needs to.
 17. **Banner details.** (a) The error banner's shadow is `cloth` red; the shadow list in `docs/DESIGN.md` has only `ink`, `ink-label` and `cloth-deep`. Recommend adding it to the list, for the error banner only. (b) Nothing says how long the undo banner stays. Recommend no timer in F2 and deciding the time in R1-7, where a tutor's real pace can be tested. (c) The offline banner is a square full-width strip at the top and the undo banner is a rounded block near the bottom; recommend the banner kind fixes the shape and the screen fixes the position.
 18. **Disabled states that were never drawn.** Only `Button` has a drawn disabled state. Recommendation: build none for `Segmented`, `Switch`, `BottomNav`, `Banner` or `Tabs` in F2; when a screen first needs one, reuse the button's language (dashed `ink-label` outline, no fill, a line saying why).
+19. **Headline amounts and the phone's font-size setting.** To stop a large amount being pushed off the screen, a fitted headline amount sets `text-size-adjust: none`: it follows the page's root font size but opts out of the phone's own text-scaling multiplier. PRD §9 requires the app to work with a large system font size, so this is an exception to a non-functional requirement and needs the founder's yes.
+    - **Product ruling, already applied:** the exception is limited to headline amounts (criterion 95). It is never allowed on row amounts, reading text, labels or anything a tutor or parent needs enlarged in order to read. A 60 to 72px figure is already several times larger than the largest system text, and an amount that runs off the screen or breaks in the middle is a worse failure than one that does not grow.
+    - **Recommendation to the founder:** accept the exception for headline amounts only, on condition that hand check H4b shows the amount whole, on one line and on the screen at the largest setting.
+    - **Unknown until H4 is run:** `test-engineer` notes that Tailwind's base styles already set `text-size-adjust: 100%` on the whole page. That may mean the declaration on amounts changes nothing on a real phone, and it may mean the whole site ignores the phone's font-size setting. If H4a shows ordinary text does not grow, that is a failure of PRD §9 and of criterion 63, not a matter of taste: it must be fixed before any screen a tutor or parent uses ships (R0-1 at the latest). It need not hold up merging F2a, which has no such screen. Until H4 is run, the manual half of criterion 63 is not proven.
+20. **Oldest phones supported.** The build works on Chrome and Android WebView 111 and later and on iOS 16.4 and later (the floor set by Tailwind 4, chosen in F1). Android 6 and older, and iPhones older than the iPhone 8, will show broken styling. The PRD says "low-end Android" without a version. Recommendation: accept this floor, since Chrome updates itself on Android 8 and later and Android 7 reaches Chrome 119; write the floor into PRD §9 so it is a stated decision; and check the share of older phones in PostHog once Release 0 has traffic.
+
+## Carry forward to later slices
+- **R1-7 and R1-12 (banners):** keep a live-region wrapper mounted on the screen at all times and put the banner inside it when it appears. A banner that mounts together with its own live region is often not announced by screen readers.
+- **Every amount on a real screen:** a headline amount needs the `amount-box` wrapper, an `amount-size-*` class and `amountFit()`; without all three it can break inside the number or overflow. Row amounts use none of them (criterion 95).
+- **R1-1 (sign-in):** decide whether the email field needs a plain single-line input so that the browser's and the keyboard's autofill work; the wrapping field of criteria 26 to 32 may not get autofill.
+- **R0-1 (landing page):** revisit preloading DM Mono once labels sit above the fold; today it is not preloaded and labels swap face on a first load (hand check H11a).
+- **Rows:** a screen must not give a row both an amount and a status tag (criterion 94).
+- **Blue grounds:** the first slice that puts a focusable control on a blue ground adds the yellow-ring test left open in criterion 21.
+- **Needs the founder before Release 0:** the browser floor (Open question 20), a per-language font-bytes ceiling (Open question 10), and the phone checks H3 and H4.
 
 ## Hand-off
-Next: `tech-lead` appends the technical plan to this file, `docs/specs/F2-design-system.md`.
+F2a (criteria 1 to 69) is built and is pull request #2 on `f2-design-system`. Criteria 94 and 95 were added after that build and still need to be checked against it. F2b (criteria 70 to 93) follows. The technical plans are below.
 
 ## Technical plan
 
