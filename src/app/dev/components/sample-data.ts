@@ -20,6 +20,8 @@ export const langNames: Record<Lang, string> = {
 export const figures = {
   large: "₹1,23,456",
   largeRest: "₹78,900",
+  sixWide: "₹9,87,650",
+  sevenDigits: "₹99,99,999",
   row: "₹1,200",
   rowLarge: "₹1,23,456",
   allDigits: "₹0123456789",
@@ -432,6 +434,8 @@ export const copy = {
     title: "The rupee sign",
     note: "Check on a real phone that the sign sits on the same line as the digits and looks like the same weight.",
     headline: "Headline size: sign and digits both Bricolage Grotesque",
+    fit: "Too wide for the screen at this size: it gets smaller, on one line, never broken",
+    fitNarrow: "The same amounts in half the width",
     reading: "Reading size: sign and digits both Bricolage Grotesque",
     row: "Row size: digits DM Mono, sign from Bricolage Grotesque",
     rowEnlarged: "The same two faces, enlarged, so the join is easy to judge",

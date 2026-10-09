@@ -113,8 +113,31 @@
   letter-spacing: -0.04em;
   --tw-leading: 0.92;
   line-height: 0.92;
-  /* An amount too wide for the screen at a large system font breaks; it never scrolls the page sideways. */
-  overflow-wrap: anywhere;
+  /* An amount is never broken: "₹78,90" on one line and "0" on the next reads as a different amount. */
+  white-space: nowrap;
+}
+
+/*
+ * Shrink to fit, for amounts that may be wider than their space. Three parts:
+ *   amount-box       on a wrapper: it becomes the space the amount must fit (a size container).
+ *   amount-size-7xl  on the amount, in place of text-7xl: the token size is the maximum.
+ *   --amount-em      on the amount: its width in em, from amountFit() in src/lib/amount-fit.ts.
+ * The size is the token, or the container's width divided by the amount's width, whichever is
+ * smaller, and never under 14px. Nothing changes when the amount fits at the token size.
+ * Without --amount-em it assumes a wide seven-digit amount.
+ */
+@utility amount-box {
+  container-type: inline-size;
+}
+
+@utility amount-size-* {
+  font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));
+  /*
+   * A phone's text-scaling setting multiplies text after this size is worked out, which would push a
+   * fitted amount back off the screen. Fitted amounts are headline sizes; they follow the root font
+   * size but not that multiplier.
+   */
+  text-size-adjust: none;
 }
 
 /* Row amounts. Always DM Mono (the rupee sign falls to Bricolage, next in the stack). Ignores the script variables. */

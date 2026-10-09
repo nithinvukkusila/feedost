@@ -1,3 +1,4 @@
+import { amountFit } from "@/lib/amount-fit";
 import { copy, figures, indicLangs, sample } from "../sample-data";
 import { Example, ScriptBlock, Section } from "./parts";
 
@@ -20,12 +21,35 @@ export function RupeeSection() {
   return (
     <Section id="rupee" title={copy.rupee.title} note={copy.rupee.note}>
       <Example caption={copy.rupee.headline} testId="rupee-headline">
-        <p data-rupee="headline" translate="no" className="type-amount text-7xl text-blue">
-          {figures.large}
-        </p>
-        <p data-rupee="headline" translate="no" className="type-amount text-7xl text-blue">
-          {figures.largeRest}
-        </p>
+        <div className="amount-box">
+          <p data-rupee="headline" translate="no" style={amountFit(figures.large)} className="type-amount amount-size-7xl text-blue">
+            {figures.large}
+          </p>
+          <p data-rupee="headline" translate="no" style={amountFit(figures.largeRest)} className="type-amount amount-size-7xl text-blue">
+            {figures.largeRest}
+          </p>
+        </div>
+      </Example>
+
+      <Example caption={copy.rupee.fit} testId="rupee-fit">
+        <div className="amount-box">
+          <p data-rupee="fit" translate="no" style={amountFit(figures.sixWide)} className="type-amount amount-size-7xl text-blue">
+            {figures.sixWide}
+          </p>
+          <p data-rupee="fit" translate="no" style={amountFit(figures.sevenDigits)} className="type-amount amount-size-7xl text-blue">
+            {figures.sevenDigits}
+          </p>
+        </div>
+      </Example>
+      <Example caption={copy.rupee.fitNarrow} testId="rupee-fit-narrow">
+        <div className="amount-box w-1/2 border-b border-rule">
+          <p data-rupee="fit" translate="no" style={amountFit(figures.large)} className="type-amount amount-size-7xl text-blue">
+            {figures.large}
+          </p>
+          <p data-rupee="fit" translate="no" style={amountFit(figures.sevenDigits)} className="type-amount amount-size-7xl text-blue">
+            {figures.sevenDigits}
+          </p>
+        </div>
       </Example>
 
       <Example caption={copy.rupee.reading} testId="rupee-reading">
@@ -83,9 +107,11 @@ export function RupeeSection() {
           <ScriptBlock key={lang} lang={lang}>
             <Example caption={copy.rupee.headline}>
               <p className="type-body font-bold text-cloth">{s.pending}</p>
-              <p data-rupee="headline" translate="no" className="type-amount text-7xl text-blue">
-                {figures.fee}
-              </p>
+              <div className="amount-box">
+                <p data-rupee="headline" translate="no" style={amountFit(figures.fee)} className="type-amount amount-size-7xl text-blue">
+                  {figures.fee}
+                </p>
+              </div>
               <p className="type-body text-ink-soft">{s.sentence}</p>
             </Example>
             <Example caption={copy.rupee.inScript}>

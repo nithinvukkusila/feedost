@@ -1,3 +1,4 @@
+import { amountFit } from "@/lib/amount-fit";
 import { copy, figures, langs, sample } from "../sample-data";
 import { Example, ScriptBlock, Section } from "./parts";
 
@@ -14,9 +15,11 @@ export function TypeSection() {
               </p>
             </Example>
             <Example caption={copy.type.amount}>
-              <p data-role="amount" translate="no" className="type-amount text-6xl text-blue">
-                {figures.fee}
-              </p>
+              <div className="amount-box">
+                <p data-role="amount" translate="no" style={amountFit(figures.fee)} className="type-amount amount-size-6xl text-blue">
+                  {figures.fee}
+                </p>
+              </div>
             </Example>
             <Example caption={copy.type.bodyLg}>
               <p data-role="body-lg" className="type-body-lg">

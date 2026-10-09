@@ -126,7 +126,16 @@ describe("amounts never follow the script (criteria 14 and 40)", () => {
     expect(amount["font-family"]).toBe("var(--font-sans)");
     expect(amount["font-weight"]).toBe("800");
     expect(amount["letter-spacing"]).toBe("-0.04em");
-    expect(amount["overflow-wrap"]).toBe("anywhere");
+    // Never broken in the middle of the number.
+    expect(amount["white-space"]).toBe("nowrap");
+    expect(amount["overflow-wrap"]).toBeUndefined();
+  });
+
+  it("can shrink to fit its container, with the token as the maximum and 14px as the floor", () => {
+    expect(rule(type, "@utility amount-box")).toEqual({ "container-type": "inline-size" });
+    const fit = /@utility amount-size-\* \{([^}]*)\}/.exec(type)![1];
+    expect(fit).toContain("font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));");
+    expect(fit).toContain("text-size-adjust: none;");
   });
 
   it("row amounts are fixed to DM Mono", () => {

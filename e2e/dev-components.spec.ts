@@ -448,22 +448,34 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       const small = await smallTargets(page, "body");
       expect(small.small).toEqual([]);
 
-      // As built (the spec says nothing breaks): a headline amount wider than the screen at this size
-      // breaks onto a second line in the middle of the number instead of scrolling the page sideways.
-      // At the 72px size that is every amount shown, five digits ("₹78,900", "₹18,500") as well as six.
-      // At the 60px size a five-digit amount still fits on one line.
-      expect((await css(sixDigits, ["overflow-wrap"]))["overflow-wrap"]).toBe("anywhere");
+      // A headline amount is never broken in the middle of the number ("₹78,90" then "0" reads as a
+      // different amount). One wider than its space gets smaller instead: it stays on one line, at
+      // most its token size, never under 14px, and never scrolls the page sideways.
+      expect((await css(sixDigits, ["white-space"]))["white-space"]).toBe("nowrap");
       const amounts = page.locator('[data-rupee="headline"], [data-role="amount"]');
       await expect(amounts).toHaveCount(9);
       for (const amount of await amounts.all()) {
         const text = (await amount.textContent()) ?? "";
-        const token = await amount.evaluate((el) => (el.classList.contains("text-7xl") ? 72 : el.classList.contains("text-6xl") ? 60 : 0));
+        const token = await amount.evaluate((el) => (el.classList.contains("amount-size-7xl") ? 72 : el.classList.contains("amount-size-6xl") ? 60 : 0));
         expect(token, text).not.toBe(0);
-        expect(await lineCount(amount), `${text} at the ${token}px size`).toBe(token === 72 ? 2 : 1);
+        expect(await lineCount(amount), `${text} at the ${token}px size`).toBe(1);
+        const size = parseFloat((await css(amount, ["font-size"]))["font-size"]);
+        // Root scaling raises the token itself; text-only scaling leaves a fitted amount alone.
+        expect(size, text).toBeLessThanOrEqual(token * (scale.boxesGrow ? 1.3 : 1) + 0.01);
+        expect(size, text).toBeGreaterThanOrEqual(14);
         const amountBox = await box(amount);
         expect(amountBox.x, text).toBeGreaterThanOrEqual(0);
         expect(amountBox.x + amountBox.width, text).toBeLessThanOrEqual(360);
+        // The digits themselves end inside the amount's own space.
+        const fits = await amount.evaluate((el) => {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect().right <= el.parentElement!.getBoundingClientRect().right + 0.5;
+        });
+        expect(fits, text).toBe(true);
       }
+      // The six-digit amount no longer fits at its 93.6px token when the root is 130%, so it is smaller.
+      if (scale.boxesGrow) expect(parseFloat((await css(sixDigits, ["font-size"]))["font-size"])).toBeLessThan(93.6);
 
       // A stamp's ring is sized in rem. It grows with the root font size; with text-only scaling it
       // grows only as far as its word needs.
