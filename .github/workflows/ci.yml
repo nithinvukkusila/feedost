@@ -34,7 +34,11 @@ jobs:
       - run: pnpm test:e2e
       # Last, because it overwrites out/: a production build must not contain /dev/components.
       - name: Production build leaves out the dev routes
-        run: VERCEL_ENV=production pnpm build && test ! -e out/dev
+        # The folder must be gone, and so must the page's own words (a chunk could carry them without the route).
+        run: |
+          VERCEL_ENV=production pnpm build
+          test ! -e out/dev
+          ! grep -rqF "Venkatasubrahmanyalakshminarasimharao" out
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
