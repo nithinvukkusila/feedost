@@ -5,10 +5,11 @@ Read the root `CLAUDE.md` first. These rules are specific to the backend.
 ## Layout
 
 ```
-supabase/migrations/      SQL migrations named <timestamp>_name.sql by `supabase migration new`, the only way the schema changes
+supabase/migrations/      SQL migrations named <timestamp>_name.sql by `pnpm exec supabase migration new`, the only way the schema changes
 supabase/functions/       Edge Functions (Deno)
 supabase/tests/           pgTAP tests for RLS and database functions
-supabase/seed.sql         local sample data (the "try with sample data" tutor)
+supabase/seed.sql         local sample data (the "try with sample data" tutor); a comment only until R1
+supabase/environments.json  public identifiers per environment (staging and production refs are filled in F4b)
 ```
 
 ## Rules
@@ -24,10 +25,24 @@ supabase/seed.sql         local sample data (the "try with sample data" tutor)
 - Edge Functions that serve public pages use the service role, look up by token only, return only the fields the page shows, and never return another student's data, the parent's phone, or internal ids.
 - Public write functions (`submit-claim`, `record-consent`, `waitlist-join`) validate input with zod and are rate-limited per token or IP.
 - Payment screenshots go to a private bucket. Storage policy: only the owning tutor can read. The pay page gets a short-lived signed upload URL from the Edge Function.
-- No secrets in SQL or function source. Use `supabase secrets`.
+- Every table migration says `grant ... to authenticated` itself. Never grant to `anon`. The baseline migration revokes the default `anon` access on new `public` tables, and `supabase/tests/030_default_privileges.sql` pins that.
+- Never run `supabase config push`, `supabase db push --include-seed`, or `supabase link` to production. Never change structure in the Supabase SQL editor.
+- No secrets in SQL or function source. Use `supabase secrets`. The only function secret so far is `APP_ENV`.
+
+## Test helper
+
+`supabase/tests/000_helpers.sql` creates the schema `tests`. Inside a test's own `begin ... rollback`, call `tests.act_as(tests.tutor_a())` or `tests.act_as(tests.tutor_b())` to act as a tutor, `tests.act_as_anon()` for no session, and `tests.reset()` to go back. Start every later file with `select tests.assert_ready();`. `010_rls_probe.sql` is the worked example. `020_public_tables_have_rls.sql` fails if any `public` table has RLS off; never delete or loosen it.
 
 ## Running
 
-- `supabase start`, `supabase db reset` — local stack with migrations and seed.
-- `supabase test db` — pgTAP tests.
-- `supabase db push` against staging is done by `release-manager`, never ad hoc. Production needs the human's approval first.
+The full workflow, who runs each step, and the production approval rule are in [docs/ENVIRONMENTS.md](../docs/ENVIRONMENTS.md). This section matches it.
+
+- `pnpm db:start` starts the reduced local stack. The first run pulls several GB of images. If it says Docker is not running, start Docker.
+- `pnpm db:reset` applies every migration, then the seed. `pnpm db:test` runs the pgTAP tests; run it twice. `pnpm db:stop` stops the stack.
+- `pnpm check:db --base origin/main` checks migration names, that no applied migration was changed, and that no schema change sits outside `supabase/migrations/`.
+- `pnpm smoke:env <local|staging|production>` asks that environment's `health` function which environment it is.
+- Seed data runs on the local stack only.
+- Rollback is a forward fix: a new migration. There are no down migrations. A migration must work with the front end that is live now.
+- `release-manager` applies migrations and functions to staging, never ad hoc. This machine is linked to staging only.
+- Production: the human approves each migration and release, and the founder runs the production commands in their own terminal, after a database dump saved outside the repo. No agent runs `db push`, `db reset` or `functions deploy` against production.
+- Docker does not work on the founder's machine today, so CI's `database` job is where `db:reset` and `db:test` run.
