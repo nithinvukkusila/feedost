@@ -1,0 +1,237 @@
+/*
+ * Type roles (docs/DESIGN.md "Type"). Components use these classes; they never set a font family,
+ * letter-spacing or uppercase themselves. Each role reads variables that the three Indian scripts
+ * override, so a component needs no per-language code. All sizes are rem.
+ */
+
+/* Defaults are repeated on [lang] because custom properties inherit: an English block inside a Hindi one must reset. */
+@layer base {
+  :root,
+  [lang] {
+    --script-font: var(--font-sans);
+    --script-label-font: var(--font-mono);
+
+    --headline-weight: 800;
+    --headline-leading: 0.92;
+    --headline-tracking: -0.04em;
+
+    --body-sm-size: 0.9375rem;
+    --body-size: 1rem;
+    --body-lg-size: 1.125rem;
+    --body-leading: 1.4;
+
+    --caption-size: 0.875rem;
+    --caption-leading: 1.35;
+
+    --label-size: 0.875rem;
+    --label-weight: 500;
+    --label-leading: 1.4;
+    --label-tracking: 0.04em;
+    --label-transform: uppercase;
+
+    --control-leading: 1.2;
+    --control-sm-size: 0.9375rem;
+
+    --name-size: 1.0625rem;
+    --name-leading: 1.25;
+
+    --value-leading: 1.3;
+
+    --stamp-weight: 800;
+    --stamp-leading: 0.95;
+    --stamp-tracking: 0.04em;
+    --stamp-transform: uppercase;
+
+    font-family: var(--script-font);
+  }
+
+  /* Hindi, Kannada, Telugu: Anek, no letter-spacing, no capitals, more room for vowel marks. */
+  [lang|="hi"],
+  [lang|="kn"],
+  [lang|="te"] {
+    --headline-weight: 700;
+    --headline-leading: 1.3;
+    --headline-tracking: 0em;
+
+    --body-sm-size: 1rem;
+    --body-size: 1.0625rem;
+    --body-lg-size: 1.125rem;
+    --body-leading: 1.6;
+
+    --caption-size: 0.9375rem;
+    --caption-leading: 1.5;
+
+    --label-size: 0.9375rem;
+    --label-weight: 600;
+    --label-leading: 1.5;
+    --label-tracking: 0em;
+    --label-transform: none;
+
+    --control-leading: 1.35;
+    --control-sm-size: 1rem;
+
+    --name-size: 1.125rem;
+    --name-leading: 1.35;
+
+    --value-leading: 1.5;
+
+    --stamp-weight: 700;
+    --stamp-leading: 1.2;
+    --stamp-tracking: 0em;
+    --stamp-transform: none;
+  }
+
+  [lang|="hi"] {
+    --script-font: var(--font-hi);
+    --script-label-font: var(--font-hi);
+  }
+
+  [lang|="kn"] {
+    --script-font: var(--font-kn);
+    --script-label-font: var(--font-kn);
+  }
+
+  [lang|="te"] {
+    --script-font: var(--font-te);
+    --script-label-font: var(--font-te);
+  }
+}
+
+/* Headlines. Size comes from a text-* class beside it; --tw-leading keeps that class from resetting the line-height. */
+@utility type-headline {
+  font-family: var(--script-font);
+  font-weight: var(--headline-weight);
+  letter-spacing: var(--headline-tracking);
+  --tw-leading: var(--headline-leading);
+  line-height: var(--headline-leading);
+}
+
+/* Headline amounts. Always Bricolage with -0.04em: this role ignores the script variables on purpose. */
+@utility type-amount {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  --tw-leading: 0.92;
+  line-height: 0.92;
+  /* An amount is never broken: "₹78,90" on one line and "0" on the next reads as a different amount. */
+  white-space: nowrap;
+}
+
+/*
+ * Shrink to fit, for headline amounts that may be wider than their space. Three parts:
+ *   amount-box       on a wrapper: it becomes the space the amount must fit (a size container).
+ *   amount-size-7xl  on the amount, in place of text-7xl: the token size is the maximum.
+ *   --amount-em      on the amount: its width in em, from amountFit() in src/lib/amount-fit.ts.
+ * The size is the token, or the container's width divided by the amount's width, whichever is
+ * smaller, and never under 14px. Nothing changes when the amount fits at the token size.
+ * Without --amount-em it assumes a wide seven-digit amount.
+ *
+ * Fitting is for headline amounts only (spec F2, criterion 95), so these exist at the two headline
+ * sizes, 60px and 72px, and nowhere else. Row amounts and amounts in reading text are never fitted.
+ */
+@utility amount-box {
+  container-type: inline-size;
+}
+
+@utility amount-size-6xl {
+  font-size: max(0.875rem, min(var(--text-6xl), calc(100cqi / var(--amount-em, 5.3))));
+}
+
+@utility amount-size-7xl {
+  font-size: max(0.875rem, min(var(--text-7xl), calc(100cqi / var(--amount-em, 5.3))));
+}
+
+/* Row amounts. Always DM Mono (the rupee sign falls to Bricolage, next in the stack). Ignores the script variables. */
+@utility type-amount-row {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0em;
+  line-height: 1.4;
+  text-transform: none;
+}
+
+/* Reading text: 15, 16 and 18px at 1.4; 16, 17 and 18px at 1.6 in the Indian scripts. */
+@utility type-body-sm {
+  font-family: var(--script-font);
+  font-size: var(--body-sm-size);
+  line-height: var(--body-leading);
+  letter-spacing: 0em;
+}
+
+@utility type-body {
+  font-family: var(--script-font);
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  letter-spacing: 0em;
+}
+
+@utility type-body-lg {
+  font-family: var(--script-font);
+  font-size: var(--body-lg-size);
+  line-height: var(--body-leading);
+  letter-spacing: 0em;
+}
+
+/* The smallest reading text: row meta, helper text and messages. 14px at 1.35; 15px at 1.5 in the Indian scripts. */
+@utility type-caption {
+  font-family: var(--script-font);
+  font-size: var(--caption-size);
+  line-height: var(--caption-leading);
+  letter-spacing: 0em;
+}
+
+/* Labels, dates, receipt numbers: DM Mono capitals; Anek 600 at 15px with no capitals in the Indian scripts. */
+@utility type-label {
+  font-family: var(--script-label-font);
+  font-size: var(--label-size);
+  font-weight: var(--label-weight);
+  line-height: var(--label-leading);
+  letter-spacing: var(--label-tracking);
+  text-transform: var(--label-transform);
+}
+
+/* Text on buttons (18px) and on tabs (15px; 16px in the Indian scripts). */
+@utility type-control {
+  font-family: var(--script-font);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: var(--control-leading);
+  letter-spacing: 0em;
+}
+
+@utility type-control-sm {
+  font-family: var(--script-font);
+  font-size: var(--control-sm-size);
+  font-weight: 700;
+  line-height: var(--control-leading);
+  letter-spacing: 0em;
+}
+
+/* The name in a ledger row: 17px; 18px in the Indian scripts. */
+@utility type-name {
+  font-family: var(--script-font);
+  font-size: var(--name-size);
+  font-weight: 700;
+  line-height: var(--name-leading);
+  letter-spacing: 0em;
+}
+
+/* The value written on a field's line. */
+@utility type-value {
+  font-family: var(--script-font);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: var(--value-leading);
+  letter-spacing: 0em;
+}
+
+/* The word on a stamp. Size comes from a text-* class beside it. */
+@utility type-stamp {
+  font-family: var(--script-font);
+  font-weight: var(--stamp-weight);
+  letter-spacing: var(--stamp-tracking);
+  text-transform: var(--stamp-transform);
+  --tw-leading: var(--stamp-leading);
+  line-height: var(--stamp-leading);
+}

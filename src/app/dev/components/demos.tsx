@@ -1,0 +1,157 @@
+"use client";
+
+// The few examples on the dev page that need state.
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Row, Rows } from "@/components/ui/row";
+import { Sheet, type SheetContext } from "@/components/ui/sheet";
+import { Slip } from "@/components/ui/slip";
+import { Stamp } from "@/components/ui/stamp";
+import { tabId, Tabs, type TabItem } from "@/components/ui/tabs";
+
+/** A button that goes busy for a moment when tapped, to show that a second tap does nothing. */
+export function BusyDemo({ label, busyLabel }: { label: string; busyLabel: string }) {
+  const [busy, setBusy] = useState(false);
+  const [taps, setTaps] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+
+  return (
+    <Button
+      variant="send"
+      full
+      busy={busy}
+      busyLabel={busyLabel}
+      data-testid="busy-demo"
+      data-taps={taps}
+      onClick={() => {
+        setTaps((n) => n + 1);
+        setBusy(true);
+        timer.current = setTimeout(() => setBusy(false), 1500);
+      }}
+    >
+      {label}
+    </Button>
+  );
+}
+
+/** A stamp that lands when the page loads, with a button to see it again. */
+export function StampReplay({
+  word,
+  label,
+  secondLine,
+  replayLabel,
+}: {
+  word: string;
+  label: string;
+  secondLine: string;
+  replayLabel: string;
+}) {
+  const [run, setRun] = useState(0);
+  return (
+    <div className="flex flex-wrap items-center gap-6 py-3">
+      {/* A new key remounts the stamp, which is what restarts a one-shot animation. */}
+      <Stamp key={run} size="md" tone="stamp" label={label} secondLine={secondLine} animate>
+        {word}
+      </Stamp>
+      <Button variant="outline" data-testid="stamp-replay" onClick={() => setRun((n) => n + 1)}>
+        {replayLabel}
+      </Button>
+    </div>
+  );
+}
+
+export type TabsDemoRow = { name: string; meta: string; tone: "overdue" | "due" | "paid"; amount: string };
+
+/** Tabs joined to a slip. Each tab shows one sample row, so a change of tab is easy to see. */
+export function TabsDemo({
+  tabs,
+  label,
+  panelId,
+  rows,
+}: {
+  tabs: TabItem[];
+  label: string;
+  panelId: string;
+  /** One row per tab id. */
+  rows: Record<string, TabsDemoRow>;
+}) {
+  const [value, setValue] = useState(tabs[0].id);
+  const row = rows[value];
+  return (
+    <div data-testid={`tabs-${panelId}`}>
+      <Tabs tabs={tabs} value={value} onChange={setValue} label={label} panelId={panelId} />
+      <Slip joined id={panelId} role="tabpanel" aria-labelledby={tabId(panelId, value)} className="px-3">
+        <Rows>
+          <Row name={row.name} meta={row.meta} tone={row.tone} amount={row.amount} />
+        </Rows>
+      </Slip>
+    </div>
+  );
+}
+
+/** A button that opens a sheet. `lines` adds enough content to make the panel scroll. */
+export function SheetDemo({
+  id,
+  openLabel,
+  title,
+  closeLabel,
+  context,
+  body,
+  fieldLabel,
+  fieldValue,
+  actionLabel,
+  lines = 0,
+  line,
+  focusField = false,
+}: {
+  id: string;
+  openLabel: string;
+  title: string;
+  closeLabel: string;
+  context?: SheetContext;
+  body: string;
+  fieldLabel: string;
+  fieldValue: string;
+  actionLabel: string;
+  lines?: number;
+  line?: string;
+  /** Put the cursor in the field when the sheet opens, instead of on the close control. */
+  focusField?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="outline" full data-testid={`sheet-open-${id}`} onClick={() => setOpen(true)}>
+        {openLabel}
+      </Button>
+      <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={closeLabel} context={context}>
+        <div data-testid={`sheet-body-${id}`} className="flex flex-col gap-5">
+          <Field
+            label={fieldLabel}
+            defaultValue={fieldValue}
+            inputMode="numeric"
+            autoComplete="off"
+            data-autofocus={focusField ? "" : undefined}
+          />
+          {Array.from({ length: lines }, (_, i) => (
+            <p key={i} className="type-body">
+              {line}
+            </p>
+          ))}
+          <p className="type-caption text-ink-soft">{body}</p>
+          {/* 5px of room on the right for the button's shadow. */}
+          <div className="pr-1.5">
+            <Button variant="record" full onClick={() => setOpen(false)}>
+              {actionLabel}
+            </Button>
+          </div>
+        </div>
+      </Sheet>
+    </>
+  );
+}

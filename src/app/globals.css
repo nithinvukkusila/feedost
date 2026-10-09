@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
-/* Design tokens arrive in slice F2 (docs/DESIGN.md). */
-body {
-  margin: 0;
-}
+@import "tailwindcss" source("..");
+@source not "../**/*.test.*";
+@import "../styles/tokens.css";
+@import "../styles/type.css";
+@import "../styles/states.css";

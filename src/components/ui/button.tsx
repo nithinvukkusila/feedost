@@ -1,0 +1,175 @@
+// Button and RoundButton (docs/DESIGN.md). Blue sends or pays, black records, outline is secondary.
+// There is no red variant. Every word is passed in.
+// No client directive and no handler of its own, so it renders from server and client components alike.
+import { useId, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { cx } from "@/lib/cx";
+
+export type ButtonVariant = "send" | "record" | "outline";
+
+// Whole class names: Tailwind must be able to see them.
+const base =
+  "type-control inline-flex min-h-control items-center justify-center gap-2 rounded-sm border-2 px-5 py-2.5 text-center whitespace-normal wrap-anywhere transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
+
+const rest: Record<ButtonVariant, string> = {
+  send: "border-ink bg-blue text-slip shadow-button ground-shadow pressed:press-button pressed:bg-blue-pressed",
+  record: "border-ink bg-ink text-slip shadow-record ground-shadow pressed:press-button",
+  outline: "border-ink bg-slip text-ink shadow-button ground-shadow pressed:press-button",
+};
+
+// Not merely pale: dashed outline, no fill, no shadow, and it does not move.
+const unavailable = "cursor-not-allowed border-dashed border-ink-label bg-transparent text-ink-soft";
+
+type Shared = {
+  variant: ButtonVariant;
+  /** The label. */
+  children: ReactNode;
+  /** Decorative icon before the label. Hidden from screen readers. */
+  iconStart?: ReactNode;
+  /** Decorative icon after the label. Hidden from screen readers. */
+  iconEnd?: ReactNode;
+  disabled?: boolean;
+  /** A line beneath a disabled button saying why. Tied to the button for screen readers. */
+  disabledReason?: ReactNode;
+  /** Fill the width of the container. */
+  full?: boolean;
+};
+
+// `busyLabel` is required whenever `busy` can be true.
+type Busy = { busy?: false; busyLabel?: ReactNode } | { busy: boolean; busyLabel: ReactNode };
+
+type Own = keyof Shared | "busy" | "busyLabel" | "className" | "style";
+
+type AsButton = { href?: undefined } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, Own>;
+type AsLink = { href: string } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, Own | "href">;
+
+export type ButtonProps = Shared & Busy & (AsButton | AsLink);
+
+export function Button(props: ButtonProps) {
+  const {
+    variant,
+    children,
+    iconStart,
+    iconEnd,
+    disabled = false,
+    disabledReason,
+    full = false,
+    busy = false,
+    busyLabel,
+    ...native
+  } = props;
+  const reasonId = useId();
+  const showReason = disabled && disabledReason != null;
+  const working = busy && !disabled;
+
+  const className = cx(base, disabled ? unavailable : rest[variant], full && "w-full");
+  const describedBy = cx(native["aria-describedby"], showReason && reasonId) || undefined;
+  const content = (
+    <>
+      {iconStart && !working ? (
+        <span aria-hidden="true" className="inline-flex shrink-0">
+          {iconStart}
+        </span>
+      ) : null}
+      <span className="min-w-0">{working ? busyLabel : children}</span>
+      {iconEnd && !working ? (
+        <span aria-hidden="true" className="inline-flex shrink-0">
+          {iconEnd}
+        </span>
+      ) : null}
+    </>
+  );
+
+  let control: ReactNode;
+  if (native.href !== undefined) {
+    const { href, onClick, ...link } = native;
+    control =
+      disabled || working ? (
+        // A link that cannot be followed has no href. While working it keeps its place in the tab order,
+        // so focus is not lost; its click handler is dropped so it cannot fire twice.
+        <a
+          {...link}
+          role="link"
+          aria-disabled="true"
+          aria-busy={working ? "true" : undefined}
+          aria-describedby={describedBy}
+          tabIndex={working ? 0 : undefined}
+          className={className}
+        >
+          {content}
+        </a>
+      ) : (
+        <a {...link} href={href} onClick={onClick} aria-describedby={describedBy} className={className}>
+          {content}
+        </a>
+      );
+  } else {
+    const { type, onClick, href: _none, ...button } = native;
+    void _none;
+    control = (
+      <button
+        {...button}
+        // While working the button stays focusable but does nothing: no handler, and it cannot submit a form.
+        type={working ? "button" : (type ?? "button")}
+        onClick={working ? undefined : onClick}
+        disabled={disabled}
+        aria-busy={working ? "true" : undefined}
+        aria-disabled={working ? "true" : undefined}
+        aria-describedby={describedBy}
+        className={className}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  if (!showReason) return control;
+  return (
+    <span className={cx("flex-col gap-2", full ? "flex w-full" : "inline-flex")}>
+      {control}
+      <span id={reasonId} className="type-caption text-ink-soft">
+        {disabledReason}
+      </span>
+    </span>
+  );
+}
+
+const round =
+  "inline-flex size-control shrink-0 items-center justify-center rounded-full border-2 border-ink bg-blue text-slip shadow-round ground-shadow transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 pressed:press-round pressed:bg-blue-pressed ring:ground-ring";
+
+type RoundShared = {
+  /** The accessible name. Required: the button shows only an icon. */
+  label: string;
+  icon: ReactNode;
+};
+
+type RoundOwn = keyof RoundShared | "children" | "className" | "style" | "aria-label";
+
+export type RoundButtonProps = RoundShared &
+  (
+    | ({ href?: undefined } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, RoundOwn>)
+    | ({ href: string } & Omit<AnchorHTMLAttributes<HTMLAnchorElement>, RoundOwn | "href">)
+  );
+
+/** The 48px round action in a ledger row. Send colours, 3px shadow. */
+export function RoundButton(props: RoundButtonProps) {
+  const { label, icon, ...native } = props;
+  const content = (
+    <span aria-hidden="true" className="inline-flex">
+      {icon}
+    </span>
+  );
+  if (native.href !== undefined) {
+    return (
+      <a {...native} aria-label={label} className={round}>
+        {content}
+      </a>
+    );
+  }
+  const { type, href: _none, ...button } = native;
+  void _none;
+  return (
+    <button {...button} type={type ?? "button"} aria-label={label} className={round}>
+      {content}
+    </button>
+  );
+}

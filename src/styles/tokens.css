@@ -1,0 +1,71 @@
+/*
+ * Design tokens for the "Bahi-khata" look (docs/DESIGN.md).
+ * This is the only file in src/ that may contain hex values.
+ * Default Tailwind colours, radii, shadows, blurs and the sub-14px text size are removed,
+ * so a class outside the design system produces no CSS.
+ */
+@theme {
+  /* Colour: the 17 from docs/DESIGN.md, same names and values. */
+  --color-*: initial;
+  --color-cloth: #A81C22;
+  --color-cloth-deep: #5E0D11;
+  --color-stitch: #E9C95A;
+  --color-on-cloth: #F7E7A0;
+  --color-on-cloth-soft: #FBF1C8;
+  --color-page: #FAF3D3;
+  --color-page-ruled: #F8ECB8;
+  --color-slip: #FDF6D8;
+  --color-rule: #C9B56A;
+  --color-tab-idle: #E6D38A;
+  --color-ink: #1A1410;
+  --color-ink-soft: #4A3F1E;
+  --color-ink-label: #6B5B2A;
+  --color-blue: #1B2B8F;
+  --color-stamp: #1F6B3C;
+  --color-highlight: #F4C430;
+  --color-bubble: #E4F0D2;
+  /* Two extras from the canvas (spec open question 11b). */
+  --color-blue-pressed: #14206B;
+  --color-sheet-ground: #2A0709;
+
+  /* Text size: nothing under 14px exists. Sizes are rem so the system font size scales them. */
+  --text-xs: initial;
+  --text-xs--line-height: initial;
+
+  /* Radius: square, 4px, 6px (top of index tabs only), full circle (stamps, round button). */
+  --radius-*: initial;
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-tab: 6px;
+  --radius-full: 9999px;
+
+  /* Shadow: solid offsets, zero blur. On cloth the colour changes through the ground utility. */
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+  --text-shadow-*: initial;
+  --blur-*: initial;
+  --shadow-button: 5px 5px 0 var(--color-ink);
+  --shadow-record: 5px 5px 0 var(--color-ink-label);
+  --shadow-slip: 6px 6px 0 var(--color-ink);
+  --shadow-round: 3px 3px 0 var(--color-ink);
+
+  /* Size minimums: tap target 44px, control 48px, ledger row 64px. */
+  --spacing-tap: 2.75rem;
+  --spacing-control: 3rem;
+  --spacing-row: 4rem;
+}
+
+/*
+ * Font stacks. The --font-* variables on the right come from next/font (src/styles/fonts.ts).
+ * DM Mono has no rupee sign, so Bricolage Grotesque follows it directly and draws it.
+ * 'Anek Latin' is a name only (docs/DESIGN.md); no file is shipped for it.
+ */
+@theme {
+  --font-*: initial;
+  --font-sans: var(--font-bricolage), 'Anek Latin', system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), var(--font-bricolage), 'Anek Latin', system-ui, monospace;
+  --font-hi: var(--font-anek-devanagari), var(--font-bricolage), 'Anek Latin', system-ui, sans-serif;
+  --font-kn: var(--font-anek-kannada), var(--font-bricolage), 'Anek Latin', system-ui, sans-serif;
+  --font-te: var(--font-anek-telugu), var(--font-bricolage), 'Anek Latin', system-ui, sans-serif;
+}

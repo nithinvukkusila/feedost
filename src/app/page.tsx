@@ -4,7 +4,7 @@ import { brand } from "@/config/brand";
 export default function Home() {
   return (
     <main className="p-5">
-      <h1 className="text-3xl font-extrabold">{brand.name}</h1>
+      <h1 className="type-headline text-3xl">{brand.name}</h1>
     </main>
   );
 }

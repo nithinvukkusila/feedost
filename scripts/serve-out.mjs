@@ -5,6 +5,8 @@ import { extname, join, normalize } from "node:path";
 
 const ROOT = "out";
 const PORT = Number(process.env.PORT ?? 4173);
+// HOST=0.0.0.0 lets a phone on the same Wi-Fi open the site (`pnpm serve:lan`). Default: this machine only.
+const HOST = process.env.HOST ?? "127.0.0.1";
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
@@ -41,4 +43,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end("Not found");
   }
-}).listen(PORT, "127.0.0.1", () => console.log(`Serving ${ROOT}/ on http://localhost:${PORT}`));
+}).listen(PORT, HOST, () => console.log(`Serving ${ROOT}/ on http://${HOST === "127.0.0.1" ? "localhost" : HOST}:${PORT}`));
