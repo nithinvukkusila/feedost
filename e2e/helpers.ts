@@ -3,6 +3,8 @@ import { expect, type CDPSession, type Locator, type Page, type TestInfo } from 
 import { group, readTokens } from "../src/styles/read-tokens";
 
 export const DEV = "/dev/components/";
+/** The home page. "/" only jumps to a language address, so the old "home page" tests open this. */
+export const HOME = "/en/";
 
 export const langs = ["en", "hi", "kn", "te"] as const;
 export const indicLangs = ["hi", "kn", "te"] as const;

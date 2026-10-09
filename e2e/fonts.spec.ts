@@ -13,6 +13,7 @@ import {
   scriptFontVariable,
   scriptPattern,
   type IndicLang,
+  HOME,
 } from "./helpers";
 
 const ANEK = /^Anek /;
@@ -45,7 +46,7 @@ function recordRequests(page: Page): string[] {
 }
 
 test.describe("criterion 9: fonts come from our own origin", () => {
-  for (const path of ["/", DEV]) {
+  for (const path of [HOME, DEV]) {
     test(`${path} makes no request to another host, for fonts or anything else`, async ({ page, baseURL }) => {
       const origin = new URL(baseURL!).origin;
       const urls = recordRequests(page);
@@ -91,7 +92,7 @@ test.describe("criterion 9: fonts come from our own origin", () => {
 test.describe("font bytes a page does not need (follow-up to criterion 12's slow-network case)", () => {
   test("the home page preloads the two Bricolage files and nothing else, and never asks for DM Mono", async ({ page }) => {
     const urls = recordRequests(page);
-    await page.goto("/");
+    await page.goto(HOME);
     await fontsSettled(page);
     const files = await fontFiles(page);
     const familyByUrl = new Map(files.map((f) => [f.url, f.family]));
@@ -139,7 +140,7 @@ test.describe("font bytes a page does not need (follow-up to criterion 12's slow
 test.describe("criterion 11: an Indian-script font loads only when its script is on the page", () => {
   test("the English home page requests no Hindi, Kannada or Telugu font file", async ({ page }) => {
     const urls = recordRequests(page);
-    await page.goto("/");
+    await page.goto(HOME);
     await fontsSettled(page);
 
     const files = await fontFiles(page);
@@ -155,7 +156,7 @@ test.describe("criterion 11: an Indian-script font loads only when its script is
   for (const lang of indicLangs) {
     test(`text in ${lang} on the home page fetches that script's file and no other script's`, async ({ page }) => {
       const urls = recordRequests(page);
-      await page.goto("/");
+      await page.goto(HOME);
       await fontsSettled(page);
       const files = await fontFiles(page);
       const own = await familyOf(page, scriptFontVariable[lang]);
