@@ -272,3 +272,5 @@ CI: `pnpm size` at 150 KB or less per route (22); `pnpm check:leak` (31).
 - `experimental.globalNotFound` was proven in a build: `out/404.html` has `<html lang="en">`, the five font variables, four `<section lang>` blocks, four links and `noindex`. `pnpm check:404` guards it in CI.
 - Rule found while drafting: `check:leak` matches by substring, so a flagged (English) sentence in hi/kn/te must not contain a short English value that another key has translated (for example "Remind" or "Coming soon"). Such sentences were reworded or drafted.
 - `Button` gained `size="large"` (56px) for criterion 11.
+- Fonts: the ribbon's Hindi, Kannada and Telugu words and the footer endonyms are drawn without the Anek faces (the ribbon words have no `lang`; the footer links keep `lang` but use the new `type-endonym` role in the Latin stack), so `/en/` fetches no Anek file. DM Mono is now fetched (not preloaded) on the landing because mono labels are drawn.
+- E2E specs changed only where the old placeholder page forced it: `smoke`, `jump`, `fonts`, `languages` and the new `messageText` helper.

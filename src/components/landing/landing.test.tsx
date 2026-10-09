@@ -75,9 +75,9 @@ describe("ribbon (criterion 23)", () => {
     expect(ribbon.getAttribute("aria-hidden")).toBe("true");
     expect(ribbon.querySelectorAll("span")).toHaveLength(7);
     expect(ribbon.outerHTML).not.toMatch(/animate|marquee|motion/);
-    expect(ribbon.querySelector("[lang=hi]")?.textContent).toBe("फ़ीस");
-    expect(ribbon.querySelector("[lang=kn]")?.textContent).toBe("ಶುಲ್ಕ");
-    expect(ribbon.querySelector("[lang=te]")?.textContent).toBe("ఫీజు");
+    expect([...ribbon.querySelectorAll("span")].map((s) => s.textContent)).toEqual(["Fees", "फ़ीस", "ಶುಲ್ಕ", "ఫీజు", "Remind", "Pay", "Paid"]);
+    // No lang: a foreign-script word must not make the page fetch that script's web font.
+    expect(ribbon.querySelectorAll("[lang]")).toHaveLength(0);
   });
 });
 

@@ -21,9 +21,10 @@ export default async function GlobalNotFound() {
     <html lang={defaultLocale} className={fontVariables}>
       <body className="bg-page-ruled type-body text-ink">
         <main className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-5 py-10">
+          <h1 className="type-headline text-3xl">{brand.name}</h1>
           {blocks.map(({ code, notFound }) => (
             <section key={code} lang={code} className="border-t-3 border-ink pt-4">
-              <h1 className="type-headline text-3xl wrap-break-word">{notFound.title}</h1>
+              <h2 className="type-headline text-3xl wrap-break-word">{notFound.title}</h2>
               <p className="type-body mt-2">{notFound.body}</p>
               <a href={`/${code}/`} hrefLang={code} className="type-control mt-3 flex min-h-tap w-fit items-center text-blue underline ring:ground-ring">
                 {localeNames[code]}

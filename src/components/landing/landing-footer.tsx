@@ -1,4 +1,6 @@
 // The last block: one sentence, the four language links and the big decorative product name.
+// Each endonym keeps its `lang` (screen readers say it right) but is set in the Latin stack, so the phone's own
+// font draws it and no page fetches the three Anek files just for the footer (F3 criterion 5).
 // The language links are plain links; following one does not save the choice (spec R0-1, criterion 32).
 import { useLocale, useTranslations } from "next-intl";
 import { brand } from "@/config/brand";
@@ -16,11 +18,11 @@ export function LandingFooter() {
             {locales.map((code) => (
               <li key={code}>
                 {code === current ? (
-                  <span lang={code} aria-current="page" className="type-body flex min-h-tap min-w-tap items-center border-b-4 border-highlight font-bold">
+                  <span lang={code} aria-current="page" className="flex min-h-tap min-w-tap items-center border-b-4 border-highlight type-endonym font-bold">
                     {localeNames[code]}
                   </span>
                 ) : (
-                  <a href={`/${code}/`} lang={code} hrefLang={code} className="type-body flex min-h-tap min-w-tap items-center underline ring:ground-ring">
+                  <a href={`/${code}/`} lang={code} hrefLang={code} className="flex min-h-tap min-w-tap items-center type-endonym underline ring:ground-ring">
                     {localeNames[code]}
                   </a>
                 )}

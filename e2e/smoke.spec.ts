@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { brand } from "../src/config/brand";
-import { HOME } from "./helpers";
+import { HOME, messageText } from "./helpers";
 
-test("home page loads and shows the product name", async ({ page }) => {
+test("home page loads and shows its headline and title", async ({ page }) => {
   await page.goto(HOME);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.name);
-  await expect(page).toHaveTitle(brand.name);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(messageText("en", "landing.hero.title"));
+  await expect(page).toHaveTitle(messageText("en", "landing.meta.title").replace("{brand}", brand.name));
 });
 
 test("nothing scrolls sideways at 360px", async ({ page }) => {

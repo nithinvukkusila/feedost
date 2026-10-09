@@ -69,7 +69,7 @@ test.describe("criterion 9: fonts come from our own origin", () => {
 });
 
 test.describe("font bytes a page does not need (follow-up to criterion 12's slow-network case)", () => {
-  test("the home page preloads the two Bricolage files and nothing else, and never asks for DM Mono", async ({ page }) => {
+  test("the home page preloads the two Bricolage files and nothing else; DM Mono loads late, only because labels are drawn", async ({ page }) => {
     const urls = recordRequests(page);
     await page.goto(HOME);
     await fontsSettled(page);
@@ -81,8 +81,11 @@ test.describe("font bytes a page does not need (follow-up to criterion 12's slow
     expect(preloaded.map((url) => familyByUrl.get(url))).toEqual(["Bricolage Grotesque", "Bricolage Grotesque"]);
     expect(new Set(preloaded).size).toBe(2);
     const requested = urls.filter((u) => u.endsWith(".woff2"));
-    expect(requested.map((u) => familyByUrl.get(u)).sort()).toEqual(["Bricolage Grotesque", "Bricolage Grotesque"]);
-    expect(requested.filter((u) => familyByUrl.get(u) === "DM Mono")).toEqual([]);
+    // The landing draws mono labels (kicker, tool numbers), so DM Mono is fetched after first paint, never preloaded.
+    const families = requested.map((u) => familyByUrl.get(u));
+    expect(families.filter((f) => f === "Bricolage Grotesque")).toHaveLength(2);
+    expect([...new Set(families)].sort()).toEqual(["Bricolage Grotesque", "DM Mono"]);
+    expect(preloaded.map((url) => familyByUrl.get(url))).not.toContain("DM Mono");
   });
 
   test("14 font files are declared; DM Mono has weight 500 only and loads, unpreloaded, where a label is drawn", async ({ page }) => {

@@ -2,7 +2,7 @@
 // "/" is a static page of four links plus one inline script that picks the language before paint.
 import { expect, test, type Page } from "@playwright/test";
 import { brand } from "../src/config/brand";
-import { langs, sidewaysScroll, slow4G, type Lang } from "./helpers";
+import { langs, messageText, sidewaysScroll, slow4G, type Lang } from "./helpers";
 
 const KEY = "ui-language";
 const endonym: Record<Lang, string> = { en: "English", hi: "हिन्दी", kn: "ಕನ್ನಡ", te: "తెలుగు" };
@@ -29,7 +29,7 @@ test.describe("criterion 12: the browser's language picks the page", () => {
       await page.goto("/");
       await expect(page).toHaveURL(/\/hi\/$/);
       await expect(page.locator("html")).toHaveAttribute("lang", "hi");
-      await expect(page.locator("main p")).toHaveText(/\p{Script=Devanagari}/u);
+      await expect(page.locator("main p").first()).toHaveText(/\p{Script=Devanagari}/u);
       expect(await saved(page), "nothing was saved by the jump (criterion 18)").toBeNull();
     });
 
@@ -252,7 +252,7 @@ test.describe("criteria 17, 18: only a deliberate pick saves a language", () => 
 
     test("18: opening /hi/ with nothing saved saves nothing", async ({ page }) => {
       await page.goto("/hi/");
-      await expect(page.locator("main p")).toBeVisible();
+      await expect(page.locator("main p").first()).toBeVisible();
       expect(await saved(page)).toBeNull();
       expect(await page.evaluate(() => localStorage.length)).toBe(0);
       await page.goto("/kn/");
@@ -277,7 +277,7 @@ test.describe("the key flow in each language (slow 4G): arrive from a browser in
         await page.goto("/");
         await expect(page).toHaveURL(new RegExp(`/${lang}/$`), { timeout: 20_000 });
         await expect(page.locator("html")).toHaveAttribute("lang", lang);
-        await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.name);
+        await expect(page.getByRole("heading", { level: 1 })).toHaveText(messageText(lang, "landing.hero.title"));
         const other = langs.find((l) => l !== lang)!;
         await page.goto("/#choose");
         await page.getByRole("link", { name: endonym[other] }).tap();
