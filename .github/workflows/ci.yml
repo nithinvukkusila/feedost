@@ -37,6 +37,7 @@ jobs:
           grep -rqF "Venkatasubrahmanyalakshminarasimharao" out || { echo "the sample-name sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
           grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm size
+      - run: pnpm check:leak
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       # Last, because it overwrites out/: a production build must not contain /dev/components.
@@ -50,9 +51,9 @@ jobs:
             echo "out/dev exists in a production build"
             exit 1
           fi
-          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps"; do
+          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "TODO-translate"; do
             if grep -rqF "$sentinel" out; then
-              echo "dev-page code is in the production build: found $sentinel"
+              echo "the production build must not contain this text: found $sentinel"
               exit 1
             fi
           done

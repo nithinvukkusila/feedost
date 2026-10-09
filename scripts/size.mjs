@@ -5,6 +5,10 @@ import { gzipSync } from "node:zlib";
 
 const OUT = "out";
 const LIMIT = 200 * 1024;
+// F3 target: aim for 150 KB or less on every route so the next slices have room. Over it only warns.
+const TARGET = 150 * 1024;
+// The home page and the four language pages must all be there, so the budget cannot pass by omission.
+const REQUIRED = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", "te/index.html"];
 
 if (!existsSync(OUT)) {
   console.error("No out/ folder. Run `pnpm build` first.");
@@ -25,6 +29,12 @@ function gzipped(file) {
 }
 
 let failed = false;
+for (const name of REQUIRED) {
+  if (!existsSync(join(OUT, name))) {
+    console.error(`${OUT}/${name} is missing, so its budget cannot be checked.`);
+    failed = true;
+  }
+}
 for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
   const html = readFileSync(page, "utf8");
   // Skip `nomodule` scripts: they are polyfills that only very old browsers download.
@@ -52,7 +62,8 @@ for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
   const kb = (total / 1024).toFixed(1);
   const over = total > LIMIT;
   if (over) failed = true;
-  console.log(`${over ? "OVER " : "ok   "} ${kb.padStart(7)} KB  ${page}`);
+  const warn = !over && total > TARGET;
+  console.log(`${over ? "OVER " : warn ? "WARN " : "ok   "} ${kb.padStart(7)} KB  ${page}`);
 }
 if (failed) {
   console.error(`Budget check failed: limit is ${LIMIT / 1024} KB of gzipped JavaScript per page, and every script must be measurable.`);
