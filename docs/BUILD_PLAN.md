@@ -34,6 +34,7 @@ The founder approved adding libraries on 2026-10-09 on one condition: each must 
 
 | Need | Decision | Long-term standing |
 | --- | --- | --- |
+| Translations | **`next-intl` 4.14.7**, exact, with `use-intl` and `icu-minify` pinned by `overrides`; `@formatjs/icu-messageformat-parser` 3.5.20 as a dev-only dependency for `pnpm i18n:check` | In the CLAUDE.md stack. Fails the "more than one maintainer" test (one npm maintainer, weekly releases, all published advisories fixed). Approved by the founder on 2026-10-09 as an exception. 0 KB on server-rendered words, about +12 KB on a route that passes messages to a client component |
 | Unit tests | Vitest + Testing Library | Backed by the Vite team; dev-only, so replaceable without touching the product |
 | End-to-end tests | Playwright | Maintained by Microsoft; dev-only |
 | Validation | `zod` | Very widely used and actively released |

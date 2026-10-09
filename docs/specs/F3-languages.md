@@ -178,6 +178,12 @@ Next: `tech-lead` appends the technical plan to this file. Decisions that are th
 
 ---
 
+## Review follow-ups, 2026-10-09 (not fixed in F3)
+From `code-reviewer`, no must fix. Recorded so they are not lost:
+- **404 page has no `lang` and no font classes** (`out/404.html`, `out/_not-found/index.html`). Next 16 gives not-found pages a bare shell when an app has several root layouts. `globalNotFound` fixes it but is experimental. Fix in R0-1, with the real 404 design.
+- **Criterion 29 is proven for server-rendered text only.** The leak check sees one value per language (`home.placeholder`). When the first client component uses `ClientMessages`, add an assertion on `pickNamespaces` for that real page.
+- The criterion 43 scan does not follow strings held in objects, arrays or functions; reviewers must look for those as UI code grows.
+
 ## Technical plan — F3
 
 Written by `tech-lead` on 2026-10-09. There is no backend work: no table, migration, policy, function or Edge Function. Every task is `frontend-dev` or `test-engineer`.
