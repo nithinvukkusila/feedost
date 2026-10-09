@@ -7,6 +7,7 @@ import { ButtonSection } from "./sections/button";
 import { FieldSection } from "./sections/field";
 import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
+import { SegmentedSection } from "./sections/segmented";
 import { SheetSection } from "./sections/sheet";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
@@ -39,6 +40,7 @@ export default function DevComponentsPage() {
       <StampSection />
       <TabsSection />
       <SheetSection />
+      <SegmentedSection />
     </main>
   );
 }

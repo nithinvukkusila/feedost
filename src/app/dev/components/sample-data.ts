@@ -99,6 +99,28 @@ export type Sample = {
     body: string;
     open: string;
   };
+  segmented: {
+    paidBy: string;
+    upi: string;
+    cash: string;
+    tone: string;
+    polite: string;
+    politeDetail: string;
+    firm: string;
+    firmDetail: string;
+    when: string;
+    today: string;
+    yesterday: string;
+    pickDate: string;
+    language: string;
+    english: string;
+    hindi: string;
+    kannada: string;
+    telugu: string;
+    longLabel: string;
+    longA: string;
+    longB: string;
+  };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -177,6 +199,28 @@ export const sample: Record<Lang, Sample> = {
       body: "Receipt no. 215 is made for you. Send it on WhatsApp next.",
       open: "Open the sheet",
     },
+    segmented: {
+      paidBy: "Paid by",
+      upi: "UPI",
+      cash: "Cash",
+      tone: "Tone",
+      polite: "Polite",
+      politeDetail: "A gentle first nudge",
+      firm: "Firm",
+      firmDetail: "When it is well overdue",
+      when: "When",
+      today: "Today",
+      yesterday: "Yesterday",
+      pickDate: "Pick date",
+      language: "Language",
+      english: "English",
+      hindi: "Hindi",
+      kannada: "Kannada",
+      telugu: "Telugu",
+      longLabel: "Choose the tone of this month's fee reminder to every parent in the batch",
+      longA: "A polite first reminder this week",
+      longB: "A firm final reminder",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -252,6 +296,28 @@ export const sample: Record<Lang, Sample> = {
       contextTitle: "रवि कुमार",
       body: "रसीद संख्या 215 आपके लिए बन गई है। अब इसे WhatsApp पर भेजें।",
       open: "शीट खोलें",
+    },
+    segmented: {
+      paidBy: "भुगतान का तरीका",
+      upi: "UPI",
+      cash: "नकद",
+      tone: "लहजा",
+      polite: "विनम्र",
+      politeDetail: "पहली बार हल्की याद",
+      firm: "सख़्त",
+      firmDetail: "जब बहुत देर हो चुकी हो",
+      when: "कब",
+      today: "आज",
+      yesterday: "कल",
+      pickDate: "तारीख चुनें",
+      language: "भाषा",
+      english: "अंग्रेज़ी",
+      hindi: "हिन्दी",
+      kannada: "कन्नड़",
+      telugu: "तेलुगु",
+      longLabel: "चुनें कि इस महीने की फ़ीस की याद बैच के हर अभिभावक को किस लहजे में भेजी जाए",
+      longA: "इस हफ़्ते विनम्रता से पहली याद",
+      longB: "सख़्ती से आख़िरी याद",
     },
   },
   kn: {
@@ -329,6 +395,28 @@ export const sample: Record<Lang, Sample> = {
       body: "ರಸೀದಿ ಸಂಖ್ಯೆ 215 ನಿಮಗಾಗಿ ಸಿದ್ಧವಾಗಿದೆ. ಈಗ ಅದನ್ನು WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ.",
       open: "ಶೀಟ್ ತೆರೆಯಿರಿ",
     },
+    segmented: {
+      paidBy: "ಪಾವತಿ ವಿಧಾನ",
+      upi: "UPI",
+      cash: "ನಗದು",
+      tone: "ಧಾಟಿ",
+      polite: "ಸೌಮ್ಯ",
+      politeDetail: "ಮೊದಲ ಸೌಮ್ಯ ನೆನಪು",
+      firm: "ಕಟ್ಟುನಿಟ್ಟು",
+      firmDetail: "ತುಂಬಾ ತಡವಾದಾಗ",
+      when: "ಯಾವಾಗ",
+      today: "ಇಂದು",
+      yesterday: "ನಿನ್ನೆ",
+      pickDate: "ದಿನಾಂಕ ಆರಿಸಿ",
+      language: "ಭಾಷೆ",
+      english: "ಇಂಗ್ಲಿಷ್",
+      hindi: "ಹಿಂದಿ",
+      kannada: "ಕನ್ನಡ",
+      telugu: "ತೆಲುಗು",
+      longLabel: "ಈ ತಿಂಗಳ ಶುಲ್ಕದ ನೆನಪನ್ನು ಬ್ಯಾಚ್‌ನ ಪ್ರತಿ ಪೋಷಕರಿಗೆ ಯಾವ ಧಾಟಿಯಲ್ಲಿ ಕಳುಹಿಸಬೇಕು ಎಂದು ಆರಿಸಿ",
+      longA: "ಈ ವಾರ ಸೌಮ್ಯವಾಗಿ ಮೊದಲ ನೆನಪು",
+      longB: "ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಕೊನೆಯ ನೆನಪು",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -404,6 +492,28 @@ export const sample: Record<Lang, Sample> = {
       contextTitle: "రవి కుమార్",
       body: "రసీదు సంఖ్య 215 మీ కోసం సిద్ధమైంది. ఇప్పుడు దాన్ని WhatsApp లో పంపండి.",
       open: "షీట్ తెరవండి",
+    },
+    segmented: {
+      paidBy: "చెల్లింపు విధానం",
+      upi: "UPI",
+      cash: "నగదు",
+      tone: "ధోరణి",
+      polite: "మర్యాదగా",
+      politeDetail: "మొదటి సున్నితమైన గుర్తు",
+      firm: "గట్టిగా",
+      firmDetail: "చాలా ఆలస్యమైనప్పుడు",
+      when: "ఎప్పుడు",
+      today: "ఈరోజు",
+      yesterday: "నిన్న",
+      pickDate: "తేదీ ఎంచుకోండి",
+      language: "భాష",
+      english: "ఇంగ్లీష్",
+      hindi: "హిందీ",
+      kannada: "కన్నడ",
+      telugu: "తెలుగు",
+      longLabel: "ఈ నెల ఫీజు గుర్తును బ్యాచ్‌లోని ప్రతి తల్లిదండ్రులకు ఏ ధోరణిలో పంపాలో ఎంచుకోండి",
+      longA: "ఈ వారం మర్యాదగా మొదటి గుర్తు",
+      longB: "గట్టిగా చివరి గుర్తు",
     },
   },
 };
@@ -518,5 +628,18 @@ export const copy = {
     tall: "Open with tall content",
     focused: "Open with the cursor already in the field",
     line: "A line of content to make the sheet taller than the screen.",
+  },
+  segmented: {
+    title: "Segmented",
+    note: "A radio group. Tap a choice, or use the arrow keys.",
+    two: "Two choices",
+    twoLine: "Two lines in each choice",
+    three: "Three choices",
+    four: "Four choices: two rows of two on a phone",
+    long: "Long label and long choices",
+    focusChosen: "Keyboard focus on the chosen one: the ring is inside, in yellow",
+    focusOther: "Keyboard focus on another one: the ring is inside, in blue",
+    live: "Try it: the screen holds the choice",
+    chosen: "Chosen:",
   },
 };

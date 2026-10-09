@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Row, Rows } from "@/components/ui/row";
+import { Segmented, type SegmentedProps } from "@/components/ui/segmented";
 import { Sheet, type SheetContext } from "@/components/ui/sheet";
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
@@ -153,5 +154,28 @@ export function SheetDemo({
         </div>
       </Sheet>
     </>
+  );
+}
+
+/** A segmented group whose choice the screen holds, with the reported value shown beneath. */
+export function SegmentedDemo({
+  label,
+  name,
+  options,
+  chosenLabel,
+}: {
+  label: string;
+  name: string;
+  options: SegmentedProps["options"];
+  chosenLabel: string;
+}) {
+  const [value, setValue] = useState(options[0].value);
+  return (
+    <div className="flex flex-col gap-2">
+      <Segmented label={label} name={name} options={options} value={value} onChange={setValue} />
+      <p className="type-caption text-ink-soft">
+        {chosenLabel} <span data-testid="segmented-live-value">{value}</span>
+      </p>
+    </div>
   );
 }
