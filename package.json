@@ -13,6 +13,7 @@
     "check:leak": "node scripts/check-locale-leak.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
     "check:db": "node scripts/check-db.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "fonts:report": "node scripts/font-report.mjs",
     "serve:lan": "HOST=0.0.0.0 PORT=4173 node scripts/serve-out.mjs",
     "db:start": "SUPABASE_NO_UPDATE_CHECK=1 supabase start -x studio,imgproxy,mailpit,logflare,vector,realtime,storage-api,edge-runtime,postgrest,postgres-meta,supavisor",

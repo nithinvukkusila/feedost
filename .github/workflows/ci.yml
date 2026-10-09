@@ -38,6 +38,7 @@ jobs:
           grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm size
       - run: pnpm check:leak
+      - run: pnpm check:secrets
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       # Last, because it overwrites out/: a production build must not contain /dev/components.
@@ -57,6 +58,7 @@ jobs:
               exit 1
             fi
           done
+          pnpm check:secrets
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
