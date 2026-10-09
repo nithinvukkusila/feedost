@@ -107,10 +107,23 @@ export function sidewaysScroll(page: Page): Promise<number> {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 }
 
+/** The first family named by one of the next/font variables on <html>, for example "Anek Kannada". */
+export function familyOf(page: Page, variable: string): Promise<string> {
+  return page.evaluate((name) => {
+    const stack = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return stack.split(",")[0].trim().replace(/^["']|["']$/g, "");
+  }, variable);
+}
+
+/** The first family in an element's computed font-family. */
+export function firstFamily(locator: Locator): Promise<string> {
+  return locator.first().evaluate((el) => getComputedStyle(el).fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, ""));
+}
+
 export type PlatformFont = { family: string; glyphs: number; custom: boolean };
 
 export type FontProbe = {
-  /** The faces that actually drew the element's own text, with how many glyphs each drew. */
+  /** The faces that actually drew the text in the element, its descendants included, with how many glyphs each drew. */
   facesFor(locator: Locator): Promise<PlatformFont[]>;
 };
 
@@ -252,7 +265,11 @@ export function textProblems(page: Page, scope: string): Promise<TextProblem[]> 
         });
     };
 
-    // Elements with a text node of their own, or a form control that shows a value.
+    // Elements with a text node of their own, or a form control that shows a value. A radio or a
+    // checkbox shows no value: its words are its label's, which are walked as text of their own.
+    // (Segmented's radio is laid over its whole segment, so as a "value" it would overlap its own label.)
+    const showsValue = (el: Element) =>
+      (el instanceof HTMLInputElement && el.type !== "radio" && el.type !== "checkbox") || el instanceof HTMLTextAreaElement;
     const holders: Element[] = [];
     for (const el of root.querySelectorAll("*")) {
       if (el.closest("script, style, noscript, template")) continue;
@@ -261,7 +278,7 @@ export function textProblems(page: Page, scope: string): Promise<TextProblem[]> 
       if (style.display === "none" || style.visibility === "hidden") continue;
       if (el.getClientRects().length === 0) continue;
       const ownText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "");
-      if (ownText || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) holders.push(el);
+      if (ownText || showsValue(el)) holders.push(el);
     }
 
     for (const el of holders) {

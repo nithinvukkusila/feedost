@@ -58,7 +58,11 @@ export function SheetFrame({ title, titleId, closeLabel, onClose, context, child
 export type SheetProps = {
   /** Opening focuses the close control, or the element inside marked `data-autofocus` if there is one. */
   open: boolean;
-  /** Called once however the sheet closes: the close control, Escape, or the phone's back gesture. */
+  /**
+   * Called once however the sheet closes: the close control, Escape, or the phone's back gesture.
+   * The screen must then set `open` to false. A screen that ignores this and leaves `open` true ends
+   * up with a closed native dialog that cannot be reopened, because `open` never changes again.
+   */
   onClose: () => void;
   title: ReactNode;
   closeLabel: ReactNode;

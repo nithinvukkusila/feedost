@@ -3,14 +3,19 @@
 // production build has no such route and ships none of this folder.
 import type { Metadata } from "next";
 import { copy } from "./sample-data";
+import { BannerSection } from "./sections/banner";
+import { BottomNavSection } from "./sections/bottom-nav";
 import { ButtonSection } from "./sections/button";
 import { FieldSection } from "./sections/field";
 import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
+import { SegmentedSection } from "./sections/segmented";
 import { SheetSection } from "./sections/sheet";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
 import { StatusTagSection } from "./sections/status-tag";
+import { StudentStripSection } from "./sections/student-strip";
+import { SwitchSection } from "./sections/switch";
 import { TabsSection } from "./sections/tabs";
 import { TokensSection } from "./sections/tokens";
 import { TypeSection } from "./sections/type";
@@ -39,6 +44,11 @@ export default function DevComponentsPage() {
       <StampSection />
       <TabsSection />
       <SheetSection />
+      <SegmentedSection />
+      <SwitchSection />
+      <StudentStripSection />
+      <BottomNavSection />
+      <BannerSection />
     </main>
   );
 }

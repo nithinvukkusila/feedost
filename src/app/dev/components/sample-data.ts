@@ -99,6 +99,49 @@ export type Sample = {
     body: string;
     open: string;
   };
+  segmented: {
+    paidBy: string;
+    upi: string;
+    cash: string;
+    tone: string;
+    polite: string;
+    politeDetail: string;
+    firm: string;
+    firmDetail: string;
+    when: string;
+    today: string;
+    yesterday: string;
+    pickDate: string;
+    language: string;
+    english: string;
+    hindi: string;
+    kannada: string;
+    telugu: string;
+    longLabel: string;
+    longA: string;
+    longB: string;
+  };
+  switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
+  /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
+  strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
+  nav: { label: string; home: string; students: string; attendance: string; more: string; longStudents: string; longAttendance: string };
+  /** `{amount}` in `undoMessage` is filled with a sample amount by the banner section. */
+  banner: {
+    offlineTitle: string;
+    offlineDetail: string;
+    errorTitle: string;
+    errorDetail: string;
+    longErrorDetail: string;
+    retry: string;
+    later: string;
+    longRetry: string;
+    longLater: string;
+    undoMessage: string;
+    undo: string;
+    sendReceipt: string;
+    longUndo: string;
+    longSend: string;
+  };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -177,6 +220,70 @@ export const sample: Record<Lang, Sample> = {
       body: "Receipt no. 215 is made for you. Send it on WhatsApp next.",
       open: "Open the sheet",
     },
+    segmented: {
+      paidBy: "Paid by",
+      upi: "UPI",
+      cash: "Cash",
+      tone: "Tone",
+      polite: "Polite",
+      politeDetail: "A gentle first nudge",
+      firm: "Firm",
+      firmDetail: "When it is well overdue",
+      when: "When",
+      today: "Today",
+      yesterday: "Yesterday",
+      pickDate: "Pick date",
+      language: "Language",
+      english: "English",
+      hindi: "Hindi",
+      kannada: "Kannada",
+      telugu: "Telugu",
+      longLabel: "Choose the tone of this month's fee reminder to every parent in the batch",
+      longA: "A polite first reminder this week",
+      longB: "A firm final reminder",
+    },
+    switch: {
+      name: "Automatic reminders",
+      on: "ON",
+      off: "OFF",
+      longOn: "SENDING",
+      longOff: "PAUSED",
+      visibleLabel: "Monthly report to parents",
+    },
+    strip: {
+      paid: "{n} paid",
+      due: "{n} due, hollow",
+      overdue: "{n} overdue, tall",
+      label: "{t} students: {p} paid, {d} due, {o} overdue",
+      longPaid: "{n} paid and confirmed this month",
+      longDue: "{n} due this week, hollow",
+      longOverdue: "{n} overdue by more than a week, tall",
+    },
+    nav: {
+      label: "Main",
+      home: "Home",
+      students: "Students",
+      attendance: "Attendance",
+      more: "More",
+      longStudents: "Students and batches",
+      longAttendance: "Attendance register",
+    },
+    banner: {
+      offlineTitle: "You are offline",
+      offlineDetail: "3 changes are saved on this phone. They will sync when the network is back.",
+      errorTitle: "Couldn't save just now",
+      errorDetail: "The network dropped. Nothing is lost. Your changes are kept on this phone.",
+      longErrorDetail: "The network dropped. Nothing is lost. Your changes are kept on this phone. Try again when the network is back, or do it later: you will not have to enter anything again.",
+      retry: "Try again",
+      later: "Later",
+      longRetry: "Try saving all three changes again",
+      longLater: "Not now, remind me later",
+      undoMessage: "Ravi Kumar marked paid, {amount}",
+      undo: "Undo",
+      sendReceipt: "Send receipt",
+      longUndo: "Undo this payment",
+      longSend: "Send the receipt on WhatsApp",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -252,6 +359,70 @@ export const sample: Record<Lang, Sample> = {
       contextTitle: "रवि कुमार",
       body: "रसीद संख्या 215 आपके लिए बन गई है। अब इसे WhatsApp पर भेजें।",
       open: "शीट खोलें",
+    },
+    segmented: {
+      paidBy: "भुगतान का तरीका",
+      upi: "UPI",
+      cash: "नकद",
+      tone: "लहजा",
+      polite: "विनम्र",
+      politeDetail: "पहली बार हल्की याद",
+      firm: "सख़्त",
+      firmDetail: "जब बहुत देर हो चुकी हो",
+      when: "कब",
+      today: "आज",
+      yesterday: "कल",
+      pickDate: "तारीख चुनें",
+      language: "भाषा",
+      english: "अंग्रेज़ी",
+      hindi: "हिन्दी",
+      kannada: "कन्नड़",
+      telugu: "तेलुगु",
+      longLabel: "चुनें कि इस महीने की फ़ीस की याद बैच के हर अभिभावक को किस लहजे में भेजी जाए",
+      longA: "इस हफ़्ते विनम्रता से पहली याद",
+      longB: "सख़्ती से आख़िरी याद",
+    },
+    switch: {
+      name: "अपने-आप याद दिलाना",
+      on: "चालू",
+      off: "बंद",
+      longOn: "भेज रहे हैं",
+      longOff: "रोका गया",
+      visibleLabel: "अभिभावकों को मासिक रिपोर्ट",
+    },
+    strip: {
+      paid: "{n} जमा",
+      due: "{n} बाकी, खाली",
+      overdue: "{n} देर से, ऊँचा",
+      label: "{t} छात्र: {p} जमा, {d} बाकी, {o} देर से",
+      longPaid: "{n} इस महीने जमा और पुष्ट",
+      longDue: "{n} इस हफ़्ते बाकी, खाली",
+      longOverdue: "{n} एक हफ़्ते से ज़्यादा देर, ऊँचा",
+    },
+    nav: {
+      label: "मुख्य",
+      home: "होम",
+      students: "छात्र",
+      attendance: "हाज़िरी",
+      more: "और",
+      longStudents: "छात्र और बैच",
+      longAttendance: "हाज़िरी का रजिस्टर",
+    },
+    banner: {
+      offlineTitle: "आप ऑफ़लाइन हैं",
+      offlineDetail: "3 बदलाव इस फ़ोन पर सुरक्षित हैं। नेटवर्क लौटते ही वे सिंक हो जाएँगे।",
+      errorTitle: "अभी सेव नहीं हो सका",
+      errorDetail: "नेटवर्क चला गया। कुछ भी खोया नहीं है। आपके बदलाव इस फ़ोन पर सुरक्षित हैं।",
+      longErrorDetail: "नेटवर्क चला गया। कुछ भी खोया नहीं है। आपके बदलाव इस फ़ोन पर सुरक्षित हैं। नेटवर्क लौटने पर फिर कोशिश करें, या बाद में करें: आपको कुछ भी दोबारा भरना नहीं पड़ेगा।",
+      retry: "फिर कोशिश करें",
+      later: "बाद में",
+      longRetry: "तीनों बदलाव फिर से सेव करने की कोशिश करें",
+      longLater: "अभी नहीं, बाद में याद दिलाएँ",
+      undoMessage: "रवि कुमार का {amount} जमा दर्ज हुआ",
+      undo: "वापस लें",
+      sendReceipt: "रसीद भेजें",
+      longUndo: "यह भुगतान वापस लें",
+      longSend: "रसीद WhatsApp पर भेजें",
     },
   },
   kn: {
@@ -329,6 +500,70 @@ export const sample: Record<Lang, Sample> = {
       body: "ರಸೀದಿ ಸಂಖ್ಯೆ 215 ನಿಮಗಾಗಿ ಸಿದ್ಧವಾಗಿದೆ. ಈಗ ಅದನ್ನು WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ.",
       open: "ಶೀಟ್ ತೆರೆಯಿರಿ",
     },
+    segmented: {
+      paidBy: "ಪಾವತಿ ವಿಧಾನ",
+      upi: "UPI",
+      cash: "ನಗದು",
+      tone: "ಧಾಟಿ",
+      polite: "ಸೌಮ್ಯ",
+      politeDetail: "ಮೊದಲ ಸೌಮ್ಯ ನೆನಪು",
+      firm: "ಕಟ್ಟುನಿಟ್ಟು",
+      firmDetail: "ತುಂಬಾ ತಡವಾದಾಗ",
+      when: "ಯಾವಾಗ",
+      today: "ಇಂದು",
+      yesterday: "ನಿನ್ನೆ",
+      pickDate: "ದಿನಾಂಕ ಆರಿಸಿ",
+      language: "ಭಾಷೆ",
+      english: "ಇಂಗ್ಲಿಷ್",
+      hindi: "ಹಿಂದಿ",
+      kannada: "ಕನ್ನಡ",
+      telugu: "ತೆಲುಗು",
+      longLabel: "ಈ ತಿಂಗಳ ಶುಲ್ಕದ ನೆನಪನ್ನು ಬ್ಯಾಚ್‌ನ ಪ್ರತಿ ಪೋಷಕರಿಗೆ ಯಾವ ಧಾಟಿಯಲ್ಲಿ ಕಳುಹಿಸಬೇಕು ಎಂದು ಆರಿಸಿ",
+      longA: "ಈ ವಾರ ಸೌಮ್ಯವಾಗಿ ಮೊದಲ ನೆನಪು",
+      longB: "ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಕೊನೆಯ ನೆನಪು",
+    },
+    switch: {
+      name: "ಸ್ವಯಂಚಾಲಿತ ನೆನಪು",
+      on: "ಆನ್",
+      off: "ಆಫ್",
+      longOn: "ಕಳುಹಿಸುತ್ತಿದೆ",
+      longOff: "ನಿಲ್ಲಿಸಿದೆ",
+      visibleLabel: "ಪೋಷಕರಿಗೆ ಮಾಸಿಕ ವರದಿ",
+    },
+    strip: {
+      paid: "{n} ಪಾವತಿ",
+      due: "{n} ಬಾಕಿ, ಖಾಲಿ",
+      overdue: "{n} ತಡ, ಎತ್ತರ",
+      label: "{t} ವಿದ್ಯಾರ್ಥಿಗಳು: {p} ಪಾವತಿ, {d} ಬಾಕಿ, {o} ತಡ",
+      longPaid: "{n} ಈ ತಿಂಗಳು ಪಾವತಿಸಿ ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+      longDue: "{n} ಈ ವಾರ ಬಾಕಿ, ಖಾಲಿ",
+      longOverdue: "{n} ಒಂದು ವಾರಕ್ಕಿಂತ ಹೆಚ್ಚು ತಡ, ಎತ್ತರ",
+    },
+    nav: {
+      label: "ಮುಖ್ಯ",
+      home: "ಮುಖಪುಟ",
+      students: "ವಿದ್ಯಾರ್ಥಿಗಳು",
+      attendance: "ಹಾಜರಾತಿ",
+      more: "ಇನ್ನಷ್ಟು",
+      longStudents: "ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಬ್ಯಾಚ್‌ಗಳು",
+      longAttendance: "ಹಾಜರಾತಿ ಪುಸ್ತಕ",
+    },
+    banner: {
+      offlineTitle: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ",
+      offlineDetail: "3 ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ. ನೆಟ್‌ವರ್ಕ್ ಮರಳಿದಾಗ ಅವು ಸಿಂಕ್ ಆಗುತ್ತವೆ.",
+      errorTitle: "ಈಗ ಉಳಿಸಲು ಆಗಲಿಲ್ಲ",
+      errorDetail: "ನೆಟ್‌ವರ್ಕ್ ಕಡಿತವಾಯಿತು. ಏನೂ ಕಳೆದುಹೋಗಿಲ್ಲ. ನಿಮ್ಮ ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ.",
+      longErrorDetail: "ನೆಟ್‌ವರ್ಕ್ ಕಡಿತವಾಯಿತು. ಏನೂ ಕಳೆದುಹೋಗಿಲ್ಲ. ನಿಮ್ಮ ಬದಲಾವಣೆಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಉಳಿದಿವೆ. ನೆಟ್‌ವರ್ಕ್ ಮರಳಿದಾಗ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ, ಅಥವಾ ನಂತರ ಮಾಡಿ: ನೀವು ಏನನ್ನೂ ಮತ್ತೆ ತುಂಬಬೇಕಾಗಿಲ್ಲ.",
+      retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+      later: "ನಂತರ",
+      longRetry: "ಮೂರೂ ಬದಲಾವಣೆಗಳನ್ನು ಮತ್ತೆ ಉಳಿಸಲು ಪ್ರಯತ್ನಿಸಿ",
+      longLater: "ಈಗ ಬೇಡ, ನಂತರ ನೆನಪಿಸಿ",
+      undoMessage: "ರವಿ ಕುಮಾರ್ {amount} ಪಾವತಿ ದಾಖಲಾಗಿದೆ",
+      undo: "ರದ್ದುಮಾಡಿ",
+      sendReceipt: "ರಸೀದಿ ಕಳುಹಿಸಿ",
+      longUndo: "ಈ ಪಾವತಿಯನ್ನು ರದ್ದುಮಾಡಿ",
+      longSend: "ರಸೀದಿಯನ್ನು WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -404,6 +639,70 @@ export const sample: Record<Lang, Sample> = {
       contextTitle: "రవి కుమార్",
       body: "రసీదు సంఖ్య 215 మీ కోసం సిద్ధమైంది. ఇప్పుడు దాన్ని WhatsApp లో పంపండి.",
       open: "షీట్ తెరవండి",
+    },
+    segmented: {
+      paidBy: "చెల్లింపు విధానం",
+      upi: "UPI",
+      cash: "నగదు",
+      tone: "ధోరణి",
+      polite: "మర్యాదగా",
+      politeDetail: "మొదటి సున్నితమైన గుర్తు",
+      firm: "గట్టిగా",
+      firmDetail: "చాలా ఆలస్యమైనప్పుడు",
+      when: "ఎప్పుడు",
+      today: "ఈరోజు",
+      yesterday: "నిన్న",
+      pickDate: "తేదీ ఎంచుకోండి",
+      language: "భాష",
+      english: "ఇంగ్లీష్",
+      hindi: "హిందీ",
+      kannada: "కన్నడ",
+      telugu: "తెలుగు",
+      longLabel: "ఈ నెల ఫీజు గుర్తును బ్యాచ్‌లోని ప్రతి తల్లిదండ్రులకు ఏ ధోరణిలో పంపాలో ఎంచుకోండి",
+      longA: "ఈ వారం మర్యాదగా మొదటి గుర్తు",
+      longB: "గట్టిగా చివరి గుర్తు",
+    },
+    switch: {
+      name: "ఆటోమేటిక్ గుర్తు",
+      on: "ఆన్",
+      off: "ఆఫ్",
+      longOn: "పంపుతోంది",
+      longOff: "ఆపివేశారు",
+      visibleLabel: "తల్లిదండ్రులకు నెలవారీ నివేదిక",
+    },
+    strip: {
+      paid: "{n} చెల్లింపు",
+      due: "{n} బాకీ, ఖాళీ",
+      overdue: "{n} ఆలస్యం, పొడవు",
+      label: "{t} మంది విద్యార్థులు: {p} చెల్లింపు, {d} బాకీ, {o} ఆలస్యం",
+      longPaid: "{n} ఈ నెల చెల్లించి నిర్ధారించారు",
+      longDue: "{n} ఈ వారం బాకీ, ఖాళీ",
+      longOverdue: "{n} వారం కంటే ఎక్కువ ఆలస్యం, పొడవు",
+    },
+    nav: {
+      label: "ముఖ్య",
+      home: "హోమ్",
+      students: "విద్యార్థులు",
+      attendance: "హాజరు",
+      more: "మరిన్ని",
+      longStudents: "విద్యార్థులు మరియు బ్యాచ్‌లు",
+      longAttendance: "హాజరు పుస్తకం",
+    },
+    banner: {
+      offlineTitle: "మీరు ఆఫ్‌లైన్‌లో ఉన్నారు",
+      offlineDetail: "3 మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి. నెట్‌వర్క్ తిరిగి వచ్చినప్పుడు అవి సింక్ అవుతాయి.",
+      errorTitle: "ఇప్పుడు సేవ్ కాలేదు",
+      errorDetail: "నెట్‌వర్క్ పోయింది. ఏదీ పోలేదు. మీ మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి.",
+      longErrorDetail: "నెట్‌వర్క్ పోయింది. ఏదీ పోలేదు. మీ మార్పులు ఈ ఫోన్‌లో భద్రంగా ఉన్నాయి. నెట్‌వర్క్ తిరిగి వచ్చినప్పుడు మళ్లీ ప్రయత్నించండి, లేదా తర్వాత చేయండి: మీరు ఏదీ మళ్లీ నింపాల్సిన అవసరం లేదు.",
+      retry: "మళ్లీ ప్రయత్నించండి",
+      later: "తర్వాత",
+      longRetry: "మూడు మార్పులనూ మళ్లీ సేవ్ చేయడానికి ప్రయత్నించండి",
+      longLater: "ఇప్పుడు వద్దు, తర్వాత గుర్తు చేయండి",
+      undoMessage: "రవి కుమార్ {amount} చెల్లింపు నమోదైంది",
+      undo: "రద్దు చేయండి",
+      sendReceipt: "రసీదు పంపండి",
+      longUndo: "ఈ చెల్లింపును రద్దు చేయండి",
+      longSend: "రసీదును WhatsApp లో పంపండి",
     },
   },
 };
@@ -518,5 +817,59 @@ export const copy = {
     tall: "Open with tall content",
     focused: "Open with the cursor already in the field",
     line: "A line of content to make the sheet taller than the screen.",
+  },
+  segmented: {
+    title: "Segmented",
+    note: "A radio group. Tap a choice, or use the arrow keys.",
+    two: "Two choices",
+    twoLine: "Two lines in each choice",
+    three: "Three choices",
+    four: "Four choices: two rows of two on a phone",
+    long: "Long label and long choices",
+    focusChosen: "Keyboard focus on the chosen one: the ring is inside, in yellow",
+    focusOther: "Keyboard focus on another one: the ring is inside, in blue",
+    live: "Try it: the screen holds the choice",
+    chosen: "Chosen:",
+  },
+  switch: {
+    title: "Switch",
+    note: "Every switch here works: tap it. On and off differ by where the knob sits and the word on it, not only by the green.",
+    on: "On",
+    off: "Off",
+    labelled: "Named by the words beside it",
+    focus: "Keyboard focus",
+    long: "A longer word: the switch grows wider, and is the same width on and off",
+  },
+  strip: {
+    title: "Student strip",
+    note: "One block per student. Paid is short and filled, due is short and hollow, overdue is tall. The words underneath always say the same.",
+    one: "1 student",
+    typical: "23 students, as on the home screen",
+    many: "60 students: three rows of 20",
+    long: "Long legend",
+    none: "No students: the strip draws nothing. The box below is empty on purpose.",
+    onSlip: "On a slip",
+  },
+  nav: {
+    title: "Bottom nav",
+    note: "Shown in the page here. On a real screen it is pinned to the bottom. The current item has the red bar on top.",
+    standard: "Four items, a different current one in each language",
+    long: "Long labels: they wrap and the bar grows",
+    focus: "Keyboard focus: the ring is inside the item",
+    longSuffix: "(long)",
+  },
+  banner: {
+    title: "Banner",
+    note: "Three kinds. Each says what happened in plain words; the error one also says what is safe. With a screen reader, all of them may be read out when this page loads: that happens on this page only.",
+    offline: "Offline: a full-width strip, no actions",
+    error: "Error: red outline and shadow, a black and an outlined button",
+    errorOne: "Error with one action",
+    errorNone: "Error with no action",
+    undo: "Undo: two actions, the second a link with an icon",
+    long: "Long text and long action labels",
+    live: "Try it: each tap is counted",
+    taps: "Taps:",
+    pressed: "Flat buttons pressed: a 2px move, no shadow",
+    focus: "Keyboard focus: yellow on the dark banner, blue on the paper one",
   },
 };

@@ -29,16 +29,33 @@ jobs:
       - run: pnpm test
       - run: pnpm i18n:check
       - run: pnpm build
+      # The two strings the production check looks for must be in this build, or that check proves nothing:
+      # one sample name from the dev page's markup, and one test id that only its client chunk carries.
+      - name: The dev-page sentinels are in a normal build
+        run: |
+          test -f out/index.html || { echo "no build in out/"; exit 1; }
+          grep -rqF "Venkatasubrahmanyalakshminarasimharao" out || { echo "the sample-name sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm size
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       # Last, because it overwrites out/: a production build must not contain /dev/components.
       - name: Production build leaves out the dev routes
-        # The folder must be gone, and so must the page's own words (a chunk could carry them without the route).
+        # The build must be there, the folder must be gone, and so must the page's own words and its
+        # chunk's test id (a chunk could carry the page without the route).
         run: |
           VERCEL_ENV=production pnpm build
-          test ! -e out/dev
-          ! grep -rqF "Venkatasubrahmanyalakshminarasimharao" out
+          test -f out/index.html || { echo "no build in out/"; exit 1; }
+          if [ -e out/dev ]; then
+            echo "out/dev exists in a production build"
+            exit 1
+          fi
+          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps"; do
+            if grep -rqF "$sentinel" out; then
+              echo "dev-page code is in the production build: found $sentinel"
+              exit 1
+            fi
+          done
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
