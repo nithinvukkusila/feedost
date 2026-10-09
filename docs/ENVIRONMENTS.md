@@ -128,12 +128,13 @@ Verified (run in CI or by unit tests, or read in the code):
 
 - The checks `check:db`, `check:secrets`, `check:build-env` and `smoke:env` and their unit tests pass.
 - The `health` handler's behaviour, tested in Node: exact body, 204 for `OPTIONS`, 405 for other methods, 500 for an unset or invalid `APP_ENV`.
-- The `database` job ran `db:reset` and `db:test` twice on a pull request and went green with the reduced stack.
+- The `database` job ran `db:reset` and `db:test` twice on a branch push (the `pull_request` run is still unverified) and went green with the reduced stack.
 - `/dev/supabase` and its words are in a normal build and absent from the production build, checked by CI sentinels.
 - `supabase/config.toml` has anonymous sign-ins off, phone sign-in off, Google off, email on, and no remote seed.
 
 Unverified until F4b or later:
 
+- `check:build-env` ties an anon JWT key to its project, but not an `sb_publishable_` key: a Preview build with the staging URL and the production publishable key would pass. When F4b records the keys, add the key prefix to `supabase/environments.json` and compare against it, before the guard is wired into `build`.
 - **The hosted gateway and `verify_jwt = false`.** Whether the hosted gateway lets an unauthenticated `GET` through. If it wants a key, `smoke:env` and the dev page add the `apikey` header (the preflight already allows it). The first staging deploy settles it.
 - **`supabase functions deploy health --use-api`** without Docker, and `supabase secrets set APP_ENV=...`.
 - **The deploy hook** building `main` (section above).

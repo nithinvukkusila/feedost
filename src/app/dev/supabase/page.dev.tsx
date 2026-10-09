@@ -14,7 +14,7 @@ export default function DevSupabasePage() {
   return (
     <main className="mx-auto flex max-w-md flex-col gap-6 px-5 pt-6 pb-16">
       <header className="flex flex-col gap-3">
-        <h1 className="type-headline text-5xl">{copy.title}</h1>
+        <h1 className="type-headline text-5xl wrap-anywhere">{copy.title}</h1>
         <p className="type-body text-ink-soft">{copy.intro}</p>
       </header>
       <EnvCheck />
