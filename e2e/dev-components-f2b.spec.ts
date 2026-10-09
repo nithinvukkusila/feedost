@@ -43,9 +43,17 @@ async function boxes(locator: Locator): Promise<{ x: number; y: number; width: n
   );
 }
 
-/** True when the element's content is not wider or taller than its box: nothing is cut. */
+/**
+ * True when the element's content is not wider or taller than its box: nothing is cut.
+ * Sideways the check is tight. Downwards it allows 15% of the font size: the Anek faces' own
+ * content area is a little taller than their line (2px at 19.5px text), which overhangs the line
+ * box without anything being cut. Whether an ancestor clips is checked by `textProblems`.
+ */
 function holdsItsContent(locator: Locator): Promise<boolean> {
-  return locator.first().evaluate((el) => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1);
+  return locator.first().evaluate((el) => {
+    const slack = Math.max(1, parseFloat(getComputedStyle(el).fontSize) * 0.15);
+    return el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + slack;
+  });
 }
 
 /** Puts keyboard focus on `target` the way a person would: Tab from the focusable thing before it. */
@@ -707,4 +715,172 @@ test.describe("StudentStrip: criteria 75, 76, 78, 79 (and 77 in a real browser)"
     expect(await empty.evaluate((el) => el.childNodes.length)).toBe(0);
     expect(await empty.evaluate((el) => el.innerHTML)).toBe("");
   });
+});
+
+test.describe("BottomNav: criteria 84, 85, 86, 87", () => {
+  const nav = (page: Page, id: string) => page.getByTestId(`nav-${id}`).getByRole("navigation");
+  const links = (page: Page, id: string) => nav(page, id).getByRole("link");
+  const currentIn = { en: 0, hi: 1, kn: 2, te: 3 } as const;
+
+  test("84: a slip bar with a 2px ink top border, at least 64px tall, in four equal columns in the fixed order", async ({ page }) => {
+    const bar = nav(page, "en");
+    expect(await css(bar, ["background-color", "border-top-width", "border-top-style", "border-top-color", "border-bottom-width"])).toEqual({
+      "background-color": rgb("slip"),
+      "border-top-width": "2px",
+      "border-top-style": "solid",
+      "border-top-color": rgb("ink"),
+      "border-bottom-width": "0px",
+    });
+    const b = await box(bar);
+    expect(b.height).toBeGreaterThanOrEqual(64);
+    expect(b.width).toBe(360);
+    await expect(links(page, "en")).toHaveText(["Home", "Students", "Attendance", "More"]);
+    const cells = await boxes(links(page, "en"));
+    expect(cells).toHaveLength(4);
+    for (const [i, cell] of cells.entries()) {
+      expect(cell.width, "equal columns").toBeCloseTo(90, 1);
+      expect(cell.x - b.x, "columns side by side").toBeCloseTo(90 * i, 1);
+    }
+  });
+
+  test("84: each item is a link with a 24px icon above a label of 14px or more at weight 700", async ({ page }) => {
+    for (const link of await links(page, "en").all()) {
+      await expect(link).toHaveAttribute("href", "#top");
+      const icon = await box(link.locator("svg"));
+      const label = await box(link.locator("> span").nth(1));
+      expect(icon.width).toBe(24);
+      expect(icon.height).toBe(24);
+      expect(icon.y + icon.height, "the icon is above the label").toBeLessThanOrEqual(label.y + 0.5);
+      // Centred over it.
+      expect(Math.abs(icon.x + icon.width / 2 - (label.x + label.width / 2))).toBeLessThanOrEqual(1);
+      expect(await css(link.locator("> span").nth(1), ["font-size", "font-weight"])).toEqual({ "font-size": "14px", "font-weight": "700" });
+    }
+  });
+
+  for (const lang of langs) {
+    test(`85: ${lang}: only the current item has the 5px red bar and ink text; the others have no visible bar and ink-label text; it is the current page`, async ({ page }) => {
+      const all = await links(page, lang).all();
+      for (const [i, link] of all.entries()) {
+        const look = await css(link, ["border-top-width", "border-top-style", "border-top-color", "color"]);
+        const current = i === currentIn[lang];
+        // Every item has the 5px slot, so labels line up; only the current one's is drawn.
+        expect(look["border-top-width"], `${lang} ${i}`).toBe("5px");
+        expect(look["border-top-color"], `${lang} ${i}`).toBe(current ? rgb("cloth") : TRANSPARENT);
+        expect(look.color, `${lang} ${i}`).toBe(current ? rgb("ink") : rgb("ink-label"));
+        if (current) await expect(link).toHaveAttribute("aria-current", "page");
+        else await expect(link).not.toHaveAttribute("aria-current");
+      }
+      await expect(nav(page, lang).locator('[aria-current="page"]')).toHaveCount(1);
+      // The labels sit on one line across the bar whichever item is current.
+      const labels = await boxes(links(page, lang).locator("> span:nth-child(2)"));
+      for (const l of labels) expect(Math.abs(l.y - labels[0].y), lang).toBeLessThanOrEqual(1);
+    });
+  }
+
+  test("85: with colour removed the current item is still the one with a bar across its top", async ({ page }, testInfo) => {
+    await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
+    for (const lang of langs) {
+      const bars = await links(page, lang).evaluateAll((els) => els.map((el) => getComputedStyle(el).borderTopColor !== "rgba(0, 0, 0, 0)"));
+      expect(bars, lang).toEqual([0, 1, 2, 3].map((i) => i === currentIn[lang]));
+    }
+    await nav(page, "en").scrollIntoViewIfNeeded();
+    await attachScreenshot(testInfo, "bottom-nav-greyscale.png", await page.screenshot());
+  });
+
+  test("86: a named navigation landmark; each link's target is its whole column at the bar's full height; icons are hidden", async ({ page }) => {
+    await expect(nav(page, "en")).toHaveAccessibleName("Main");
+    await expect(nav(page, "hi")).toHaveAccessibleName(/\p{Script=Devanagari}/u);
+    for (const id of ["en", "hi", "kn", "te", "long-en", "long-te"]) {
+      const bar = await box(nav(page, id));
+      for (const cell of await boxes(links(page, id))) {
+        expect(cell.width, id).toBeCloseTo(bar.width / 4, 1);
+        // The bar's height less its own 2px top border.
+        expect(cell.height, id).toBeCloseTo(bar.height - 2, 1);
+        expect(cell.y, id).toBeCloseTo(bar.y + 2, 1);
+        expect(cell.height, id).toBeGreaterThanOrEqual(64);
+      }
+    }
+    for (const link of await links(page, "en").all()) {
+      await expect(link.locator("> span").first()).toHaveAttribute("aria-hidden", "true");
+      await expect(link.locator("> span").first().locator("svg")).toHaveCount(1);
+    }
+    await expect(links(page, "en").nth(2)).toHaveAccessibleName("Attendance");
+  });
+
+  test("86: Tab reaches each item and draws a 3px blue ring inside it, not clipped by the screen edge; a tap draws none", async ({ page }) => {
+    const first = links(page, "en").first();
+    await tabTo(page, first);
+    const ring = ["outline-style", "outline-width", "outline-offset", "outline-color"] as const;
+    const inside = { "outline-style": "solid", "outline-width": "3px", "outline-offset": "-3px", "outline-color": rgb("blue") };
+    expect(await css(first, ring)).toEqual(inside);
+    // The first item starts at the screen's left edge; a ring drawn inside it is wholly on screen.
+    const b = await box(first);
+    expect(b.x).toBe(0);
+    for (let i = 1; i < 4; i++) {
+      await page.keyboard.press("Tab");
+      await expect(links(page, "en").nth(i)).toBeFocused();
+      expect(await css(links(page, "en").nth(i), ring), `item ${i}`).toEqual(inside);
+    }
+    const last = await box(links(page, "en").nth(3));
+    expect(last.x + last.width).toBe(360);
+    expect(await sidewaysScroll(page)).toBe(0);
+
+    // The frozen example shows it without a keyboard, on the current item and on another.
+    const forced = page.getByTestId("nav-focus").locator('[data-force="focus"]');
+    await expect(forced).toHaveCount(2);
+    for (const link of await forced.all()) expect(await css(link, ring)).toEqual(inside);
+
+    // A link that is tapped is not ringed. (The links go to the top of this page.)
+    await page.reload();
+    await links(page, "en").nth(1).tap();
+    expect((await css(links(page, "en").nth(1), ["outline-style"]))["outline-style"]).toBe("none");
+  });
+
+  for (const lang of langs) {
+    test(`87: ${lang}: long labels wrap and the bar grows; nothing is cut, at the default size and at 130%`, async ({ page }) => {
+      const standard = (await box(nav(page, lang))).height;
+      const long = nav(page, `long-${lang}`);
+      const check = async (when: string) => {
+        for (const link of await links(page, `long-${lang}`).all()) {
+          const label = link.locator("> span").nth(1);
+          expect(await holdsItsContent(link), `${when}: a link holds its label`).toBe(true);
+          expect(await holdsItsContent(label), `${when}: the label is whole`).toBe(true);
+          expect(await css(label, ["text-overflow", "white-space", "overflow-x"]), when).toEqual({ "text-overflow": "clip", "white-space": "normal", "overflow-x": "visible" });
+          expect(parseFloat((await css(label, ["font-size"]))["font-size"]), when).toBeGreaterThanOrEqual(14);
+          // The label stays inside its own column.
+          const [cell, text] = [await box(link), await box(label)];
+          expect(text.x, when).toBeGreaterThanOrEqual(cell.x - 0.5);
+          expect(text.x + text.width, when).toBeLessThanOrEqual(cell.x + cell.width + 0.5);
+          expect(text.y + text.height, when).toBeLessThanOrEqual(cell.y + cell.height + 0.5);
+        }
+        expect(await sidewaysScroll(page), when).toBe(0);
+      };
+
+      // The long labels take more than one line, so the bar is taller than the standard one.
+      expect(await lineCount(links(page, `long-${lang}`).nth(2).locator("> span").nth(1)), "the long label wraps").toBeGreaterThanOrEqual(2);
+      const grown = (await box(long)).height;
+      expect(grown, "the bar grows").toBeGreaterThan(standard + 10);
+      await check("default size");
+      if (lang !== "en") await expect(long).toContainText(scriptPattern[lang]);
+
+      await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+      await expect.poll(async () => parseFloat((await css(links(page, `long-${lang}`).first().locator("> span").nth(1), ["font-size"]))["font-size"])).toBeGreaterThan(18);
+      expect((await box(long)).height, "taller again at 130%").toBeGreaterThan(grown + 10);
+      await check("130%");
+      // The standard bar's labels are whole at 130% as well.
+      for (const link of await links(page, lang).all()) expect(await holdsItsContent(link), "standard bar at 130%").toBe(true);
+    });
+  }
+
+  for (const lang of indicLangs) {
+    test(`${lang}: nav labels are the script's own face at 15px, weight 700, with no letter-spacing`, async ({ page }) => {
+      const label = links(page, lang).first().locator("> span").nth(1);
+      expect(await css(label, ["font-size", "font-weight", "letter-spacing", "text-transform"])).toEqual({
+        "font-size": "15px",
+        "font-weight": "700",
+        "letter-spacing": "normal",
+        "text-transform": "none",
+      });
+    });
+  }
 });

@@ -3,6 +3,7 @@
 // production build has no such route and ships none of this folder.
 import type { Metadata } from "next";
 import { copy } from "./sample-data";
+import { BottomNavSection } from "./sections/bottom-nav";
 import { ButtonSection } from "./sections/button";
 import { FieldSection } from "./sections/field";
 import { RowSection } from "./sections/row";
@@ -45,6 +46,7 @@ export default function DevComponentsPage() {
       <SegmentedSection />
       <SwitchSection />
       <StudentStripSection />
+      <BottomNavSection />
     </main>
   );
 }

@@ -124,6 +124,7 @@ export type Sample = {
   switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
   /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
   strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
+  nav: { label: string; home: string; students: string; attendance: string; more: string; longStudents: string; longAttendance: string };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -241,6 +242,15 @@ export const sample: Record<Lang, Sample> = {
       longDue: "{n} due this week, hollow",
       longOverdue: "{n} overdue by more than a week, tall",
     },
+    nav: {
+      label: "Main",
+      home: "Home",
+      students: "Students",
+      attendance: "Attendance",
+      more: "More",
+      longStudents: "Students and batches",
+      longAttendance: "Attendance register",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -355,6 +365,15 @@ export const sample: Record<Lang, Sample> = {
       longPaid: "{n} इस महीने जमा और पुष्ट",
       longDue: "{n} इस हफ़्ते बाकी, खाली",
       longOverdue: "{n} एक हफ़्ते से ज़्यादा देर, ऊँचा",
+    },
+    nav: {
+      label: "मुख्य",
+      home: "होम",
+      students: "छात्र",
+      attendance: "हाज़िरी",
+      more: "और",
+      longStudents: "छात्र और बैच",
+      longAttendance: "हाज़िरी का रजिस्टर",
     },
   },
   kn: {
@@ -471,6 +490,15 @@ export const sample: Record<Lang, Sample> = {
       longDue: "{n} ಈ ವಾರ ಬಾಕಿ, ಖಾಲಿ",
       longOverdue: "{n} ಒಂದು ವಾರಕ್ಕಿಂತ ಹೆಚ್ಚು ತಡ, ಎತ್ತರ",
     },
+    nav: {
+      label: "ಮುಖ್ಯ",
+      home: "ಮುಖಪುಟ",
+      students: "ವಿದ್ಯಾರ್ಥಿಗಳು",
+      attendance: "ಹಾಜರಾತಿ",
+      more: "ಇನ್ನಷ್ಟು",
+      longStudents: "ವಿದ್ಯಾರ್ಥಿಗಳು ಮತ್ತು ಬ್ಯಾಚ್‌ಗಳು",
+      longAttendance: "ಹಾಜರಾತಿ ಪುಸ್ತಕ",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -585,6 +613,15 @@ export const sample: Record<Lang, Sample> = {
       longPaid: "{n} ఈ నెల చెల్లించి నిర్ధారించారు",
       longDue: "{n} ఈ వారం బాకీ, ఖాళీ",
       longOverdue: "{n} వారం కంటే ఎక్కువ ఆలస్యం, పొడవు",
+    },
+    nav: {
+      label: "ముఖ్య",
+      home: "హోమ్",
+      students: "విద్యార్థులు",
+      attendance: "హాజరు",
+      more: "మరిన్ని",
+      longStudents: "విద్యార్థులు మరియు బ్యాచ్‌లు",
+      longAttendance: "హాజరు పుస్తకం",
     },
   },
 };
@@ -731,5 +768,13 @@ export const copy = {
     long: "Long legend",
     none: "No students: the strip draws nothing. The box below is empty on purpose.",
     onSlip: "On a slip",
+  },
+  nav: {
+    title: "Bottom nav",
+    note: "Shown in the page here. On a real screen it is pinned to the bottom. The current item has the red bar on top.",
+    standard: "Four items, a different current one in each language",
+    long: "Long labels: they wrap and the bar grows",
+    focus: "Keyboard focus: the ring is inside the item",
+    longSuffix: "(long)",
   },
 };
