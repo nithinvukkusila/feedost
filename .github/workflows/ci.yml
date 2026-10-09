@@ -28,16 +28,24 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm i18n:check
-      - run: pnpm build
-      # The two strings the production check looks for must be in this build, or that check proves nothing:
-      # one sample name from the dev page's markup, and one test id that only its client chunk carries.
+      - name: Build
+        # A made-up project address (20 letters): nothing answers there, and the browser test
+        # intercepts it. The production-build step further down sets none, on purpose.
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://cicicicicicicicicici.supabase.co
+      # The strings the production check looks for must be in this build, or that check proves nothing:
+      # per dev page, one sentence or sample name from its markup, and one test id that only its client chunk carries.
       - name: The dev-page sentinels are in a normal build
         run: |
           test -f out/index.html || { echo "no build in out/"; exit 1; }
           grep -rqF "Venkatasubrahmanyalakshminarasimharao" out || { echo "the sample-name sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "Which Supabase does this build talk to?" out || { echo "the Supabase page sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "env-check-result" out/_next || { echo "the Supabase chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
           grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm size
       - run: pnpm check:leak
+      - run: pnpm check:secrets
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
       # Last, because it overwrites out/: a production build must not contain /dev/components.
@@ -51,15 +59,51 @@ jobs:
             echo "out/dev exists in a production build"
             exit 1
           fi
-          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "TODO-translate"; do
+          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "Which Supabase does this build talk to?" "env-check-result" "TODO-translate"; do
             if grep -rqF "$sentinel" out; then
               echo "the production build must not contain this text: found $sentinel"
               exit 1
             fi
           done
+          pnpm check:secrets
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-traces
           path: test-results/
           retention-days: 7
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_NO_UPDATE_CHECK: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Migration rules against the base
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            base="origin/$BASE_REF"
+          else
+            base="$BEFORE"
+          fi
+          pnpm check:db --base "$base"
+      - run: pnpm db:start
+      - run: pnpm db:reset
+      - run: pnpm db:test
+      - name: Run the tests a second time (nothing is left behind)
+        run: pnpm db:test
+      - name: Stop the local stack
+        if: always()
+        run: pnpm db:stop

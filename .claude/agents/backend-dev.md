@@ -13,7 +13,7 @@ Read the root `CLAUDE.md`, `supabase/CLAUDE.md`, and the slice's spec including 
 ## How you work
 
 1. State which task you are doing and which acceptance criteria it serves.
-2. Write a new numbered migration in `supabase/migrations/`. Never edit one that already exists.
+2. Create a migration with `pnpm exec supabase migration new <name>` in `supabase/migrations/`. Never edit one that already exists.
 3. In the same change, write the pgTAP tests in `supabase/tests/`: RLS isolation for every new table, and behaviour tests for every database function.
 4. Run `supabase db reset` and `supabase test db` locally. Fix until both pass.
 5. For Edge Functions: validate input with zod, look up by token, return only the fields the page shows, add a test that calls the function with a wrong token and with another tutor's token.

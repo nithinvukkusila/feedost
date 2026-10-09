@@ -14,6 +14,7 @@ Read the root `CLAUDE.md`, section 3 and 4 of `docs/BUILD_PLAN.md`, and the spec
 
 Run these against the **staging** URL, never production.
 
+0. **Environment.** Run `pnpm smoke:env staging` first and expect `staging`.
 1. **Build identity.** The commit deployed on staging is the commit that was reviewed.
 2. **Migrations.** Staging schema matches `supabase/migrations/`. No pending or failed migration. `pg_cron` jobs are scheduled.
 3. **End-to-end suite.** `pnpm test:e2e` pointed at staging: phone viewport, slow 4G, all four languages for the key flows.

@@ -13,6 +13,8 @@ dist/
 .env.*
 !.env.example
 .claude/settings.local.json
+supabase/.env*
+supabase/functions/.env*
 
 # supabase local
 supabase/.branches/
@@ -31,3 +33,4 @@ test-results/
 next-env.d.ts
 .vercel
 *.pem
+.claude/worktrees/

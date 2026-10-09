@@ -12,8 +12,16 @@
     "size": "node scripts/size.mjs",
     "check:leak": "node scripts/check-locale-leak.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "check:db": "node scripts/check-db.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
+    "check:build-env": "node scripts/check-build-env.mjs",
+    "smoke:env": "node scripts/smoke-env.mjs",
     "fonts:report": "node scripts/font-report.mjs",
-    "serve:lan": "HOST=0.0.0.0 PORT=4173 node scripts/serve-out.mjs"
+    "serve:lan": "HOST=0.0.0.0 PORT=4173 node scripts/serve-out.mjs",
+    "db:start": "SUPABASE_NO_UPDATE_CHECK=1 supabase start -x studio,imgproxy,mailpit,logflare,vector,realtime,storage-api,edge-runtime,postgrest,postgres-meta,supavisor",
+    "db:stop": "SUPABASE_NO_UPDATE_CHECK=1 supabase stop --no-backup",
+    "db:reset": "SUPABASE_NO_UPDATE_CHECK=1 supabase db reset",
+    "db:test": "SUPABASE_NO_UPDATE_CHECK=1 supabase test db"
   },
   "dependencies": {
     "next": "16.4.0",
@@ -34,6 +42,7 @@
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.0",
     "jsdom": "30.1.2",
+    "supabase": "2.118.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitest": "5.0.3"

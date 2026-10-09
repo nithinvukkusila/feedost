@@ -29,7 +29,7 @@ Every slice moves through these stages. Each stage has an agent in `.claude/agen
 | 6. Pre-production | `preprod-qa` | Go or no-go report against the staging deployment |
 | 7. Ship | `release-manager` | Production release, smoke test, rollback note |
 
-Merging to `main` is `lead-reviewer`'s decision (the founder delegated it on 2026-10-09). The human approves two things and only the human: running a migration on production, and promoting a build to production.
+Merging to `main` is `lead-reviewer`'s decision (the founder delegated it on 2026-10-09). The human approves two things and only the human: running a migration on production, and releasing to production.
 
 ## Stack (do not swap without asking)
 

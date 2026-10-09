@@ -14,7 +14,7 @@ Read the root `CLAUDE.md`, sections 3 and 4 of `docs/BUILD_PLAN.md`, and `docs/r
 
 1. Confirm the commit is on `main`, CI is green, and `code-reviewer` approved it.
 2. Apply pending migrations to the **staging** Supabase project. Read each migration first; if one drops or rewrites data, stop and flag it.
-3. Deploy Edge Functions to staging.
+3. Deploy Edge Functions to staging, then run `pnpm smoke:env staging` and expect `staging`.
 4. Confirm the Vercel preview deployment for that commit is live, and give its URL to `preprod-qa`.
 
 ## Release to production
@@ -22,11 +22,12 @@ Read the root `CLAUDE.md`, sections 3 and 4 of `docs/BUILD_PLAN.md`, and `docs/r
 Do not begin until both are true: `preprod-qa` reported **Go** for this exact commit, and the human has approved releasing it. If either is missing, stop and ask.
 
 1. **Announce the plan** in plain words: the commit, the migrations that will run, the Edge Functions that will change, and the rollback step. Wait for a yes.
-2. **Back up.** Confirm a recent production database backup exists, or take one.
+2. **Back up.** Take a database dump with the Supabase CLI and store it outside the repo (the free plan has no automatic backups). Never commit it.
 3. **Migrate.** Apply migrations to production. Migrations must be backward compatible with the currently live front end, because the database changes first.
 4. **Functions.** Deploy Edge Functions to production.
-5. **Promote.** Promote the same build that was tested on staging to Vercel production. Do not rebuild.
+5. **Build for production.** Production is a fresh build of the same commit that was tested on staging, made with the Production-scope variables. The Supabase URL and key are baked in at build time, so a preview build cannot be reused. Use the mechanism recorded in `docs/ENVIRONMENTS.md`; the founder's explicit yes covers each production build.
 6. **Smoke test** on the production URL, with the dedicated production test tutor only:
+   - `pnpm smoke:env production` answers `production`
    - landing page and both tools load in all four languages
    - sign in works
    - the dues board loads
