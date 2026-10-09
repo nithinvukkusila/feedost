@@ -158,3 +158,110 @@ Next: `tech-lead` appends the technical plan to this file. Decisions that are th
 5. Message namespaces and key names for `landing` and `notFound`; the `TODO-translate` count; how `TODO-translate` interacts with the 404's four-language render (criterion 27 of F3 still holds).
 6. Bundle: measure the five routes after the build and record them here.
 7. Tests: which of the above are unit and which e2e; `test-engineer` writes `e2e/landing.spec.ts` and the 404 spec; the "every link resolves" check (10).
+
+
+## Decided, 2026-10-10
+The coordinator confirmed the recommendations on Open questions 1 to 10 are the working decisions, so the implementer proceeds on them without waiting:
+1. Header and hero buttons go to `#waitlist`; the waitlist block is the unavailable `Button` with "Opens soon"; tool cards stay, marked "Coming soon", not links; heading "Two free tools. Coming soon."
+2. No date on the waitlist block.
+3. Footer carries the four endonym language links.
+4. Kicker reworded so it does not claim the app exists; third promise is "Built for a cheap phone and a slow network" unless the founder commits to offline in Release 1.
+5. No WhatsApp help link; no Privacy link.
+6. Ribbon is static.
+7. No month on the ledger card.
+8. No `og:image`.
+9. Use `experimental.globalNotFound` for the 404, guarded by criterion 29. This is the only experimental flag in the app.
+10. The implementer drafts hi/kn/te and flags doubts with `TODO-translate`; native review is the Release 0 gate.
+
+No new dependency is needed, so there is no dependency question for the founder.
+
+## Technical plan — R0-1
+
+### Approach
+The landing is one Server Component page at `src/app/[locale]/page.tsx` (no `(public)` group, see below) built from small Server Components in `src/components/landing/`. It uses `getTranslations` and the F2 components, so it ships no client text and no extra JavaScript. `generateMetadata` gives each language its title, description, canonical, `hreflang` and Open Graph from a small helper. The 404 is a `src/app/global-not-found.tsx` that writes its own `<html lang>` and renders all four languages from `loadMessages(locale)`.
+
+### Files
+Create:
+- `src/lib/seo.ts` (+ `seo.test.ts`): `canonicalUrl(locale)`, `alternateUrls()` returning the five `hreflang` entries (`en`, `hi`, `kn`, `te`, `x-default` = `/en/`), all absolute with trailing slash, built from `brand.domain` and `locales`.
+- `src/components/landing/` (each a Server Component, each with a small render test):
+  - `landing-header.tsx`: cloth header, brand name, small `Button` (as link) to `#waitlist`.
+  - `hero.tsx`: kicker, the single `h1`, paragraph, full-width `Button` to `#waitlist`, `ledger-card.tsx`.
+  - `ledger-card.tsx`: `Slip` + `Rows`/`Row` + `Stamp`; "Example" label; amounts only via `formatRupees(1850000)` and `formatRupees(120000)`; no rotation, no month.
+  - `ribbon.tsx`: static words, `aria-hidden` (the words are decoration); no animation.
+  - `steps.tsx`: `h2` and three numbered steps (digits 1, 2, 3 in the headline face); third uses `Stamp`.
+  - `tools.tsx`: `id="tools"`, `h2`, two cards with a plain labelled "Coming soon" mark, not links.
+  - `promises.tsx`: `h2`, four items numbered 01 to 04 in DM Mono (these use the F2 `data-amount`/mono rule that keeps Latin digits).
+  - `waitlist-slot.tsx`: the only file R0-4 replaces. Top comment says so. Renders the "opens soon" line and the unavailable `Button` with `disabledReason`.
+  - `landing-footer.tsx`: sentence, four language links (current one `aria-current="page"`, rendered as text not a link), decorative `aria-hidden` wordmark inside `overflow-hidden`.
+- `src/app/global-not-found.tsx`: own `<html lang>`, `<body>`, imports `./globals.css` and the font variables the same way `HtmlShell` does; `<meta name="robots" content="noindex">`; title from `brand.name`; one block per locale with its own `lang`, heading, sentence, and a link to `/{locale}/` labelled with the endonym from `src/config/locales.ts`.
+- `e2e/landing.spec.ts`, `e2e/not-found.spec.ts` (written by `test-engineer`).
+- `scripts/check-404.mjs` (or a vitest that reads `out/404.html`) for criterion 29, wired into CI after `pnpm build`.
+
+Change:
+- `src/app/[locale]/page.tsx`: replace the placeholder; compose the sections inside `<main>` (header and footer are siblings of `<main>`, one landmark each); export `generateMetadata`.
+- `next.config.ts`: add `experimental: { globalNotFound: true }` with a comment that this is the only experimental flag and why.
+- `messages/{en,hi,kn,te}.json`: add `landing.*` and `notFound.*`; delete `home.placeholder` from all four.
+- `docs/specs/R0-1-landing-page.md`: frontend-dev records the `TODO-translate` count and the measured bundle sizes.
+
+Group decision: no `(public)` route group. The page already sits at `[locale]/page.tsx`, which is the root layout's own page. A group would only move a file and add a path. `src/CLAUDE.md` names `(public)` for later tool pages; R0-2 may introduce it when there are several public routes to group.
+
+### Data
+None. No migration, table, RLS, Edge Function, PostHog event or network request.
+
+Message keys (all four files, same shape):
+- `landing.meta.{title,description}`, `landing.header.join`, `landing.hero.{kicker,title,body,join}`
+- `landing.example.{label,student1,student2,month?}` (no month key; `landing.example.label` only), `landing.ribbon.{fees,hindi,kannada,telugu,remind,pay,paid}` (the Indian-script ribbon words are values in every file, not typed in JSX)
+- `landing.steps.{title,s1.title,s1.body,s2.title,s2.body,s3.title,s3.body,stamp}`
+- `landing.tools.{title,tag,t1.no,t1.title,t1.body,t2.no,t2.title,t2.body,soon}`
+- `landing.promises.{title,p1.title,p1.body, ... p4.title,p4.body}`
+- `landing.waitlist.{title,body,soon,button,reason}`
+- `landing.footer.{line,languages}`; `notFound.{title,body}`; sentences needing the name use `{brand}`.
+
+`TODO-translate`: `loadMessages` (F3) already returns the English text for a flagged value. The 404 calls `loadMessages` for each language, so a flagged `notFound` line shows English in that block, never the marker. `pnpm i18n:check` (non-strict) stays green in CI; only `--strict` fails, as criterion 7 expects. The CI must not run `--strict` for this slice.
+
+The 404 approach, verified against the Next 16.4 docs: `global-not-found.js` bypasses all layouts, so it must supply `<html>`, `<body>`, CSS and fonts itself, and it cannot use `next/root-params`. It needs no locale from the address. If the build does not write `out/404.html` with `lang`, fall back as the spec says: keep the bare 404 and leave criteria 28 and 29 open. Do not add a file to `public/`.
+
+### Work split
+Backend is not involved; the slice has no server or database work.
+1. `frontend-dev`: `src/lib/seo.ts` and its unit test (criterion 27). Smallest, no dependencies.
+2. `frontend-dev`: message keys in all four files with English first, then hi/kn/te drafts with `TODO-translate` where unsure; delete `home.placeholder`; run `pnpm i18n:check` and the no-strings scan.
+3. `frontend-dev`: the landing components and the page, in page order (header, hero + ledger card, ribbon, steps, tools, promises, waitlist slot, footer). Add `generateMetadata`. Render tests per component.
+4. `frontend-dev`: `global-not-found.tsx` and the `next.config.ts` flag; run `pnpm build` and open `out/404.html` to confirm `<html lang=`, four blocks and four links. If this fails, stop and report; do not hand-write HTML.
+5. `frontend-dev`: build check script for `out/404.html` (criterion 29), wire into CI.
+6. `frontend-dev`: run lint, typecheck, test, `pnpm build`, `pnpm size`, `pnpm check:leak`, `pnpm i18n:check`; record the five route sizes and the `TODO-translate` count in this spec.
+7. `test-engineer`: `e2e/landing.spec.ts` and the 404 spec, including JavaScript-off, every-link-resolves, 200% root font-size, 44px targets and 14px floor, no-network-except-own check.
+
+### Tests required
+Unit (vitest):
+- `seo.test.ts`: canonical and five alternates for each locale, absolute, trailing slash (27).
+- Component render tests: `ledger-card` uses `formatRupees` output `₹18,500` and `₹1,200` and has the Example label, no `rotate` (5, 25); `steps` has digits 1 to 3 and a `Stamp` (3); `promises` has four items numbered 01 to 04 (4); `tools` cards are not links and carry the Coming soon mark (15); `waitlist-slot` exports the slot and the unavailable button with reason (12, 13); `landing-footer` marks the current locale `aria-current="page"` and has no Privacy or WhatsApp link (32, 33).
+- Existing no-strings scan, product-name test, i18n key-parity test pass unchanged (6, 7, 8); a test that no `<img>` is used and nothing is added to `public/` (9).
+- `out/404.html` contains `<html lang=` (29).
+
+E2E (Playwright, phone project, against `out/`):
+- Landmarks and heading order on four pages (1); JS disabled and anchors work (2); label and `₹18,500` (5); every `a[href]` resolves (10); button heights and widths (11); waitlist block (12); no form elements and no off-origin request (14); tools not links, absent reminder/receipt links (15, 16); no `₹149`, `₹999`, "Pro" (17); computed fonts for hi/kn/te (18); no sideways scroll at 360px and at 200% font (19, 20); 44px and 14px floors (21); ribbon `animation-name: none` (23); no new font request (24); raw-HTML title, description, canonical, `hreflang` and OG differ per page (26, 27); 404 for `/fr/`, `/en/nope/`, `/xyz` (28); `/dev/*` and `/` unchanged (30).
+CI: `pnpm size` at 150 KB or less per route (22); `pnpm check:leak` (31).
+
+### Risks and traps
+- **Experimental `globalNotFound`.** It may not work with `output: 'export'` plus a top-level `[locale]` root layout. Mitigation: step 4 proves it before anything depends on it; criterion 29 fails CI if a Next upgrade drops it; fallback is the documented bare 404.
+- **No layouts in the 404.** Fonts and CSS do not come from `HtmlShell`. Import them directly; check the four scripts render (no boxes) and that the page does not load all four message files into client JavaScript (it is server HTML only).
+- **`TODO-translate` leaking.** Always read text through `getTranslations`/`loadMessages`, never raw JSON, so the marker falls back to English.
+- **Sideways scroll.** Ribbon, footer wordmark and stamp are the usual culprits. Put the ribbon and wordmark in `overflow-hidden` wrappers; test at 360px and 200% font.
+- **Accidental client code.** Any `"use client"` in the landing adds about 12 KB through `ClientMessages`. None is expected; the PR must say why if one appears.
+- **Dead links.** Only `#waitlist`, `#tools` and `/xx/` are used. No `href="#"`.
+- **Money and dates as text.** Amounts only via `formatRupees`; no month name in any message file.
+- **Canonical host.** Always from `brand.domain`; never typed.
+- **Tailwind tokens.** No raw hex; `pnpm lint` runs the token check.
+- **`h1` and landmarks.** `<header>` and `<footer>` must not sit inside `<main>`; the layout's `HtmlShell` must not add a second `<main>` (check it before composing).
+
+### Not doing
+- The waitlist form, table, privacy notice, consent line (R0-4).
+- Tool links, the reminder and receipt generators (R0-2, R0-3).
+- Sitemap, `robots.txt`, `og:image`, JSON-LD, canonical on `/` (R0-5).
+- A language picker or saved language (R1-1).
+- A ribbon animation, card rotation, month on the card, price or Pro text.
+- A `(public)` route group, a new dependency, any file under `public/`.
+- Desktop two-column composition beyond "does not break".
+
+### Hand-off
+`frontend-dev` starts with task 1 (`src/lib/seo.ts` and its test), then tasks 2 to 6 in order; `test-engineer` takes task 7 after the build is green.
