@@ -26,16 +26,31 @@ const ADVANCE: Record<string, number> = {
   " ": 0.2,
 };
 
-// Anything not in the table is taken to be as wide as the widest figure.
-const WIDEST = 0.63;
+// A character that is not in the table is given a full em, wider than any letter in this face
+// ("W" is 0.99em), so an amount with words in it ("₹5 CR") still fits; it only ends up a little
+// smaller than it had to be. In development it also says so, so the table can be extended.
+const UNKNOWN = 1;
 
-// Room for kerning, rounding and the fallback face before the font arrives.
+// Room for rounding in the table and for small differences in how platforms set the same glyphs.
+// Kerning is not counted, and only ever tightens a pair, so it adds to this room. The margin does
+// not cover the fallback face shown for a moment before the font arrives: that face is wider.
 const MARGIN = 1.03;
+
+const warned = new Set<string>();
 
 /** The width of `text` in em when set in the headline amount role, rounded up a little. */
 export function amountEm(text: string): number {
   let em = 0;
-  for (const ch of text) em += ADVANCE[ch] ?? WIDEST;
+  for (const ch of text) {
+    const advance = ADVANCE[ch];
+    if (advance === undefined && process.env.NODE_ENV !== "production" && !warned.has(ch)) {
+      warned.add(ch);
+      console.warn(
+        `amountEm: no width for "${ch}" (in "${text}"), so it is counted as 1em. Add it to ADVANCE in src/lib/amount-fit.ts.`,
+      );
+    }
+    em += advance ?? UNKNOWN;
+  }
   return Math.round(em * MARGIN * 1000) / 1000;
 }
 
