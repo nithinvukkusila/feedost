@@ -424,6 +424,8 @@ Owner is `frontend-dev` unless the row says `test-engineer`.
 - HTML size is not part of the budget but the leak script prints it for each page (information only). The Hindi home page is 2.3 KB gzipped in the throwaway build.
 - Lazy loading: nothing heavy is added. The ICU parser (12.3 KB) loads only on routes that wrap a subtree in `ClientMessages`.
 
+**Measured by `frontend-dev` on the real code (step 6, `pnpm size`, Turbopack):** `/` 132.1 KB, `/en/` 132.1 KB, `/hi/` 132.1 KB, `/kn/` 132.1 KB, `/te/` 132.1 KB, `/dev/components/` 138.7 KB. With one Client Component under `ClientMessages` on a locale page (throwaway, not committed): 144.1 KB on each of the four language routes, 5.9 KB under the 150 KB target. The plan's 144.4 KB was within 0.3 KB.
+
 ### 10. Tests required
 
 **Who writes what.** `frontend-dev` writes the unit tests listed per file in section 8 as part of each build step (the repo rule is that a test sits next to its code, and a step is not green without it), and makes the existing e2e suite pass. `test-engineer` writes `e2e/languages.spec.ts` and `e2e/jump.spec.ts`, retargets the three old specs, reviews every unit test below for one that cannot fail, and adds missing cases. All Playwright tests run in the `phone` project against `out/`, so **`pnpm build` must run first**; so must `pnpm size` and `pnpm check:leak`. Criterion 27 and the dev-route check need a `VERCEL_ENV=production pnpm build`, which overwrites `out/`; they stay in CI's last step, after the e2e run, as today.
