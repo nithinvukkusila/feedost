@@ -107,10 +107,23 @@ export function sidewaysScroll(page: Page): Promise<number> {
   return page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 }
 
+/** The first family named by one of the next/font variables on <html>, for example "Anek Kannada". */
+export function familyOf(page: Page, variable: string): Promise<string> {
+  return page.evaluate((name) => {
+    const stack = getComputedStyle(document.documentElement).getPropertyValue(name);
+    return stack.split(",")[0].trim().replace(/^["']|["']$/g, "");
+  }, variable);
+}
+
+/** The first family in an element's computed font-family. */
+export function firstFamily(locator: Locator): Promise<string> {
+  return locator.first().evaluate((el) => getComputedStyle(el).fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, ""));
+}
+
 export type PlatformFont = { family: string; glyphs: number; custom: boolean };
 
 export type FontProbe = {
-  /** The faces that actually drew the element's own text, with how many glyphs each drew. */
+  /** The faces that actually drew the text in the element, its descendants included, with how many glyphs each drew. */
   facesFor(locator: Locator): Promise<PlatformFont[]>;
 };
 

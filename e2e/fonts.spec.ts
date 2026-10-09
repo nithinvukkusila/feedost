@@ -3,6 +3,8 @@
 import { expect, test, type CDPSession, type Locator, type Page } from "@playwright/test";
 import {
   DEV,
+  familyOf,
+  firstFamily,
   fontProbe,
   fontsSettled,
   indicLangs,
@@ -14,19 +16,6 @@ import {
 } from "./helpers";
 
 const ANEK = /^Anek /;
-
-/** The first family named by one of the next/font variables on <html>, for example "Anek Kannada". */
-function familyOf(page: Page, variable: string): Promise<string> {
-  return page.evaluate((name) => {
-    const stack = getComputedStyle(document.documentElement).getPropertyValue(name);
-    return stack.split(",")[0].trim().replace(/^["']|["']$/g, "");
-  }, variable);
-}
-
-/** The first family in an element's computed font-family. */
-function firstFamily(locator: Locator): Promise<string> {
-  return locator.first().evaluate((el) => getComputedStyle(el).fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, ""));
-}
 
 /** Every @font-face on the page: which family each font file belongs to. */
 function fontFiles(page: Page): Promise<{ family: string; url: string }[]> {

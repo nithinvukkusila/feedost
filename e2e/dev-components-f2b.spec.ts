@@ -7,7 +7,23 @@
 // failed on the Linux CI runner in F2a. Exact checks are kept for things CSS fixes outright
 // (border widths, colours, a min-height with short text).
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, shadow, sidewaysScroll, textProblems } from "./helpers";
+import {
+  attachScreenshot,
+  box,
+  css,
+  familyOf,
+  firstFamily,
+  fontProbe,
+  indicLangs,
+  langs,
+  openDevPage,
+  rgb,
+  scriptFontVariable,
+  scriptPattern,
+  shadow,
+  sidewaysScroll,
+  textProblems,
+} from "./helpers";
 
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
@@ -129,14 +145,50 @@ test.describe("Segmented: criteria 70, 71, 72, 74 (and 73 in a real browser)", (
     }
   });
 
-  test("71: every segment on the page is at least 44px tall, and so is the target inside it", async ({ page }) => {
-    const all = await boxes(section(page, "segmented").locator("fieldset label"));
-    expect(all.length).toBeGreaterThan(50);
-    for (const b of all) expect(b.height).toBeGreaterThanOrEqual(44);
-    for (const b of await boxes(section(page, "segmented").getByRole("radio"))) {
-      expect(b.height).toBeGreaterThanOrEqual(44);
-      expect(b.width).toBeGreaterThanOrEqual(44);
+  test("71: every segment on the page is at least 48px tall, and the target inside its 2px line is at least 44 by 44", async ({ page }) => {
+    // The segment is the label: the box that is filled when chosen and that draws the 2px lines.
+    // The radio is laid over the inside of those lines, so it is 2px shorter and narrower than its segment.
+    const all = section(page, "segmented").locator("fieldset [data-segment]");
+    const measured = await all.evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        const radio = el.querySelector('input[type="radio"]');
+        const t = radio?.getBoundingClientRect();
+        return {
+          tag: el.tagName,
+          height: r.height,
+          sizing: s.boxSizing,
+          line: s.borderTopWidth,
+          radios: el.querySelectorAll('input[type="radio"]').length,
+          target: t ? { width: t.width, height: t.height } : null,
+          // How far the target's top and left are inside the segment's: the 2px line.
+          inset: t ? { top: t.top - r.top, left: t.left - r.left, bottom: r.bottom - t.bottom, right: r.right - t.right } : null,
+        };
+      }),
+    );
+    expect(measured.length).toBeGreaterThan(50);
+    // Every radio in the section is in exactly one of the segments measured: none is missed.
+    await expect(section(page, "segmented").getByRole("radio")).toHaveCount(measured.length);
+    for (const m of measured) {
+      expect({ tag: m.tag, sizing: m.sizing, line: m.line, radios: m.radios }).toEqual({ tag: "LABEL", sizing: "border-box", line: "2px", radios: 1 });
+      expect(m.height, "the segment").toBeGreaterThanOrEqual(48);
+      expect(m.target!.height, "the target").toBeGreaterThanOrEqual(44);
+      expect(m.target!.width, "the target").toBeGreaterThanOrEqual(44);
+      // The target is the inside of the segment: under the 2px line at the top and left, and reaching the other two edges.
+      expect(m.inset!.top).toBeCloseTo(2, 1);
+      expect(m.inset!.left).toBeCloseTo(2, 1);
+      expect(m.inset!.bottom).toBeCloseTo(0, 1);
+      expect(m.inset!.right).toBeCloseTo(0, 1);
     }
+    // With short text the minimum is what sets the height: exactly 48, and a 46px target.
+    const short = await group(page, "two-en")
+      .locator("[data-segment]")
+      .evaluateAll((els) => els.map((el) => ({ height: el.getBoundingClientRect().height, target: el.querySelector("input")!.getBoundingClientRect().height })));
+    expect(short).toEqual([
+      { height: 48, target: 46 },
+      { height: 48, target: 46 },
+    ]);
   });
 
   for (const lang of langs) {
@@ -455,16 +507,68 @@ test.describe("Switch: criteria 80, 81, 82, 83", () => {
     expect(await shownWord(page, "en-off")).toEqual(["OFF"]);
   });
 
+  /** The visible words that name a switch, found the way a screen reader finds them: by the id in aria-labelledby. */
+  const wordsOf = async (page: Page, control: Locator): Promise<Locator> => {
+    const id = await control.getAttribute("aria-labelledby");
+    expect(id, "the switch names its words by id").toBeTruthy();
+    expect(id!.trim().split(/\s+/), "one id").toHaveLength(1);
+    return page.locator(`[id="${id}"]`);
+  };
+
   test("82: a switch can be named by the visible words beside it, and the knob's word is not part of the name", async ({ page }) => {
     for (const lang of langs) {
       const control = sw(page, `${lang}-labelled`);
-      const words = await control.locator("xpath=preceding-sibling::span").textContent();
-      expect(words?.trim().length, lang).toBeGreaterThan(5);
-      await expect(control, lang).toHaveAccessibleName(words!.trim());
+      const words = await wordsOf(page, control);
+      await expect(words, lang).toHaveCount(1);
+      await expect(words, lang).toBeVisible();
+      const text = ((await words.textContent()) ?? "").trim();
+      expect(text.length, lang).toBeGreaterThan(5);
+      if (lang !== "en") expect(text, lang).toMatch(scriptPattern[lang]);
+      // The name is the words, whole and once: a label that both points at the switch and is
+      // named by it must not be counted twice, and the knob's ON or OFF must not be added.
+      await expect(control, lang).toHaveAccessibleName(text);
+      await expect(control, lang).not.toHaveAttribute("aria-label");
       await expect(control.locator("> span"), lang).toHaveAttribute("aria-hidden", "true");
+      for (const word of await control.locator("> span > span").allTextContents()) {
+        expect(word.trim().length, lang).toBeGreaterThan(0);
+        expect(text, `${lang}: the knob's word is not in the name`).not.toContain(word.trim());
+      }
+      await expect(page.getByTestId("section-switch").getByRole("switch", { name: text, exact: true }), lang).toHaveCount(1);
     }
     await expect(sw(page, "en-on")).toHaveAccessibleName("Automatic reminders");
   });
+
+  for (const lang of langs) {
+    test(`82: ${lang}: a tap on the visible words switches it, and a second tap switches it back`, async ({ page }) => {
+      const control = sw(page, `${lang}-labelled`);
+      const words = await wordsOf(page, control);
+      await expect(words).toHaveCount(1);
+      // The words are a separate box beside the switch: a tap on them does not land on the switch itself.
+      const [w, c] = [await box(words), await box(control)];
+      expect(w.x + w.width, "the words end before the switch starts").toBeLessThanOrEqual(c.x);
+      expect(w.width).toBeGreaterThan(20);
+
+      const before = await control.getAttribute("aria-checked");
+      expect(["true", "false"]).toContain(before);
+      const flipped = before === "true" ? "false" : "true";
+      // A real tap in the middle of the words. Playwright checks that the words, not something over them, receive it.
+      await words.tap();
+      await expect(control).toHaveAttribute("aria-checked", flipped);
+      // The knob has changed sides and shows the other word, as it does for a tap on the switch.
+      const k = await box(knob(page, `${lang}-labelled`));
+      if (flipped === "true") expect(k.x + k.width / 2).toBeGreaterThan(c.x + c.width / 2);
+      else expect(k.x + k.width / 2).toBeLessThan(c.x + c.width / 2);
+      expect(await shownWord(page, `${lang}-labelled`)).toHaveLength(1);
+      await words.tap();
+      await expect(control).toHaveAttribute("aria-checked", before!);
+      // One tap, one change: a third tap is a third change, not two.
+      await words.tap();
+      await expect(control).toHaveAttribute("aria-checked", flipped);
+      // The other switches in this language's block were not touched.
+      await expect(sw(page, `${lang}-on`)).toHaveAttribute("aria-checked", "true");
+      await expect(sw(page, `${lang}-off`)).toHaveAttribute("aria-checked", "false");
+    });
+  }
 
   test("82: Tab reaches it and shows the 3px ring 4px away; a tap shows none", async ({ page }) => {
     const control = sw(page, "en-on");
@@ -1147,6 +1251,148 @@ test.describe("Banner and its flat buttons: criteria 89, 90, 91, 92, 93 (and 88 
       expect(await shadow(control)).toBe("none");
     }
   });
+
+  // The amount in an undo message (criterion 14 inside a banner): the same checks as the amounts
+  // section in fonts.spec.ts, by computed style and by which font file drew the glyphs.
+  const AMOUNT = /^₹[0-9,]+$/;
+  const amountIn = (b: Locator) => b.locator('[data-rupee="reading"]');
+  /** The amount is one unbroken piece of text, wholly inside its message, its banner and the screen. */
+  const amountIsWhole = async (b: Locator, when: string) => {
+    const m = await amountIn(b).evaluate((el) => {
+      const rects = [...el.getClientRects()].filter((r) => r.width > 0);
+      const r = el.getBoundingClientRect();
+      const p = el.closest("p")!.getBoundingClientRect();
+      const outer = el.closest("[data-kind]")!.getBoundingClientRect();
+      const s = getComputedStyle(el);
+      const clipping: string[] = [];
+      for (let up = el.parentElement; up && up !== document.body; up = up.parentElement) {
+        const o = getComputedStyle(up);
+        if (o.overflowX !== "visible" || o.overflowY !== "visible") {
+          const c = up.getBoundingClientRect();
+          if (r.left < c.left - 0.5 || r.right > c.right + 0.5 || r.top < c.top - 0.5 || r.bottom > c.bottom + 0.5) clipping.push(up.tagName);
+        }
+      }
+      return {
+        lines: rects.length,
+        width: r.width,
+        insideMessage: r.left >= p.left - 0.5 && r.right <= p.right + 0.5,
+        insideBanner: r.left >= outer.left && r.right <= outer.right && r.top >= outer.top && r.bottom <= outer.bottom,
+        onScreen: r.left >= 0 && r.right <= document.documentElement.clientWidth,
+        wrap: s.whiteSpace,
+        overflow: s.textOverflow,
+        clipping,
+      };
+    });
+    expect(m, when).toEqual({ lines: 1, width: m.width, insideMessage: true, insideBanner: true, onScreen: true, wrap: "nowrap", overflow: "clip", clipping: [] });
+    expect(m.width, when).toBeGreaterThan(30);
+  };
+
+  test("every undo banner on the page shows its amount in the amount role: one in each, none plain", async ({ page }) => {
+    const undo = section(page, "banner").locator('[data-kind="undo"]');
+    // en, hi, kn and te each have the plain and the long example; English has the pressed, focus and working ones too.
+    await expect(undo).toHaveCount(11);
+    for (const b of await undo.all()) {
+      await expect(amountIn(b)).toHaveCount(1);
+      await expect(amountIn(b)).toHaveText(AMOUNT);
+      // No rupee sign or digit is left in the message's own text, outside the amount.
+      const own = await b.locator("p").evaluate((el) => [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent).join(""));
+      expect(own).not.toMatch(/[₹0-9०-९೦-೯౦-౯]/);
+    }
+    await expect(section(page, "banner").locator('[data-rupee="reading"]')).toHaveCount(11);
+  });
+
+  for (const lang of langs) {
+    test(`14 in a banner: ${lang}: the amount in the undo message is Bricolage at -0.04em with digits 0-9${lang === "en" ? "" : ", beside words in Anek"}; it is whole, also in the long example and at 130%`, async ({ page }) => {
+      const bricolage = await familyOf(page, "--font-bricolage");
+      expect(bricolage).toMatch(/^Bricolage Grotesque/);
+      const probe = await fontProbe(page);
+      const ids = lang === "en" ? ["undo-en", "long-en", "pressed", "focus", "live"] : [`undo-${lang}`, `long-${lang}`];
+
+      const check = async (when: string) => {
+        for (const id of ids) {
+          const b = banner(page, id, "undo");
+          await expect(b, id).toHaveCount(1);
+          const amount = amountIn(b);
+          await expect(amount, id).toHaveCount(1);
+          await expect(amount, id).toBeVisible();
+          const text = (await amount.textContent()) ?? "";
+          expect(text, id).toMatch(AMOUNT);
+          expect(await amount.evaluate((el) => el.closest("[lang]")?.getAttribute("lang")), id).toBe(lang);
+
+          // Computed style: the amount role, whatever the script around it.
+          const family = await firstFamily(amount);
+          expect(family, `${when} ${id}`).toBe(bricolage);
+          expect(family, `${when} ${id}`).not.toMatch(/^Anek /);
+          const s = await amount.evaluate((el) => {
+            const c = getComputedStyle(el);
+            return { weight: c.fontWeight, spacing: c.letterSpacing, tracking: parseFloat(c.letterSpacing) / parseFloat(c.fontSize), size: parseFloat(c.fontSize), transform: c.textTransform };
+          });
+          expect(s.spacing, `${when} ${id}: letter-spacing is not zero`).not.toBe("normal");
+          expect(s.spacing, `${when} ${id}: letter-spacing is not zero`).not.toBe("0px");
+          expect(s.tracking, `${when} ${id}`).toBeCloseTo(-0.04, 3);
+          expect(s.weight, `${when} ${id}`).toBe("800");
+          expect(s.transform, `${when} ${id}`).toBe("none");
+          // It is the size of the words it sits in, never smaller.
+          const messageSize = parseFloat((await css(b.locator("p"), ["font-size"]))["font-size"]);
+          expect(s.size, `${when} ${id}`).toBe(messageSize);
+          expect(s.size, `${when} ${id}`).toBeGreaterThanOrEqual(14);
+
+          // What was drawn: Bricolage Grotesque drew the sign and every digit, and nothing else did.
+          const faces = await probe.facesFor(amount);
+          expect(faces.map((f) => f.family.replace(/ \d+pt.*$/, "")), `${when} ${id}`).toEqual(["Bricolage Grotesque"]);
+          expect(faces[0].glyphs, `${when} ${id}`).toBe(text.length);
+          expect(faces[0].custom, `${when} ${id}`).toBe(true);
+
+          // The other side: the words around the amount are still set in the script's own face.
+          // The probe counts a node's whole subtree, so the message reports its words and its amount.
+          const message = b.locator("p");
+          const whole = Object.entries(
+            (await probe.facesFor(message)).reduce<Record<string, number>>((sum, f) => {
+              expect(f.custom, `${when} ${id}: ${f.family} is one of our own font files`).toBe(true);
+              const name = f.family.replace(/ (Thin|ExtraLight|Light|Regular|Medium|SemiBold|Bold|ExtraBold|\d+pt.*)$/, "");
+              sum[name] = (sum[name] ?? 0) + f.glyphs;
+              return sum;
+            }, {}),
+          );
+          if (lang === "en") {
+            expect(await firstFamily(message), `${when} ${id}`).toBe(bricolage);
+            expect(whole.map(([name]) => name), `${when} ${id}`).toEqual(["Bricolage Grotesque"]);
+            expect(whole[0][1], `${when} ${id}: there are words beside the amount`).toBeGreaterThan(text.length + 5);
+          } else {
+            const anek = await familyOf(page, scriptFontVariable[lang]);
+            expect(anek).toMatch(/^Anek /);
+            expect(await firstFamily(message), `${when} ${id}`).toBe(anek);
+            expect((await css(message, ["letter-spacing"]))["letter-spacing"], `${when} ${id}`).toBe("normal");
+            await expect(message).toContainText(scriptPattern[lang]);
+            // Two faces and no third: Anek drew the words, and Bricolage drew the amount's glyphs and not one more.
+            const drawn = Object.fromEntries(whole);
+            expect(Object.keys(drawn).sort(), `${when} ${id}`).toEqual([anek, "Bricolage Grotesque"].sort());
+            expect(drawn["Bricolage Grotesque"], `${when} ${id}: Bricolage drew only the amount`).toBe(text.length);
+            expect(drawn[anek], `${when} ${id}: Anek drew the words`).toBeGreaterThan(5);
+          }
+
+          await amountIsWhole(b, `${when} ${id}`);
+          expect(await holdsItsContent(message), `${when} ${id}: the message is whole`).toBe(true);
+        }
+        expect(await sidewaysScroll(page), when).toBe(0);
+      };
+
+      await check("default size");
+      // The amount takes the size of its message (16px in English, the script's own reading size otherwise),
+      // and its letter-spacing is 4% of that, in pixels: it grows with the text.
+      const first = amountIn(banner(page, ids[0], "undo"));
+      const before = await css(first, ["font-size", "letter-spacing"]);
+      const px = parseFloat(before["font-size"]);
+      if (lang === "en") expect(before).toEqual({ "font-size": "16px", "letter-spacing": "-0.64px" });
+      expect(px).toBeGreaterThanOrEqual(16);
+      expect(parseFloat(before["letter-spacing"])).toBeCloseTo(px * -0.04, 2);
+
+      await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+      await expect.poll(async () => parseFloat((await css(first, ["font-size"]))["font-size"])).toBeCloseTo(px * 1.3, 1);
+      expect(parseFloat((await css(first, ["letter-spacing"]))["letter-spacing"])).toBeCloseTo(px * 1.3 * -0.04, 2);
+      await check("130%");
+    });
+  }
 
   for (const lang of indicLangs) {
     test(`${lang}: banner text and action labels are the script's own face with no letter-spacing and no capitals, 14px or larger`, async ({ page }) => {
