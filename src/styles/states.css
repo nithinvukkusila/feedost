@@ -46,6 +46,17 @@
   outline-offset: 4px;
 }
 
+/*
+ * The same ring drawn 3px inside the item, for an item whose edge is a shared border or the edge of
+ * the screen (a segment, a bottom-nav item), where a ring outside would be clipped or land on the
+ * neighbour. Use as `ring:ring-inset`. The colour is the ground's: blue on paper, yellow on a dark
+ * fill. A selected (black) segment marks itself `on-dark-ground`, because blue on ink is 1.5:1.
+ */
+@utility ring-inset {
+  outline: 3px solid var(--ground-ring);
+  outline-offset: -3px;
+}
+
 /* A shadow token's colour, unless the ground names another. Use beside `shadow-button` and the like. */
 @utility ground-shadow {
   --tw-shadow-color: var(--ground-shadow);
@@ -79,6 +90,24 @@
 /* Keeps room for one line of text even when empty, so a message appearing does not move what is below. */
 @utility reserve-line {
   min-height: 1lh;
+}
+
+/*
+ * The student strip: one column per block, bottoms aligned, 3px apart. `--cols` is the number of
+ * blocks in a row (stripColumns() in src/components/ui/student-strip.tsx). A block is never wider
+ * than 24px, so one student is not a bar across the screen. The gap stays in px, like borders.
+ */
+@utility strip-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1.5rem));
+  grid-auto-rows: 1.5rem;
+  gap: 3px;
+  align-items: end;
+}
+
+/* Room for the phone's gesture bar under something pinned to the bottom of the screen. */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Moving into the shadow. The offsets match the shadow tokens and stay in px, like the shadows. */

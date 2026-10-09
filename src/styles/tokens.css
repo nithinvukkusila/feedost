@@ -49,6 +49,8 @@
   --shadow-record: 5px 5px 0 var(--color-ink-label);
   --shadow-slip: 6px 6px 0 var(--color-ink);
   --shadow-round: 3px 3px 0 var(--color-ink);
+  /* The error banner only (spec open question 17a). Red here is a shadow, never a button. */
+  --shadow-banner-error: 5px 5px 0 var(--color-cloth);
 
   /* Size minimums: tap target 44px, control 48px, ledger row 64px. */
   --spacing-tap: 2.75rem;

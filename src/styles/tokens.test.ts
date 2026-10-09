@@ -66,12 +66,14 @@ describe("shadow tokens (criterion 6)", () => {
     }
   });
 
-  it("defines the four solid offsets", () => {
+  it("defines the four solid offsets, and one more for the error banner", () => {
     expect(shadows).toEqual({
       button: "5px 5px 0 var(--color-ink)",
       record: "5px 5px 0 var(--color-ink-label)",
       slip: "6px 6px 0 var(--color-ink)",
       round: "3px 3px 0 var(--color-ink)",
+      // Spec open question 17a: allowed by name, for the error banner only.
+      "banner-error": "5px 5px 0 var(--color-cloth)",
     });
   });
 
