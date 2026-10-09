@@ -24,26 +24,59 @@ const spoken = new Set([
 
 const hasLetter = (text: string) => /\p{L}/u.test(text);
 
-/** Words a component would show or speak by itself: JSX text, string children, spoken attributes. */
+/**
+ * Words a component would show or speak by itself: JSX text, string children, spoken attributes.
+ * A string is followed through `a ? "x" : "y"`, `a && "x"`, `a ?? "x"`, brackets, template strings,
+ * and a module-level `const NAME = "x"` used by name.
+ * Not followed: a string returned by a function, held in an object or array, or imported from
+ * another file. Those need a reviewer's eye.
+ */
 export function findOwnWords(source: string, fileName = "component.tsx"): string[] {
   const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const found: string[] = [];
+
+  // Module-level constants that are plain strings.
+  const constants = new Map<string, ts.Expression>();
+  for (const statement of file.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const decl of statement.declarationList.declarations) {
+      if (ts.isIdentifier(decl.name) && decl.initializer) constants.set(decl.name.text, decl.initializer);
+    }
+  }
+
+  /** Every literal string an expression can turn into. */
+  const words = (expr: ts.Expression | undefined, seen = new Set<string>()): string[] => {
+    if (!expr) return [];
+    if (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)) return [expr.text];
+    if (ts.isTemplateExpression(expr)) return [expr.head.text, ...expr.templateSpans.map((span) => span.literal.text)];
+    if (ts.isConditionalExpression(expr)) return [...words(expr.whenTrue, seen), ...words(expr.whenFalse, seen)];
+    if (ts.isParenthesizedExpression(expr) || ts.isAsExpression(expr) || ts.isNonNullExpression(expr) || ts.isSatisfiesExpression(expr)) {
+      return words(expr.expression, seen);
+    }
+    if (ts.isBinaryExpression(expr)) {
+      const op = expr.operatorToken.kind;
+      const joins =
+        op === ts.SyntaxKind.AmpersandAmpersandToken ||
+        op === ts.SyntaxKind.BarBarToken ||
+        op === ts.SyntaxKind.QuestionQuestionToken ||
+        op === ts.SyntaxKind.PlusToken;
+      return joins ? [...words(expr.left, seen), ...words(expr.right, seen)] : [];
+    }
+    if (ts.isIdentifier(expr) && constants.has(expr.text) && !seen.has(expr.text)) {
+      seen.add(expr.text);
+      return words(constants.get(expr.text), seen);
+    }
+    return [];
+  };
+
   const visit = (node: ts.Node) => {
     if (ts.isJsxText(node) && hasLetter(node.text)) {
       found.push(`text "${node.text.trim()}"`);
-    } else if (
-      ts.isJsxExpression(node) &&
-      node.expression &&
-      (ts.isStringLiteral(node.expression) || ts.isNoSubstitutionTemplateLiteral(node.expression)) &&
-      !ts.isJsxAttribute(node.parent) &&
-      hasLetter(node.expression.text)
-    ) {
-      found.push(`text "${node.expression.text}"`);
+    } else if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+      for (const text of words(node.expression)) if (hasLetter(text)) found.push(`text "${text}"`);
     } else if (ts.isJsxAttribute(node) && spoken.has(node.name.getText(file)) && node.initializer) {
       const value = ts.isJsxExpression(node.initializer) ? node.initializer.expression : node.initializer;
-      if (value && (ts.isStringLiteral(value) || ts.isNoSubstitutionTemplateLiteral(value)) && hasLetter(value.text)) {
-        found.push(`${node.name.getText(file)}="${value.text}"`);
-      }
+      for (const text of words(value)) if (hasLetter(text)) found.push(`${node.name.getText(file)}="${text}"`);
     }
     ts.forEachChild(node, visit);
   };
@@ -65,6 +98,22 @@ describe("findOwnWords", () => {
     expect(findOwnWords('const a = <button aria-label="Close" />;')).toEqual(['aria-label="Close"']);
     expect(findOwnWords('const a = <input placeholder={"name@bank"} />;')).toEqual(['placeholder="name@bank"']);
     expect(findOwnWords("const a = <p>जमा</p>;")).toEqual(['text "जमा"']);
+  });
+
+  it("follows a string through a condition, a fallback and a template", () => {
+    expect(findOwnWords('const a = <button>{open ? "Close" : "Open"}</button>;')).toEqual(['text "Close"', 'text "Open"']);
+    expect(findOwnWords('const a = <p>{busy && "Saving"}</p>;')).toEqual(['text "Saving"']);
+    expect(findOwnWords('const a = <p>{label ?? "Untitled"}</p>;')).toEqual(['text "Untitled"']);
+    expect(findOwnWords("const a = <p>{`Step ${n}`}</p>;")).toEqual(['text "Step "']);
+    expect(findOwnWords('const a = <button aria-label={open ? "Close" : label} />;')).toEqual(['aria-label="Close"']);
+  });
+
+  it("follows a module constant used by name", () => {
+    expect(findOwnWords('const LABEL = "Close";\nconst a = <button aria-label={LABEL} />;')).toEqual(['aria-label="Close"']);
+    expect(findOwnWords('const WORD = "Paid";\nconst a = <span>{WORD}</span>;')).toEqual(['text "Paid"']);
+    expect(findOwnWords('const A = B;\nconst B = "Loop";\nconst a = <span>{A}</span>;')).toEqual(['text "Loop"']);
+    // Class-name constants are not words shown to anyone.
+    expect(findOwnWords('const base = "flex items-center";\nconst a = <span className={base}>{children}</span>;')).toEqual([]);
   });
 
   it("allows passed-in text, class names, roles, spacing and comments", () => {

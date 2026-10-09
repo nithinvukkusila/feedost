@@ -149,3 +149,20 @@ describe("Tabs interaction (criterion 51)", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe("Tabs when the value matches no tab", () => {
+  it("keeps the list reachable by keyboard through the first tab, with nothing shown as selected", async () => {
+    const onChange = vi.fn();
+    const user = userEvent.setup();
+    render(<Tabs tabs={tabs} value="gone" onChange={onChange} label="Fee status" panelId="panel" />);
+    const all = screen.getAllByRole("tab");
+    expect(all.map((t) => t.getAttribute("tabindex"))).toEqual(["0", "-1", "-1"]);
+    expect(all.map((t) => t.getAttribute("aria-selected"))).toEqual(["false", "false", "false"]);
+    await user.tab();
+    expect(document.activeElement).toBe(all[0]);
+    await user.keyboard("{ArrowRight}");
+    expect(onChange).toHaveBeenLastCalledWith("overdue");
+    await user.keyboard("{ArrowLeft}");
+    expect(onChange).toHaveBeenLastCalledWith("paid");
+  });
+});

@@ -49,10 +49,14 @@ export function Tabs({ tabs, value, onChange, label, panelId }: TabsProps) {
     buttons.current.get(next.id)?.focus();
   }
 
+  // If `value` names no tab (a screen passed a stale id), the first tab stands in for the tab stop,
+  // so the list can still be reached by keyboard. Nothing is shown as selected.
+  const current = tabs.findIndex((t) => t.id === value);
+  const stop = current === -1 ? 0 : current;
+
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const current = tabs.findIndex((t) => t.id === value);
     if (event.key === "ArrowRight") go(current + 1);
-    else if (event.key === "ArrowLeft") go(current - 1);
+    else if (event.key === "ArrowLeft") go(current === -1 ? tabs.length - 1 : current - 1);
     else if (event.key === "Home") go(0);
     else if (event.key === "End") go(tabs.length - 1);
     else return;
@@ -67,7 +71,7 @@ export function Tabs({ tabs, value, onChange, label, panelId }: TabsProps) {
       onKeyDown={onKeyDown}
       className="grid auto-cols-fr grid-flow-col items-stretch gap-1 px-1"
     >
-      {tabs.map((tab) => {
+      {tabs.map((tab, index) => {
         const isSelected = tab.id === value;
         return (
           <button
@@ -81,7 +85,7 @@ export function Tabs({ tabs, value, onChange, label, panelId }: TabsProps) {
             id={tabId(panelId, tab.id)}
             aria-selected={isSelected}
             aria-controls={panelId}
-            tabIndex={isSelected ? 0 : -1}
+            tabIndex={index === stop ? 0 : -1}
             onClick={() => onChange(tab.id)}
             className={cx(base, isSelected ? selected : idle)}
           >
