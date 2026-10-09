@@ -18,10 +18,16 @@ export const bricolage = Bricolage_Grotesque({
 
 // Labels, dates and row amounts. DM Mono has no rupee sign: naming Bricolage as its fallback puts
 // Bricolage straight after it and stops Next generating an Arial-based fallback face in between.
+// Weight 500 only: no type role uses 400.
+// Not preloaded. next/font preloads a font on every route under the file that declares it, and this
+// one is declared for the root layout, so preloading it costs every page 8.7 KB whether or not the
+// page draws mono text. The price is that labels appear in Bricolage for a moment on a first visit
+// and then swap. Revisit when real screens show labels above the fold.
 export const dmMono = DM_Mono({
-  weight: ["400", "500"],
+  weight: "500",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   fallback: ["Bricolage Grotesque"],
   variable: "--font-dm-mono",
 });
