@@ -10,7 +10,7 @@ create table public.rls_probe (
   note text not null
 );
 alter table public.rls_probe enable row level security;
-create policy rls_probe_select on public.rls_probe for select using (true);
+create policy rls_probe_select on public.rls_probe for select using (tutor_id = auth.uid());
 create policy rls_probe_insert on public.rls_probe for insert with check (tutor_id = auth.uid());
 create policy rls_probe_update on public.rls_probe for update using (tutor_id = auth.uid()) with check (tutor_id = auth.uid());
 create policy rls_probe_delete on public.rls_probe for delete using (tutor_id = auth.uid());
