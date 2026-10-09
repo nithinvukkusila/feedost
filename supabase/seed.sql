@@ -1,0 +1,5 @@
+-- Local sample data only. `supabase db reset` runs this file on the local stack.
+-- It is never applied to staging or production (see docs/ENVIRONMENTS.md).
+-- F4 adds no product table, so there is nothing to insert yet.
+-- The "try with sample data" tutor arrives with R1-x, and every name, phone and
+-- email in it must be made up.
