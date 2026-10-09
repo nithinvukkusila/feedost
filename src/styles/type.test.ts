@@ -135,7 +135,8 @@ describe("amounts never follow the script (criteria 14 and 40)", () => {
     expect(rule(type, "@utility amount-box")).toEqual({ "container-type": "inline-size" });
     const fit = /@utility amount-size-\* \{([^}]*)\}/.exec(type)![1];
     expect(fit).toContain("font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));");
-    expect(fit).toContain("text-size-adjust: none;");
+    // No text-size-adjust here: the page already has 100% from Tailwind's base styles, so it changed nothing.
+    expect(type).not.toMatch(/text-size-adjust/);
   });
 
   it("row amounts are fixed to DM Mono", () => {

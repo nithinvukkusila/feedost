@@ -132,12 +132,6 @@
 
 @utility amount-size-* {
   font-size: max(0.875rem, min(--value(--text-*), calc(100cqi / var(--amount-em, 5.3))));
-  /*
-   * A phone's text-scaling setting multiplies text after this size is worked out, which would push a
-   * fitted amount back off the screen. Fitted amounts are headline sizes; they follow the root font
-   * size but not that multiplier.
-   */
-  text-size-adjust: none;
 }
 
 /* Row amounts. Always DM Mono (the rupee sign falls to Bricolage, next in the stack). Ignores the script variables. */

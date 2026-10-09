@@ -440,12 +440,12 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
     expect([...new Set(radii)]).toEqual(["0px", "4px", "6px", "full"]);
   });
 
-  // Two ways of making text 130%. The plan's way scales the root font size, so every rem (text, box
-  // minimums, stamp rings) grows together. `text-size-adjust` enlarges text only and leaves rem boxes
-  // alone, which is closer to what a phone's font-size setting does to a page.
+  // Text at 130% the plan's way: the root font size is scaled, so every rem (text, box minimums,
+  // stamp rings) grows together. A run that set `text-size-adjust: 130%` on <html> by hand was removed
+  // in review (S2): the page's base styles pin that property to 100%, so the hand-set value showed what
+  // CSS inheritance does, not what a phone does. A phone's own text-scaling setting is hand check H4.
   const scales = [
     { name: "root font size 130% (the plan's method)", boxesGrow: true, apply: () => document.documentElement.style.setProperty("font-size", "130%") },
-    { name: "text only, text-size-adjust 130%", boxesGrow: false, apply: () => document.documentElement.style.setProperty("text-size-adjust", "130%") },
   ];
   for (const scale of scales) {
     test(`63: ${scale.name}: nothing clipped, overlapped or truncated and no sideways scroll`, async ({ page }, testInfo) => {
@@ -486,7 +486,7 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
         expect(token, text).not.toBe(0);
         expect(await lineCount(amount), `${text} at the ${token}px size`).toBe(1);
         const size = parseFloat((await css(amount, ["font-size"]))["font-size"]);
-        // Root scaling raises the token itself; text-only scaling leaves a fitted amount alone.
+        // Root scaling raises the token itself.
         expect(size, text).toBeLessThanOrEqual(token * (scale.boxesGrow ? 1.3 : 1) + 0.01);
         expect(size, text).toBeGreaterThanOrEqual(14);
         const amountBox = await box(amount);
@@ -503,8 +503,7 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       // The six-digit amount no longer fits at its 93.6px token when the root is 130%, so it is smaller.
       if (scale.boxesGrow) expect(parseFloat((await css(sixDigits, ["font-size"]))["font-size"])).toBeLessThan(93.6);
 
-      // A stamp's ring is sized in rem. It grows with the root font size; with text-only scaling it
-      // grows only as far as its word needs.
+      // A stamp's ring is sized in rem, so it grows with the root font size.
       const stampNow = (await box(smallStamp)).width;
       // Within half a percent, not to the tenth of a pixel: the word inside is laid out again at the new size.
       if (scale.boxesGrow) expect(Math.abs(stampNow / (before.stamp * 1.3) - 1)).toBeLessThanOrEqual(0.005);
@@ -1254,7 +1253,6 @@ test.describe("Headline amounts shrink to fit (follow-up to criterion 63; replac
   const scales = [
     { name: "at the default text size", root: 1, apply: null },
     { name: "with the root font size at 130%", root: 1.3, apply: () => document.documentElement.style.setProperty("font-size", "130%") },
-    { name: "with text-only scaling at 130%", root: 1, apply: () => document.documentElement.style.setProperty("text-size-adjust", "130%") },
   ];
   const AMOUNTS = '[data-rupee="headline"], [data-rupee="fit"], [data-role="amount"]';
 
@@ -1289,7 +1287,6 @@ test.describe("Headline amounts shrink to fit (follow-up to criterion 63; replac
             text: el.textContent ?? "",
             size: parseFloat(s.fontSize),
             whiteSpace: s.whiteSpace,
-            adjust: s.getPropertyValue("text-size-adjust"),
             em: parseFloat(s.getPropertyValue("--amount-em")),
             token: el.classList.contains("amount-size-7xl") ? 72 : el.classList.contains("amount-size-6xl") ? 60 : 0,
             ink: { left: ink.left, right: ink.right, width: ink.width },
@@ -1327,39 +1324,20 @@ test.describe("Headline amounts shrink to fit (follow-up to criterion 63; replac
     });
   }
 
-  test("a fitted amount still grows with the root font size, but not with text-only scaling", async ({ page }) => {
+  test("a fitted amount still grows with the root font size", async ({ page }) => {
     // "₹18,500" at the 60px size has room to spare at 360px, so it shows the scaling plainly.
     const amount = page.getByTestId("section-type").locator('[lang="en"] [data-role="amount"]');
-    const body = page.getByTestId("section-type").locator('[lang="en"] [data-role="body"]');
     const width = async () => amount.evaluate((el) => {
       const range = document.createRange();
       range.selectNodeContents(el);
       return range.getBoundingClientRect().width;
     });
-    // The amount role declares `text-size-adjust: none`. Chromium reports that as "100%", which is
-    // also what every other element on the page already has (Tailwind's base styles set it on <html>).
-    expect((await css(amount, ["font-size", "text-size-adjust"]))).toEqual({ "font-size": "60px", "text-size-adjust": "100%" });
-    expect((await css(page.locator("html"), ["text-size-adjust"]))["text-size-adjust"]).toBe("100%");
-    expect((await css(body, ["text-size-adjust"]))["text-size-adjust"]).toBe("100%");
+    expect((await css(amount, ["font-size"]))["font-size"]).toBe("60px");
     const drawn = await width();
 
     await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
     await expect.poll(async () => (await css(amount, ["font-size"]))["font-size"]).toBe("78px");
     expect((await width()) / drawn).toBeCloseTo(1.3, 1);
-
-    // As built: with text-only scaling the reading text grows to 20.8px and the amount stays as it was.
-    await page.evaluate(() => {
-      document.documentElement.style.removeProperty("font-size");
-      document.documentElement.style.setProperty("text-size-adjust", "130%");
-    });
-    await expect.poll(async () => (await css(body, ["font-size"]))["font-size"]).toBe("20.8px");
-    expect((await css(amount, ["font-size"]))["font-size"]).toBe("60px");
-    expect((await width()) / drawn).toBeCloseTo(1, 2);
-    // Amounts that are not fitted (reading size inside a sentence, row amounts) do follow it.
-    const inline = page.getByTestId("section-rupee").locator('[lang="hi"] [data-rupee="reading"]');
-    expect((await css(inline, ["font-size"]))["font-size"]).toBe("23.4px");
-    const row = page.getByTestId("section-type").locator('[lang="en"] [data-role="amount-row"]');
-    expect((await css(row, ["font-size"]))["font-size"]).toBe("20.8px");
   });
 
   test("in a space too narrow for 14px the amount stops at 14px and stays on one line", async ({ page }) => {
