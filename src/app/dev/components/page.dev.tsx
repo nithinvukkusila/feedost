@@ -12,6 +12,7 @@ import { SheetSection } from "./sections/sheet";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
 import { StatusTagSection } from "./sections/status-tag";
+import { StudentStripSection } from "./sections/student-strip";
 import { SwitchSection } from "./sections/switch";
 import { TabsSection } from "./sections/tabs";
 import { TokensSection } from "./sections/tokens";
@@ -43,6 +44,7 @@ export default function DevComponentsPage() {
       <SheetSection />
       <SegmentedSection />
       <SwitchSection />
+      <StudentStripSection />
     </main>
   );
 }

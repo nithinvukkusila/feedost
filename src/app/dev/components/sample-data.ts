@@ -122,6 +122,8 @@ export type Sample = {
     longB: string;
   };
   switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
+  /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
+  strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -230,6 +232,15 @@ export const sample: Record<Lang, Sample> = {
       longOff: "PAUSED",
       visibleLabel: "Monthly report to parents",
     },
+    strip: {
+      paid: "{n} paid",
+      due: "{n} due, hollow",
+      overdue: "{n} overdue, tall",
+      label: "{t} students: {p} paid, {d} due, {o} overdue",
+      longPaid: "{n} paid and confirmed this month",
+      longDue: "{n} due this week, hollow",
+      longOverdue: "{n} overdue by more than a week, tall",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -335,6 +346,15 @@ export const sample: Record<Lang, Sample> = {
       longOn: "भेज रहे हैं",
       longOff: "रोका गया",
       visibleLabel: "अभिभावकों को मासिक रिपोर्ट",
+    },
+    strip: {
+      paid: "{n} जमा",
+      due: "{n} बाकी, खाली",
+      overdue: "{n} देर से, ऊँचा",
+      label: "{t} छात्र: {p} जमा, {d} बाकी, {o} देर से",
+      longPaid: "{n} इस महीने जमा और पुष्ट",
+      longDue: "{n} इस हफ़्ते बाकी, खाली",
+      longOverdue: "{n} एक हफ़्ते से ज़्यादा देर, ऊँचा",
     },
   },
   kn: {
@@ -442,6 +462,15 @@ export const sample: Record<Lang, Sample> = {
       longOff: "ನಿಲ್ಲಿಸಿದೆ",
       visibleLabel: "ಪೋಷಕರಿಗೆ ಮಾಸಿಕ ವರದಿ",
     },
+    strip: {
+      paid: "{n} ಪಾವತಿ",
+      due: "{n} ಬಾಕಿ, ಖಾಲಿ",
+      overdue: "{n} ತಡ, ಎತ್ತರ",
+      label: "{t} ವಿದ್ಯಾರ್ಥಿಗಳು: {p} ಪಾವತಿ, {d} ಬಾಕಿ, {o} ತಡ",
+      longPaid: "{n} ಈ ತಿಂಗಳು ಪಾವತಿಸಿ ದೃಢೀಕರಿಸಲಾಗಿದೆ",
+      longDue: "{n} ಈ ವಾರ ಬಾಕಿ, ಖಾಲಿ",
+      longOverdue: "{n} ಒಂದು ವಾರಕ್ಕಿಂತ ಹೆಚ್ಚು ತಡ, ಎತ್ತರ",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -547,6 +576,15 @@ export const sample: Record<Lang, Sample> = {
       longOn: "పంపుతోంది",
       longOff: "ఆపివేశారు",
       visibleLabel: "తల్లిదండ్రులకు నెలవారీ నివేదిక",
+    },
+    strip: {
+      paid: "{n} చెల్లింపు",
+      due: "{n} బాకీ, ఖాళీ",
+      overdue: "{n} ఆలస్యం, పొడవు",
+      label: "{t} మంది విద్యార్థులు: {p} చెల్లింపు, {d} బాకీ, {o} ఆలస్యం",
+      longPaid: "{n} ఈ నెల చెల్లించి నిర్ధారించారు",
+      longDue: "{n} ఈ వారం బాకీ, ఖాళీ",
+      longOverdue: "{n} వారం కంటే ఎక్కువ ఆలస్యం, పొడవు",
     },
   },
 };
@@ -683,5 +721,15 @@ export const copy = {
     labelled: "Named by the words beside it",
     focus: "Keyboard focus",
     long: "A longer word: the switch grows wider, and is the same width on and off",
+  },
+  strip: {
+    title: "Student strip",
+    note: "One block per student. Paid is short and filled, due is short and hollow, overdue is tall. The words underneath always say the same.",
+    one: "1 student",
+    typical: "23 students, as on the home screen",
+    many: "60 students: three rows of 20",
+    long: "Long legend",
+    none: "No students: the strip draws nothing. The box below is empty on purpose.",
+    onSlip: "On a slip",
   },
 };

@@ -518,3 +518,193 @@ test.describe("Switch: criteria 80, 81, 82, 83", () => {
     });
   }
 });
+
+test.describe("StudentStrip: criteria 75, 76, 78, 79 (and 77 in a real browser)", () => {
+  const strip = (page: Page, id: string) => page.getByTestId(`strip-${id}`).getByRole("img");
+  const blocksOf = (page: Page, id: string, kind?: string) => strip(page, id).locator(kind ? `span[data-kind="${kind}"]` : "span");
+
+  /** What each block of a strip looks like, measured. */
+  const measure = (page: Page, id: string) =>
+    blocksOf(page, id).evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect();
+        const s = getComputedStyle(el);
+        return {
+          kind: el.getAttribute("data-kind"),
+          left: r.left,
+          right: r.right,
+          bottom: r.bottom,
+          width: r.width,
+          height: r.height,
+          fill: s.backgroundColor,
+          border: s.borderTopWidth,
+          borderColour: s.borderTopColor,
+          borderStyle: s.borderTopStyle,
+        };
+      }),
+    );
+
+  test("75: 23 blocks in one line, 3px apart, bottoms level: paid 14px green, due 14px hollow with a 2px ink outline, overdue 24px red", async ({ page }) => {
+    const blocks = await measure(page, "23-en");
+    expect(blocks.map((b) => b.kind)).toEqual([...Array(14).fill("paid"), ...Array(4).fill("due"), ...Array(5).fill("overdue")]);
+    for (const b of blocks) {
+      // One line: every block ends on the same bottom edge.
+      expect(Math.abs(b.bottom - blocks[0].bottom), "bottoms level").toBeLessThanOrEqual(0.5);
+      if (b.kind === "paid") expect({ height: b.height, fill: b.fill, border: b.border }).toEqual({ height: 14, fill: rgb("stamp"), border: "0px" });
+      if (b.kind === "due") {
+        expect({ height: b.height, fill: b.fill, border: b.border, colour: b.borderColour, style: b.borderStyle }).toEqual({
+          height: 14,
+          fill: rgb("slip"),
+          border: "2px",
+          colour: rgb("ink"),
+          style: "solid",
+        });
+      }
+      if (b.kind === "overdue") expect({ height: b.height, fill: b.fill, border: b.border }).toEqual({ height: 24, fill: rgb("cloth"), border: "0px" });
+    }
+    for (let i = 1; i < blocks.length; i++) {
+      expect(blocks[i].left - blocks[i - 1].right, "3px gap").toBeCloseTo(3, 1);
+      expect(Math.abs(blocks[i].width - blocks[0].width), "equal widths").toBeLessThanOrEqual(0.5);
+    }
+    expect((await box(strip(page, "23-en"))).height).toBe(24);
+  });
+
+  for (const lang of langs) {
+    test(`76: ${lang}: the legend is shown under the strip with its three texts, in the label style, and a long one wraps`, async ({ page }) => {
+      const example = page.getByTestId(`strip-23-${lang}`);
+      const items = example.getByRole("listitem");
+      await expect(items).toHaveCount(3);
+      for (const item of await items.all()) await expect(item).toBeVisible();
+      const stripBox = await box(strip(page, `23-${lang}`));
+      const legendBox = await box(example.getByRole("list"));
+      expect(legendBox.y, "the legend is below the blocks").toBeGreaterThanOrEqual(stripBox.y + stripBox.height);
+
+      const style = await css(items.first(), ["font-size", "font-weight", "text-transform", "letter-spacing"]);
+      if (lang === "en") {
+        // DM Mono capitals, 14px, with letter-spacing.
+        expect(style).toEqual({ "font-size": "14px", "font-weight": "500", "text-transform": "uppercase", "letter-spacing": "0.56px" });
+        await expect(items).toHaveText(["14 paid", "4 due, hollow", "5 overdue, tall"]);
+      } else {
+        // Anek 600 at 15px, no capitals, no letter-spacing.
+        expect(style).toEqual({ "font-size": "15px", "font-weight": "600", "text-transform": "none", "letter-spacing": "normal" });
+        await expect(example.getByRole("list")).toContainText(scriptPattern[lang]);
+      }
+      // Colour supports the words: each text is its kind's colour, and the words say the kind.
+      expect((await css(example.locator('[data-legend="paid"]'), ["color"])).color).toBe(rgb("stamp"));
+      expect((await css(example.locator('[data-legend="due"]'), ["color"])).color).toBe(rgb("ink-soft"));
+      expect((await css(example.locator('[data-legend="overdue"]'), ["color"])).color).toBe(rgb("cloth"));
+
+      // The long legend takes more than one line and none of it is cut.
+      const long = page.getByTestId(`strip-long-${lang}`);
+      const longList = long.getByRole("list");
+      const shortHeight = legendBox.height / (await lineCount(example.getByRole("list")));
+      expect((await box(longList)).height, "the long legend is on more lines").toBeGreaterThan(shortHeight * 1.8);
+      for (const item of await long.getByRole("listitem").all()) {
+        expect(await holdsItsContent(item)).toBe(true);
+        expect(await css(item, ["text-overflow", "white-space"])).toEqual({ "text-overflow": "clip", "white-space": "normal" });
+        const b = await box(item);
+        expect(b.x).toBeGreaterThanOrEqual(0);
+        expect(b.x + b.width).toBeLessThanOrEqual(360);
+      }
+      expect(await sidewaysScroll(page)).toBe(0);
+    });
+  }
+
+  test("77, in the browser: the strip is one image with its text alternative; no block can be reached by Tab or tapped", async ({ page }) => {
+    await expect(strip(page, "23-en")).toHaveAccessibleName("23 students: 14 paid, 4 due, 5 overdue");
+    await expect(page.getByTestId("strip-23-hi").getByRole("img")).toHaveAccessibleName(/\p{Script=Devanagari}/u);
+    const inside = await page.getByTestId("section-student-strip").evaluate((el) => ({
+      focusable: el.querySelectorAll("a, button, input, select, textarea, [tabindex]").length,
+      hidden: [...el.querySelectorAll('[role="img"] span')].every((s) => s.getAttribute("aria-hidden") === "true"),
+      pointer: [...el.querySelectorAll('[role="img"] span')].filter((s) => getComputedStyle(s).cursor === "pointer").length,
+    }));
+    expect(inside).toEqual({ focusable: 0, hidden: true, pointer: 0 });
+  });
+
+  test("78: with colour removed, the three kinds are told apart by height and fill", async ({ page }, testInfo) => {
+    await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
+    const blocks = await measure(page, "23-en");
+    const kinds = (name: string) => blocks.filter((b) => b.kind === name);
+    // Overdue is the only tall one.
+    expect(new Set(kinds("overdue").map((b) => b.height))).toEqual(new Set([24]));
+    expect(new Set([...kinds("paid"), ...kinds("due")].map((b) => b.height))).toEqual(new Set([14]));
+    // Paid and due are the same height; due is the one with an outline and a light fill.
+    expect(new Set(kinds("due").map((b) => b.border))).toEqual(new Set(["2px"]));
+    expect(new Set(kinds("paid").map((b) => b.border))).toEqual(new Set(["0px"]));
+    expect(kinds("due")[0].fill).not.toBe(kinds("paid")[0].fill);
+
+    // What is actually drawn, in greyscale: the middle of a paid block is dark, the middle of a due
+    // block is light with a dark edge. Lightness is read from a screenshot, not compared with a baseline.
+    await strip(page, "23-en").scrollIntoViewIfNeeded();
+    const shot = await page.screenshot();
+    await attachScreenshot(testInfo, "student-strip-greyscale.png", shot);
+    const lightness = async (locator: Locator, where: "middle" | "edge") => {
+      const b = await box(locator);
+      const x = where === "middle" ? b.x + b.width / 2 : b.x + 1;
+      const y = b.y + b.height / 2;
+      return page.evaluate(
+        async ([base64, px, py]) => {
+          const image = new Image();
+          image.src = `data:image/png;base64,${base64}`;
+          await image.decode();
+          const canvas = document.createElement("canvas");
+          canvas.width = image.naturalWidth;
+          canvas.height = image.naturalHeight;
+          const context = canvas.getContext("2d")!;
+          context.drawImage(image, 0, 0);
+          const scale = image.naturalWidth / window.innerWidth;
+          const [r, g, b2] = context.getImageData(Math.round((px as number) * scale), Math.round((py as number) * scale), 1, 1).data;
+          return (r + g + b2) / 3;
+        },
+        [shot.toString("base64"), x, y] as const,
+      );
+    };
+    const paidMiddle = await lightness(blocksOf(page, "23-en", "paid").first(), "middle");
+    const dueMiddle = await lightness(blocksOf(page, "23-en", "due").first(), "middle");
+    const dueEdge = await lightness(blocksOf(page, "23-en", "due").first(), "edge");
+    const overdueMiddle = await lightness(blocksOf(page, "23-en", "overdue").first(), "middle");
+    expect(dueMiddle, "a due block is light inside").toBeGreaterThan(200);
+    expect(dueEdge, "and dark at its edge").toBeLessThan(80);
+    expect(paidMiddle, "a paid block is filled").toBeLessThan(140);
+    expect(overdueMiddle, "an overdue block is filled").toBeLessThan(140);
+  });
+
+  test("79: 1, 23 and 60 students at 360px: no sideways scroll, no block narrower than 8px, a hollow block keeps a hollow", async ({ page }) => {
+    expect(await sidewaysScroll(page)).toBe(0);
+    for (const [id, count] of [["1", 1], ["23-en", 23], ["60", 60], ["on-slip", 23]] as const) {
+      const blocks = await measure(page, id);
+      expect(blocks, id).toHaveLength(count);
+      const outer = await box(strip(page, id));
+      for (const b of blocks) {
+        expect(b.width, `${id}: block width`).toBeGreaterThanOrEqual(8);
+        expect(b.width, `${id}: a block is never wider than 24px`).toBeLessThanOrEqual(24.01);
+        expect(b.left, id).toBeGreaterThanOrEqual(outer.x - 0.5);
+        expect(b.right, id).toBeLessThanOrEqual(outer.x + outer.width + 0.5);
+        expect(b.right, id).toBeLessThanOrEqual(360);
+        // Hollow: what is left inside the 2px border on each side.
+        if (b.kind === "due") expect(b.width - 4, `${id}: hollow inside a due block`).toBeGreaterThanOrEqual(4);
+      }
+    }
+  });
+
+  test("79: one student is one block, not a bar; 60 students are three equal rows of 20", async ({ page }) => {
+    const one = await measure(page, "1");
+    expect(one[0].width).toBeCloseTo(24, 0);
+
+    const many = await measure(page, "60");
+    const rows = [...new Set(many.map((b) => Math.round(b.bottom)))].sort((a, b) => a - b);
+    expect(rows).toHaveLength(3);
+    for (const bottom of rows) expect(many.filter((b) => Math.round(b.bottom) === bottom)).toHaveLength(20);
+    // Rows are 24px tall and 3px apart, like the blocks.
+    expect(rows[1] - rows[0]).toBe(27);
+    expect(rows[2] - rows[1]).toBe(27);
+    expect((await css(strip(page, "60"), ["grid-template-columns"]))["grid-template-columns"].split(" ")).toHaveLength(20);
+  });
+
+  test("79: with no students the strip draws nothing", async ({ page }) => {
+    const empty = page.getByTestId("strip-0");
+    await expect(empty).toBeAttached();
+    expect(await empty.evaluate((el) => el.childNodes.length)).toBe(0);
+    expect(await empty.evaluate((el) => el.innerHTML)).toBe("");
+  });
+});
