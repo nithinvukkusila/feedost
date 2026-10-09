@@ -1,26 +1,13 @@
-// Fails if any message key is missing from any language file.
-import { readFileSync } from "node:fs";
+// Fails when a message file breaks a rule in scripts/i18n-check-lib.mjs. Run from the repo root;
+// it reads ./messages. `--strict` also fails on any TODO-translate value (the Release 0 gate).
+import { check, locales } from "./i18n-check-lib.mjs";
 
-const locales = ["en", "hi", "kn", "te"];
+const strict = process.argv.includes("--strict");
+const { problems, keyCount, todoCount } = check("messages", { strict });
 
-function keys(obj, prefix = "") {
-  return Object.entries(obj).flatMap(([k, v]) =>
-    v && typeof v === "object" ? keys(v, `${prefix}${k}.`) : [`${prefix}${k}`],
-  );
+for (const problem of problems) console.error(problem);
+if (problems.length) {
+  console.error(`i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
+  process.exit(1);
 }
-
-const sets = Object.fromEntries(
-  locales.map((l) => [l, new Set(keys(JSON.parse(readFileSync(`messages/${l}.json`, "utf8"))))]),
-);
-const all = new Set(locales.flatMap((l) => [...sets[l]]));
-let missing = 0;
-for (const key of [...all].sort()) {
-  for (const l of locales) {
-    if (!sets[l].has(key)) {
-      console.error(`messages/${l}.json is missing "${key}"`);
-      missing++;
-    }
-  }
-}
-if (missing) process.exit(1);
-console.log(`i18n: ${all.size} keys present in all ${locales.length} languages`);
+console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate`);
