@@ -108,9 +108,9 @@ The rules already stated apply to these too: text is passed in (66), no text und
 **Segmented**
 
 70. A group of two to four choices inside one 2px `ink` border with 4px corners. Segments are equal width, with a 2px `ink` line between them. Exactly one is selected: `ink` fill with `slip` text. The others have no fill and `ink` text. [unit + e2e]
-71. Each segment is at least 44px tall. A segment's text can have a second, smaller line (14px or larger), as in `Tool-reminder.dc.html`. Long text wraps and all segments grow to the same height; nothing is truncated. [e2e]
+71. (Changed after the F2b build.) Each segment is at least 48px tall, the same minimum as a button. The tap target sits inside the segment's 2px line, so a 44px segment gave a 42px target; at 48px the target is at least 44px. A segment's text can have a second, smaller line (14px or larger), as in `Tool-reminder.dc.html`. Long text wraps and all segments grow to the same height; nothing is truncated. [e2e]
 72. When four segments do not fit side by side at 360px, the group becomes two rows of two, with the lines kept between them, as in `Tool-reminder-m.dc.html`. [e2e]
-73. The group has a visible label in the label style, tied to it. The chosen segment is exposed to screen readers as the chosen one. It works by tap and by keyboard and reports the choice to the screen. [unit]
+73. (Changed after the F2b build.) The group has a visible label in the label style, tied to it. Each choice is a real radio input laid over its whole segment, not hidden, so the segment itself is the tap target and a tap anywhere in it chooses it. The input draws nothing of its own except the focus ring. The chosen segment is exposed to screen readers as the chosen one. It works by tap and by keyboard and reports the choice to the screen. [unit + e2e]
 74. The focus ring is visible on a selected and on an unselected segment and is not clipped by the group's border. In a greyscale screenshot the selected segment is still obvious. [e2e]
 
 **StudentStrip**
@@ -123,7 +123,7 @@ The rules already stated apply to these too: text is passed in (66), no text und
 
 **Switch**
 
-80. A square switch, 76px by 44px, 2px `ink` border, 4px corners. On: `stamp` green track with the knob at the right. The knob is a `slip` block with a 2px `ink` border that carries the passed-in word (canvas: "ON") at 14px, weight 800. [e2e]
+80. A square switch, 76px by 44px, 2px `ink` border, 4px corners. On: `stamp` green track with the knob at the right. The knob is a `slip` block with a 2px `ink` border that carries the passed-in word (canvas: "ON") at 14px, weight 800. (Changed after the F2b build.) On the green track the knob's shape is shown by its `slip` fill, which is 6.00:1 against `stamp`. Its `ink` edge is 2.80:1 against `stamp`, under 3:1; it is a reported pair under criterion 8 and no token was changed (Open question 21). [e2e]
 81. Off: the knob is at the left and carries the passed-in off word; the track is not green (exact look: Open question 14). On and off are told apart by the knob's position and its word, never by colour alone. [e2e]
 82. It is exposed to screen readers as a switch with a passed-in name and its on or off state. It works by tap and by keyboard and reports the change. The knob moves without animation. [unit + e2e]
 83. A longer knob word in Hindi, Kannada or Telugu is not truncated and not shrunk below 14px; the switch grows wider instead. [e2e]
@@ -141,7 +141,7 @@ The rules already stated apply to these too: text is passed in (66), no text und
 89. Offline: a full-width `ink` strip, a leading mark in `highlight`, a title in `slip` (16px, weight 700) and a detail line in `on-cloth` (14px or larger). No actions. It is announced politely as a status. [unit + e2e]
 90. Error: `slip` background, 2px `cloth` border, a solid `cloth` offset shadow, a title in `cloth` (18px, weight 800) and a detail line in `ink-soft` that says what happened and what is safe. Up to two actions, each at least 48px tall: the main one in `record` colours, the other outlined. It is announced at once as an alert. Red appears only in the border, title and shadow; there is no red button. [unit + e2e]
 91. Undo: `ink` background with 4px corners, a message in `slip` (16px, weight 700), and two actions at least 48px tall: one outlined in `slip` on the dark ground, one filled `slip` with `ink` text. The second can carry an icon and can be a link. It is announced politely as a status. [unit + e2e]
-92. Titles, details and action labels wrap; the two actions grow to the same height and the banner grows with them. Nothing is truncated. [e2e]
+92. (Changed after the F2b build.) Titles, details and action labels wrap and the banner grows with them. Two actions that sit side by side share one height, the taller one's. When both labels are too long to share a row, the second action drops below the first; each then fills the row and takes its own height, at least 48px. Nothing is truncated. [e2e]
 93. Focus rings inside the offline and undo banners (dark ground) are yellow. Actions are reachable by keyboard. The banner has no timer and never closes itself in F2; the screen that shows it decides (Open question 17). [unit + e2e]
 
 ### The `/dev/components` page
@@ -149,7 +149,7 @@ The rules already stated apply to these too: text is passed in (66), no text und
 59. It shows a type sample and the components with text in English, Hindi, Kannada and Telugu, each block marked with its `lang`, including one deliberately long label per script. [e2e]
 60. It shows the ₹ sign with digits 0–9 at headline size, reading size and row size, alone and inside each Indian script. [e2e + manual]
 61. At 360px wide the page has no sideways scroll. [e2e]
-62. Every interactive element on the page is at least 44px by 44px. [e2e]
+62. Every interactive element on the page is at least 44px by 44px. For a segment, the interactive element is its radio input, which covers the whole segment (criteria 71 and 73; note added after the F2b build). [e2e]
 63. With text scaled to 130% at 360px wide, nothing is clipped, overlapped or truncated, and there is still no sideways scroll. A headline amount never breaks inside the number: it stays on one line and shrinks to fit its container, never below 14px. [e2e + manual: check H4]
 64. With "reduce motion" on: the stamp does not animate and nothing else moves except state changes. [e2e]
 65. The page is marked `noindex` and is not linked from the home page. It is in local, CI and preview builds and is left out of the production build: a production build has no `/dev/components` route and requesting it gives "not found". [e2e for noindex; build check for production]
@@ -158,6 +158,7 @@ The rules already stated apply to these too: text is passed in (66), no text und
 66. The thirteen components contain no user-visible words of their own: every label, message and screen-reader name is passed in. The product name is not typed anywhere outside `src/config/brand.ts`. `pnpm i18n:check` still passes. [unit]
 67. `pnpm size` passes for `/` and `/dev/components`. The home page loads no component code it does not use; its JavaScript does not grow by more than a few KB over the F1 figure of about 132 KB. `tech-lead` records both numbers here. [`pnpm size`]
     - **Measured on the F2a build:** `/` 132.1 KB and `/dev/components` 136.4 KB of gzipped JavaScript, against the 200 KB limit.
+    - **Measured on the F2b build:** `/` 132.1 KB (unchanged) and `/dev/components` 138.7 KB of gzipped JavaScript, against the 200 KB limit.
 95. (Added after the F2a build.) Fitting an amount to its container is for headline amounts only. The `amount-size-*` classes exist only at headline sizes; row amounts and amounts in reading text are never fitted and always grow with the phone's font-size setting. The two sizes are 60px and 72px (`amount-size-6xl` and `amount-size-7xl`). Reason: small text must always follow the phone's font-size setting without being resized by us (see Open question 19). [unit]
 68. No runtime dependency is added. If `tech-lead` finds one is needed (for example for font subsetting or the sheet's focus handling), the dependency-policy check is written into this spec and the founder is asked first. [review]
 69. The only motion in the slice is the button press and the stamp. [review]
@@ -170,11 +171,11 @@ The rules already stated apply to these too: text is passed in (66), no text und
 - **Typing a long value in a field.** The field grows a line at a time as the value wraps; the mark stays beside the value; Enter submits and never adds a line; pasted line breaks become spaces.
 - **A row with both an amount and a tag.** Not allowed (criterion 94).
 - **14px floor.** Covered by criterion 4. The 10px date on the stamp in `Main.dc.html` is not built (criterion 45).
-- **44px targets.** Unselected tabs are exactly 44px; the sheet's close link and the row's link area must not fall below it when text is small.
+- **44px targets.** Unselected tabs are exactly 44px; the sheet's close link and the row's link area must not fall below it when text is small. A segment is 48px so that its target, inside the 2px line, stays at or above 44px (criterion 71).
 - **Status without colour.** Red and green are close in lightness. Tags, row meta, field states, the selected tab, the selected segment, the student strip, the switch, the current bottom-nav item and the three banners must all read correctly in a greyscale screenshot.
 - **Student strip at the extremes.** One student, 60 students (the PRD's upper end for a tutor), and none. A part-paid student has no shape of its own (Open question 15).
 - **Bottom nav with long labels.** Four columns of 90px at 360px; a long translated "Attendance" wraps and the bar grows.
-- **Banners.** A long error detail in Telugu at 130% must not push the actions off screen. Two banners at once is a screen matter, not F2's.
+- **Banners.** A long error detail in Telugu at 130% must not push the actions off screen. Two action labels too long to sit side by side stack, one above the other (criterion 92). Two banners at once is a screen matter, not F2's.
 - **Pressed, busy, disabled, focus.** A busy button must not fire twice. A disabled button must not look merely pale: dashed outline and no shadow. Focus must be visible on `page`, `slip`, cloth and the dark sheet ground.
 - **Reduced motion.** No stamp animation. Whether the 80ms press movement becomes instant is Open question 11.
 - **₹ and digits.** ₹ may be missing from Bricolage Grotesque or DM Mono; the fallback must not change the line height or look like a different weight. Amounts never switch to Devanagari, Kannada or Telugu digits.
@@ -232,11 +233,11 @@ Use a real Android phone with Chrome, a low-end one if there is one. Open `/dev/
 - **H10. Reduce motion.** Turn on "Remove animations" in Accessibility. The stamp example appears without the pop.
 - **H11. Slow network.** If possible, on mobile data: text appears at once and the fonts follow; nothing jumps badly.
   - **H11a. Labels on a first load.** The small capital labels (DM Mono) are no longer loaded ahead of time, so on a first visit they appear in another face and then change. Clear Chrome's data for the site, or use an incognito tab, and load the page on mobile data. Watch the small labels: say whether you notice the change, and whether anything near them moves when it happens.
-- **H12. Segmented.** Tap each choice in the two-, three- and four-part groups. The chosen one turns black with light text; only one is chosen at a time. The four-language group shows as two rows of two and nothing is cut off.
+- **H12. Segmented.** Tap each choice in the two-, three- and four-part groups. The chosen one turns black with light text; only one is chosen at a time. A tap anywhere in a segment chooses it, including near its edge and on the second line of a two-line segment. The four-language group shows as two rows of two and nothing is cut off.
 - **H13. Student strip.** With greyscale still on from H5, you can pick out paid (short, filled), due (short, hollow) and overdue (tall) blocks, and the words under the strip say the same. Look at the 60-student example: hollow blocks still look hollow.
-- **H14. Switch.** Tap it. The knob jumps to the other side and its word changes. You can tell on from off without relying on the green.
+- **H14. Switch.** Tap it. The knob jumps to the other side and its word changes. You can tell on from off without relying on the green. When it is on, look at the knob against the green: say whether its light block stands out clearly and whether its edge looks weak (this settles Open question 21).
 - **H15. Bottom nav.** The four items have an icon and a word; the current one has a red bar on top. With the largest font size and in the Hindi, Kannada and Telugu examples, every word is whole and the bar is taller, not clipped.
-- **H16. Banners.** Read the offline, error and undo examples. Each says in plain words what happened; the error one also says what is safe. Buttons inside them are easy to hit with a thumb. No banner is told apart by colour alone.
+- **H16. Banners.** Read the offline, error and undo examples. Each says in plain words what happened; the error one also says what is safe. Buttons inside them are easy to hit with a thumb. Two buttons side by side are the same height. In the long-text examples, and at the largest font size, the second button may sit below the first: each is then whole, full width and not squeezed. No banner is told apart by colour alone.
 
 ## Decided by the founder, 2026-10-09
 These were open questions 2, 4 and 12. The numbers of the remaining questions are unchanged.
@@ -271,6 +272,7 @@ Only the founder can settle these. Each has a recommendation. Until answered, th
     - **If H4b shows the amount running off the screen:** fix it by measuring the rendered amount, before any screen uses a fitted amount (R0-1 at the latest). Do not bring back `text-size-adjust`.
     - **If H4a shows ordinary text does not grow:** the whole site is ignoring the phone's font-size setting. That is a failure of PRD §9 and of criterion 63 and must be fixed before any screen a tutor or parent uses ships. Neither result holds up merging F2a, which has no such screen. Until H4 is run, the manual half of criterion 63 is not proven.
 20. **Oldest phones supported.** The build works on Chrome and Android WebView 111 and later and on iOS 16.4 and later (the floor set by Tailwind 4, chosen in F1). Android 6 and older, and iPhones older than the iPhone 8, will show broken styling. The PRD says "low-end Android" without a version. Recommendation: accept this floor, since Chrome updates itself on Android 8 and later and Android 7 reaches Chrome 119; write the floor into PRD §9 so it is a stated decision; and check the share of older phones in PostHog once Release 0 has traffic.
+21. **Switch knob edge on the green track (found during the F2b build).** When the switch is on, the knob's 2px `ink` edge sits on the `stamp` green track at 2.80:1. The usual minimum for an edge that carries meaning is 3:1 (criterion 8). The knob's `slip` fill on the same track is 6.00:1, and that fill is what shows the knob's shape there. On and off are also told apart by the knob's position and its word, which is `ink` on `slip`. When the switch is off it is the other way round: the fill is close to the `tab-idle` track and the `ink` edge (12.2:1) shows the shape. The pair is recorded in `src/styles/contrast.ts` as reported, and a unit test keeps it on record. No token was changed. Recommendation: accept it as built, because the edge is not the only thing that shows the knob in either state; confirm by eye in hand check H14 before the first screen uses the switch (Release 2). If the founder wants every edge at 3:1 regardless, that is a change to the `stamp` or `ink` token or to the knob's design, and it goes back to design, not to a quiet fix in code.
 
 ## Carry forward to later slices
 - **R1-7 and R1-12 (banners):** keep a live-region wrapper mounted on the screen at all times and put the banner inside it when it appears. A banner that mounts together with its own live region is often not announced by screen readers.
@@ -279,10 +281,11 @@ Only the founder can settle these. Each has a recommendation. Until answered, th
 - **R0-1 (landing page):** revisit preloading DM Mono once labels sit above the fold; today it is not preloaded and labels swap face on a first load (hand check H11a).
 - **Rows:** a screen must not give a row both an amount and a status tag (criterion 94).
 - **Blue grounds:** the first slice that puts a focusable control on a blue ground adds the yellow-ring test left open in criterion 21.
+- **Before the first screen uses `Switch` (Release 2):** the founder's answer to Open question 21 (knob edge on the green track) and hand check H14.
 - **Needs the founder before Release 0:** the browser floor (Open question 20), a per-language font-bytes ceiling (Open question 10), and the phone checks H3 and H4.
 
 ## Hand-off
-F2a (criteria 1 to 69) is built and is pull request #2 on `f2-design-system`. Criteria 94 and 95 were added after that build and still need to be checked against it. F2b (criteria 70 to 93) follows. The technical plans are below.
+F2a (criteria 1 to 69) merged as pull request #2. Criteria 94 and 95 were added after that build and still need to be checked against it. F2b (criteria 70 to 93) is built and is pull request #3 on `f2b-components`. Criteria 62, 71, 73, 80 and 92 were reworded after the F2b build to match it; the reasons are in section 9a of the F2b technical plan. Open question 21 is new and is for the founder. Hand checks H12 to H16 have not been run on a phone yet. The technical plans are below.
 
 ## Technical plan
 
@@ -783,6 +786,18 @@ Playwright in the existing `phone` project at 360px against `out/`. Criteria 58,
 6. **Open question 15.** Minimum block width is 8px, not 6px, and rows are equal (60 gives 20, 20, 20) instead of filling the first row and leaving a short second one. Same intent, steadier look.
 7. **Open question 6.** The flat form is a separate `FlatButton`, not a prop on `Button`, so `Button`'s API does not grow a switch that screens could reach.
 8. Open questions 14, 16, 17, 18: planned exactly as recommended; no objection. Question 16's "Indian-script labels at 15px" comes from the `type-caption` role's script settings.
+
+### 9a. Departures found during the build, 2026-10-09
+
+Added by `product-manager` after the build, from pull request #3 and the code at `1ff123e`. Section 9 above is the plan as written and is unchanged. Where this section and sections 3, 6 or 8 disagree, this section says what was built.
+
+1. **Criterion 71, segment height.** Segments are `min-h-control` (48px), not `min-h-tap` (44px). The tap target is the radio input, and it sits inside the segment's 2px line, so a 44px segment gave a 42px target. Criterion 71 now says 48px.
+2. **Criteria 73 and 62, the radio input.** The radio is not visually hidden, as sections 3 and 8 planned. It is laid over its whole segment (`absolute inset-0`, `appearance-none`) and draws nothing of its own. The segment itself is therefore the real tap target, and focusing it cannot scroll the page. The focus ring is drawn on the radio with `ring-inset`, not on the label with `has-[:focus-visible]`; the forced-focus example puts `data-force="focus"` on the radio. The selected segment marks itself `on-dark-ground`, which is what makes its ring yellow.
+3. **Criterion 92, banner actions.** Side by side the two actions stretch to one height. When both labels are too long to share a row, the second drops below the first; each then fills the row and takes its own height. Section 3 already planned the drop; the criterion's words "grow to the same height" did not allow for it, and now do. The lesser action is never narrower than 96px.
+4. **How criterion 63 is checked (`e2e/helpers.ts`).** The cut-off-text check (`textProblems`) no longer treats a radio or a checkbox as a control that shows a value. Because of point 2, a segment's radio covers its own label, and counted as a "value" it was reported as overlapping that label. A radio's words are its label's, and the label is still walked as text. This is a change to a test helper only; criterion 63 itself is unchanged.
+5. **Criteria 8, 80 and 81, one contrast number under 3:1.** The switch knob's `ink` edge on the green (`stamp`) track is 2.80:1. The knob's `slip` fill on that track is 6.00:1 and is what shows the knob's shape. The pair is listed in `src/styles/contrast.ts` under `reportedPairs`, with `slip` on `stamp` and `ink` on `tab-idle` added to the pairs that must pass. No token was changed, as criterion 8 requires. It is Open question 21 for the founder.
+
+Not yet matched by a test: the Playwright check for criterion 71 still asserts 44px for the segment and for its target. It passes, but it would also pass if segments went back to 44px. A unit test does assert the `min-h-control` class. `test-engineer` should raise the segment figure in the Playwright check to 48.
 
 ### 10. One correction for the F2a plan
 
