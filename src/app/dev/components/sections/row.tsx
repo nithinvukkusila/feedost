@@ -30,7 +30,7 @@ export function RowSection() {
                     meta={r.metaDue}
                     tone="due"
                     // As on the canvas: a row with a status tag has no amount column.
-                    trailing={<StatusTag status="due">{s.tag.due}</StatusTag>}
+                    tag={<StatusTag status="due">{s.tag.due}</StatusTag>}
                   />
                   <Row
                     name={r.name3}

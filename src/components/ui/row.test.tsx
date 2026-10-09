@@ -1,8 +1,12 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Row, Rows, type RowTone } from "./row";
+import { StatusTag } from "./status-tag";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const classes = (el: Element) => el.className.split(/\s+/);
 
@@ -137,5 +141,65 @@ describe("Row amount (criterion 40)", () => {
     const amount = screen.getByText("₹1,200");
     expect(classes(amount)).toContain("type-amount-row");
     expect(amount.getAttribute("translate")).toBe("no");
+  });
+});
+
+describe("Row: an amount or a status tag, never both (criterion 94)", () => {
+  it("shows a status tag in the trailing place when given one", () => {
+    render(
+      <Rows>
+        <Row name="Ananya Sharma" meta="Due on the 12th" tone="due" tag={<StatusTag status="due">Due 12 Oct</StatusTag>} />
+      </Rows>,
+    );
+    const item = screen.getByRole("listitem");
+    const tag = screen.getByText("Due 12 Oct");
+    expect(classes(tag.parentElement!)).toContain("shrink-0");
+    expect(item.lastElementChild).toBe(tag.parentElement);
+    expect(item.querySelector("[translate]")).toBeNull();
+  });
+
+  it("refuses an amount beside a tag, by type", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <Rows>
+        {/* @ts-expect-error a row with a tag has no amount */}
+        <Row name="A" meta="Due" tone="due" amount="₹1,200" tag={<StatusTag status="due">Due</StatusTag>} />
+      </Rows>,
+    );
+    expect(screen.getByText("A")).toBeTruthy();
+  });
+
+  it("refuses another trailing item beside a tag, by type", () => {
+    render(
+      <Rows>
+        {/* @ts-expect-error a row with a tag has no other trailing item */}
+        <Row name="A" meta="Due" tone="due" tag={<StatusTag status="due">Due</StatusTag>} trailing={<button type="button">Remind</button>} />
+      </Rows>,
+    );
+    expect(screen.getByText("A")).toBeTruthy();
+  });
+
+  it("still allows an amount with an action, an amount alone, and neither", () => {
+    render(
+      <Rows>
+        <Row name="A" meta="7 days late" tone="overdue" amount="₹1,200" trailing={<button type="button">Remind</button>} />
+        <Row name="B" meta="7 days late" tone="overdue" amount="₹1,200" />
+        <Row name="C" meta="7 days late" tone="overdue" />
+      </Rows>,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  });
+
+  it("says so in development when a tag is slipped in as the trailing item beside an amount", () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(
+      <Rows>
+        <Row name="A" meta="Due" tone="due" amount="₹1,200" trailing={<StatusTag status="due">Due</StatusTag>} />
+        <Row name="B" meta="7 days late" tone="overdue" amount="₹1,200" trailing={<button type="button">Remind</button>} />
+        <Row name="C" meta="Due" tone="due" trailing={<StatusTag status="due">Due</StatusTag>} />
+      </Rows>,
+    );
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error.mock.calls[0][0]).toContain("amount and a status tag");
   });
 });
