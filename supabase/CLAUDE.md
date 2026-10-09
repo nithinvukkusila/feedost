@@ -5,7 +5,7 @@ Read the root `CLAUDE.md` first. These rules are specific to the backend.
 ## Layout
 
 ```
-supabase/migrations/      numbered SQL migrations, the only way the schema changes
+supabase/migrations/      SQL migrations named <timestamp>_name.sql by `supabase migration new`, the only way the schema changes
 supabase/functions/       Edge Functions (Deno)
 supabase/tests/           pgTAP tests for RLS and database functions
 supabase/seed.sql         local sample data (the "try with sample data" tutor)
