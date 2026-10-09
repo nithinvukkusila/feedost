@@ -1,8 +1,8 @@
 // @vitest-environment node
 // F4 criteria 1, 4, 5, 26, 28, 29, 36 and 48: the Supabase project files are what the spec says.
-// Folders that later steps add (migrations, tests, functions/health) are checked when those steps land.
+// functions/health is checked when step 5 lands it.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -57,6 +57,45 @@ describe("the CLI dependency (criterion 5)", () => {
     for (const name of ["db:start", "db:stop", "db:reset", "db:test"]) {
       expect(pkg.scripts[name], name).toMatch(/supabase/);
     }
+  });
+});
+
+describe("the migrations, functions and tests folders (criteria 1, 7 and 10)", () => {
+  const tracked = (path: string) =>
+    spawnSync("git", ["ls-files", "--error-unmatch", path], { cwd: root }).status === 0;
+
+  it("exist and hold tracked files", () => {
+    for (const dir of ["supabase/migrations", "supabase/tests", "supabase/functions"]) {
+      expect(existsSync(join(root, dir)), dir).toBe(true);
+    }
+    // functions/ holds only .gitkeep until step 5 adds health/ and removes it.
+    const inFunctions = spawnSync("git", ["ls-files", "supabase/functions"], { cwd: root, encoding: "utf8" });
+    expect(inFunctions.stdout.trim()).not.toBe("");
+    for (const file of readdirSync(join(root, "supabase", "migrations"))) {
+      expect(tracked(`supabase/migrations/${file}`), file).toBe(true);
+    }
+    for (const file of readdirSync(join(root, "supabase", "tests"))) {
+      expect(tracked(`supabase/tests/${file}`), file).toBe(true);
+    }
+  });
+
+  it("have exactly one migration, the baseline, and it creates no table", () => {
+    const files = readdirSync(join(root, "supabase", "migrations"));
+    expect(files).toHaveLength(1);
+    expect(files[0]).toMatch(/^\d{14}_f4_baseline\.sql$/);
+    expect(read(`supabase/migrations/${files[0]}`)).not.toMatch(/create\s+table/i);
+  });
+
+  it("have the shared helper and the three RLS and privilege tests", () => {
+    const names = readdirSync(join(root, "supabase", "tests")).sort();
+    expect(names).toEqual(
+      expect.arrayContaining([
+        "000_helpers.sql",
+        "010_rls_probe.sql",
+        "020_public_tables_have_rls.sql",
+        "030_default_privileges.sql",
+      ]),
+    );
   });
 });
 
@@ -153,5 +192,29 @@ describe("vercel.json (criterion 36)", () => {
       $schema: "https://openapi.vercel.sh/vercel.json",
       git: { deploymentEnabled: { main: false } },
     });
+  });
+});
+
+describe("the database job in ci.yml (criteria 14, 15 and 34)", () => {
+  const ci = read(".github/workflows/ci.yml");
+  const job = ci.slice(ci.indexOf("\n  database:"));
+
+  it("exists beside the check job with no needs between them", () => {
+    expect(ci).toMatch(/\n {2}check:/);
+    expect(ci).toMatch(/\n {2}database:/);
+    expect(ci).not.toMatch(/\bneeds:/);
+  });
+
+  it("stops after 15 minutes and runs check:db, reset, and the tests twice", () => {
+    expect(job).toMatch(/timeout-minutes: 15/);
+    expect(job).toContain("fetch-depth: 0");
+    expect(job).toMatch(/pnpm check:db --base/);
+    expect(job).toContain("pnpm db:reset");
+    expect(job.match(/pnpm db:test/g)).toHaveLength(2);
+  });
+
+  it("picks the base by event: the pull request target, or the push's previous commit", () => {
+    expect(job).toContain("origin/$BASE_REF");
+    expect(job).toContain("github.event.before");
   });
 });
