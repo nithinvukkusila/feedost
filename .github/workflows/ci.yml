@@ -37,8 +37,14 @@ jobs:
         # The folder must be gone, and so must the page's own words (a chunk could carry them without the route).
         run: |
           VERCEL_ENV=production pnpm build
-          test ! -e out/dev
-          ! grep -rqF "Venkatasubrahmanyalakshminarasimharao" out
+          if [ -e out/dev ]; then
+            echo "out/dev exists in a production build"
+            exit 1
+          fi
+          if grep -rqF "Venkatasubrahmanyalakshminarasimharao" out; then
+            echo "a dev-page sample string is in the production build"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
