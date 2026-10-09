@@ -184,8 +184,8 @@ export function SegmentedDemo({
 }
 
 /**
- * A working switch. With `visibleLabel` the words sit beside it and name it; otherwise `label` is
- * its name for screen readers. The test id is `switch-<id>`.
+ * A working switch. With `visibleLabel` the words sit beside it in a `<label>` that names it and
+ * passes a tap on to it; otherwise `label` is its name for screen readers. The test id is `switch-<id>`.
  */
 export function SwitchDemo({
   id,
@@ -206,14 +206,15 @@ export function SwitchDemo({
 }) {
   const [on, setOn] = useState(start);
   const labelId = useId();
+  const switchId = useId();
   const shared = { checked: on, onChange: setOn, onText, offText, "data-testid": `switch-${id}`, "data-force": force };
   if (visibleLabel !== undefined) {
     return (
       <div className="flex items-center justify-between gap-4">
-        <span id={labelId} className="type-body min-w-0 font-bold wrap-anywhere">
+        <label id={labelId} htmlFor={switchId} className="type-body min-w-0 font-bold wrap-anywhere">
           {visibleLabel}
-        </span>
-        <Switch {...shared} labelledBy={labelId} />
+        </label>
+        <Switch {...shared} id={switchId} labelledBy={labelId} />
       </div>
     );
   }

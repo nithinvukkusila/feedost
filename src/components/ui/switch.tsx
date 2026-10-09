@@ -5,7 +5,17 @@ import type { ReactNode } from "react";
 import type { DataAttributes } from "@/lib/data-attributes";
 
 // Either a name of its own, or the id of visible text on the screen that names it.
-type Named = { label: string; labelledBy?: undefined } | { labelledBy: string; label?: undefined };
+type Named =
+  | { label: string; labelledBy?: undefined }
+  | {
+      /**
+       * The id of the visible words that name the switch. Make those words a
+       * `<label htmlFor={id}>` with the switch's `id`, so that tapping the words switches it too.
+       * A plain `<span>` names it but ignores the tap.
+       */
+      labelledBy: string;
+      label?: undefined;
+    };
 
 export type SwitchProps = Named &
   DataAttributes & {
@@ -16,6 +26,7 @@ export type SwitchProps = Named &
     onText: ReactNode;
     /** The word on the knob when off, for example "OFF". */
     offText: ReactNode;
+    /** For a `<label htmlFor>` on the screen to point at. */
     id?: string;
   };
 

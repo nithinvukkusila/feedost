@@ -53,6 +53,31 @@ describe("Switch element and name (criterion 82)", () => {
     expect(control.hasAttribute("aria-label")).toBe(false);
   });
 
+  it("is switched by a tap on a label that points at it, and takes its name from that label once", async () => {
+    function Labelled() {
+      const [on, setOn] = useState(false);
+      return (
+        <>
+          <label id="report-label" htmlFor="report">
+            Monthly report to parents
+          </label>
+          <Switch id="report" labelledBy="report-label" checked={on} onChange={setOn} onText="ON" offText="OFF" />
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<Labelled />);
+    const control = screen.getByRole("switch", { name: "Monthly report to parents" });
+    expect(control.getAttribute("id")).toBe("report");
+    expect(screen.getByLabelText("Monthly report to parents")).toBe(control);
+    await user.click(screen.getByText("Monthly report to parents"));
+    expect(control.getAttribute("aria-checked")).toBe("true");
+    await user.click(screen.getByText("Monthly report to parents"));
+    expect(control.getAttribute("aria-checked")).toBe("false");
+    // The words stay outside the component: it still holds only its knob.
+    expect(control.textContent).toBe("OFFON");
+  });
+
   it("cannot be drawn without a name, by type", () => {
     // @ts-expect-error either `label` or `labelledBy`
     render(<Switch checked onChange={() => {}} onText="ON" offText="OFF" />);
