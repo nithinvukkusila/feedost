@@ -29,7 +29,7 @@ export function tabId(panelId: string, id: string): string {
 }
 
 const base =
-  "type-control-sm flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 rounded-t-tab border-2 border-b-0 border-ink px-2 py-2 text-center ring:ground-ring";
+  "type-control-sm flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 rounded-t-tab border-2 border-b-0 border-ink px-1 py-2 text-center ring:ground-ring";
 
 // Selected: 48px, slip coloured, and a strip of slip colour over the slip's top border beneath it,
 // which is what removes the line between the tab and the slip.

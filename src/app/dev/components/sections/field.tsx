@@ -33,7 +33,7 @@ export function FieldSection() {
             defaultValue={en.wrong}
             state="error"
             stateLabel={en.errorLabel}
-            message={en.errorMessage}
+            message={en.errorShort}
             {...upi}
           />
         </Example>

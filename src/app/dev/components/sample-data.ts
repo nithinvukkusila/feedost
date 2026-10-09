@@ -77,6 +77,7 @@ export type Sample = {
     correctMessage: string;
     errorLabel: string;
     errorMessage: string;
+    errorShort: string;
     helper: string;
   };
   tabs: {
@@ -154,6 +155,7 @@ export const sample: Record<Lang, Sample> = {
       correctMessage: "That looks like a valid UPI ID.",
       errorLabel: "needs fixing",
       errorMessage: "This is missing the part after @. A UPI ID looks like name@bank",
+      errorShort: "Add the part after @, like name@bank",
       helper: "Parents pay you directly to this ID.",
     },
     tabs: {
@@ -229,6 +231,7 @@ export const sample: Record<Lang, Sample> = {
       correctMessage: "यह सही UPI ID लगती है।",
       errorLabel: "ठीक करना है",
       errorMessage: "इसमें @ के बाद का हिस्सा नहीं है। UPI ID ऐसी दिखती है: name@bank",
+      errorShort: "@ के बाद का हिस्सा जोड़ें: name@bank",
       helper: "अभिभावक सीधे इसी ID पर भुगतान करते हैं।",
     },
     tabs: {
@@ -304,6 +307,7 @@ export const sample: Record<Lang, Sample> = {
       correctMessage: "ಇದು ಸರಿಯಾದ UPI ID ಯಂತೆ ಕಾಣುತ್ತದೆ.",
       errorLabel: "ಸರಿಪಡಿಸಬೇಕು",
       errorMessage: "@ ನಂತರದ ಭಾಗ ಇಲ್ಲ. UPI ID ಹೀಗಿರುತ್ತದೆ: name@bank",
+      errorShort: "@ ನಂತರದ ಭಾಗ ಸೇರಿಸಿ: name@bank",
       helper: "ಪೋಷಕರು ನೇರವಾಗಿ ಈ ID ಗೆ ಪಾವತಿಸುತ್ತಾರೆ.",
     },
     tabs: {
@@ -379,6 +383,7 @@ export const sample: Record<Lang, Sample> = {
       correctMessage: "ఇది సరైన UPI ID లా ఉంది.",
       errorLabel: "సరిచేయాలి",
       errorMessage: "@ తర్వాత భాగం లేదు. UPI ID ఇలా ఉంటుంది: name@bank",
+      errorShort: "@ తర్వాత భాగం జోడించండి: name@bank",
       helper: "తల్లిదండ్రులు నేరుగా ఈ ID కి చెల్లిస్తారు.",
     },
     tabs: {
