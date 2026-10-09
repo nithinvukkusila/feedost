@@ -10,16 +10,19 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "size": "node scripts/size.mjs",
+    "check:leak": "node scripts/check-locale-leak.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
     "fonts:report": "node scripts/font-report.mjs",
     "serve:lan": "HOST=0.0.0.0 PORT=4173 node scripts/serve-out.mjs"
   },
   "dependencies": {
     "next": "16.4.0",
+    "next-intl": "4.14.7",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@formatjs/icu-messageformat-parser": "3.5.20",
     "@playwright/test": "1.64.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/react": "16.3.3",

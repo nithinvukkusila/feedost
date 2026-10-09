@@ -1,133 +1,14 @@
-// Criterion 66: design-system components hold no user-visible words of their own, and the product
-// name is typed only in src/config/brand.ts.
-import { readdirSync, readFileSync, statSync } from "node:fs";
+// Criterion 66 (F2) and criterion 43 (F3): components and pages hold no user-visible words of their
+// own, and the product name is typed only in src/config/brand.ts.
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { brand } from "@/config/brand";
+import { findOwnWords, walk } from "@/test-utils/find-own-words";
 
 const root = process.cwd();
 const uiDir = join(root, "src", "components", "ui");
-
-// Attributes whose value is read out or shown to the user.
-const spoken = new Set([
-  "aria-label",
-  "aria-description",
-  "aria-roledescription",
-  "aria-valuetext",
-  "aria-placeholder",
-  "title",
-  "placeholder",
-  "alt",
-  "label",
-]);
-
-const hasLetter = (text: string) => /\p{L}/u.test(text);
-
-/**
- * Words a component would show or speak by itself: JSX text, string children, spoken attributes.
- * A string is followed through `a ? "x" : "y"`, `a && "x"`, `a ?? "x"`, brackets, template strings,
- * and a module-level `const NAME = "x"` used by name.
- * Not followed: a string returned by a function, held in an object or array, or imported from
- * another file. Those need a reviewer's eye.
- */
-export function findOwnWords(source: string, fileName = "component.tsx"): string[] {
-  const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  const found: string[] = [];
-
-  // Module-level constants that are plain strings.
-  const constants = new Map<string, ts.Expression>();
-  for (const statement of file.statements) {
-    if (!ts.isVariableStatement(statement)) continue;
-    for (const decl of statement.declarationList.declarations) {
-      if (ts.isIdentifier(decl.name) && decl.initializer) constants.set(decl.name.text, decl.initializer);
-    }
-  }
-
-  /** Every literal string an expression can turn into. */
-  const words = (expr: ts.Expression | undefined, seen = new Set<string>()): string[] => {
-    if (!expr) return [];
-    if (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr)) return [expr.text];
-    if (ts.isTemplateExpression(expr)) return [expr.head.text, ...expr.templateSpans.map((span) => span.literal.text)];
-    if (ts.isConditionalExpression(expr)) return [...words(expr.whenTrue, seen), ...words(expr.whenFalse, seen)];
-    if (ts.isParenthesizedExpression(expr) || ts.isAsExpression(expr) || ts.isNonNullExpression(expr) || ts.isSatisfiesExpression(expr)) {
-      return words(expr.expression, seen);
-    }
-    if (ts.isBinaryExpression(expr)) {
-      const op = expr.operatorToken.kind;
-      const joins =
-        op === ts.SyntaxKind.AmpersandAmpersandToken ||
-        op === ts.SyntaxKind.BarBarToken ||
-        op === ts.SyntaxKind.QuestionQuestionToken ||
-        op === ts.SyntaxKind.PlusToken;
-      return joins ? [...words(expr.left, seen), ...words(expr.right, seen)] : [];
-    }
-    if (ts.isIdentifier(expr) && constants.has(expr.text) && !seen.has(expr.text)) {
-      seen.add(expr.text);
-      return words(constants.get(expr.text), seen);
-    }
-    return [];
-  };
-
-  const visit = (node: ts.Node) => {
-    if (ts.isJsxText(node) && hasLetter(node.text)) {
-      found.push(`text "${node.text.trim()}"`);
-    } else if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
-      for (const text of words(node.expression)) if (hasLetter(text)) found.push(`text "${text}"`);
-    } else if (ts.isJsxAttribute(node) && spoken.has(node.name.getText(file)) && node.initializer) {
-      const value = ts.isJsxExpression(node.initializer) ? node.initializer.expression : node.initializer;
-      for (const text of words(value)) if (hasLetter(text)) found.push(`${node.name.getText(file)}="${text}"`);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(file);
-  return found;
-}
-
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const path = join(dir, name);
-    return statSync(path).isDirectory() ? walk(path) : [path];
-  });
-}
-
-describe("findOwnWords", () => {
-  it("flags JSX text, string children and spoken attributes", () => {
-    expect(findOwnWords("const a = <button>Save</button>;")).toEqual(['text "Save"']);
-    expect(findOwnWords('const a = <p>{"Saved"}</p>;')).toEqual(['text "Saved"']);
-    expect(findOwnWords('const a = <button aria-label="Close" />;')).toEqual(['aria-label="Close"']);
-    expect(findOwnWords('const a = <input placeholder={"name@bank"} />;')).toEqual(['placeholder="name@bank"']);
-    expect(findOwnWords("const a = <p>जमा</p>;")).toEqual(['text "जमा"']);
-  });
-
-  it("follows a string through a condition, a fallback and a template", () => {
-    expect(findOwnWords('const a = <button>{open ? "Close" : "Open"}</button>;')).toEqual(['text "Close"', 'text "Open"']);
-    expect(findOwnWords('const a = <p>{busy && "Saving"}</p>;')).toEqual(['text "Saving"']);
-    expect(findOwnWords('const a = <p>{label ?? "Untitled"}</p>;')).toEqual(['text "Untitled"']);
-    expect(findOwnWords("const a = <p>{`Step ${n}`}</p>;")).toEqual(['text "Step "']);
-    expect(findOwnWords('const a = <button aria-label={open ? "Close" : label} />;')).toEqual(['aria-label="Close"']);
-  });
-
-  it("follows a module constant used by name", () => {
-    expect(findOwnWords('const LABEL = "Close";\nconst a = <button aria-label={LABEL} />;')).toEqual(['aria-label="Close"']);
-    expect(findOwnWords('const WORD = "Paid";\nconst a = <span>{WORD}</span>;')).toEqual(['text "Paid"']);
-    expect(findOwnWords('const A = B;\nconst B = "Loop";\nconst a = <span>{A}</span>;')).toEqual(['text "Loop"']);
-    // Class-name constants are not words shown to anyone.
-    expect(findOwnWords('const base = "flex items-center";\nconst a = <span className={base}>{children}</span>;')).toEqual([]);
-  });
-
-  it("allows passed-in text, class names, roles, spacing and comments", () => {
-    const source = `
-      const a = (
-        <button type="button" role="tab" className="type-label" aria-hidden="true" aria-label={label}>
-          {/* a comment with words */}
-          {children}{" "}
-          <span>{count}</span>
-        </button>
-      );`;
-    expect(findOwnWords(source)).toEqual([]);
-  });
-});
 
 describe("components hold no words of their own (criterion 66)", () => {
   const files = readdirSync(uiDir).filter((name) => name.endsWith(".tsx") && !name.endsWith(".test.tsx"));
@@ -141,6 +22,63 @@ describe("components hold no words of their own (criterion 66)", () => {
 
   it.each(files)("%s shows and speaks only what it is given", (name) => {
     expect(findOwnWords(readFileSync(join(uiDir, name), "utf8"), name)).toEqual([]);
+  });
+});
+
+/** Criterion 43: every .tsx under src/app (not dev) and src/components (not ui), tests aside. */
+function pageAndFeatureFiles(base: string): string[] {
+  const app = join(base, "src", "app");
+  const components = join(base, "src", "components");
+  const exists = (dir: string) => {
+    try {
+      return readdirSync(dir).length >= 0;
+    } catch {
+      return false;
+    }
+  };
+  return [...(exists(app) ? walk(app) : []), ...(exists(components) ? walk(components) : [])]
+    .filter((path) => path.endsWith(".tsx") && !/\.(test|spec)\.tsx$/.test(path))
+    .filter((path) => !path.startsWith(join(app, "dev") + "/") && !path.startsWith(join(components, "ui") + "/"));
+}
+
+function wordsIn(base: string): string[] {
+  return pageAndFeatureFiles(base).flatMap((path) =>
+    findOwnWords(readFileSync(path, "utf8"), path).map((word) => `${path.slice(base.length + 1)}: ${word}`),
+  );
+}
+
+describe("pages and feature components hold no words of their own (criterion 43)", () => {
+  it("finds the real files, so the scan means something", () => {
+    const names = pageAndFeatureFiles(root).map((path) => path.slice(root.length + 1));
+    expect(names).toContain("src/app/[locale]/page.tsx");
+    expect(names).toContain("src/app/[locale]/layout.tsx");
+    expect(names).toContain("src/app/(jump)/page.tsx");
+    expect(names).toContain("src/components/shell/html-shell.tsx");
+    expect(names).toContain("src/components/i18n/client-messages.tsx");
+    expect(names.some((name) => name.startsWith("src/app/dev/") || name.startsWith("src/components/ui/"))).toBe(false);
+  });
+
+  it("finds no English or other word typed in them", () => {
+    expect(wordsIn(root)).toEqual([]);
+  });
+
+  it("does flag a word typed in a page, and skips dev, ui and test files", () => {
+    const fake = mkdtempSync(join(tmpdir(), "no-strings-"));
+    try {
+      const put = (path: string, source: string) => {
+        mkdirSync(join(fake, path, ".."), { recursive: true });
+        writeFileSync(join(fake, path), source);
+      };
+      put("src/app/page.tsx", "export default function P() { return <p>Hello</p>; }\n");
+      put("src/components/feature/card.tsx", 'export const C = () => <button aria-label="Close" />;\n');
+      put("src/app/dev/page.dev.tsx", "export const D = () => <p>Hello</p>;\n");
+      put("src/app/dev/other.tsx", "export const D = () => <p>Hello</p>;\n");
+      put("src/components/ui/thing.tsx", "export const T = () => <p>Hello</p>;\n");
+      put("src/components/feature/card.test.tsx", "export const T = () => <p>Hello</p>;\n");
+      expect(wordsIn(fake).sort()).toEqual(['src/app/page.tsx: text "Hello"', 'src/components/feature/card.tsx: aria-label="Close"']);
+    } finally {
+      rmSync(fake, { recursive: true, force: true });
+    }
   });
 });
 

@@ -4,6 +4,8 @@
 // The Hindi, Kannada and Telugu strings are drafts for checking how the scripts set. A native speaker
 // has not reviewed them; do not copy them into messages/*.json.
 
+import { formatDate, formatRupees } from "@/lib/format";
+
 export type Lang = "en" | "hi" | "kn" | "te";
 
 export const langs: Lang[] = ["en", "hi", "kn", "te"];
@@ -16,18 +18,25 @@ export const langNames: Record<Lang, string> = {
   te: "Telugu",
 };
 
-/** Amounts and dates are plain strings here; formatRupees() and formatDate() arrive in F3. */
+/** Amounts and dates come from the formatters. `allDigits` and `rupee` stay literal: they test the glyphs. */
 export const figures = {
-  large: "₹1,23,456",
-  largeRest: "₹78,900",
-  sixWide: "₹9,87,650",
-  sevenDigits: "₹99,99,999",
-  row: "₹1,200",
-  rowLarge: "₹1,23,456",
+  large: formatRupees(12345600),
+  largeRest: formatRupees(7890000),
+  sixWide: formatRupees(98765000),
+  sevenDigits: formatRupees(999999900),
+  row: formatRupees(120000),
+  rowLarge: formatRupees(12345600),
   allDigits: "₹0123456789",
   rupee: "₹",
-  date: "08 Oct 2026",
-  fee: "₹18,500",
+  date: formatDate("2026-10-08"),
+  fee: formatRupees(1850000),
+};
+
+/** What the Formats section feeds the formatters, and the paise values it shows. */
+export const formatInputs = {
+  paise: [0, 99, 100000, 12345600],
+  date: "2026-10-08",
+  phone: "+919876543210",
 };
 
 export type Sample = {
@@ -743,6 +752,13 @@ export const copy = {
     inScript: "Inside running text",
     inRow: "In a ledger row",
     digits: "0123456789",
+  },
+  formats: {
+    title: "Formats",
+    note: "formatRupees, formatDate and formatPhone give the same text in all four languages: digits 0 to 9, Indian grouping, English months.",
+    rupees: "formatRupees",
+    date: "formatDate",
+    phone: "formatPhone",
   },
   states: {
     rest: "Rest",

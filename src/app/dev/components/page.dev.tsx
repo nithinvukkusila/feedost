@@ -7,6 +7,7 @@ import { BannerSection } from "./sections/banner";
 import { BottomNavSection } from "./sections/bottom-nav";
 import { ButtonSection } from "./sections/button";
 import { FieldSection } from "./sections/field";
+import { FormatsSection } from "./sections/formats";
 import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
 import { SegmentedSection } from "./sections/segmented";
@@ -49,6 +50,7 @@ export default function DevComponentsPage() {
       <StudentStripSection />
       <BottomNavSection />
       <BannerSection />
+      <FormatsSection />
     </main>
   );
 }

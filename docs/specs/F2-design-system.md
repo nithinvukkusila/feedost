@@ -240,11 +240,13 @@ Use a real Android phone with Chrome, a low-end one if there is one. Open `/dev/
 - **H16. Banners.** Read the offline, error and undo examples. Each says in plain words what happened; the error one also says what is safe. Buttons inside them are easy to hit with a thumb. Two buttons side by side are the same height. In the long-text examples, and at the largest font size, the second button may sit below the first: each is then whole, full width and not squeezed. No banner is told apart by colour alone.
 
 ## Decided by the founder, 2026-10-09
-These were open questions 2, 4 and 12. The numbers of the remaining questions are unchanged.
+These were open questions 2, 4, 12 and 21. The numbers of the remaining questions are unchanged.
 
 - **Row amounts (was question 2).** DM Mono for row amounts in every language; Bricolage Grotesque for headline amounts. Criterion 40 states it. `docs/DESIGN.md` and `CLAUDE.md` still say "amounts are always in the headline face"; that wording needs correcting to "amounts never use Anek and always use digits 0–9".
 - **Thirteen components (was question 4).** F2 builds all thirteen components in `docs/DESIGN.md`, not the eight in the build plan's F2 row. Criteria 70 to 93 cover `Segmented`, `StudentStrip`, `Switch`, `BottomNav` and `Banner`. "Tabs" in the build plan is `IndexTabs`. The F2 row in `docs/BUILD_PLAN.md` (the list of components and the size M) is now out of date.
 - **`/dev/components` in production (was question 12).** Left out of the production build; present in local, CI and preview builds; `noindex` everywhere; kept out of the sitemap (R0-5). Criterion 65 states it. `release-manager` adds "`/dev/components` is not found" to the production smoke test.
+- **Switch knob edge (question 21), decided 2026-10-09.** Accepted as built: the knob's `ink` edge is 2.80:1 on the green track, and the `slip` fill (6.00:1), the knob's position and its word carry the state. The canvas draws it this way. H14 still has the founder look at it on a phone, with the other phone checks, once the web app is working end to end.
+- **Amount in the English undo banner, decided 2026-10-09.** Kept as built: the amount uses the amount role (Bricolage, weight 800) inside the weight-700 line, the same pattern as an amount in reading text elsewhere. The canvas draws the whole line at weight 700.
 
 ## Open questions
 Only the founder can settle these. Each has a recommendation. Until answered, the criteria above follow the recommendation.
@@ -281,7 +283,7 @@ Only the founder can settle these. Each has a recommendation. Until answered, th
 - **R0-1 (landing page):** revisit preloading DM Mono once labels sit above the fold; today it is not preloaded and labels swap face on a first load (hand check H11a).
 - **Rows:** a screen must not give a row both an amount and a status tag (criterion 94).
 - **Blue grounds:** the first slice that puts a focusable control on a blue ground adds the yellow-ring test left open in criterion 21.
-- **Before the first screen uses `Switch` (Release 2):** the founder's answer to Open question 21 (knob edge on the green track) and hand check H14.
+- **Before the first screen uses `Switch` (Release 2):** hand check H14. Open question 21 is decided (see above).
 - **Needs the founder before Release 0:** the browser floor (Open question 20), a per-language font-bytes ceiling (Open question 10), and the phone checks H3 and H4.
 
 ## Hand-off

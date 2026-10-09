@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 // /dev/components is a `page.dev.tsx` file. The extra extension is recognised everywhere except a
 // Vercel production build, so production has no such route (spec F2, criterion 65).
@@ -24,4 +25,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Finds src/i18n/request.ts. No proxy, no redirects and no rewrites: none of them work with a static export.
+const withNextIntl = createNextIntlPlugin();
+
+export default withNextIntl(nextConfig);

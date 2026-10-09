@@ -1504,7 +1504,7 @@ test.describe("whole page with thirteen components: criteria 58, 59, 61, 62, 63,
       await expect(s, id).toHaveAccessibleName(/\S/);
     }
     const order = await page.locator('[data-testid^="section-"]').evaluateAll((els) => els.map((el) => el.getAttribute("data-testid")!.replace("section-", "")));
-    expect(order).toEqual(["tokens", "type", "rupee", "button", "field", "slip", "row", "status-tag", "stamp", "tabs", "sheet", "segmented", "switch", "student-strip", "bottom-nav", "banner"]);
+    expect(order).toEqual(["tokens", "type", "rupee", "button", "field", "slip", "row", "status-tag", "stamp", "tabs", "sheet", "segmented", "switch", "student-strip", "bottom-nav", "banner", "formats"]);
   });
 
   test("58: every variant and state of the five new components is on the page without anyone touching it", async ({ page }) => {

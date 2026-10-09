@@ -22,6 +22,7 @@ import {
   shadow,
   sidewaysScroll,
   textProblems,
+  HOME,
 } from "./helpers";
 
 const INTERACTIVE = 'a[href], button, input, select, textarea, [role="tab"], [role="link"], [role="button"], [tabindex]:not([tabindex="-1"])';
@@ -272,9 +273,9 @@ test.describe("the page: criteria 58, 59, 61, 65", () => {
   });
 
   test("65: the home page does not link to it or mention it [own page]", async ({ page, request }) => {
-    await page.goto("/");
+    await page.goto(HOME);
     await expect(page.locator('a[href*="dev"]')).toHaveCount(0);
-    const html = await (await request.get("/")).text();
+    const html = await (await request.get(HOME)).text();
     expect(html).not.toContain("dev/components");
     // A route that was never built gives "not found"; this is what production gives for /dev/components.
     const missing = await request.get("/dev/not-a-page/");
@@ -282,7 +283,7 @@ test.describe("the page: criteria 58, 59, 61, 65", () => {
   });
 
   test("the home page has no text below 14px either [own page]", async ({ page }) => {
-    await page.goto("/");
+    await page.goto(HOME);
     await fontsSettled(page);
     const result = await smallText(page, "body");
     expect(result.seen).toBeGreaterThan(0);

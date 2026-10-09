@@ -3,6 +3,8 @@ import { expect, type CDPSession, type Locator, type Page, type TestInfo } from 
 import { group, readTokens } from "../src/styles/read-tokens";
 
 export const DEV = "/dev/components/";
+/** The home page. "/" only jumps to a language address, so the old "home page" tests open this. */
+export const HOME = "/en/";
 
 export const langs = ["en", "hi", "kn", "te"] as const;
 export const indicLangs = ["hi", "kn", "te"] as const;
@@ -358,4 +360,41 @@ export function textProblems(page: Page, scope: string): Promise<TextProblem[]> 
     }
     return problems;
   }, scope);
+}
+
+/** Every @font-face on the page: which family each font file belongs to. */
+export function fontFiles(page: Page): Promise<{ family: string; url: string }[]> {
+  return page.evaluate(() => {
+    const out: { family: string; url: string }[] = [];
+    for (const sheet of document.styleSheets) {
+      for (const rule of sheet.cssRules) {
+        if (!(rule instanceof CSSFontFaceRule)) continue;
+        const family = rule.style.getPropertyValue("font-family").trim().replace(/^["']|["']$/g, "");
+        for (const m of rule.style.getPropertyValue("src").matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
+          out.push({ family, url: new URL(m[1], sheet.href ?? location.href).href });
+        }
+      }
+    }
+    return out;
+  });
+}
+
+/** Every URL the page requests from now on. */
+export function recordRequests(page: Page): string[] {
+  const urls: string[] = [];
+  page.on("request", (request) => urls.push(request.url()));
+  return urls;
+}
+
+/** Chrome DevTools "Slow 4G": 562.5 ms round trip, 1.6 Mbit/s down, 750 kbit/s up (with the 0.9 factor DevTools uses). */
+export async function slow4G(page: Page): Promise<CDPSession> {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Network.enable");
+  await cdp.send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 562.5,
+    downloadThroughput: (1.6 * 1024 * 1024 * 0.9) / 8,
+    uploadThroughput: (750 * 1024 * 0.9) / 8,
+  });
+  return cdp;
 }
