@@ -121,6 +121,7 @@ export type Sample = {
     longA: string;
     longB: string;
   };
+  switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
 };
 
 export const sample: Record<Lang, Sample> = {
@@ -221,6 +222,14 @@ export const sample: Record<Lang, Sample> = {
       longA: "A polite first reminder this week",
       longB: "A firm final reminder",
     },
+    switch: {
+      name: "Automatic reminders",
+      on: "ON",
+      off: "OFF",
+      longOn: "SENDING",
+      longOff: "PAUSED",
+      visibleLabel: "Monthly report to parents",
+    },
   },
   hi: {
     headline: "फ़ीस समय पर, बिना माँगे।",
@@ -318,6 +327,14 @@ export const sample: Record<Lang, Sample> = {
       longLabel: "चुनें कि इस महीने की फ़ीस की याद बैच के हर अभिभावक को किस लहजे में भेजी जाए",
       longA: "इस हफ़्ते विनम्रता से पहली याद",
       longB: "सख़्ती से आख़िरी याद",
+    },
+    switch: {
+      name: "अपने-आप याद दिलाना",
+      on: "चालू",
+      off: "बंद",
+      longOn: "भेज रहे हैं",
+      longOff: "रोका गया",
+      visibleLabel: "अभिभावकों को मासिक रिपोर्ट",
     },
   },
   kn: {
@@ -417,6 +434,14 @@ export const sample: Record<Lang, Sample> = {
       longA: "ಈ ವಾರ ಸೌಮ್ಯವಾಗಿ ಮೊದಲ ನೆನಪು",
       longB: "ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಕೊನೆಯ ನೆನಪು",
     },
+    switch: {
+      name: "ಸ್ವಯಂಚಾಲಿತ ನೆನಪು",
+      on: "ಆನ್",
+      off: "ಆಫ್",
+      longOn: "ಕಳುಹಿಸುತ್ತಿದೆ",
+      longOff: "ನಿಲ್ಲಿಸಿದೆ",
+      visibleLabel: "ಪೋಷಕರಿಗೆ ಮಾಸಿಕ ವರದಿ",
+    },
   },
   te: {
     headline: "ఫీజు సమయానికి.",
@@ -514,6 +539,14 @@ export const sample: Record<Lang, Sample> = {
       longLabel: "ఈ నెల ఫీజు గుర్తును బ్యాచ్‌లోని ప్రతి తల్లిదండ్రులకు ఏ ధోరణిలో పంపాలో ఎంచుకోండి",
       longA: "ఈ వారం మర్యాదగా మొదటి గుర్తు",
       longB: "గట్టిగా చివరి గుర్తు",
+    },
+    switch: {
+      name: "ఆటోమేటిక్ గుర్తు",
+      on: "ఆన్",
+      off: "ఆఫ్",
+      longOn: "పంపుతోంది",
+      longOff: "ఆపివేశారు",
+      visibleLabel: "తల్లిదండ్రులకు నెలవారీ నివేదిక",
     },
   },
 };
@@ -641,5 +674,14 @@ export const copy = {
     focusOther: "Keyboard focus on another one: the ring is inside, in blue",
     live: "Try it: the screen holds the choice",
     chosen: "Chosen:",
+  },
+  switch: {
+    title: "Switch",
+    note: "Every switch here works: tap it. On and off differ by where the knob sits and the word on it, not only by the green.",
+    on: "On",
+    off: "Off",
+    labelled: "Named by the words beside it",
+    focus: "Keyboard focus",
+    long: "A longer word: the switch grows wider, and is the same width on and off",
   },
 };

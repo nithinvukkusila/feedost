@@ -134,7 +134,7 @@ describe("components hold no words of their own (criterion 66)", () => {
 
   it("finds the component files: the eight from F2a and those F2b has added so far", () => {
     expect(files.sort()).toEqual(
-      ["button.tsx", "field.tsx", "row.tsx", "segmented.tsx", "sheet.tsx", "slip.tsx", "stamp.tsx", "status-tag.tsx", "tabs.tsx"].sort(),
+      ["button.tsx", "field.tsx", "row.tsx", "segmented.tsx", "sheet.tsx", "slip.tsx", "stamp.tsx", "status-tag.tsx", "switch.tsx", "tabs.tsx"].sort(),
     );
   });
 

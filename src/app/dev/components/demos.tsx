@@ -1,7 +1,7 @@
 "use client";
 
 // The few examples on the dev page that need state.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Row, Rows } from "@/components/ui/row";
@@ -9,6 +9,7 @@ import { Segmented, type SegmentedProps } from "@/components/ui/segmented";
 import { Sheet, type SheetContext } from "@/components/ui/sheet";
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
+import { Switch } from "@/components/ui/switch";
 import { tabId, Tabs, type TabItem } from "@/components/ui/tabs";
 
 /** A button that goes busy for a moment when tapped, to show that a second tap does nothing. */
@@ -178,4 +179,41 @@ export function SegmentedDemo({
       </p>
     </div>
   );
+}
+
+/**
+ * A working switch. With `visibleLabel` the words sit beside it and name it; otherwise `label` is
+ * its name for screen readers. The test id is `switch-<id>`.
+ */
+export function SwitchDemo({
+  id,
+  start = false,
+  onText,
+  offText,
+  label,
+  visibleLabel,
+  force,
+}: {
+  id: string;
+  start?: boolean;
+  onText: string;
+  offText: string;
+  label?: string;
+  visibleLabel?: string;
+  force?: "focus";
+}) {
+  const [on, setOn] = useState(start);
+  const labelId = useId();
+  const shared = { checked: on, onChange: setOn, onText, offText, "data-testid": `switch-${id}`, "data-force": force };
+  if (visibleLabel !== undefined) {
+    return (
+      <div className="flex items-center justify-between gap-4">
+        <span id={labelId} className="type-body min-w-0 font-bold wrap-anywhere">
+          {visibleLabel}
+        </span>
+        <Switch {...shared} labelledBy={labelId} />
+      </div>
+    );
+  }
+  return <Switch {...shared} label={label ?? ""} />;
 }

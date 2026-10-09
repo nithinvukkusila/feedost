@@ -7,7 +7,7 @@
 // failed on the Linux CI runner in F2a. Exact checks are kept for things CSS fixes outright
 // (border widths, colours, a min-height with short text).
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, shadow, sidewaysScroll } from "./helpers";
+import { attachScreenshot, box, css, indicLangs, langs, openDevPage, rgb, scriptPattern, sidewaysScroll } from "./helpers";
 
 const TRANSPARENT = "rgba(0, 0, 0, 0)";
 
@@ -335,6 +335,186 @@ test.describe("Segmented: criteria 70, 71, 72, 74 (and 73 in a real browser)", (
       for (const span of await segments(page, `two-line-${lang}`).locator("span").all()) {
         expect(parseFloat((await css(span, ["font-size"]))["font-size"])).toBeGreaterThanOrEqual(14);
       }
+    });
+  }
+});
+
+test.describe("Switch: criteria 80, 81, 82, 83", () => {
+  const sw = (page: Page, id: string) => page.getByTestId(`switch-${id}`);
+  const knob = (page: Page, id: string) => sw(page, id).locator("> span");
+  /** The one word that can be seen on the knob. */
+  const shownWord = (page: Page, id: string) =>
+    knob(page, id).evaluate((el) => [...el.children].filter((w) => getComputedStyle(w).visibility === "visible").map((w) => w.textContent));
+
+  test("80: on is at least 76 by 44 with a 2px ink border and 4px corners, a green track, and the knob at the right carrying its word", async ({ page }) => {
+    const on = sw(page, "en-on");
+    await expect(on).toHaveAttribute("aria-checked", "true");
+    const b = await box(on);
+    // 76 by 44 are minimums in rem. "ON" and "OFF" fit the smallest knob with a few pixels to spare
+    // on this machine; another platform may set them a little wider, and then the switch is wider.
+    expect(b.width).toBeGreaterThanOrEqual(76);
+    expect(b.width).toBeLessThanOrEqual(84);
+    expect(b.height).toBeGreaterThanOrEqual(44);
+    expect(b.height).toBeLessThanOrEqual(46);
+    expect(await css(on, ["border-top-width", "border-top-style", "border-top-color", "border-top-left-radius", "background-color"])).toEqual({
+      "border-top-width": "2px",
+      "border-top-style": "solid",
+      "border-top-color": rgb("ink"),
+      "border-top-left-radius": "4px",
+      "background-color": rgb("stamp"),
+    });
+    const k = await box(knob(page, "en-on"));
+    expect(k.x + k.width / 2, "the knob is right of centre").toBeGreaterThan(b.x + b.width / 2);
+    // 3px of padding and the 2px border on the knob's side; a strip of track on the other.
+    expect(b.x + b.width - (k.x + k.width)).toBeCloseTo(5, 0);
+    expect(k.x - b.x).toBeGreaterThanOrEqual(30);
+    expect(await css(knob(page, "en-on"), ["background-color", "border-top-width", "border-top-color", "font-size", "font-weight", "color"])).toEqual({
+      "background-color": rgb("slip"),
+      "border-top-width": "2px",
+      "border-top-color": rgb("ink"),
+      "font-size": "14px",
+      "font-weight": "800",
+      color: rgb("ink"),
+    });
+    expect(await shownWord(page, "en-on")).toEqual(["ON"]);
+  });
+
+  test("81: off has the knob at the left carrying the off word, on a track that is not green", async ({ page }) => {
+    const off = sw(page, "en-off");
+    await expect(off).toHaveAttribute("aria-checked", "false");
+    const b = await box(off);
+    const k = await box(knob(page, "en-off"));
+    expect(k.x + k.width / 2, "the knob is left of centre").toBeLessThan(b.x + b.width / 2);
+    expect(k.x - b.x).toBeCloseTo(5, 0);
+    expect(b.x + b.width - (k.x + k.width)).toBeGreaterThanOrEqual(30);
+    const track = (await css(off, ["background-color"]))["background-color"];
+    expect(track).toBe(rgb("tab-idle"));
+    expect(track).not.toBe(rgb("stamp"));
+    expect(await shownWord(page, "en-off")).toEqual(["OFF"]);
+    // Same shape as the on switch.
+    expect(await css(off, ["border-top-width", "border-top-color", "border-top-left-radius"])).toEqual({ "border-top-width": "2px", "border-top-color": rgb("ink"), "border-top-left-radius": "4px" });
+  });
+
+  test("81: with colour removed, on and off still differ by the knob's side and its word", async ({ page }, testInfo) => {
+    await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
+    for (const lang of langs) {
+      const [on, off] = [await box(sw(page, `${lang}-on`)), await box(sw(page, `${lang}-off`))];
+      const [onKnob, offKnob] = [await box(knob(page, `${lang}-on`)), await box(knob(page, `${lang}-off`))];
+      expect(onKnob.x - on.x, lang).toBeGreaterThan(offKnob.x - off.x + 20);
+      const [onWord, offWord] = [await shownWord(page, `${lang}-on`), await shownWord(page, `${lang}-off`)];
+      expect(onWord, lang).toHaveLength(1);
+      expect(offWord, lang).toHaveLength(1);
+      expect(onWord[0], lang).not.toBe(offWord[0]);
+    }
+    await sw(page, "en-on").scrollIntoViewIfNeeded();
+    await attachScreenshot(testInfo, "switch-greyscale.png", await page.screenshot());
+  });
+
+  test("82: it is a switch with its name and state; a tap, Space and Enter each flip it; the knob jumps with no animation", async ({ page }) => {
+    const control = page.getByTestId("section-switch").getByTestId("lang-en").getByRole("switch", { name: "Automatic reminders" }).nth(1);
+    await expect(control).toHaveAttribute("data-testid", "switch-en-off");
+    await expect(control).toHaveAttribute("aria-checked", "false");
+    expect((await css(control, ["transition-duration", "animation-name"]))).toEqual({ "transition-duration": "0s", "animation-name": "none" });
+    expect((await css(knob(page, "en-off"), ["transition-duration", "animation-name"]))).toEqual({ "transition-duration": "0s", "animation-name": "none" });
+    const width = (await box(control)).width;
+
+    await control.tap();
+    await expect(control).toHaveAttribute("aria-checked", "true");
+    // No polling: with no transition the knob is already on the other side.
+    let b = await box(control);
+    let k = await box(knob(page, "en-off"));
+    expect(k.x + k.width / 2).toBeGreaterThan(b.x + b.width / 2);
+    expect((await css(control, ["background-color"]))["background-color"]).toBe(rgb("stamp"));
+    expect(await shownWord(page, "en-off")).toEqual(["ON"]);
+    expect(b.width, "the width does not change when it is switched").toBe(width);
+    // The page's landing stamp keeps its two finished animations; nothing in or on a switch has one.
+    expect(
+      await page.evaluate(() =>
+        document.getAnimations().filter((a) => (a.effect instanceof KeyframeEffect ? a.effect.target?.closest('[role="switch"]') : null)).length,
+      ),
+    ).toBe(0);
+
+    await control.focus();
+    await page.keyboard.press("Space");
+    await expect(control).toHaveAttribute("aria-checked", "false");
+    await page.keyboard.press("Enter");
+    await expect(control).toHaveAttribute("aria-checked", "true");
+    await page.keyboard.press("Enter");
+    await expect(control).toHaveAttribute("aria-checked", "false");
+    b = await box(control);
+    k = await box(knob(page, "en-off"));
+    expect(k.x + k.width / 2).toBeLessThan(b.x + b.width / 2);
+    expect(await shownWord(page, "en-off")).toEqual(["OFF"]);
+  });
+
+  test("82: a switch can be named by the visible words beside it, and the knob's word is not part of the name", async ({ page }) => {
+    for (const lang of langs) {
+      const control = sw(page, `${lang}-labelled`);
+      const words = await control.locator("xpath=preceding-sibling::span").textContent();
+      expect(words?.trim().length, lang).toBeGreaterThan(5);
+      await expect(control, lang).toHaveAccessibleName(words!.trim());
+      await expect(control.locator("> span"), lang).toHaveAttribute("aria-hidden", "true");
+    }
+    await expect(sw(page, "en-on")).toHaveAccessibleName("Automatic reminders");
+  });
+
+  test("82: Tab reaches it and shows the 3px ring 4px away; a tap shows none", async ({ page }) => {
+    const control = sw(page, "en-on");
+    await tabTo(page, control);
+    expect(await css(control, ["outline-style", "outline-width", "outline-offset", "outline-color"])).toEqual({
+      "outline-style": "solid",
+      "outline-width": "3px",
+      "outline-offset": "4px",
+      "outline-color": rgb("blue"),
+    });
+    await sw(page, "en-off").tap();
+    expect((await css(sw(page, "en-off"), ["outline-style"]))["outline-style"]).toBe("none");
+    for (const id of ["focus-on", "focus-off"]) {
+      expect((await css(sw(page, id), ["outline-style", "outline-width", "outline-color"])), id).toEqual({ "outline-style": "solid", "outline-width": "3px", "outline-color": rgb("blue") });
+    }
+  });
+
+  for (const lang of langs) {
+    test(`83: ${lang}: a longer word is whole and at least 14px, the switch is wider than 76px, and the same width on and off`, async ({ page }) => {
+      const [on, off] = [sw(page, `${lang}-long-on`), sw(page, `${lang}-long-off`)];
+      for (const [id, control] of [[`${lang}-long-on`, on], [`${lang}-long-off`, off]] as const) {
+        const k = knob(page, id);
+        expect(await holdsItsContent(k), `${id}: the knob holds its word`).toBe(true);
+        for (const word of await k.locator("> span").all()) {
+          expect(await holdsItsContent(word), id).toBe(true);
+          expect(parseFloat((await css(word, ["font-size"]))["font-size"]), id).toBeGreaterThanOrEqual(14);
+          expect((await css(word, ["text-overflow", "overflow-x"])), id).toEqual({ "text-overflow": "clip", "overflow-x": "visible" });
+          expect(await lineCount(word), `${id}: the word is on one line`).toBe(1);
+        }
+        const b = await box(control);
+        // Well clear of 76, not a pixel over it: the long words are 60 to 90px wide.
+        expect(b.width, id).toBeGreaterThan(90);
+        expect(b.height, id).toBeGreaterThanOrEqual(44);
+        // The knob and its strip of track are both inside the switch.
+        const kb = await box(k);
+        expect(kb.x, id).toBeGreaterThanOrEqual(b.x + 4.5);
+        expect(kb.x + kb.width, id).toBeLessThanOrEqual(b.x + b.width - 4.5);
+        expect(b.width - kb.width, `${id}: track still shows beside the knob`).toBeGreaterThanOrEqual(38);
+      }
+      const before = (await box(off)).width;
+      expect(Math.abs((await box(on)).width - before), "on and off are the same width").toBeLessThanOrEqual(0.5);
+      await off.tap();
+      await expect(off).toHaveAttribute("aria-checked", "true");
+      expect(Math.abs((await box(off)).width - before), "switching does not change the width").toBeLessThanOrEqual(0.01);
+      if (lang !== "en") await expect(knob(page, `${lang}-long-on`)).toContainText(scriptPattern[lang]);
+      expect(await sidewaysScroll(page)).toBe(0);
+    });
+  }
+
+  for (const lang of indicLangs) {
+    test(`${lang}: the knob word is the script's own face at 15px with no letter-spacing`, async ({ page }) => {
+      const word = knob(page, `${lang}-on`).locator("> span").nth(1);
+      expect(await css(word, ["font-size", "font-weight", "letter-spacing", "text-transform"])).toEqual({
+        "font-size": "15px",
+        "font-weight": "800",
+        "letter-spacing": "normal",
+        "text-transform": "none",
+      });
     });
   }
 });
