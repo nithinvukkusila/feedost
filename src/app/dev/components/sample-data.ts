@@ -504,6 +504,8 @@ export const copy = {
     title: "Sheet",
     open: "Open it",
     still: "How it looks, without opening it",
+    amountLabel: "Amount received",
+    amountValue: "1,200",
     tall: "Open with tall content",
     line: "A line of content to make the sheet taller than the screen.",
   },

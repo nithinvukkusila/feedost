@@ -7,9 +7,11 @@ import { ButtonSection } from "./sections/button";
 import { FieldSection } from "./sections/field";
 import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
+import { SheetSection } from "./sections/sheet";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
 import { StatusTagSection } from "./sections/status-tag";
+import { TabsSection } from "./sections/tabs";
 import { TokensSection } from "./sections/tokens";
 import { TypeSection } from "./sections/type";
 
@@ -35,6 +37,8 @@ export default function DevComponentsPage() {
       <RowSection />
       <StatusTagSection />
       <StampSection />
+      <TabsSection />
+      <SheetSection />
     </main>
   );
 }
