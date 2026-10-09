@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { Field } from "./field";
 import { Sheet, SheetFrame } from "./sheet";
 
 afterEach(cleanup);
@@ -169,5 +170,74 @@ describe("SheetFrame", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.getByRole("heading", { name: "Mark paid" }).id).toBe("t");
     expect(screen.getByRole("button", { name: "Cancel" })).toBeTruthy();
+  });
+});
+
+describe("Sheet focus (review S3)", () => {
+  it("focuses the element marked data-autofocus when it opens", () => {
+    const { rerender } = render(
+      <Sheet open={false} onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <Field label="Amount received" data-autofocus="" />
+      </Sheet>,
+    );
+    rerender(
+      <Sheet open onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <Field label="Amount received" data-autofocus="" />
+      </Sheet>,
+    );
+    expect(document.activeElement).toBe(screen.getByLabelText("Amount received"));
+  });
+
+  it("focuses it when the sheet is open from the start", () => {
+    render(
+      <Sheet open onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <Field label="Amount received" data-autofocus="" />
+      </Sheet>,
+    );
+    expect(document.activeElement).toBe(screen.getByLabelText("Amount received"));
+  });
+
+  it("leaves focus to the browser when nothing is marked", () => {
+    render(
+      <Sheet open onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <Field label="Amount received" />
+      </Sheet>,
+    );
+    // The stand-in showModal() moves no focus; a real browser focuses the close control (Playwright checks that).
+    expect(document.activeElement).not.toBe(screen.getByLabelText("Amount received"));
+  });
+
+  it("closes the dialog when it is removed while open, so the browser can hand focus back", () => {
+    const onClose = vi.fn();
+    const { unmount } = render(
+      <Sheet open onClose={onClose} title="Mark paid" closeLabel="Cancel">
+        <p>Body</p>
+      </Sheet>,
+    );
+    const dialog = document.querySelector("dialog")!;
+    const close = vi.spyOn(dialog, "close");
+    expect(dialog.hasAttribute("open")).toBe(true);
+    unmount();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(dialog.hasAttribute("open")).toBe(false);
+    // The screen removed it; there is nobody to tell.
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("does not close twice when it is removed after closing", () => {
+    const { rerender, unmount } = render(
+      <Sheet open onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <p>Body</p>
+      </Sheet>,
+    );
+    const dialog = document.querySelector("dialog")!;
+    rerender(
+      <Sheet open={false} onClose={() => {}} title="Mark paid" closeLabel="Cancel">
+        <p>Body</p>
+      </Sheet>,
+    );
+    const close = vi.spyOn(dialog, "close");
+    unmount();
+    expect(close).not.toHaveBeenCalled();
   });
 });

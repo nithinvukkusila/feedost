@@ -516,6 +516,7 @@ export const copy = {
     amountLabel: "Amount received",
     amountValue: "1,200",
     tall: "Open with tall content",
+    focused: "Open with the cursor already in the field",
     line: "A line of content to make the sheet taller than the screen.",
   },
 };

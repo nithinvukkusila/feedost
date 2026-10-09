@@ -49,6 +49,22 @@ export function SheetSection() {
               />
             </Example>
             {lang === "en" ? (
+              <Example caption={copy.sheet.focused}>
+                <SheetDemo
+                  id="focused"
+                  openLabel={s.sheet.open}
+                  title={s.sheet.title}
+                  closeLabel={s.sheet.close}
+                  context={{ label: s.sheet.contextLabel, title: s.sheet.contextTitle }}
+                  body={s.sheet.body}
+                  fieldLabel={s.field.label}
+                  fieldValue={s.field.value}
+                  actionLabel={s.button.markPaid}
+                  focusField
+                />
+              </Example>
+            ) : null}
+            {lang === "en" ? (
               <Example caption={copy.sheet.tall}>
                 <SheetDemo
                   id="tall"

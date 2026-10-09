@@ -107,6 +107,7 @@ export function SheetDemo({
   actionLabel,
   lines = 0,
   line,
+  focusField = false,
 }: {
   id: string;
   openLabel: string;
@@ -119,6 +120,8 @@ export function SheetDemo({
   actionLabel: string;
   lines?: number;
   line?: string;
+  /** Put the cursor in the field when the sheet opens, instead of on the close control. */
+  focusField?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -128,7 +131,13 @@ export function SheetDemo({
       </Button>
       <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={closeLabel} context={context}>
         <div data-testid={`sheet-body-${id}`} className="flex flex-col gap-5">
-          <Field label={fieldLabel} defaultValue={fieldValue} inputMode="numeric" autoComplete="off" />
+          <Field
+            label={fieldLabel}
+            defaultValue={fieldValue}
+            inputMode="numeric"
+            autoComplete="off"
+            data-autofocus={focusField ? "" : undefined}
+          />
           {Array.from({ length: lines }, (_, i) => (
             <p key={i} className="type-body">
               {line}

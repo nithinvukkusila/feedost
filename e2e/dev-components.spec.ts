@@ -1939,6 +1939,29 @@ test.describe("Tabs: criteria 49, 50, 51, 52", () => {
 });
 
 test.describe("Sheet: criteria 53, 54, 55, 56, 57", () => {
+  test("review S3: a sheet can open with the cursor in a field, and still gives focus back when it closes", async ({ page }) => {
+    const opener = page.getByTestId("sheet-open-focused");
+    await opener.scrollIntoViewIfNeeded();
+    await opener.focus();
+    await page.keyboard.press("Enter");
+    const dialog = page.locator("dialog[open]");
+    await expect(dialog).toBeVisible();
+    const control = dialog.getByRole("textbox");
+    await expect(control).toHaveAttribute("data-autofocus", "");
+    await expect(control).toBeFocused();
+    // The close control is still the first stop going backwards, and is not where focus started.
+    await expect(dialog.getByRole("button", { name: "Cancel" })).not.toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+    await expect(opener).toBeFocused();
+
+    // A sheet with nothing marked opens on its close control, as before.
+    const plain = page.getByTestId("sheet-open-en");
+    await plain.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.locator("dialog[open]").getByRole("button", { name: "Cancel" })).toBeFocused();
+  });
+
   for (const lang of langs) {
     test(`53, 54, 55: ${lang}: opens as a named dialog on the dark ground, holds focus, closes with Escape and gives focus back`, async ({ page }) => {
       const opener = page.getByTestId(`sheet-open-${lang}`);

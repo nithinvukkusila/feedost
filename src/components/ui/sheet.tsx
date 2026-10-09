@@ -3,7 +3,7 @@
 // Sheet (docs/DESIGN.md): a bottom sheet on the dark ground. A native modal <dialog>: the browser
 // moves focus in, keeps it in, makes the page behind inert, closes on Escape and returns focus.
 // Every word is passed in.
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from "react";
 
 export type SheetContext = {
   /** A small label on the dark ground, for example the batch and month. */
@@ -56,6 +56,7 @@ export function SheetFrame({ title, titleId, closeLabel, onClose, context, child
 }
 
 export type SheetProps = {
+  /** Opening focuses the close control, or the element inside marked `data-autofocus` if there is one. */
   open: boolean;
   /** Called once however the sheet closes: the close control, Escape, or the phone's back gesture. */
   onClose: () => void;
@@ -73,9 +74,25 @@ export function Sheet({ open, onClose, title, closeLabel, context, children }: S
   useEffect(() => {
     const el = dialog.current;
     if (!el) return;
-    if (open && !el.open) el.showModal();
-    else if (!open && el.open) el.close();
+    if (open && !el.open) {
+      el.showModal();
+      // showModal() focuses the first control, which is the close control. A screen that wants the
+      // cursor somewhere else marks that element `data-autofocus`. (The `autoFocus` prop cannot do
+      // this: React writes no autofocus attribute when it draws in the browser, so the dialog never sees it.)
+      el.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    } else if (!open && el.open) {
+      el.close();
+    }
   }, [open]);
+
+  // If the sheet is removed while it is open, close it first. Closing is what makes the browser
+  // hand focus back to the control that opened it and let the page behind be used again.
+  useLayoutEffect(() => {
+    const el = dialog.current;
+    return () => {
+      if (el?.open) el.close();
+    };
+  }, []);
 
   return (
     <dialog
