@@ -99,6 +99,54 @@ test.describe("criterion 9: fonts come from our own origin", () => {
   });
 });
 
+test.describe("font bytes a page does not need (follow-up to criterion 12's slow-network case)", () => {
+  test("the home page preloads the two Bricolage files and nothing else, and never asks for DM Mono", async ({ page }) => {
+    const urls = recordRequests(page);
+    await page.goto("/");
+    await fontsSettled(page);
+    const files = await fontFiles(page);
+    const familyByUrl = new Map(files.map((f) => [f.url, f.family]));
+    const preloaded = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="font"]')].map((link) => link.href),
+    );
+    expect(preloaded.map((url) => familyByUrl.get(url))).toEqual(["Bricolage Grotesque", "Bricolage Grotesque"]);
+    expect(new Set(preloaded).size).toBe(2);
+    const requested = urls.filter((u) => u.endsWith(".woff2"));
+    expect(requested.map((u) => familyByUrl.get(u)).sort()).toEqual(["Bricolage Grotesque", "Bricolage Grotesque"]);
+    expect(requested.filter((u) => familyByUrl.get(u) === "DM Mono")).toEqual([]);
+  });
+
+  test("14 font files are declared; DM Mono has weight 500 only and loads, unpreloaded, where a label is drawn", async ({ page }) => {
+    await openDevPage(page);
+    const files = await fontFiles(page);
+    expect(new Set(files.map((f) => f.url)).size).toBe(14);
+    const faces = await page.evaluate(() =>
+      [...document.fonts].map((f) => ({ family: f.family.replace(/^["']|["']$/g, ""), weight: f.weight, status: f.status })),
+    );
+    const mono = faces.filter((f) => f.family === "DM Mono");
+    expect(mono.length).toBeGreaterThan(0);
+    expect([...new Set(mono.map((f) => f.weight))]).toEqual(["500"]);
+    expect(mono.some((f) => f.status === "loaded")).toBe(true);
+    const familyByUrl = new Map(files.map((f) => [f.url, f.family]));
+    const preloaded = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="font"]')].map((link) => link.href),
+    );
+    // (The dev page itself carries no font preload at all; whatever it preloads, it is not DM Mono.)
+    expect(preloaded.map((url) => familyByUrl.get(url)).filter((family) => family !== "Bricolage Grotesque")).toEqual([]);
+    // No element on the page asks for a mono weight that has no file.
+    const monoWeights = await page.evaluate(() => {
+      const found = new Set<string>();
+      for (const el of document.querySelectorAll("body *")) {
+        const s = getComputedStyle(el);
+        const own = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "");
+        if (own && /^"?DM Mono/.test(s.fontFamily)) found.add(s.fontWeight);
+      }
+      return [...found];
+    });
+    expect(monoWeights).toEqual(["500"]);
+  });
+});
+
 test.describe("criterion 11: an Indian-script font loads only when its script is on the page", () => {
   test("the English home page requests no Hindi, Kannada or Telugu font file", async ({ page }) => {
     const urls = recordRequests(page);
@@ -325,15 +373,18 @@ test.describe("criterion 13: Hindi, Kannada and Telugu settings", () => {
             if (first !== face) out.push(`font ${first}: ${text}`);
           }
           // Values typed into fields are text too.
-          for (const input of document.querySelectorAll("input")) {
+          let controls = 0;
+          for (const input of document.querySelectorAll("input, textarea")) {
             if (input.closest("[lang]")?.getAttribute("lang") !== code) continue;
             seen++;
+            controls++;
             const s = getComputedStyle(input);
             const first = s.fontFamily.split(",")[0].trim().replace(/^["']|["']$/g, "");
             if (s.letterSpacing !== "normal" && s.letterSpacing !== "0px") out.push(`input letter-spacing ${s.letterSpacing}`);
             if (s.textTransform !== "none") out.push(`input text-transform ${s.textTransform}`);
             if (first !== face) out.push(`input font ${first}`);
           }
+          if (controls < 3) out.push(`only ${controls} form controls found in ${code}`);
           if (seen < 40) out.push(`only ${seen} pieces of text found in ${code}`);
           return out;
         },

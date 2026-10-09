@@ -261,7 +261,7 @@ export function textProblems(page: Page, scope: string): Promise<TextProblem[]> 
       if (style.display === "none" || style.visibility === "hidden") continue;
       if (el.getClientRects().length === 0) continue;
       const ownText = [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "");
-      if (ownText || el instanceof HTMLInputElement) holders.push(el);
+      if (ownText || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) holders.push(el);
     }
 
     for (const el of holders) {
@@ -270,10 +270,23 @@ export function textProblems(page: Page, scope: string): Promise<TextProblem[]> 
       // Truncated: an ellipsis, a line clamp, or text wider than the box that holds it.
       if (style.textOverflow !== "clip") report(`text-overflow is ${style.textOverflow}`, el);
       if (style.getPropertyValue("-webkit-line-clamp") !== "none") report("line clamp", el);
-      if (el instanceof HTMLInputElement) {
-        // A single-line input cannot wrap: a value wider than the input is cut off at its edge.
-        if (el.scrollWidth > el.clientWidth + 1) {
-          problems.push({ what: `value is ${el.scrollWidth}px wide in a ${el.clientWidth}px input`, text: el.value, where: describe(el) });
+      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        // A form control does not grow by itself: a value wider or taller than the control is cut off
+        // at its edge (an input scrolls sideways, a textarea with hidden overflow loses its last lines).
+        if (el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1) {
+          problems.push({
+            what: `value is cut: it needs ${el.scrollWidth} by ${el.scrollHeight}px in a ${el.clientWidth} by ${el.clientHeight}px control`,
+            text: el.value,
+            where: describe(el),
+          });
+        }
+        // The value must stay clear of a tick or error mark drawn on the same line.
+        const own = el.getBoundingClientRect();
+        for (const mark of el.parentElement?.querySelectorAll(":scope > svg") ?? []) {
+          const m = mark.getBoundingClientRect();
+          if (Math.min(own.right, m.right) - Math.max(own.left, m.left) > 0.5 && Math.min(own.bottom, m.bottom) - Math.max(own.top, m.top) > 0.5) {
+            problems.push({ what: "value runs under its mark", text: el.value, where: describe(el) });
+          }
         }
       } else if (style.display !== "inline" && el.scrollWidth > el.clientWidth + 1) {
         report(`content is ${el.scrollWidth}px wide in a ${el.clientWidth}px box`, el);

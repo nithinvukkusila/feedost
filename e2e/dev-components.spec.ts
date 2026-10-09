@@ -174,7 +174,7 @@ test.describe("the page: criteria 58, 59, 61, 65", () => {
     for (const id of ["empty", "typing", "correct", "error", "helper", "long"]) {
       await expect(page.getByTestId(`field-${id}`), `field ${id}`).toBeVisible();
     }
-    await expect(page.getByTestId("field-typing").locator('input[data-force="focus"]')).toHaveCount(1);
+    await expect(page.getByTestId("field-typing").getByRole("textbox")).toHaveAttribute("data-force", "focus");
     await expect(page.getByTestId("field-correct").locator('[data-state="correct"]')).toHaveCount(1);
     await expect(page.getByTestId("field-error").locator('[data-state="error"]')).toHaveCount(1);
 
@@ -341,10 +341,34 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
     expect(found.some((w) => w.startsWith("overlaps"))).toBe(true);
     expect(found.some((w) => w.startsWith("content is"))).toBe(true);
 
-    // And a value too long for its field.
-    const input = page.getByTestId("field-empty").locator("input");
-    await input.fill("a.very.long.upi.id.that.cannot.fit.in.the.field@okhdfcbank");
-    expect((await textProblems(page, '[data-testid="field-empty"]')).map((p) => p.what.slice(0, 8))).toEqual(["value is"]);
+    // A value that does not fit its field. The real field wraps and grows, so nothing is reported...
+    const example = page.getByTestId("field-correct");
+    const control = example.getByRole("textbox");
+    const long = "a.very.long.upi.id.that.cannot.fit.on.one.line@okhdfcbank";
+    await control.fill(long);
+    await expect(control).toHaveValue(long);
+    expect(await textProblems(page, '[data-testid="field-correct"]')).toEqual([]);
+    // ...but the same value held to one row is cut off below, and that is reported.
+    await control.evaluate((el) => ((el.previousElementSibling as HTMLElement).style.display = "none"));
+    expect((await textProblems(page, '[data-testid="field-correct"]')).map((p) => p.what.slice(0, 12))).toEqual(["value is cut"]);
+    await control.evaluate((el) => ((el.previousElementSibling as HTMLElement).style.display = ""));
+    expect(await textProblems(page, '[data-testid="field-correct"]')).toEqual([]);
+    // A value that cannot wrap and is wider than the control is reported too.
+    await control.evaluate((el) => ((el as HTMLElement).style.whiteSpace = "nowrap"));
+    expect((await textProblems(page, '[data-testid="field-correct"]')).map((p) => p.what.slice(0, 12))).toEqual(["value is cut"]);
+    await control.evaluate((el) => ((el as HTMLElement).style.whiteSpace = ""));
+    // So is a tick that has slid over the value.
+    await example.locator("svg").evaluate((el) => ((el as unknown as HTMLElement).style.marginLeft = "-80px"));
+    expect((await textProblems(page, '[data-testid="field-correct"]')).map((p) => p.what.slice(0, 15))).toEqual(["value runs unde"]);
+    // An old-style single-line input with too long a value is still caught.
+    await page.evaluate((value) => {
+      const input = document.createElement("input");
+      input.value = value;
+      input.style.width = "120px";
+      input.setAttribute("data-e2e", "old-input");
+      document.querySelector("main")!.prepend(input);
+    }, long);
+    expect((await textProblems(page, "main")).filter((p) => p.where.endsWith("> input")).map((p) => p.what.slice(0, 12))).toEqual(["value is cut"]);
   });
 
   test("8, as rendered: every piece of text on the page reaches 4.5:1 against the ground it sits on", async ({ page }) => {
@@ -370,7 +394,9 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
           if (el.getClientRects().length === 0) continue;
           add(el, getComputedStyle(el).color, (node.textContent ?? "").trim().slice(0, 30));
         }
-        for (const input of document.querySelectorAll("input")) {
+        const controls = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea");
+        if (controls.length < 10) throw new Error(`Only ${controls.length} form controls found`);
+        for (const input of controls) {
           if (input.getClientRects().length === 0) continue;
           add(input, getComputedStyle(input).color, "an input value");
           if (input.placeholder) add(input, getComputedStyle(input, "::placeholder").color, "a placeholder");
@@ -440,7 +466,7 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
 
       expect(await sidewaysScroll(page)).toBe(0);
       // A value cut off inside a field is checked by the next test, so that one fault does not hide the rest.
-      expect((await textProblems(page, "main")).filter((p) => !p.what.startsWith("value is"))).toEqual([]);
+      expect((await textProblems(page, "main")).filter((p) => !p.what.startsWith("value "))).toEqual([]);
 
       // Buttons and rows grow; they are not clipped at their old height.
       expect((await box(button)).height).toBeGreaterThan(before.button);
@@ -498,7 +524,7 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       for (const id of ["en", "hi", "kn", "te", "tall"]) {
         const dialog = await openSheet(page, id);
         expect(await sidewaysScroll(page), id).toBe(0);
-        expect((await textProblems(page, "dialog[open]")).filter((p) => !p.what.startsWith("value is")), id).toEqual([]);
+        expect((await textProblems(page, "dialog[open]")).filter((p) => !p.what.startsWith("value ")), id).toEqual([]);
         expect((await smallTargets(page, "dialog[open]")).small, id).toEqual([]);
         await page.keyboard.press("Escape");
         await expect(dialog).toHaveCount(0);
@@ -512,10 +538,10 @@ test.describe("whole page: criteria 4, 62, 63, 64 and the runtime side of 69", (
       await page.evaluate(scale.apply);
       await expect.poll(async () => (await css(body, ["font-size"]))["font-size"]).toBe("20.8px");
       await fontsSettled(page);
-      const cut = (await textProblems(page, "main")).filter((p) => p.what.startsWith("value is"));
+      const cut = (await textProblems(page, "main")).filter((p) => p.what.startsWith("value "));
       for (const id of ["en", "hi", "kn", "te"]) {
         const dialog = await openSheet(page, id);
-        cut.push(...(await textProblems(page, "dialog[open]")).filter((p) => p.what.startsWith("value is")));
+        cut.push(...(await textProblems(page, "dialog[open]")).filter((p) => p.what.startsWith("value ")));
         await page.keyboard.press("Escape");
         await expect(dialog).toHaveCount(0);
       }
@@ -878,12 +904,12 @@ test.describe("Button: criteria 17, 18, 20, 21, 22, 23, 25", () => {
 
 test.describe("Field: criteria 26 to 32", () => {
   const field = (page: Page, id: string) => page.getByTestId(`field-${id}`).locator("[data-state]");
-  const line = (root: Locator) => root.locator("input").locator("xpath=..");
+  const line = (root: Locator) => root.getByRole("textbox").locator("xpath=..");
   const lineStyle = (root: Locator) => css(line(root), ["border-bottom-width", "border-bottom-style", "border-bottom-color", "border-top-width", "border-left-width", "border-right-width", "padding-bottom"]);
 
   test("26, 27: empty is a label above a 2px ink line with no box, at least 48px tall, placeholder in ink-label", async ({ page }) => {
     const root = field(page, "empty");
-    const input = root.locator("input");
+    const input = root.getByRole("textbox");
     await expect(page.getByTestId("field-empty").getByLabel("Your UPI ID")).toHaveCount(1);
     const label = await box(root.locator("label"));
     const control = await box(input);
@@ -915,7 +941,7 @@ test.describe("Field: criteria 26 to 32", () => {
 
   test("28: typing turns the line 4px blue and the label and value blue, and back again", async ({ page }) => {
     const root = field(page, "empty");
-    const input = root.locator("input");
+    const input = root.getByRole("textbox");
     await input.tap();
     await expect(input).toBeFocused();
     expect(await lineStyle(root)).toMatchObject({ "border-bottom-width": "4px", "border-bottom-style": "solid", "border-bottom-color": rgb("blue") });
@@ -932,7 +958,7 @@ test.describe("Field: criteria 26 to 32", () => {
     const frozen = field(page, "typing");
     expect(await lineStyle(frozen)).toMatchObject({ "border-bottom-width": "4px", "border-bottom-color": rgb("blue") });
     expect((await css(frozen.locator("label"), ["color"])).color).toBe(rgb("blue"));
-    expect((await css(frozen.locator("input"), ["color"])).color).toBe(rgb("blue"));
+    expect((await css(frozen.getByRole("textbox"), ["color"])).color).toBe(rgb("blue"));
   });
 
   test("29: correct has a green line, a tick, a message, and says so in words for a screen reader", async ({ page }) => {
@@ -943,8 +969,8 @@ test.describe("Field: criteria 26 to 32", () => {
     await expect(tick).toHaveAttribute("aria-hidden", "true");
     expect((await css(tick, ["color"])).color).toBe(rgb("stamp"));
     await expect(root.getByText("That looks like a valid UPI ID.")).toBeVisible();
-    await expect(root.locator("input")).toHaveAccessibleName("Your UPI ID correct");
-    await expect(root.locator("input")).toHaveAccessibleDescription("That looks like a valid UPI ID.");
+    await expect(root.getByRole("textbox")).toHaveAccessibleName("Your UPI ID correct");
+    await expect(root.getByRole("textbox")).toHaveAccessibleDescription("That looks like a valid UPI ID.");
   });
 
   test("30: needs fixing has a 3px red line, a mark, the words in the red label, and a message tied to the invalid input", async ({ page }) => {
@@ -954,8 +980,8 @@ test.describe("Field: criteria 26 to 32", () => {
     expect((await css(root.locator("svg"), ["color"])).color).toBe(rgb("cloth"));
     expect((await css(root.locator("label"), ["color"])).color).toBe(rgb("cloth"));
     await expect(root.locator("label").getByText("needs fixing")).toBeVisible();
-    await expect(root.locator("input")).toHaveAttribute("aria-invalid", "true");
-    await expect(root.locator("input")).toHaveAccessibleDescription("Add the part after @, like name@bank");
+    await expect(root.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
+    await expect(root.getByRole("textbox")).toHaveAccessibleDescription("Add the part after @, like name@bank");
     await expect(root.getByText("Add the part after @, like name@bank")).toBeVisible();
     // Red is a line and words here, never a button.
     await expect(root.locator("button")).toHaveCount(0);
@@ -984,19 +1010,186 @@ test.describe("Field: criteria 26 to 32", () => {
     const root = field(page, "empty");
     const next = page.getByTestId("field-typing");
     // Document coordinates: focusing scrolls the page, which must not count as movement.
-    const before = { field: await docBox(root), next: await docBox(next), input: await docBox(root.locator("input")) };
-    await root.locator("input").focus();
+    const before = { field: await docBox(root), next: await docBox(next), input: await docBox(root.getByRole("textbox")) };
+    await root.getByRole("textbox").focus();
     expect((await lineStyle(root))["border-bottom-width"]).toBe("4px");
     expect(await docBox(root)).toEqual(before.field);
     expect(await docBox(next)).toEqual(before.next);
-    expect(await docBox(root.locator("input"))).toEqual(before.input);
+    expect(await docBox(root.getByRole("textbox"))).toEqual(before.input);
+    // Typing a value that fits on one line changes nothing either.
+    await page.keyboard.type("meena@okhdfc");
+    await expect(root.getByRole("textbox")).toHaveValue("meena@okhdfc");
+    expect(await docBox(root)).toEqual(before.field);
+    expect(await docBox(next)).toEqual(before.next);
+    expect(await docBox(root.getByRole("textbox"))).toEqual(before.input);
+  });
+
+  const LONG_VALUE = "meena.kumari.sharma.tuitions.bengaluru@okhdfcbank";
+
+  for (const lang of langs) {
+    test(`a long value in a ${lang} field wraps and the field grows, in all four states, with the mark still beside it`, async ({ page }) => {
+      const roots =
+        lang === "en"
+          ? { idle: field(page, "empty"), correct: field(page, "correct"), error: field(page, "error") }
+          : (() => {
+              const block = page.getByTestId("section-field").getByTestId(`lang-${lang}`).locator("[data-state]");
+              return { idle: block.nth(0), correct: block.nth(1), error: block.nth(2) };
+            })();
+      const lineWant = {
+        idle: { "border-bottom-width": "2px", "border-bottom-color": rgb("ink") },
+        typing: { "border-bottom-width": "4px", "border-bottom-color": rgb("blue") },
+        correct: { "border-bottom-width": "2px", "border-bottom-color": rgb("stamp") },
+        error: { "border-bottom-width": "3px", "border-bottom-color": rgb("cloth") },
+      };
+
+      const check = async (root: Locator, state: keyof typeof lineWant, hasMark: boolean, before: { field: number; control: number }) => {
+        const control = root.getByRole("textbox");
+        const what = `${lang} ${state}${hasMark ? " with a mark" : ""}`;
+        await expect(control, what).toHaveValue(LONG_VALUE);
+        expect(await lineStyle(root), what).toMatchObject(lineWant[state]);
+        const lineHeight = parseFloat((await css(control, ["line-height"]))["line-height"]);
+        const c = await docBox(control);
+        const wrapper = await docBox(line(root));
+        const whole = await docBox(root);
+        // Two lines or more, all of them shown.
+        expect(c.height, what).toBeGreaterThanOrEqual(2 * lineHeight);
+        expect(await control.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1), what).toBe(true);
+        // The field grew by exactly what the value grew by, and by more than half a line.
+        expect(c.height - before.control, what).toBeGreaterThan(lineHeight / 2);
+        expect(whole.height - before.field, what).toBeCloseTo(c.height - before.control, 1);
+        // The value sits on the line: the line is drawn below every row of it, and the note below the line.
+        expect(c.x, what).toBeGreaterThanOrEqual(wrapper.x - 0.5);
+        expect(c.y + c.height, what).toBeLessThanOrEqual(wrapper.y + wrapper.height + 0.5);
+        const note = await docBox(root.locator("> p"));
+        expect(note.y, what).toBeGreaterThanOrEqual(wrapper.y + wrapper.height - 0.5);
+        expect(wrapper.x + wrapper.width, what).toBeLessThanOrEqual(360);
+        // The tick or error mark stays beside the value, full size, inside the line.
+        const marks = root.locator("svg");
+        expect(await marks.count(), what).toBe(hasMark ? 1 : 0);
+        if ((await marks.count()) === 1) {
+          const m = await docBox(marks);
+          expect([m.width, m.height], what).toEqual([24, 24]);
+          expect(m.x, what).toBeGreaterThanOrEqual(c.x + c.width - 0.5);
+          expect(m.x + m.width, what).toBeLessThanOrEqual(wrapper.x + wrapper.width + 0.5);
+          expect(m.y, what).toBeGreaterThanOrEqual(wrapper.y - 0.5);
+          expect(m.y + m.height, what).toBeLessThanOrEqual(wrapper.y + wrapper.height + 0.5);
+        }
+        // The shared checker agrees: nothing cut, clipped, overlapping or under the mark.
+        await root.evaluate((el) => el.setAttribute("data-e2e-field", "now"));
+        expect(await textProblems(page, '[data-e2e-field="now"]'), what).toEqual([]);
+        await root.evaluate((el) => el.removeAttribute("data-e2e-field"));
+      };
+
+      for (const state of ["idle", "correct", "error"] as const) {
+        const root = roots[state];
+        const control = root.getByRole("textbox");
+        const before = { field: (await docBox(root)).height, control: (await docBox(control)).height };
+        await control.fill(LONG_VALUE);
+        // Still focused after filling: this is the typing look, whatever the field's own state.
+        await expect(control).toBeFocused();
+        await check(root, "typing", state !== "idle", before);
+        await control.blur();
+        await check(root, state, state !== "idle", before);
+      }
+      expect(await sidewaysScroll(page)).toBe(0);
+
+      // Given a short value again, a field goes back to one row and its first height.
+      const root = roots.correct;
+      const control = root.getByRole("textbox");
+      const tall = (await docBox(root)).height;
+      await control.fill("a@b");
+      await control.blur();
+      expect((await docBox(root)).height).toBeLessThan(tall);
+      expect((await docBox(control)).height).toBeLessThan(2 * parseFloat((await css(control, ["line-height"]))["line-height"]));
+    });
+  }
+
+  test("the frozen typing example also grows with a long value", async ({ page }) => {
+    const root = field(page, "typing");
+    const control = root.getByRole("textbox");
+    const before = await docBox(root);
+    await control.fill(LONG_VALUE);
+    await control.blur();
+    expect((await lineStyle(root))["border-bottom-width"]).toBe("4px");
+    expect((await docBox(root)).height).toBeGreaterThan(before.height);
+    expect(await control.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
+  });
+
+  test("Enter in a field inside a form submits the form once and never adds a line", async ({ page }) => {
+    const root = field(page, "empty");
+    const control = root.getByRole("textbox");
+    // The page has no form, so the test puts one round the field, in place.
+    await root.evaluate((el) => {
+      const form = document.createElement("form");
+      form.setAttribute("data-e2e", "form");
+      form.setAttribute("data-submits", "0");
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        form.setAttribute("data-submits", String(Number(form.getAttribute("data-submits")) + 1));
+      });
+      el.parentNode!.insertBefore(form, el);
+      form.append(el);
+    });
+    const form = page.locator('form[data-e2e="form"]');
+    await control.tap();
+    await page.keyboard.type("meena@okhdfc");
+    const height = (await docBox(control)).height;
+    await page.keyboard.press("Enter");
+    await expect(form).toHaveAttribute("data-submits", "1");
+    await expect(control).toHaveValue("meena@okhdfc");
+    expect(await control.evaluate((el) => (el as HTMLTextAreaElement).value.includes("\n"))).toBe(false);
+    expect((await docBox(control)).height).toBe(height);
+    // Typing goes on after it on the same line.
+    await page.keyboard.type("bank");
+    await expect(control).toHaveValue("meena@okhdfcbank");
+    // Shift+Enter is no way round it.
+    await page.keyboard.press("Shift+Enter");
+    await expect(control).toHaveValue("meena@okhdfcbank");
+    expect((await docBox(control)).height).toBe(height);
+    await expect(form).toHaveAttribute("data-submits", "2");
+  });
+
+  test("Enter in a field with no form round it does nothing and adds no line", async ({ page }) => {
+    const control = field(page, "empty").getByRole("textbox");
+    await control.tap();
+    await page.keyboard.type("meena");
+    const height = (await docBox(control)).height;
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("@okhdfc");
+    await expect(control).toHaveValue("meena@okhdfc");
+    expect((await docBox(control)).height).toBe(height);
+  });
+
+  test("pasted text with line breaks ends up as one line", async ({ page, context }) => {
+    const control = field(page, "empty").getByRole("textbox");
+    await control.tap();
+    const height = (await docBox(control)).height;
+
+    // Inserted in one go, as a paste or an input method does.
+    await page.keyboard.insertText("meena\ntuitions \r\n  @okhdfc");
+    await expect(control).toHaveValue("meena tuitions @okhdfc");
+    expect((await docBox(control)).height).toBe(height);
+
+    // A real paste from the clipboard.
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await control.fill("");
+    await page.evaluate(() => navigator.clipboard.writeText("name\n@bank\n"));
+    await control.focus();
+    await page.keyboard.press("ControlOrMeta+V");
+    await expect(control).toHaveValue("name @bank ");
+    expect(await control.evaluate((el) => /[\r\n]/.test((el as HTMLTextAreaElement).value))).toBe(false);
+    expect((await docBox(control)).height).toBe(height);
+
+    // It is announced as a single-line text box.
+    await expect(control).toHaveAttribute("aria-multiline", "false");
+    await expect(control).toHaveAttribute("rows", "1");
   });
 
   test("32: helper text is at least 14px, and a long label and a long message wrap", async ({ page }) => {
     const helper = page.getByTestId("field-helper").getByText("Parents pay you directly to this ID.");
     await expect(helper).toBeVisible();
     expect(parseFloat((await css(helper, ["font-size"]))["font-size"])).toBeGreaterThanOrEqual(14);
-    await expect(page.getByTestId("field-helper").locator("input")).toHaveAccessibleDescription("Parents pay you directly to this ID.");
+    await expect(page.getByTestId("field-helper").getByRole("textbox")).toHaveAccessibleDescription("Parents pay you directly to this ID.");
 
     for (const lang of langs) {
       const root =
@@ -1016,6 +1209,127 @@ test.describe("Field: criteria 26 to 32", () => {
         expect(await el.evaluate((node) => node.scrollWidth <= node.clientWidth), lang).toBe(true);
       }
     }
+  });
+});
+
+test.describe("Headline amounts shrink to fit (follow-up to criterion 63; replaces the mid-number break)", () => {
+  const scales = [
+    { name: "at the default text size", root: 1, apply: null },
+    { name: "with the root font size at 130%", root: 1.3, apply: () => document.documentElement.style.setProperty("font-size", "130%") },
+    { name: "with text-only scaling at 130%", root: 1, apply: () => document.documentElement.style.setProperty("text-size-adjust", "130%") },
+  ];
+  const AMOUNTS = '[data-rupee="headline"], [data-rupee="fit"], [data-role="amount"]';
+
+  for (const scale of scales) {
+    test(`${scale.name}: every amount, six and seven digits included, is on one line inside its space and at least 14px`, async ({ page }) => {
+      const body = page.getByTestId("section-type").locator('[lang="en"] [data-role="body"]');
+      if (scale.apply) {
+        await page.evaluate(scale.apply);
+        await expect.poll(async () => (await css(body, ["font-size"]))["font-size"]).toBe("20.8px");
+        await fontsSettled(page);
+      }
+      const amounts = page.locator(AMOUNTS);
+      await expect(amounts).toHaveCount(13);
+      const texts = await amounts.allTextContents();
+      expect(texts).toContain("₹1,23,456");
+      expect(texts).toContain("₹9,87,650");
+      expect(texts.filter((t) => t === "₹99,99,999")).toHaveLength(2);
+
+      let shrunk = 0;
+      let atToken = 0;
+      for (const amount of await amounts.all()) {
+        const m = await amount.evaluate((el) => {
+          let space: HTMLElement | null = el.parentElement;
+          while (space && getComputedStyle(space).containerType !== "inline-size") space = space.parentElement;
+          if (!space) throw new Error("The amount has no amount-box round it");
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const ink = range.getBoundingClientRect();
+          const outer = space.getBoundingClientRect();
+          const s = getComputedStyle(el);
+          return {
+            text: el.textContent ?? "",
+            size: parseFloat(s.fontSize),
+            whiteSpace: s.whiteSpace,
+            adjust: s.getPropertyValue("text-size-adjust"),
+            em: parseFloat(s.getPropertyValue("--amount-em")),
+            token: el.classList.contains("amount-size-7xl") ? 72 : el.classList.contains("amount-size-6xl") ? 60 : 0,
+            ink: { left: ink.left, right: ink.right, width: ink.width },
+            space: { left: outer.left, right: outer.right, width: space.clientWidth },
+          };
+        });
+        const what = `${m.text} in ${m.space.width}px`;
+        expect(m.token, what).not.toBe(0);
+        expect(m.em, what).toBeGreaterThan(1);
+        expect(await lineCount(amount), what).toBe(1);
+        expect(m.whiteSpace, what).toBe("nowrap");
+        await expect(amount).toHaveText(/^₹[0-9,]+$/);
+        // The digits begin and end inside the amount's own space, and inside the screen.
+        expect(m.ink.left, what).toBeGreaterThanOrEqual(m.space.left - 0.5);
+        expect(m.ink.right, what).toBeLessThanOrEqual(m.space.right + 0.5);
+        expect(m.ink.right, what).toBeLessThanOrEqual(360);
+        // Never under 14px.
+        expect(m.size, what).toBeGreaterThanOrEqual(14);
+        // The size is the token (which follows the root font size), or what fits, whichever is smaller.
+        const token = m.token * scale.root;
+        const expected = Math.max(14 * scale.root, Math.min(token, m.space.width / m.em));
+        expect(Math.abs(m.size - expected), `${what}: ${m.size}px, expected ${expected.toFixed(2)}px`).toBeLessThanOrEqual(0.1);
+        if (m.size < token - 0.1) {
+          shrunk++;
+          // Shrunk no further than needed: it uses nearly all of its space.
+          expect(m.ink.width / m.space.width, `${what} fills its space`).toBeGreaterThanOrEqual(0.9);
+        } else {
+          atToken++;
+        }
+      }
+      // The page shows both cases at every scale: amounts at full size and amounts that had to shrink.
+      expect(shrunk).toBeGreaterThanOrEqual(4);
+      expect(atToken).toBeGreaterThanOrEqual(scale.root === 1 ? 4 : 1);
+      expect(await sidewaysScroll(page)).toBe(0);
+    });
+  }
+
+  test("a fitted amount still grows with the root font size, but not with text-only scaling", async ({ page }) => {
+    // "₹18,500" at the 60px size has room to spare at 360px, so it shows the scaling plainly.
+    const amount = page.getByTestId("section-type").locator('[lang="en"] [data-role="amount"]');
+    const body = page.getByTestId("section-type").locator('[lang="en"] [data-role="body"]');
+    const width = async () => amount.evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return range.getBoundingClientRect().width;
+    });
+    // The amount role declares `text-size-adjust: none`. Chromium reports that as "100%", which is
+    // also what every other element on the page already has (Tailwind's base styles set it on <html>).
+    expect((await css(amount, ["font-size", "text-size-adjust"]))).toEqual({ "font-size": "60px", "text-size-adjust": "100%" });
+    expect((await css(page.locator("html"), ["text-size-adjust"]))["text-size-adjust"]).toBe("100%");
+    expect((await css(body, ["text-size-adjust"]))["text-size-adjust"]).toBe("100%");
+    const drawn = await width();
+
+    await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+    await expect.poll(async () => (await css(amount, ["font-size"]))["font-size"]).toBe("78px");
+    expect((await width()) / drawn).toBeCloseTo(1.3, 1);
+
+    // As built: with text-only scaling the reading text grows to 20.8px and the amount stays as it was.
+    await page.evaluate(() => {
+      document.documentElement.style.removeProperty("font-size");
+      document.documentElement.style.setProperty("text-size-adjust", "130%");
+    });
+    await expect.poll(async () => (await css(body, ["font-size"]))["font-size"]).toBe("20.8px");
+    expect((await css(amount, ["font-size"]))["font-size"]).toBe("60px");
+    expect((await width()) / drawn).toBeCloseTo(1, 2);
+    // Amounts that are not fitted (reading size inside a sentence, row amounts) do follow it.
+    const inline = page.getByTestId("section-rupee").locator('[lang="hi"] [data-rupee="reading"]');
+    expect((await css(inline, ["font-size"]))["font-size"]).toBe("23.4px");
+    const row = page.getByTestId("section-type").locator('[lang="en"] [data-role="amount-row"]');
+    expect((await css(row, ["font-size"]))["font-size"]).toBe("20.8px");
+  });
+
+  test("in a space too narrow for 14px the amount stops at 14px and stays on one line", async ({ page }) => {
+    const amount = page.getByTestId("rupee-fit-narrow").locator('[data-rupee="fit"]').last();
+    await expect(amount).toHaveText("₹99,99,999");
+    await amount.evaluate((el) => ((el.parentElement as HTMLElement).style.width = "40px"));
+    await expect.poll(async () => (await css(amount, ["font-size"]))["font-size"]).toBe("14px");
+    expect(await lineCount(amount)).toBe(1);
   });
 });
 
@@ -1743,7 +2057,7 @@ test.describe("Sheet: criteria 53, 54, 55, 56, 57", () => {
     const dialog = await openSheet(page, "en");
     const panel = await sheetPanel(dialog);
     const header = dialog.locator("p").first().locator("xpath=..");
-    expect(await header.evaluate((el) => el.querySelectorAll("a, button, input, [tabindex]").length)).toBe(0);
+    expect(await header.evaluate((el) => el.querySelectorAll("a, button, input, textarea, select, [tabindex]").length)).toBe(0);
 
     // The mechanism: the dark area names the yellow ring, the paper panel names blue.
     const ringColour = (locator: Locator) => locator.evaluate((el) => getComputedStyle(el).getPropertyValue("--ground-ring").trim().toLowerCase());
