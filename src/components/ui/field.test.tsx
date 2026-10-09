@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { act, createRef, useState } from "react";
+import { act, createRef, useCallback, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Button } from "./button";
 import { Field, oneLine, submitOnEnter } from "./field";
@@ -594,5 +594,60 @@ describe("Field small things", () => {
   it("passes data attributes to the control", () => {
     render(<Field label="A" data-autofocus="" />);
     expect(screen.getByLabelText("A").hasAttribute("data-autofocus")).toBe(true);
+  });
+});
+
+describe("Field review notes N3 and N4", () => {
+  it("calls a stable ref once, not again on every render", async () => {
+    const calls: (HTMLTextAreaElement | null)[] = [];
+    function Screen() {
+      const [count, setCount] = useState(0);
+      const ref = useCallback((el: HTMLTextAreaElement | null) => {
+        calls.push(el);
+      }, []);
+      return (
+        <>
+          <Field label="A" ref={ref} helper={String(count)} />
+          <button type="button" onClick={() => setCount((n) => n + 1)}>
+            Again
+          </button>
+        </>
+      );
+    }
+    const user = userEvent.setup();
+    render(<Screen />);
+    await user.click(screen.getByRole("button", { name: "Again" }));
+    await user.click(screen.getByRole("button", { name: "Again" }));
+    expect(screen.getByText("2")).toBeTruthy();
+    expect(calls).toEqual([screen.getByLabelText("A")]);
+  });
+
+  it("follows the ref when the screen passes a different one", () => {
+    const first = createRef<HTMLTextAreaElement>();
+    const second = createRef<HTMLTextAreaElement>();
+    const { rerender } = render(<Field label="A" ref={first} />);
+    expect(first.current).toBe(screen.getByLabelText("A"));
+    rerender(<Field label="A" ref={second} />);
+    expect(second.current).toBe(screen.getByLabelText("A"));
+    expect(first.current).toBeNull();
+  });
+
+  it("Enter does nothing when the submit button is disabled by its fieldset", async () => {
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    const user = userEvent.setup();
+    render(
+      <form onSubmit={onSubmit}>
+        <Field label="Your UPI ID" />
+        <fieldset disabled>
+          <button type="submit">Save</button>
+        </fieldset>
+      </form>,
+    );
+    const button = screen.getByRole("button", { name: "Save" }) as HTMLButtonElement;
+    // The property says false; only the selector knows.
+    expect(button.disabled).toBe(false);
+    expect(button.matches(":disabled")).toBe(true);
+    await user.type(screen.getByRole("textbox"), "meena@okhdfc{Enter}");
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

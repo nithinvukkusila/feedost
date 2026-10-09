@@ -7,7 +7,10 @@
 // than itself, and the value here can be the UPI ID money is sent to. The textarea wraps a long
 // value onto more lines and the field grows. It still behaves as a single-value text control:
 // Enter submits the form and never adds a line, and pasted line breaks become spaces.
+// Enter submits through the form: the submit button's own click handler does not run. A screen
+// must do its saving in the form's onSubmit, not in the button's onClick.
 import {
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -102,7 +105,8 @@ export function submitOnEnter(form: HTMLFormElement): void {
     form.requestSubmit();
     return;
   }
-  if (submitter.disabled || submitter.getAttribute("aria-disabled") === "true") return;
+  // `:disabled` and not `.disabled`: a button inside `<fieldset disabled>` is disabled without the property saying so.
+  if (submitter.matches(":disabled") || submitter.getAttribute("aria-disabled") === "true") return;
   form.requestSubmit(submitter);
 }
 
@@ -261,11 +265,16 @@ export function Field(props: FieldProps) {
     if (form) submitOnEnter(form);
   }
 
-  function attach(el: HTMLTextAreaElement | null) {
-    element.current = el;
-    if (typeof ref === "function") return ref(el);
-    if (ref) ref.current = el;
-  }
+  // Stable for as long as the caller's ref is the same, so React does not detach and re-attach the
+  // caller's ref on every render.
+  const attach = useCallback(
+    (el: HTMLTextAreaElement | null) => {
+      element.current = el;
+      if (typeof ref === "function") return ref(el);
+      if (ref) ref.current = el;
+    },
+    [ref],
+  );
 
   return (
     <div data-state={state} className="group/field flex flex-col">
