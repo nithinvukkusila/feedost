@@ -1,7 +1,7 @@
 "use client";
 
 // The few examples on the dev page that need state.
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -227,7 +227,7 @@ export function BannerDemo({
   tapsLabel,
 }: {
   error: { title: string; detail: string; retry: string; later: string };
-  undo: { message: string; undo: string; send: string };
+  undo: { message: ReactNode; undo: string; send: string };
   tapsLabel: string;
 }) {
   const [taps, setTaps] = useState({ retry: 0, later: 0, undo: 0, send: 0 });

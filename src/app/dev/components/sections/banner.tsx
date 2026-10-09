@@ -5,7 +5,22 @@ import { MessageIcon } from "../sample-icons";
 import { copy, figures, langs, sample, type Lang } from "../sample-data";
 import { Example, ScriptBlock, Section } from "./parts";
 
-const undoMessage = (lang: Lang) => sample[lang].banner.undoMessage.replace("{amount}", figures.row);
+/**
+ * The undo message with its amount in the amount role, as in the amounts section: inside Hindi,
+ * Kannada or Telugu words the rupee sign and digits must not take the Anek face.
+ */
+function undoMessage(lang: Lang): ReactNode {
+  const [before, after] = sample[lang].banner.undoMessage.split("{amount}");
+  return (
+    <>
+      {before}
+      <span data-rupee="reading" translate="no" className="type-amount">
+        {figures.row}
+      </span>
+      {after}
+    </>
+  );
+}
 
 /** Room on the right for the error banner's 5px shadow, as a screen would leave. */
 function Shadowed({ children }: { children: ReactNode }) {
