@@ -5,11 +5,13 @@ import {
   DEV,
   familyOf,
   firstFamily,
+  fontFiles,
   fontProbe,
   fontsSettled,
   indicLangs,
   openDevPage,
   pixels,
+  recordRequests,
   scriptFontVariable,
   scriptPattern,
   type IndicLang,
@@ -18,31 +20,8 @@ import {
 
 const ANEK = /^Anek /;
 
-/** Every @font-face on the page: which family each font file belongs to. */
-function fontFiles(page: Page): Promise<{ family: string; url: string }[]> {
-  return page.evaluate(() => {
-    const out: { family: string; url: string }[] = [];
-    for (const sheet of document.styleSheets) {
-      for (const rule of sheet.cssRules) {
-        if (!(rule instanceof CSSFontFaceRule)) continue;
-        const family = rule.style.getPropertyValue("font-family").trim().replace(/^["']|["']$/g, "");
-        for (const m of rule.style.getPropertyValue("src").matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
-          out.push({ family, url: new URL(m[1], sheet.href ?? location.href).href });
-        }
-      }
-    }
-    return out;
-  });
-}
-
 function loadedFamilies(page: Page): Promise<string[]> {
   return page.evaluate(() => [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))]);
-}
-
-function recordRequests(page: Page): string[] {
-  const urls: string[] = [];
-  page.on("request", (request) => urls.push(request.url()));
-  return urls;
 }
 
 test.describe("criterion 9: fonts come from our own origin", () => {

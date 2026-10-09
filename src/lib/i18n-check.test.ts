@@ -254,3 +254,77 @@ describe("TODO-translate: criteria 24 and 25", () => {
     expect(run(folder(), "--strict").status).toBe(0);
   });
 });
+
+// Added by test-engineer after mutation testing: each test below fails when the rule it names is removed.
+describe("gaps found by mutation (criteria 21, 22, 24)", () => {
+  /** A folder whose English has one key and every other file has the given value for it. */
+  function oneKey(en: string, other: string): string {
+    const tree = (value: string) => ({ home: { line: value } });
+    return folder({ en: tree(en), hi: tree(other), kn: tree(en), te: tree(en) });
+  }
+
+  it("21: a value of only spaces is reported as empty, by the empty-value rule (not as 'empty after TODO-translate')", () => {
+    const result = run(withValue("kn", ["common", "loading"], "   "));
+    expect(result.out).toContain('messages/kn.json "common.loading" is empty');
+    expect(result.out).not.toContain("after TODO-translate");
+  });
+
+  it("24: TODO-translate with nothing after it fails and says so", () => {
+    const result = run(withValue("hi", ["common", "loading"], "TODO-translate: "));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('messages/hi.json "common.loading" is empty after TODO-translate');
+  });
+
+  it("24: TODO-translate followed only by spaces fails the same way", () => {
+    const result = run(withValue("te", ["common", "loading"], "TODO-translate:    "));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("is empty after TODO-translate");
+  });
+
+  it("22: a renamed argument inside a rich-text tag is found", () => {
+    const result = run(oneKey("<b>Hi {name}</b>", "<b>Hi {nam}</b>"));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('messages/hi.json "home.line": expected');
+    expect(result.out).toContain("{nam}");
+  });
+
+  it("22: a tag nested inside another tag is compared too", () => {
+    const result = run(oneKey("<b>one <i>two</i></b>", "<b>one two</b>"));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("<i>");
+  });
+
+  it("22: a renamed argument inside a plural branch is found", () => {
+    const result = run(oneKey("{count, plural, one {{name} has one} other {{name} has #}}", "{count, plural, one {{nam} has one} other {{name} has #}}"));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("{nam}");
+  });
+
+  it("22: a renamed argument inside a select branch is found", () => {
+    const result = run(oneKey("{kind, select, a {{name} A} other {{name} B}}", "{kind, select, a {{name} A} other {{nam} B}}"));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("{nam}");
+  });
+
+  it("22: a placeholder that appears only inside a branch is required in the translation", () => {
+    const result = run(oneKey("{count, plural, one {{name} one} other {{name} many}}", "{count, plural, one {एक} other {कई}}"));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("{name}");
+  });
+
+  it("22: the same placeholders in a different order pass", () => {
+    expect(run(oneKey("{a} then {b}", "{b} पहले {a}")).status).toBe(0);
+  });
+});
+
+describe("duplicate keys (spec F3, Edge cases: 'Duplicates')", () => {
+  // The spec says two equal keys in one JSON file are silently merged by JSON.parse, the check cannot
+  // see them, and code review catches them. This pins that statement. It is not a wish: if a later
+  // slice adds a duplicate-key rule, the spec changes first and this test is replaced with it.
+  it("stay invisible to the check: a file with the same key twice passes", () => {
+    const hi = '{"common":{"loading":"लोड हो रहा है…","loading":"फिर से लोड"},"home":{"greeting":"नमस्ते {name}, <b>यह</b> पढ़ें","count":"{count, plural, one {# छात्र} other {# छात्र}}","kind":"{kind, select, a {अल्फा} other {अन्य}}"}}';
+    const result = run(folder({ hi }));
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("4 keys present in all 4 languages");
+  });
+});

@@ -134,3 +134,98 @@ describe("pnpm check:leak (criterion 29)", () => {
     expect(result.out).toContain("out/kn/index.html is missing");
   });
 });
+
+// Added by test-engineer after mutation testing: each test fails when the rule it names is removed from the script.
+describe("pnpm size, gaps found by mutation (criterion 30)", () => {
+  /** A project whose en page is rewritten with the given head markup and extra files in out/_next. */
+  function withEnPage(scriptTags: string, files: Record<string, Buffer | string> = {}): string {
+    const root = project();
+    for (const [name, content] of Object.entries(files)) writeFileSync(join(root, "out", "_next", name), content);
+    writeFileSync(join(root, "out", "en", "index.html"), `<html><body><p>English home line here</p>${scriptTags}</body></html>`);
+    return root;
+  }
+
+  it("says nothing about the 150 KB target below it: ok, no WARN", () => {
+    const result = run(sizeScript, project({ scriptBytes: 140 * 1024 }));
+    expect(result.status).toBe(0);
+    expect(result.out).not.toContain("WARN");
+    expect(result.out).not.toContain("OVER");
+  });
+
+  it("marks a page over 200 KB as OVER and not as WARN", () => {
+    const result = run(sizeScript, project({ scriptBytes: 210 * 1024 }));
+    const line = result.out.split("\n").find((l) => l.includes("out/index.html"))!;
+    expect(line).toContain("OVER");
+    expect(line).not.toContain("WARN");
+  });
+
+  it("adds up every script a page loads", () => {
+    const root = withEnPage('<script src="/_next/b1.js"></script><script src="/_next/b2.js"></script>', {
+      "b1.js": randomBytes(120 * 1024),
+      "b2.js": randomBytes(120 * 1024),
+    });
+    const result = run(sizeScript, root);
+    expect(result.status).toBe(1);
+    expect(result.out).toMatch(/OVER\s+\d+\.\d KB\s+out\/en\/index\.html/);
+  });
+
+  it("counts gzipped bytes, not raw bytes", () => {
+    const root = withEnPage('<script src="/_next/zeros.js"></script>', { "zeros.js": Buffer.alloc(900 * 1024) });
+    const result = run(sizeScript, root);
+    expect(result.status).toBe(0);
+    expect(result.out).not.toContain("OVER");
+  });
+
+  it("does not count a nomodule script", () => {
+    const root = withEnPage('<script src="/_next/legacy.js" nomodule=""></script><script src="/_next/a.js"></script>', {
+      "legacy.js": randomBytes(300 * 1024),
+    });
+    const result = run(sizeScript, root);
+    expect(result.status).toBe(0);
+  });
+
+  it("fails closed on a page with no script at all", () => {
+    const result = run(sizeScript, withEnPage(""));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("out/en/index.html: no scripts found");
+  });
+
+  it("fails closed on a script it cannot find, instead of counting it as zero", () => {
+    const result = run(sizeScript, withEnPage('<script src="/_next/gone.js"></script>'));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('cannot measure script "/_next/gone.js"');
+  });
+
+  it("fails with a clear message when there is no out/ folder", () => {
+    const root = mkdtempSync(join(tmpdir(), "size-scripts-"));
+    made.push(root);
+    const result = run(sizeScript, root);
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("No out/ folder");
+  });
+});
+
+describe("pnpm check:leak, gaps found by mutation (criterion 29)", () => {
+  it("finds a message written inside a script with its quotes escaped", () => {
+    const quoted = 'Kannada says "hello" here';
+    const kn = { home: { placeholder: quoted } };
+    const root = project({
+      messages: { ...messages, kn },
+      scriptText: { "chunk.js": `var m="${quoted.replace(/"/g, '\\"')}"` },
+      body: (l) => (l === "kn" ? `<p>${quoted.replace(/"/g, "&quot;")}</p>` : `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`),
+    });
+    const result = run(leakScript, root);
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("out/_next/chunk.js");
+  });
+
+  it("finds a leak of the Telugu message on the English page, and of the English message on the Telugu page", () => {
+    const page = (l: string, extra: string) => `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}${extra}</p>`;
+    const te = run(leakScript, project({ body: (l) => (l === "en" ? page(l, messages.te.home.placeholder) : page(l, "")) }));
+    expect(te.status).toBe(1);
+    expect(te.out).toContain("en page loads a te message");
+    const en = run(leakScript, project({ body: (l) => (l === "te" ? page(l, messages.en.home.placeholder) : page(l, "")) }));
+    expect(en.status).toBe(1);
+    expect(en.out).toContain("te page loads a en message");
+  });
+});
