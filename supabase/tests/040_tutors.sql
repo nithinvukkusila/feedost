@@ -3,7 +3,7 @@
 -- own two users (the trigger makes their tutors rows) and rolls everything back.
 begin;
 select tests.assert_ready();
-select plan(34);
+select plan(37);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -72,6 +72,10 @@ select throws_ok($$update public.tutors set upi_id = 'name@' where id = tests.tu
 select throws_ok($$update public.tutors set subjects = array['a','b','c','d','e','f','g','h','i'] where id = tests.tutor_a()$$, '23514', null, 'nine subjects are refused');
 select lives_ok($$update public.tutors set upi_id = 'meena.tuitions@okhdfc' where id = tests.tutor_a()$$, 'a dotted UPI ID is accepted');
 select lives_ok($$update public.tutors set upi_id = 'ravi-9@ybl' where id = tests.tutor_a()$$, 'a UPI ID with a dash and a digit is accepted');
+-- The length of the part before the @ is 2 to 256 (the PRD pattern); the edges are where a regex limit hid a bug.
+select lives_ok(format('update public.tutors set upi_id = %L where id = tests.tutor_a()', repeat('a', 256) || '@okhdfc'), 'a 256-character UPI name is accepted');
+select throws_ok(format('update public.tutors set upi_id = %L where id = tests.tutor_a()', repeat('a', 257) || '@okhdfc'), '23514', null, 'a 257-character UPI name is refused');
+select throws_ok($$update public.tutors set upi_id = 'a@okhdfc' where id = tests.tutor_a()$$, '23514', null, 'a 1-character UPI name is refused');
 
 -- updated_at moves forward on update
 create temp table updated_before as select updated_at from public.tutors where id = tests.tutor_a();

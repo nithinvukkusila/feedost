@@ -64,8 +64,10 @@ create table public.tutors (
   constraint tutors_language_check
     check (language in ('en', 'hi', 'kn', 'te')),
   -- The PRD pattern ^[\w.\-]{2,256}@[a-zA-Z]{2,64}$ with \w written out, so SQL and JavaScript agree.
+  -- PostgreSQL allows a repeat count of 255 at most, so the 2 to 256 length of the part before the @
+  -- is a separate check instead of {2,256}.
   constraint tutors_upi_id_check
-    check (upi_id is null or upi_id ~ '^[A-Za-z0-9_.-]{2,256}@[A-Za-z]{2,64}$'),
+    check (upi_id is null or (upi_id ~ '^[A-Za-z0-9_.-]+@[A-Za-z]{2,64}$' and char_length(split_part(upi_id, '@', 1)) between 2 and 256)),
   constraint tutors_subjects_check
     check (
       cardinality(subjects) <= 8
