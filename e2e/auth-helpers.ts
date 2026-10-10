@@ -96,6 +96,8 @@ export type Stub = {
   tokenDown: boolean;
   /** Hold the token endpoint's answer back this many milliseconds, so a spec can look at the page in between. */
   tokenDelayMs: number;
+  /** Answer reads of the tutor's row with this status and a PostgREST-shaped error (401: the server refuses the session; 503: it is down). Null answers normally. */
+  tutorReadStatus: number | null;
   /** Hold the tutor's row back this many milliseconds (the loading state). */
   tutorDelayMs: number;
   /** Answer the logout call by dropping the connection, as a dead network does. */
@@ -143,6 +145,7 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
     refuseToken: false,
     tokenDown: false,
     tokenDelayMs: 0,
+    tutorReadStatus: null,
     tutorDelayMs: 0,
     logoutFails: false,
     authorize: [],
@@ -199,6 +202,11 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
         return;
       }
       if (stub.tutorDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stub.tutorDelayMs));
+      if (stub.tutorReadStatus !== null && request.method() === "GET") {
+        const refused = stub.tutorReadStatus === 401 || stub.tutorReadStatus === 403;
+        await json(route, stub.tutorReadStatus, refused ? { code: "PGRST301", message: "JWT expired" } : { message: "made-up server error" });
+        return;
+      }
       const wantsObject = (request.headers()["accept"] ?? "").includes("vnd.pgrst.object");
       if (request.method() === "GET") {
         if (stub.tutor) await json(route, 200, wantsObject ? stub.tutor : [stub.tutor]);

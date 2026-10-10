@@ -52,6 +52,34 @@ test.describe("20: the session cannot be checked because the network is down", (
   });
 });
 
+test.describe("20 (review fix): a session the server refuses, and a server that keeps failing", () => {
+  test("a 401 on the tutor's row ends on the sign-in screen with the expired message, signed out", async ({ page }) => {
+    const stub = await stubSupabase(page, { tutor: completeTutor() });
+    stub.tutorReadStatus = 401;
+    await seedSession(page);
+    await page.goto("/en/home/");
+    await expect(page).toHaveURL(`${ORIGIN}/en/sign-in/`);
+    await expect(error(page)).toHaveText(messageText("en", "signIn.expired"));
+    expect(await stored(page)).toBe(false);
+  });
+
+  test("a 503 shows the banner with Try again and Sign out, and Sign out leaves for sign-in", async ({ page }) => {
+    const stub = await stubSupabase(page, { tutor: completeTutor() });
+    stub.tutorReadStatus = 503;
+    await seedSession(page);
+    await page.goto("/en/home/");
+    await expect(error(page)).toContainText("The network dropped. Nothing is lost.");
+    await expect(error(page).getByRole("button", { name: "Try again" })).toBeVisible();
+    await expect(error(page).getByRole("button", { name: "Sign out" })).toBeVisible();
+    // Try again reads again, and it still fails: no way to get stuck.
+    await error(page).getByRole("button", { name: "Try again" }).click();
+    await expect(error(page).getByRole("button", { name: "Sign out" })).toBeVisible();
+    await error(page).getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(`${ORIGIN}/en/sign-in/`);
+    expect(await stored(page)).toBe(false);
+  });
+});
+
 test.describe("33, 46: the loading screen in every language at larger text", () => {
   for (const lang of langs) {
     test(`/${lang}/home/ while the row is read: the words, no sideways scroll, nothing cut`, async ({ page }) => {

@@ -38,17 +38,32 @@ function fromRow(row: Row): Tutor {
   };
 }
 
-/** The tutor's row could not be read (the network, or the server). Nothing is lost; try again. */
+/**
+ * Why the tutor's row could not be read. `rejected`: the server answered and refused this session (401,
+ * 403, PostgREST's PGRST30x), so trying again cannot help and the tutor must sign in again. `failed`:
+ * anything else (the network, a 5xx). Nothing is lost; try again.
+ */
+export type TutorLoadKind = "rejected" | "failed";
+
 export class TutorLoadError extends Error {
-  constructor() {
+  readonly kind: TutorLoadKind;
+  constructor(kind: TutorLoadKind = "failed") {
     super("The tutor's row could not be loaded");
     this.name = "TutorLoadError";
+    this.kind = kind;
   }
+}
+
+/** Tells a refused session (401, 403, PGRST30x: bad, expired or unknown token, a deleted user) from any other failure. */
+export function classifyLoadFailure(failure: { status?: number; code?: string }): TutorLoadKind {
+  if (failure.status === 401 || failure.status === 403) return "rejected";
+  if (typeof failure.code === "string" && /^PGRST30\d$/.test(failure.code)) return "rejected";
+  return "failed";
 }
 
 /**
  * The signed-in tutor's own row (row-level security lets them see no other). Null when there is no row.
- * Throws TutorLoadError when it could not be read.
+ * Throws TutorLoadError when it could not be read; its `kind` says whether the session was refused.
  */
 export async function getTutor(): Promise<Tutor | null> {
   let result;
@@ -58,7 +73,7 @@ export async function getTutor(): Promise<Tutor | null> {
   } catch {
     throw new TutorLoadError();
   }
-  if (result.error) throw new TutorLoadError();
+  if (result.error) throw new TutorLoadError(classifyLoadFailure({ status: result.status, code: result.error.code }));
   return result.data ? fromRow(result.data) : null;
 }
 

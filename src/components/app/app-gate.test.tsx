@@ -11,7 +11,12 @@ let pathname = "/en/home/";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }), usePathname: () => pathname }));
 
 const auth = { session: { status: "loading" } as SessionState, retry: vi.fn(), signOut: vi.fn() };
-vi.mock("@/lib/auth", () => ({ useSession: () => ({ session: auth.session, retry: auth.retry }), signOut: () => auth.signOut() }));
+const setNotice = vi.fn();
+vi.mock("@/lib/auth", () => ({
+  useSession: () => ({ session: auth.session, retry: auth.retry }),
+  signOut: () => auth.signOut(),
+  setNotice: (...args: unknown[]) => setNotice(...args),
+}));
 
 const getTutor = vi.fn<() => Promise<Tutor | null>>();
 const syncLanguage = vi.fn();
@@ -44,6 +49,7 @@ beforeEach(() => {
   getTutor.mockReset();
   syncLanguage.mockReset();
   auth.retry.mockReset();
+  setNotice.mockReset();
   auth.signOut.mockReset();
   auth.signOut.mockResolvedValue(undefined);
   auth.session = { status: "loading" };
@@ -174,6 +180,59 @@ describe("when the network fails (criterion 20)", () => {
     gate();
     expect(screen.getByRole("alert").textContent).toContain("Couldn't load your details");
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe("when the server refuses the session, or keeps failing (review fix)", () => {
+  it("signs out, leaves the expired message and goes to sign-in when the row read is refused", async () => {
+    auth.session = signedIn;
+    getTutor.mockRejectedValue(Object.assign(new Error("refused"), { kind: "rejected" }));
+    gate();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/sign-in/"));
+    expect(setNotice).toHaveBeenCalledWith("expired");
+    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("offers Sign out next to Try again for any other failure, and Sign out works", async () => {
+    auth.session = signedIn;
+    getTutor.mockRejectedValue(Object.assign(new Error("503"), { kind: "failed" }));
+    gate();
+    await screen.findByRole("button", { name: "Try again" });
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/en/sign-in/"));
+    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(setNotice).not.toHaveBeenCalled();
+  });
+
+  describe("offline", () => {
+    let online: PropertyDescriptor | undefined;
+    beforeEach(() => {
+      online = Object.getOwnPropertyDescriptor(Navigator.prototype, "onLine");
+      Object.defineProperty(navigator, "onLine", { value: false, configurable: true });
+    });
+    afterEach(() => {
+      delete (navigator as unknown as { onLine?: boolean }).onLine;
+      if (online) Object.defineProperty(Navigator.prototype, "onLine", online);
+    });
+
+    it("shows the banner at once without asking the server, and Try again does nothing", async () => {
+      auth.session = signedIn;
+      gate();
+      const alert = await screen.findByRole("alert");
+      expect(alert.textContent).toContain("The network dropped. Nothing is lost.");
+      expect(getTutor).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+      expect(auth.retry).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toBeTruthy();
+    });
+
+    it("shows the banner after a moment when the session is still being checked", async () => {
+      auth.session = { status: "loading" };
+      gate();
+      expect(screen.getByRole("status").textContent).toBe("Opening your book…");
+      expect((await screen.findByRole("alert", undefined, { timeout: 3000 })).textContent).toContain("Nothing is lost");
+    });
   });
 });
 

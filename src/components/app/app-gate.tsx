@@ -3,7 +3,9 @@
 // The signed-in guard for every app screen (spec R1-1, criteria 15 to 20, 26 and 36). It shows nothing
 // but "Opening your book…" until it knows who is signed in and has read their row, then either the
 // screen or a move to where the tutor belongs (sign-in, or the open setup step). A network failure shows
-// the error banner with "Try again"; it never signs the tutor out.
+// the error banner with "Try again" and "Sign out"; it never signs the tutor out by itself. A session the
+// server refuses (401, 403) cannot be mended by trying again, so it ends as an expired one: signed out,
+// with the "expired" message on the sign-in screen.
 //
 // This is a convenience for the person, not security. The database's row-level security is the wall:
 // a signed-out visitor gets zero rows whatever this page draws.
@@ -12,7 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Locale } from "@/config/locales";
 import { localeHref, placePath, signInPath, type Place } from "@/config/routes";
-import { signOut, useSession } from "@/lib/auth";
+import { setNotice, signOut, useSession } from "@/lib/auth";
 import { nextRoute } from "@/lib/profile";
 import { getTutor, syncLanguage, type Tutor } from "@/lib/tutor";
 import { LoadError } from "./load-error";
@@ -22,7 +24,8 @@ type TutorState =
   | { status: "idle" }
   | { status: "ready"; tutor: Tutor }
   | { status: "missing" }
-  | { status: "error" };
+  | { status: "error" }
+  | { status: "refused" };
 
 type TutorContextValue = { tutor: Tutor; setTutor: (tutor: Tutor) => void };
 const TutorContext = createContext<TutorContextValue | null>(null);
@@ -33,6 +36,15 @@ export function useTutor(): TutorContextValue {
   if (value === null) throw new Error("useTutor is only for a screen inside the app gate");
   return value;
 }
+
+/** True when reading the row failed because the server refused this session (see `getTutor`). */
+function wasRefused(error: unknown): boolean {
+  return typeof error === "object" && error !== null && (error as { kind?: unknown }).kind === "rejected";
+}
+
+const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
+// With no network and a token that has run out, the library retries for about 26 seconds. The tutor is told sooner.
+const OFFLINE_PATIENCE_MS = 1500;
 
 const places = Object.keys(placePath) as Place[];
 
@@ -50,21 +62,42 @@ export function AppGate({ children }: Readonly<{ children: ReactNode }>) {
   const { session, retry: retrySession } = useSession();
   const [state, setState] = useState<TutorState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
+  const [offlineWait, setOfflineWait] = useState(false);
 
   const userId = session.status === "signed-in" ? session.userId : null;
 
-  // Read the tutor's row once someone is signed in (and again on "Try again").
+  // Offline while the session is still being checked: say so after a moment, not after the library's retries.
+  const sessionLoading = session.status === "loading";
+  useEffect(() => {
+    if (!sessionLoading || !isOffline()) return;
+    const timer = setTimeout(() => setOfflineWait(true), OFFLINE_PATIENCE_MS);
+    return () => clearTimeout(timer);
+  }, [sessionLoading, attempt]);
+
+  // Read the tutor's row once someone is signed in (and again on "Try again"). Offline, say so at once.
   useEffect(() => {
     if (userId === null) return;
     let alive = true;
-    getTutor().then(
+    const read = isOffline() ? Promise.reject(new Error("offline")) : getTutor();
+    read.then(
       (tutor) => alive && setState(tutor ? { status: "ready", tutor } : { status: "missing" }),
-      () => alive && setState({ status: "error" }),
+      (error: unknown) => {
+        if (!alive) return;
+        setState({ status: wasRefused(error) ? "refused" : "error" });
+      },
     );
     return () => {
       alive = false;
     };
   }, [userId, attempt]);
+
+  // The server will not take this session: end it as an expired one, with the message, and go to sign-in.
+  const refused = state.status === "refused";
+  useEffect(() => {
+    if (!refused) return;
+    setNotice("expired");
+    void signOut().then(() => router.replace(localeHref(locale, signInPath)));
+  }, [refused, locale, router]);
 
   // A row that belongs to someone else (another account signed in on this tab) is not this tutor's.
   const tutor = state.status === "ready" && state.tutor.id === userId ? state.tutor : undefined;
@@ -86,6 +119,9 @@ export function AppGate({ children }: Readonly<{ children: ReactNode }>) {
   const value = useMemo(() => (tutor ? { tutor, setTutor } : null), [tutor, setTutor]);
 
   const tryAgain = useCallback(() => {
+    // Offline there is nothing to try, and trying would only wait. The banner stays until the network is back.
+    if (isOffline()) return;
+    setOfflineWait(false);
     setState({ status: "idle" });
     setAttempt((n) => n + 1);
     retrySession();
@@ -96,7 +132,9 @@ export function AppGate({ children }: Readonly<{ children: ReactNode }>) {
     router.replace(localeHref(locale, signInPath));
   }, [locale, router]);
 
-  if (session.status === "error" || state.status === "error") return <LoadError kind="network" onRetry={tryAgain} />;
+  if (session.status === "error" || state.status === "error" || (sessionLoading && offlineWait)) {
+    return <LoadError kind="network" onRetry={tryAgain} onSignOut={leave} />;
+  }
   if (state.status === "missing" && userId !== null) return <LoadError kind="missing" onSignOut={leave} />;
   if (value !== null && decision.action === "stay") return <TutorContext.Provider value={value}>{children}</TutorContext.Provider>;
   return <LoadingBook label={t("loading")} />;

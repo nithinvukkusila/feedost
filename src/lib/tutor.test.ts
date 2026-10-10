@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const calls: { op: string; args: unknown[] }[] = [];
-let outcome: { data: unknown; error: { code?: string; message?: string } | null } = { data: null, error: null };
+let outcome: { data: unknown; error: { code?: string; message?: string } | null; status?: number } = { data: null, error: null };
 let session: { user: { id: string } } | null = { user: { id: "user-1" } };
 let throwOnQuery = false;
 
@@ -85,6 +85,46 @@ describe("getTutor", () => {
     await expect(getTutor()).rejects.toBeInstanceOf(TutorLoadError);
     throwOnQuery = true;
     await expect(getTutor()).rejects.toBeInstanceOf(TutorLoadError);
+  });
+});
+
+describe("getTutor tells a refused session from a failure (review fix)", () => {
+  it.each([
+    ["401", { status: 401, error: { message: "JWT expired", code: "PGRST301" } }],
+    ["403", { status: 403, error: { message: "forbidden", code: "42501" } }],
+    ["PGRST302 with no status", { error: { code: "PGRST302", message: "anonymous access is disabled" } }],
+    ["PGRST303", { status: 401, error: { code: "PGRST303", message: "JWT claims" } }],
+  ])("%s is rejected", async (_name, extra) => {
+    outcome = { data: null, ...extra } as typeof outcome;
+    const { getTutor } = await import("./tutor");
+    await expect(getTutor()).rejects.toMatchObject({ name: "TutorLoadError", kind: "rejected" });
+  });
+
+  it.each([
+    ["503", { status: 503, error: { message: "unavailable" } }],
+    ["500", { status: 500, error: { code: "XX000", message: "boom" } }],
+    ["a dropped connection", { status: 0, error: { message: "Failed to fetch" } }],
+    ["PGRST116", { status: 406, error: { code: "PGRST116", message: "no rows" } }],
+  ])("%s is a plain failure", async (_name, extra) => {
+    outcome = { data: null, ...extra } as typeof outcome;
+    const { getTutor } = await import("./tutor");
+    await expect(getTutor()).rejects.toMatchObject({ kind: "failed" });
+  });
+
+  it("a thrown network error is a plain failure", async () => {
+    throwOnQuery = true;
+    const { getTutor } = await import("./tutor");
+    await expect(getTutor()).rejects.toMatchObject({ kind: "failed" });
+  });
+});
+
+describe("classifyLoadFailure", () => {
+  it("does not mistake near misses for a refusal", async () => {
+    const { classifyLoadFailure } = await import("./tutor");
+    expect(classifyLoadFailure({ code: "PGRST3010" })).toBe("failed");
+    expect(classifyLoadFailure({ code: "PGRST200" })).toBe("failed");
+    expect(classifyLoadFailure({ status: 404 })).toBe("failed");
+    expect(classifyLoadFailure({})).toBe("failed");
   });
 });
 
