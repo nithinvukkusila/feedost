@@ -95,6 +95,20 @@
       "languages": "భాషలు"
     }
   },
+  "reminder": {
+    "meta": {
+      "title": "ట్యూటర్ల కోసం ఫీజు రిమైండర్: WhatsApp సందేశం + UPI లింక్",
+      "description": "ఇంగ్లీష్, హిందీ, కన్నడ లేదా తెలుగులో ట్యూషన్ ఫీజు రిమైండర్ రాయండి, మీ UPI చెల్లింపు లింక్‌తో. ఉచితం, సైన్-అప్ అవసరం లేదు, ఏదీ సేవ్ కాదు."
+    },
+    "kicker": "ఉచిత సాధనం · సైన్-అప్ అవసరం లేదు",
+    "title": "మీరు వాయిదా వేస్తున్న ఫీజు రిమైండర్‌ను రాయండి.",
+    "noscript": "ఈ సాధనానికి JavaScript ఆన్‌లో ఉండాలి.",
+    "promo": {
+      "title": "ప్రతి నెలా 20 మంది తల్లిదండ్రులకు ఇదే చేస్తున్నారా?",
+      "body": "TODO-translate: The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
+      "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
+    }
+  },
   "notFound": {
     "title": "ఈ పేజీ లేదు.",
     "body": "TODO-translate: Check the address, or open the page in your language."

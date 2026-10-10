@@ -95,6 +95,20 @@
       "languages": "Languages"
     }
   },
+  "reminder": {
+    "meta": {
+      "title": "Fee reminder writer for tutors: WhatsApp message + UPI link",
+      "description": "Write a polite or firm tuition fee reminder in English, Hindi, Kannada or Telugu, with your UPI payment link. Free, no sign-up, nothing saved."
+    },
+    "kicker": "Free tool · no sign-up",
+    "title": "Write the fee reminder you keep putting off.",
+    "noscript": "This tool needs JavaScript turned on.",
+    "promo": {
+      "title": "Doing this for 20 parents every month?",
+      "body": "The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
+      "join": "Join the waitlist"
+    }
+  },
   "notFound": {
     "title": "This page does not exist.",
     "body": "Check the address, or open the page in your language."

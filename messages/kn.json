@@ -95,6 +95,20 @@
       "languages": "ಭಾಷೆಗಳು"
     }
   },
+  "reminder": {
+    "meta": {
+      "title": "ಟ್ಯೂಟರ್‌ಗಳಿಗೆ ಶುಲ್ಕ ನೆನಪಿನ ಸಂದೇಶ: WhatsApp + UPI ಲಿಂಕ್",
+      "description": "ಇಂಗ್ಲಿಷ್, ಹಿಂದಿ, ಕನ್ನಡ ಅಥವಾ ತೆಲುಗಿನಲ್ಲಿ ಟ್ಯೂಷನ್ ಶುಲ್ಕದ ನೆನಪಿನ ಸಂದೇಶ ಬರೆಯಿರಿ, ನಿಮ್ಮ UPI ಪಾವತಿ ಲಿಂಕ್ ಜೊತೆಗೆ. ಉಚಿತ, ಸೈನ್-ಅಪ್ ಬೇಡ, ಏನೂ ಉಳಿಸುವುದಿಲ್ಲ."
+    },
+    "kicker": "ಉಚಿತ ಉಪಕರಣ · ಸೈನ್-ಅಪ್ ಬೇಡ",
+    "title": "ನೀವು ಮುಂದೂಡುತ್ತಿರುವ ಶುಲ್ಕ ನೆನಪಿನ ಸಂದೇಶವನ್ನು ಬರೆಯಿರಿ.",
+    "noscript": "ಈ ಉಪಕರಣಕ್ಕೆ JavaScript ಆನ್ ಆಗಿರಬೇಕು.",
+    "promo": {
+      "title": "ಪ್ರತಿ ತಿಂಗಳು 20 ಪೋಷಕರಿಗೆ ಇದನ್ನೇ ಮಾಡುತ್ತೀರಾ?",
+      "body": "TODO-translate: The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
+      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
+    }
+  },
   "notFound": {
     "title": "ಈ ಪುಟ ಇಲ್ಲ.",
     "body": "TODO-translate: Check the address, or open the page in your language."

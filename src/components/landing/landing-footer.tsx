@@ -2,11 +2,13 @@
 // Each endonym keeps its `lang` (screen readers say it right) but is set in the Latin stack, so the phone's own
 // font draws it and no page fetches the three Anek files just for the footer (F3 criterion 5).
 // The language links are plain links; following one does not save the choice (spec R0-1, criterion 32).
+// `path` is the page the links point at in each language: none for the landing, the tool's path on a tool page.
 import { useLocale, useTranslations } from "next-intl";
 import { brand } from "@/config/brand";
 import { localeNames, locales } from "@/config/locales";
+import { localeHref } from "@/config/routes";
 
-export function LandingFooter() {
+export function LandingFooter({ path = "" }: Readonly<{ path?: string }>) {
   const t = useTranslations("landing.footer");
   const current = useLocale();
   return (
@@ -22,7 +24,7 @@ export function LandingFooter() {
                     {localeNames[code]}
                   </span>
                 ) : (
-                  <a href={`/${code}/`} lang={code} hrefLang={code} className="flex min-h-tap min-w-tap items-center type-endonym underline ring:ground-ring">
+                  <a href={localeHref(code, path)} lang={code} hrefLang={code} className="flex min-h-tap min-w-tap items-center type-endonym underline ring:ground-ring">
                     {localeNames[code]}
                   </a>
                 )}
