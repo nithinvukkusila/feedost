@@ -122,6 +122,13 @@ Do these once, at a desk. Never paste a key or password into chat or a file in t
 
 On the free plan a project with no activity for about a week is paused. If `pnpm smoke:env staging` says the project may be paused, restore it from the Supabase dashboard.
 
+## Staging as set up on 2026-10-10 (F4b)
+
+- **Staging project:** ref `cujjgadbdqbxcsseogfx`, region `ap-northeast-1` (Tokyo). The founder created one project and uses it as staging; a production project is created later, in Mumbai (`ap-south-1`), when the app is ready to release. A project's region cannot be changed afterwards.
+- **Applied to staging:** migration `20261009195132_f4_baseline` (`supabase db push`; the database was empty before it), the `health` function (`functions deploy health --use-api`, no Docker needed) and `APP_ENV=staging` (`secrets set`).
+- **Proved:** `pnpm smoke:env staging` prints `staging`. The hosted gateway answers an unauthenticated `GET /functions/v1/health` with 200, so `verify_jwt = false` works and no `apikey` header is needed. An agent's shell can use the token from `supabase login` (run in the macOS Terminal: the login needs a real terminal).
+- **Not done yet:** the Vercel Preview variables (the founder adds them), the build guard wired into `build` (waits for those variables and for the publishable-key check below), production (no project yet; `production.ref` stays null and `smoke:env production` fails on purpose).
+
 ## Verified and unverified today
 
 Verified (run in CI or by unit tests, or read in the code):
@@ -135,13 +142,13 @@ Verified (run in CI or by unit tests, or read in the code):
 Unverified until F4b or later:
 
 - `check:build-env` ties an anon JWT key to its project, but not an `sb_publishable_` key: a Preview build with the staging URL and the production publishable key would pass. When F4b records the keys, add the key prefix to `supabase/environments.json` and compare against it, before the guard is wired into `build`.
-- **The hosted gateway and `verify_jwt = false`.** Whether the hosted gateway lets an unauthenticated `GET` through. If it wants a key, `smoke:env` and the dev page add the `apikey` header (the preflight already allows it). The first staging deploy settles it.
-- **`supabase functions deploy health --use-api`** without Docker, and `supabase secrets set APP_ENV=...`.
+- ~~**The hosted gateway and `verify_jwt = false`.**~~ Proved on staging, 2026-10-10 (see above). Was: whether the hosted gateway lets an unauthenticated `GET` through. If it wants a key, `smoke:env` and the dev page add the `apikey` header (the preflight already allows it). The first staging deploy settles it.
+- ~~**`supabase functions deploy health --use-api`** without Docker, and `supabase secrets set APP_ENV=...`.~~ Both worked on staging, 2026-10-10.
 - **The deploy hook** building `main` (section above).
 - **`pull_request` base wiring of `check:db`.** CI passes `origin/<base ref>` on `pull_request` and the previous commit on push to `main`. The push-to-`main` path and the pull-request path with the final `ci.yml` have not been seen running. Watch the first pull request.
 - **The final `ci.yml`** after the temporary branch trigger was removed. The file is as intended, but the first run on the pull request is the check.
 - **The build guard on Vercel.** `check:build-env` is tested on fake environments only. It is wired into `build` in F4b, after the variables and refs exist.
-- **Whether an agent's shell can read the keychain token** from `supabase login`.
+- ~~**Whether an agent's shell can read the keychain token** from `supabase login`.~~ It can, 2026-10-10.
 - **Docker on the founder's machine.** Not working today (the disk is nearly full and the socket link points at another account). The local commands are proved by CI only.
 - **The hosted auth settings** on both projects, until the founder reads them back in the dashboard.
 - **Browser access from a `*.vercel.app` preview and from the LAN address** (no blocked-request error).
