@@ -14,7 +14,8 @@
       "kicker": "The fee register for home tutors. Free.",
       "title": "Fees collected. Not chased.",
       "body": "The notebook you already keep, soon one that reminds parents on WhatsApp and gets paid by UPI.",
-      "join": "Join the waitlist"
+      "join": "Join the waitlist",
+      "tool": "or write a free reminder now"
     },
     "example": {
       "label": "Example",
@@ -51,7 +52,7 @@
       "stamp": "Paid"
     },
     "tools": {
-      "title": "Two free tools. Coming soon.",
+      "title": "Two free tools.",
       "tag": "Coming soon",
       "t1": {
         "no": "Tool no. 01",
@@ -61,7 +62,8 @@
       "t2": {
         "no": "Tool no. 02",
         "title": "Fee reminder writer",
-        "body": "Polite or firm, with your UPI link inside."
+        "body": "Polite or firm, with your UPI link inside.",
+        "open": "Write a reminder"
       }
     },
     "promises": {

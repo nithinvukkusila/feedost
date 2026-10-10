@@ -1,6 +1,8 @@
-// Section 1 of the landing: kicker, the page's one h1, a paragraph, the main button and the ledger card.
-import { useTranslations } from "next-intl";
+// Section 1 of the landing: kicker, the page's one h1, a paragraph, the main button, a text link to
+// the free reminder writer, and the ledger card.
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { feeReminderPath, localeHref } from "@/config/routes";
 import { LedgerCard } from "./ledger-card";
 
 function Arrow() {
@@ -13,6 +15,7 @@ function Arrow() {
 
 export function Hero() {
   const t = useTranslations("landing.hero");
+  const locale = useLocale();
   return (
     <section>
       <div className="on-cloth-ground bg-cloth px-5 pt-8 pb-28 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed">
@@ -25,6 +28,12 @@ export function Hero() {
               {t("join")}
             </Button>
           </div>
+          <a
+            href={localeHref(locale, feeReminderPath)}
+            className="type-body mt-3 flex min-h-tap items-center justify-center text-center font-bold text-on-cloth underline ring:ground-ring"
+          >
+            {t("tool")}
+          </a>
         </div>
       </div>
       <div className="relative mx-auto -mt-24 w-full max-w-2xl pr-7 pl-5">

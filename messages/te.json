@@ -14,7 +14,8 @@
       "kicker": "హోమ్ ట్యూటర్ల ఫీజు రిజిస్టర్. ఉచితం.",
       "title": "ఫీజు వసూలు. వెంటపడకుండా.",
       "body": "TODO-translate: The notebook you already keep, soon one that reminds parents on WhatsApp and gets paid by UPI.",
-      "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
+      "join": "వెయిట్‌లిస్ట్‌లో చేరండి",
+      "tool": "లేదా ఇప్పుడే ఉచిత రిమైండర్ రాయండి"
     },
     "example": {
       "label": "ఉదాహరణ",
@@ -51,7 +52,7 @@
       "stamp": "చెల్లించారు"
     },
     "tools": {
-      "title": "రెండు ఉచిత సాధనాలు. త్వరలో వస్తాయి.",
+      "title": "రెండు ఉచిత సాధనాలు.",
       "tag": "త్వరలో వస్తుంది",
       "t1": {
         "no": "సాధనం నం. 01",
@@ -61,7 +62,8 @@
       "t2": {
         "no": "సాధనం నం. 02",
         "title": "TODO-translate: Fee reminder writer",
-        "body": "మర్యాదగా లేదా గట్టిగా, మీ UPI లింక్‌తో."
+        "body": "మర్యాదగా లేదా గట్టిగా, మీ UPI లింక్‌తో.",
+        "open": "రిమైండర్ రాయండి"
       }
     },
     "promises": {
