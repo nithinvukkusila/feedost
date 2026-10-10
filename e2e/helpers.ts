@@ -1,4 +1,6 @@
 // Shared helpers for the F2 Playwright specs. Test code only.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, type CDPSession, type Locator, type Page, type TestInfo } from "@playwright/test";
 import { group, readTokens } from "../src/styles/read-tokens";
 
@@ -397,4 +399,11 @@ export async function slow4G(page: Page): Promise<CDPSession> {
     uploadThroughput: (750 * 1024 * 0.9) / 8,
   });
   return cdp;
+}
+
+/** The words a page shows for a message, the way the app shows them: an untranslated value reads as its English text. */
+export function messageText(lang: Lang, path: string): string {
+  const tree = JSON.parse(readFileSync(join(__dirname, "..", "messages", `${lang}.json`), "utf8"));
+  const value = path.split(".").reduce((node, key) => node?.[key], tree) as string;
+  return value.replace(/^TODO-translate: /, "");
 }

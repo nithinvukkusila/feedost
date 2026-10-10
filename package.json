@@ -12,6 +12,7 @@
     "size": "node scripts/size.mjs",
     "check:leak": "node scripts/check-locale-leak.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "check:404": "node scripts/check-404.mjs",
     "check:db": "node scripts/check-db.mjs",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:build-env": "node scripts/check-build-env.mjs",

@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
   pageExtensions: includeDevRoutes
     ? ["dev.tsx", "tsx", "ts", "jsx", "js"]
     : ["tsx", "ts", "jsx", "js"],
+  // The only experimental flag in the app. Several root layouts and a top-level [locale] segment leave
+  // Next no single layout to build a 404 from, so out/404.html had no <html lang>. global-not-found.tsx
+  // is the documented fix. If an upgrade drops the flag, scripts/check-404.mjs fails in CI.
+  experimental: { globalNotFound: true },
   // cacheComponents and partialPrefetching need a server; they cannot be used with a static export.
   turbopack: {
     rules: {

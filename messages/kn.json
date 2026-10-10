@@ -2,7 +2,101 @@
   "common": {
     "loading": "ಲೋಡ್ ಆಗುತ್ತಿದೆ…"
   },
-  "home": {
-    "placeholder": "ಹೋಮ್ ಟ್ಯೂಟರ್‌ಗಳಿಗಾಗಿ ಶುಲ್ಕ ಸಂಗ್ರಹಣೆ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ."
+  "landing": {
+    "meta": {
+      "title": "{brand}: ಹೋಮ್ ಟ್ಯೂಟರ್‌ಗಳಿಗೆ ಶುಲ್ಕ ಪುಸ್ತಕ, ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+      "description": "TODO-translate: The fee register for home tutors, coming soon: WhatsApp reminders, UPI payments, one book. Get on the waitlist."
+    },
+    "header": {
+      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
+    },
+    "hero": {
+      "kicker": "ಹೋಮ್ ಟ್ಯೂಟರ್‌ಗಳ ಶುಲ್ಕ ಪುಸ್ತಕ. ಉಚಿತ.",
+      "title": "ಶುಲ್ಕ ಸಂಗ್ರಹ. ಬೆನ್ನು ಬೀಳದೆ.",
+      "body": "TODO-translate: The notebook you already keep, soon one that reminds parents on WhatsApp and gets paid by UPI.",
+      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
+    },
+    "example": {
+      "label": "ಉದಾಹರಣೆ",
+      "heading": "ಇನ್ನೂ ಬರಬೇಕಾದದ್ದು",
+      "student1": "ರವಿ ಕುಮಾರ್",
+      "late": "7 ದಿನ ತಡ",
+      "student2": "ಸೀಮಾ ಶರ್ಮಾ",
+      "paid": "TODO-translate: Paid this month"
+    },
+    "ribbon": {
+      "fees": "Fees",
+      "hindi": "फ़ीस",
+      "kannada": "ಶುಲ್ಕ",
+      "telugu": "ఫీజు",
+      "remind": "ನೆನಪಿಸಿ",
+      "pay": "ಪಾವತಿಸಿ",
+      "paid": "ಪಾವತಿಯಾಗಿದೆ"
+    },
+    "steps": {
+      "title": "TODO-translate: Asking for money is awkward. So don't ask.",
+      "accent": "ಟ್ಯಾಪ್ ಮಾಡಿ.",
+      "s1": {
+        "title": "ನೀವು ನೆನಪಿಸಿ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡುತ್ತೀರಿ",
+        "body": "TODO-translate: WhatsApp opens with a polite message in the parent's language. You only press send."
+      },
+      "s2": {
+        "title": "TODO-translate: The parent taps Pay",
+        "body": "TODO-translate: Their UPI app opens with your ID and the amount filled in. Nothing to install."
+      },
+      "s3": {
+        "title": "TODO-translate: The page gets stamped",
+        "body": "TODO-translate: Money lands in your account. A numbered receipt goes to the parent."
+      },
+      "stamp": "ಪಾವತಿಯಾಗಿದೆ"
+    },
+    "tools": {
+      "title": "ಎರಡು ಉಚಿತ ಉಪಕರಣಗಳು. ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ.",
+      "tag": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
+      "t1": {
+        "no": "ಉಪಕರಣ ಸಂ. 01",
+        "title": "TODO-translate: Fee receipt maker",
+        "body": "TODO-translate: A proper PDF receipt in one minute."
+      },
+      "t2": {
+        "no": "ಉಪಕರಣ ಸಂ. 02",
+        "title": "TODO-translate: Fee reminder writer",
+        "body": "TODO-translate: Polite or firm, with your UPI link inside."
+      }
+    },
+    "promises": {
+      "title": "ನಾಲ್ಕು ವಾಗ್ದಾನಗಳು, ಬರವಣಿಗೆಯಲ್ಲಿ.",
+      "p1": {
+        "title": "ನಿಮ್ಮ ಹಣವನ್ನು ನಾವು ಎಂದಿಗೂ ಇಟ್ಟುಕೊಳ್ಳುವುದಿಲ್ಲ.",
+        "body": "TODO-translate: UPI payments go from the parent's bank straight to your UPI ID."
+      },
+      "p2": {
+        "title": "ಪೋಷಕರು ಏನನ್ನೂ ಇನ್‌ಸ್ಟಾಲ್ ಮಾಡಬೇಕಿಲ್ಲ.",
+        "body": "TODO-translate: They open a link from WhatsApp. No app, no account."
+      },
+      "p3": {
+        "title": "TODO-translate: Built for a cheap phone and a slow network.",
+        "body": "TODO-translate: Light pages that open fast on a basic Android phone, even on patchy 4G."
+      },
+      "p4": {
+        "title": "ಬೇಕಾದದ್ದನ್ನು ಮಾತ್ರ ಇಟ್ಟುಕೊಳ್ಳುತ್ತೇವೆ.",
+        "body": "TODO-translate: Name, batch, fee and attendance. Nothing else, and no ads."
+      }
+    },
+    "waitlist": {
+      "title": "ಪುಸ್ತಕದಲ್ಲಿ ನಿಮ್ಮ ಹೆಸರು ಬರೆಯಿರಿ.",
+      "body": "TODO-translate: The waitlist opens soon. You will be able to put your name here.",
+      "soon": "TODO-translate: The waitlist opens soon. Come back to this page to join.",
+      "button": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
+      "reason": "ಶೀಘ್ರದಲ್ಲೇ ತೆರೆಯುತ್ತದೆ"
+    },
+    "footer": {
+      "line": "TODO-translate: Free fee collection for home tutors in India.",
+      "languages": "ಭಾಷೆಗಳು"
+    }
+  },
+  "notFound": {
+    "title": "ಈ ಪುಟ ಇಲ್ಲ.",
+    "body": "TODO-translate: Check the address, or open the page in your language."
   }
 }

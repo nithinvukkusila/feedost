@@ -10,7 +10,11 @@ export type ButtonVariant = "send" | "record" | "outline";
 // Whole class names: Tailwind must be able to see them.
 // What Button and FlatButton share: the box, the wrapping text, the 80ms move and the focus ring.
 const shape =
-  "inline-flex min-h-control items-center justify-center gap-2 rounded-sm border-2 text-center whitespace-normal wrap-anywhere transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
+  "inline-flex items-center justify-center gap-2 rounded-sm border-2 text-center whitespace-normal wrap-anywhere transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
+
+// Heights: 48px, or 56px for the one big call to action on a page (the landing hero).
+const sizes = { default: "min-h-control", large: "min-h-14" } as const;
+export type ButtonSize = keyof typeof sizes;
 
 const base = `type-control px-5 py-2.5 ${shape}`;
 
@@ -36,6 +40,8 @@ type Shared = {
   disabledReason?: ReactNode;
   /** Fill the width of the container. */
   full?: boolean;
+  /** `large` is 56px high instead of 48px. For the single main call to action on a page. */
+  size?: ButtonSize;
 };
 
 // `busyLabel` is required whenever `busy` can be true.
@@ -57,6 +63,7 @@ export function Button(props: ButtonProps) {
     disabled = false,
     disabledReason,
     full = false,
+    size = "default",
     busy = false,
     busyLabel,
     ...native
@@ -65,7 +72,7 @@ export function Button(props: ButtonProps) {
   const showReason = disabled && disabledReason != null;
   const working = busy && !disabled;
 
-  const className = cx(base, disabled ? unavailable : rest[variant], full && "w-full");
+  const className = cx(base, sizes[size], disabled ? unavailable : rest[variant], full && "w-full");
   const describedBy = cx(native["aria-describedby"], showReason && reasonId) || undefined;
   const content = (
     <>
@@ -130,7 +137,7 @@ export function Button(props: ButtonProps) {
   return (
     <span className={cx("flex-col gap-2", full ? "flex w-full" : "inline-flex")}>
       {control}
-      <span id={reasonId} className="type-caption text-ink-soft">
+      <span id={reasonId} className="type-caption min-w-0 text-ink-soft wrap-anywhere">
         {disabledReason}
       </span>
     </span>
@@ -192,7 +199,7 @@ const flatLooks: Record<FlatLook, string> = {
 };
 
 // 16px text, as the canvas draws the buttons inside banners, and a 2px move: there is no shadow to move into.
-const flatBase = `type-body px-3 py-2 font-bold pressed:press-flat ${shape}`;
+const flatBase = `type-body min-h-control px-3 py-2 font-bold pressed:press-flat ${shape}`;
 
 type FlatShared = {
   look: FlatLook;

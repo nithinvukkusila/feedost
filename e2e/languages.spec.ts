@@ -14,6 +14,7 @@ import {
   fontsSettled,
   indicLangs,
   langs,
+  messageText,
   openDevPage,
   recordRequests,
   scriptFontVariable,
@@ -32,7 +33,7 @@ function messages(lang: Lang): Tree {
 }
 /** The words a page shows for a key, the way the app shows them (an untranslated value reads as its English text). */
 function placeholderOf(lang: Lang): string {
-  const value = (messages(lang).home as Tree).placeholder as string;
+  const value = ((messages(lang).landing as Tree).hero as Tree).kicker as string;
   return value.startsWith(MARKER) ? value.slice(MARKER.length) : value;
 }
 function leaves(node: Tree, out: string[] = []): string[] {
@@ -68,14 +69,13 @@ test.describe("criterion 3: <html lang> is in the file as built, not set by a sc
 test.describe("criteria 2 and 40: JavaScript off, each page reads in its own language", () => {
   test.use({ javaScriptEnabled: false });
   for (const lang of langs) {
-    test(`2, 40: /${lang}/ has the product name as headline and the ${lang} line, and nothing else`, async ({ page }) => {
+    test(`2, 40: /${lang}/ has its own headline and the ${lang} kicker`, async ({ page }) => {
       await page.goto(`/${lang}/`);
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.name);
-      const main = page.locator("main");
-      await expect(main.locator("> *")).toHaveCount(2);
-      await expect(main.locator("p")).toHaveText(placeholderOf(lang));
-      if (lang !== "en") await expect(main.locator("p")).toHaveText(scriptPattern[lang]);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(messageText(lang, "landing.hero.title"));
+      const kicker = page.locator("main p").first();
+      await expect(kicker).toHaveText(placeholderOf(lang));
+      if (lang !== "en") await expect(kicker).toHaveText(scriptPattern[lang]);
       expect(await sidewaysScroll(page)).toBe(0);
     });
   }
@@ -84,12 +84,14 @@ test.describe("criteria 2 and 40: JavaScript off, each page reads in its own lan
   });
 });
 
-test.describe("criterion 9: every language page is titled with the product name", () => {
+test.describe("criterion 9: every language page has its own title, led by the product name", () => {
   for (const lang of langs) {
-    test(`/${lang}/ <title> is the product name`, async ({ page }) => {
+    test(`/${lang}/ <title> starts with the product name`, async ({ page }) => {
+      const title = messageText(lang, "landing.meta.title").replace("{brand}", brand.name);
+      expect(title.startsWith(brand.name)).toBe(true);
       await page.goto(`/${lang}/`);
-      await expect(page).toHaveTitle(brand.name);
-      expect(readFileSync(join(OUT, lang, "index.html"), "utf8")).toContain(`<title>${brand.name}</title>`);
+      await expect(page).toHaveTitle(title);
+      expect(readFileSync(join(OUT, lang, "index.html"), "utf8")).toContain(`<title>${title}</title>`);
     });
   }
 });
@@ -99,8 +101,8 @@ test.describe("criterion 4: the script's Anek face and the F2 Indian-script rule
     test(`/${lang}/ first font in body text, letter-spacing, capitals`, async ({ page }) => {
       await page.goto(`/${lang}/`);
       await fontsSettled(page);
-      const body = page.locator("main p");
-      const style = await page.locator("main p, main h1").evaluateAll((els) =>
+      const body = page.locator("main h1 + p");
+      const style = await page.locator("main p:not([translate=no]), main h1").evaluateAll((els) =>
         els.map((el) => {
           const s = getComputedStyle(el);
           return { tag: el.tagName, tracking: s.letterSpacing, transform: s.textTransform };
@@ -164,8 +166,10 @@ test.describe("criterion 7: an unknown language segment is the 404 page", () => 
       expect(response?.status()).toBe(404);
       const html = await page.content();
       for (const lang of langs) expect(html).not.toContain(placeholderOf(lang));
-      await expect(page.getByRole("heading", { level: 1 })).not.toHaveText(brand.name);
-      expect(await page.locator("body").innerText()).toMatch(/404|not be found|not found/i);
+      // The 404 is its own page: the name as its one h1, then one block per language, each with a link to that language.
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.name);
+      expect(await page.locator("body").innerText()).toContain(messageText("en", "notFound.title"));
+      await expect(page.locator("html")).toHaveAttribute("lang", "en");
     });
   }
 });
@@ -217,7 +221,7 @@ test.describe("criteria 2, 4, 40 at the edges: large text, slow 4G, offline", ()
       await fontsSettled(page);
       expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe("32px");
       expect(await sidewaysScroll(page)).toBe(0);
-      const p = page.locator("main p");
+      const p = page.locator("main p").first();
       const box = (await p.boundingBox())!;
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(box.x + box.width).toBeLessThanOrEqual(360);
@@ -230,8 +234,8 @@ test.describe("criteria 2, 4, 40 at the edges: large text, slow 4G, offline", ()
       test.slow();
       await slow4G(page);
       await page.goto(`/${lang}/`, { waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("heading", { level: 1 })).toHaveText(brand.name);
-      await expect(page.locator("main p")).toHaveText(placeholderOf(lang));
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(messageText(lang, "landing.hero.title"));
+      await expect(page.locator("main p").first()).toHaveText(placeholderOf(lang));
       await fontsSettled(page);
       if (lang !== "en") {
         const anek = await familyOf(page, scriptFontVariable[lang]);
@@ -246,7 +250,7 @@ test.describe("criteria 2, 4, 40 at the edges: large text, slow 4G, offline", ()
     await expect(page.goto("/hi/")).rejects.toThrow(/ERR_INTERNET_DISCONNECTED|net::/);
     await context.setOffline(false);
     await page.goto("/hi/");
-    await expect(page.locator("main p")).toHaveText(placeholderOf("hi"));
+    await expect(page.locator("main p").first()).toHaveText(placeholderOf("hi"));
   });
 });
 

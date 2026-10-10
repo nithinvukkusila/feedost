@@ -235,3 +235,14 @@
   --tw-leading: var(--stamp-leading);
   line-height: var(--stamp-leading);
 }
+
+/*
+ * A language's own name (the footer language links). Keeps its `lang` for screen readers but is set in
+ * the Latin stack, so the phone's own font draws the script and no page fetches an Anek file for it.
+ */
+@utility type-endonym {
+  font-family: var(--font-sans);
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  letter-spacing: 0em;
+}
