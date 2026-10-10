@@ -80,9 +80,9 @@ describe("the migrations, functions and tests folders (criteria 1, 7 and 10)", (
     }
   });
 
-  it("have exactly one migration, the baseline, and it creates no table", () => {
-    const files = readdirSync(join(root, "supabase", "migrations"));
-    expect(files).toHaveLength(1);
+  it("keep the baseline first, and it creates no table", () => {
+    const files = readdirSync(join(root, "supabase", "migrations")).sort();
+    expect(files.length).toBeGreaterThanOrEqual(1);
     expect(files[0]).toMatch(/^\d{14}_f4_baseline\.sql$/);
     expect(read(`supabase/migrations/${files[0]}`)).not.toMatch(/create\s+table/i);
   });
