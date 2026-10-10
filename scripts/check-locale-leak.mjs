@@ -1,9 +1,12 @@
-// Fails when a language's page carries another language's words (spec F3, criterion 29).
+// Fails when a language's page carries another language's words (spec F3, criterion 29; spec R0-2, criterion 69).
 // Run from the repo root after `pnpm build`. Reads ./messages and ./out.
 // "Another language's words" = a value that is in that language's file and in no other file's
 // values. A value left as `TODO-translate: <English>` shows the English text, which equals the
 // English value, so it is not unique to anyone and is not a leak.
-import { existsSync, readFileSync } from "node:fs";
+//
+// Every index.html under out/{locale}/ is checked, with the scripts that page loads, so a new page
+// is covered without touching this file.
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
@@ -11,6 +14,16 @@ const OUT = "out";
 const locales = ["en", "hi", "kn", "te"];
 const MIN_LENGTH = 6; // a very short value could match by chance inside code
 const MARKER = "TODO-translate: ";
+
+// Pages under a language that must be there, so the check cannot pass by omission. "" is the landing.
+const REQUIRED_PAGES = [""];
+
+// The one named exception (spec R0-2, criteria 27 and 69). The fee reminder page must hold the message
+// templates and month names of all four languages, because the tutor picks the message language on
+// the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
+// under `pages`, and only in its script files, never its HTML, every line of that file is taken out
+// of the text before the search for another language's interface words.
+const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" }];
 
 function leaves(node, out = []) {
   for (const value of Object.values(node)) {
@@ -42,40 +55,112 @@ const unique = Object.fromEntries(
 /** The ways a value can be written inside HTML or an inline JSON payload. */
 const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
 
-function pageFiles(locale) {
-  const path = join(OUT, locale, "index.html");
-  if (!existsSync(path)) return null;
+/**
+ * Each exception with its file read: `lines` is every template line of a language (long enough to
+ * mean something, and not a bare placeholder), `all` is every line and month name of every language.
+ * An exception whose file does not exist is dropped: there is nothing to except.
+ */
+const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).map((exception) => {
+  const tree = JSON.parse(readFileSync(exception.file, "utf8"));
+  const lines = {};
+  const all = [];
+  for (const locale of locales) {
+    const entry = tree[locale] ?? {};
+    const templateLines = [...(entry.polite ?? []), ...(entry.firm ?? [])].filter((line) => typeof line === "string");
+    lines[locale] = [...new Set(templateLines)].filter((line) => line.length >= MIN_LENGTH && !/^\{\w+\}$/.test(line));
+    all.push(...templateLines, ...(entry.months ?? []).filter((name) => typeof name === "string"));
+  }
+  // Longest first, so a short month name is not cut out of the middle of a line that holds it.
+  const removable = [...new Set(all.flatMap(spellings))].filter((text) => text !== "").sort((a, b) => b.length - a.length);
+  return { ...exception, lines, removable };
+});
+
+/** Every page of a language: the folders under out/{locale}/ that hold an index.html. "" is the landing. */
+function pagesOf(locale, dir = join(OUT, locale), path = "") {
+  if (!existsSync(dir)) return [];
+  const found = existsSync(join(dir, "index.html")) ? [path] : [];
+  for (const name of readdirSync(dir).sort()) {
+    const next = join(dir, name);
+    if (statSync(next).isDirectory()) found.push(...pagesOf(locale, next, `${path}${name}/`));
+  }
+  return found;
+}
+
+function pageFiles(locale, pagePath) {
+  const path = join(OUT, locale, pagePath, "index.html");
   const html = readFileSync(path, "utf8");
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+\.js)"[^>]*>/g)].map((m) => m[1].split("?")[0]);
-  const files = [{ name: path, text: html }];
+  const files = [{ name: path, text: html, html: true }];
   for (const src of new Set(scripts)) {
     const file = join(OUT, decodeURIComponent(src));
-    if (src.startsWith("/") && existsSync(file)) files.push({ name: file, text: readFileSync(file, "utf8") });
+    if (src.startsWith("/") && existsSync(file)) files.push({ name: file, text: readFileSync(file, "utf8"), html: false });
   }
   return { files, htmlGzip: gzipSync(Buffer.from(html)).length };
 }
 
+const has = (text, value) => spellings(value).some((spelling) => text.includes(spelling));
+
 let failed = false;
 let ownFound = 0;
+let pageCount = 0;
 for (const locale of locales) {
-  const page = pageFiles(locale);
-  if (!page) {
-    console.error(`${OUT}/${locale}/index.html is missing, so the leak check cannot run.`);
-    failed = true;
-    continue;
+  const pages = pagesOf(locale);
+  for (const required of REQUIRED_PAGES) {
+    if (!pages.includes(required)) {
+      console.error(`${OUT}/${locale}/${required}index.html is missing, so the leak check cannot run.`);
+      failed = true;
+    }
   }
-  for (const other of locales.filter((l) => l !== locale)) {
-    for (const value of unique[other]) {
-      for (const file of page.files) {
-        if (spellings(value).some((text) => file.text.includes(text))) {
-          console.error(`${locale} page loads a ${other} message: "${value}" is in ${file.name}`);
+  const others = locales.filter((l) => l !== locale);
+  for (const pagePath of pages) {
+    pageCount += 1;
+    const page = pageFiles(locale, pagePath);
+    const address = `/${locale}/${pagePath}`;
+    const excepted = exceptions.filter((exception) => pagePath.startsWith(exception.pages));
+
+    for (const file of page.files) {
+      // The text searched for interface words: a script of an excepted page, with the templates taken out.
+      let searched = file.text;
+      if (!file.html) {
+        for (const exception of excepted) {
+          for (const text of exception.removable) searched = searched.split(text).join("\n");
+        }
+      }
+      for (const other of others) {
+        for (const value of unique[other]) {
+          if (has(searched, value)) {
+            console.error(`${locale} page loads a ${other} message: "${value}" is in ${file.name}`);
+            failed = true;
+          }
+        }
+      }
+      // The templates themselves: allowed in the scripts of their own page and nowhere else.
+      for (const exception of exceptions) {
+        if (!file.html && excepted.includes(exception)) continue;
+        for (const other of others) {
+          const line = exception.lines[other].find((text) => has(file.text, text));
+          if (line !== undefined) {
+            console.error(`the ${other} templates leaked onto ${address}: "${line}" is in ${file.name}`);
+            failed = true;
+          }
+        }
+      }
+    }
+
+    // The exception must be real: the page has to carry every other language's templates in its scripts.
+    for (const exception of excepted) {
+      const scriptText = page.files.filter((file) => !file.html).map((file) => file.text);
+      for (const other of others) {
+        if (!exception.lines[other].some((line) => scriptText.some((text) => has(text, line)))) {
+          console.error(`the ${exception.name} page does not carry the ${other} templates: none of them is in a script ${address} loads`);
           failed = true;
         }
       }
     }
+
+    ownFound += unique[locale].filter((value) => has(page.files[0].text, value)).length;
+    console.log(`${address}: ${(page.htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${page.files.length - 1} scripts`);
   }
-  ownFound += unique[locale].filter((value) => spellings(value).some((text) => page.files[0].text.includes(text))).length;
-  console.log(`${locale}: ${(page.htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${page.files.length - 1} scripts`);
 }
 // Fail closed: if no page shows any of its own words, the search above proved nothing.
 if (!failed && ownFound === 0) {
@@ -83,4 +168,4 @@ if (!failed && ownFound === 0) {
   failed = true;
 }
 if (failed) process.exit(1);
-console.log(`leak check: no language page carries another language's messages (${ownFound} own values seen)`);
+console.log(`leak check: no language page carries another language's messages (${pageCount} pages, ${ownFound} own values seen)`);
