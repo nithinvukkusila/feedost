@@ -14,7 +14,8 @@
       "kicker": "హోమ్ ట్యూటర్ల ఫీజు రిజిస్టర్. ఉచితం.",
       "title": "ఫీజు వసూలు. వెంటపడకుండా.",
       "body": "TODO-translate: The notebook you already keep, soon one that reminds parents on WhatsApp and gets paid by UPI.",
-      "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
+      "join": "వెయిట్‌లిస్ట్‌లో చేరండి",
+      "tool": "లేదా ఇప్పుడే ఉచిత రిమైండర్ రాయండి"
     },
     "example": {
       "label": "ఉదాహరణ",
@@ -51,7 +52,7 @@
       "stamp": "చెల్లించారు"
     },
     "tools": {
-      "title": "రెండు ఉచిత సాధనాలు. త్వరలో వస్తాయి.",
+      "title": "రెండు ఉచిత సాధనాలు.",
       "tag": "త్వరలో వస్తుంది",
       "t1": {
         "no": "సాధనం నం. 01",
@@ -61,7 +62,8 @@
       "t2": {
         "no": "సాధనం నం. 02",
         "title": "TODO-translate: Fee reminder writer",
-        "body": "TODO-translate: Polite or firm, with your UPI link inside."
+        "body": "మర్యాదగా లేదా గట్టిగా, మీ UPI లింక్‌తో.",
+        "open": "రిమైండర్ రాయండి"
       }
     },
     "promises": {
@@ -94,6 +96,120 @@
       "line": "TODO-translate: Free fee collection for home tutors in India.",
       "languages": "భాషలు"
     }
+  },
+  "reminder": {
+    "meta": {
+      "title": "ట్యూటర్ల కోసం ఫీజు రిమైండర్: WhatsApp సందేశం + UPI లింక్",
+      "description": "ఇంగ్లీష్, హిందీ, కన్నడ లేదా తెలుగులో ట్యూషన్ ఫీజు రిమైండర్ రాయండి, మీ UPI చెల్లింపు లింక్‌తో. ఉచితం, సైన్-అప్ అవసరం లేదు, ఏదీ సేవ్ కాదు."
+    },
+    "kicker": "ఉచిత సాధనం · సైన్-అప్ అవసరం లేదు",
+    "title": "మీరు వాయిదా వేస్తున్న ఫీజు రిమైండర్‌ను రాయండి.",
+    "noscript": "ఈ సాధనానికి JavaScript ఆన్‌లో ఉండాలి.",
+    "promo": {
+      "title": "ప్రతి నెలా 20 మంది తల్లిదండ్రులకు ఇదే చేస్తున్నారా?",
+      "body": "TODO-translate: The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
+      "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
+    }
+  },
+  "reminderForm": {
+    "language": "సందేశం భాష",
+    "tone": "ధోరణి",
+    "polite": "మర్యాదగా",
+    "firm": "గట్టిగా",
+    "parent": {
+      "label": "తల్లిదండ్రుల పేరు",
+      "placeholder": "సురేష్",
+      "missing": {
+        "word": "ఖాళీగా ఉంది",
+        "fix": "తల్లిదండ్రుల పేరు రాయండి."
+      },
+      "tooLong": {
+        "word": "చాలా పొడవు",
+        "fix": "40 లేదా అంతకంటే తక్కువ అక్షరాలు వాడండి."
+      }
+    },
+    "month": {
+      "label": "నెల"
+    },
+    "amount": {
+      "label": "మొత్తం ₹ లో",
+      "placeholder": "1,200",
+      "missing": {
+        "word": "ఖాళీగా ఉంది",
+        "fix": "ఫీజును రూపాయల్లో రాయండి."
+      },
+      "paise": {
+        "word": "సరిచూడండి",
+        "fix": "పూర్తి రూపాయలు మాత్రమే. పైసలు వదిలేయండి."
+      },
+      "notDigits": {
+        "word": "సరిచూడండి",
+        "fix": "అంకెలు మాత్రమే వాడండి, ఉదాహరణకు 1200."
+      },
+      "tooLow": {
+        "word": "చాలా తక్కువ",
+        "fix": "మొత్తం కనీసం ₹1 ఉండాలి."
+      },
+      "tooHigh": {
+        "word": "చాలా ఎక్కువ",
+        "fix": "ఈ సాధనంలో ₹1,00,000 వరకు మాత్రమే."
+      }
+    },
+    "upi": {
+      "label": "మీ UPI ID",
+      "placeholder": "name@bank",
+      "missing": {
+        "word": "ఖాళీగా ఉంది",
+        "fix": "మీ UPI ID రాయండి, ఉదాహరణకు name@bank."
+      },
+      "space": {
+        "word": "సరిచూడండి",
+        "fix": "ఖాళీలను తీసేయండి."
+      },
+      "noAt": {
+        "word": "సరిచూడండి",
+        "fix": "UPI ID లో @ ఉంటుంది, ఉదాహరణకు name@bank."
+      },
+      "format": {
+        "word": "సరిచూడండి",
+        "fix": "ఇది UPI ID లా కనిపించడం లేదు. మీ UPI యాప్ నుండి కాపీ చేయండి."
+      },
+      "ok": {
+        "word": "TODO-translate: Format looks right",
+        "note": "TODO-translate: Format looks right. We cannot check this with your bank. Read it once more: the money goes to this ID."
+      }
+    },
+    "payee": {
+      "label": "మీ పేరు",
+      "placeholder": "మీనా రావు",
+      "helper": "ఇది చెల్లింపు లింక్‌లో ఉంటుంది.",
+      "missing": {
+        "word": "ఖాళీగా ఉంది",
+        "fix": "మీ పేరు రాయండి."
+      },
+      "tooLong": {
+        "word": "చాలా పొడవు",
+        "fix": "40 లేదా అంతకంటే తక్కువ అక్షరాలు వాడండి."
+      }
+    },
+    "remember": {
+      "label": "ఈ ఫోన్‌లో నా UPI ID, పేరు గుర్తుంచుకో",
+      "on": "ఆన్",
+      "off": "ఆఫ్",
+      "note": "మర్చిపోవడానికి దీన్ని ఆఫ్ చేయండి."
+    },
+    "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
+    "preview": {
+      "title": "మీ సందేశం",
+      "incomplete": "సందేశం పూర్తి చేయడానికి పైన ఉన్న ఖాళీలను నింపండి.",
+      "blank": "ఖాళీ"
+    },
+    "send": "WhatsAppలో పంపండి",
+    "copy": "సందేశం కాపీ చేయండి",
+    "copied": "కాపీ అయింది",
+    "copiedStatus": "సందేశం కాపీ అయింది.",
+    "copyFailed": "TODO-translate: Could not copy. Press and hold the message to select it.",
+    "fillFirst": "ముందు పైన ఉన్న ఖాళీలను నింపండి."
   },
   "notFound": {
     "title": "ఈ పేజీ లేదు.",

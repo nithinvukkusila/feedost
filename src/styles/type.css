@@ -226,6 +226,21 @@
   letter-spacing: 0em;
 }
 
+/*
+ * A typed value that is always Latin letters and digits: an amount, a UPI ID. The same size, weight
+ * and line-height as type-value, so the field is the same height and wraps at the same width, but
+ * always the Latin stack. Each Anek family carries Latin letters and digits of its own, so under
+ * type-value a Hindi page drew "1200" and "name@bank" in Anek Devanagari. Only the face ignores the
+ * script; the line-height still follows it, so the field stays level with the name fields beside it.
+ */
+@utility type-value-latin {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: var(--value-leading);
+  letter-spacing: 0em;
+}
+
 /* The word on a stamp. Size comes from a text-* class beside it. */
 @utility type-stamp {
   font-family: var(--script-font);
@@ -244,5 +259,18 @@
   font-family: var(--font-sans);
   font-size: var(--body-size);
   line-height: var(--body-leading);
+  letter-spacing: 0em;
+}
+
+/*
+ * The fee reminder as WhatsApp will show it (the message preview bubble). Always the Latin stack at
+ * 17px with room for vowel marks: Latin text is Bricolage, and Devanagari, Kannada and Telugu fall
+ * through to the phone's own font, whatever the page language. It ignores the script variables on
+ * purpose, so the bubble can carry a `lang` without fetching an Anek file or drawing ₹ in Anek.
+ */
+@utility type-message {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
   letter-spacing: 0em;
 }

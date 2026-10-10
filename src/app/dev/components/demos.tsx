@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Row, Rows } from "@/components/ui/row";
 import { Segmented, type SegmentedProps } from "@/components/ui/segmented";
+import { SelectField, type SelectOption } from "@/components/ui/select-field";
 import { Sheet, type SheetContext } from "@/components/ui/sheet";
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
@@ -262,5 +263,38 @@ export function BannerDemo({
         </span>
       </p>
     </div>
+  );
+}
+
+/** A select field that holds its own choice. */
+export function SelectFieldDemo({
+  id,
+  label,
+  options,
+  start,
+  helper,
+  force,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  options: readonly SelectOption[];
+  start: string;
+  helper?: string;
+  force?: "focus";
+  disabled?: boolean;
+}) {
+  const [value, setValue] = useState(start);
+  return (
+    <SelectField
+      label={label}
+      value={value}
+      onChange={setValue}
+      options={options}
+      helper={helper}
+      disabled={disabled}
+      data-testid={`select-${id}`}
+      data-force={force}
+    />
   );
 }

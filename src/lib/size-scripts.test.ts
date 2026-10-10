@@ -2,7 +2,7 @@
 // throwaway folder, so each one is shown to pass and to fail.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,6 +11,13 @@ const sizeScript = join(process.cwd(), "scripts", "size.mjs");
 const leakScript = join(process.cwd(), "scripts", "check-locale-leak.mjs");
 const made: string[] = [];
 const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", "te/index.html"];
+// The fee reminder page in each language (spec R0-2). It loads one more script, which holds the
+// message templates of all four languages: the leak check's one named exception.
+const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
+const templatesPath = join("src", "lib", "reminder", "templates.json");
+type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;
+const templates = JSON.parse(readFileSync(join(process.cwd(), templatesPath), "utf8")) as Templates;
+const toolScript = (tree: unknown) => `var templates=JSON.parse(${JSON.stringify(JSON.stringify(tree))});var t=${JSON.stringify(tree)}`;
 
 const messages = {
   en: { home: { placeholder: "English home line here" } },
@@ -19,8 +26,8 @@ const messages = {
   te: { home: { placeholder: "తెలుగు ఇంటి వాక్యం ఇక్కడ" } },
 };
 
-function html(body: string, script = "/_next/a.js") {
-  return `<html><body>${body}<script src="${script}" async></script></body></html>`;
+function html(body: string, ...scripts: string[]) {
+  return `<html><body>${body}${scripts.map((script) => `<script src="${script}" async></script>`).join("")}</body></html>`;
 }
 
 type Options = {
@@ -29,6 +36,10 @@ type Options = {
   scriptText?: Record<string, string>;
   body?: (locale: string) => string;
   messages?: Record<string, unknown>;
+  /** The text of the script only the tool pages load. Default: all four languages' templates. */
+  toolScript?: string;
+  /** The body of a language's tool page. Default: that language's own line. */
+  toolBody?: (locale: string) => string;
 };
 
 function project(options: Options = {}): string {
@@ -46,6 +57,17 @@ function project(options: Options = {}): string {
     const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
     writeFileSync(join(root, "out", page), html(options.body ? options.body(locale) : `<p>${own}</p>`, script));
   }
+  mkdirSync(join(root, templatesPath, ".."), { recursive: true });
+  writeFileSync(join(root, templatesPath), JSON.stringify(templates));
+  writeFileSync(join(root, "out", "_next", "tool.js"), options.toolScript ?? toolScript(templates));
+  for (const page of toolPages) {
+    if (options.skip?.includes(page)) continue;
+    const locale = page.split("/")[0] as keyof typeof messages;
+    mkdirSync(join(root, "out", page, ".."), { recursive: true });
+    const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
+    const body = options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`;
+    writeFileSync(join(root, "out", page), html(body, script, "/_next/tool.js"));
+  }
   for (const [locale, tree] of Object.entries(options.messages ?? messages)) {
     writeFileSync(join(root, "messages", `${locale}.json`), JSON.stringify(tree));
   }
@@ -62,13 +84,13 @@ afterEach(() => {
 });
 
 describe("pnpm size (criterion 30)", () => {
-  it("passes when all five routes exist and are small", () => {
+  it("passes when the five routes and the four tool pages exist and are small", () => {
     const result = run(sizeScript, project());
     expect(result.status).toBe(0);
-    for (const page of pages) expect(result.out).toContain(`out/${page}`);
+    for (const page of [...pages, ...toolPages]) expect(result.out).toContain(`out/${page}`);
   });
 
-  it.each(pages)("fails when %s is missing", (page) => {
+  it.each([...pages, ...toolPages])("fails when %s is missing", (page) => {
     const result = run(sizeScript, project({ skip: [page] }));
     expect(result.status).toBe(1);
     expect(result.out).toContain(`out/${page} is missing`);
@@ -123,7 +145,7 @@ describe("pnpm check:leak (criterion 29)", () => {
   });
 
   it("fails closed when no page shows any word of its own (an empty or stale out/)", () => {
-    const result = run(leakScript, project({ body: () => "<p></p>" }));
+    const result = run(leakScript, project({ body: () => "<p></p>", toolBody: () => "<p></p>" }));
     expect(result.status).toBe(1);
     expect(result.out).toContain("proves nothing");
   });
@@ -132,6 +154,137 @@ describe("pnpm check:leak (criterion 29)", () => {
     const result = run(leakScript, project({ skip: ["kn/index.html"] }));
     expect(result.status).toBe(1);
     expect(result.out).toContain("out/kn/index.html is missing");
+  });
+
+  it.each(toolPages)("fails when the tool page %s is missing (R0-2, criterion 69)", (page) => {
+    const result = run(leakScript, project({ skip: [page] }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`out/${page} is missing`);
+  });
+});
+
+describe("pnpm check:leak on the fee reminder page: the one named exception (R0-2, criteria 27 and 69)", () => {
+  const own = (l: string) => `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`;
+  const hiLine = templates.hi.polite[0];
+
+  it("passes a tool page whose script holds the templates of all four languages, and counts every page", () => {
+    const result = run(leakScript, project());
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("/en/tools/fee-reminder/:");
+    expect(result.out).toContain("/te/tools/fee-reminder/:");
+    expect(result.out).toContain("8 pages");
+  });
+
+  it("checks a page it has never heard of: any index.html under a language", () => {
+    const root = project();
+    mkdirSync(join(root, "out", "kn", "later", "page"), { recursive: true });
+    writeFileSync(join(root, "out", "kn", "later", "page", "index.html"), html(`<p>${messages.te.home.placeholder}</p>`, "/_next/a.js"));
+    const result = run(leakScript, root);
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("kn page loads a te message");
+    expect(result.out).toContain("out/kn/later/page/index.html");
+  });
+
+  it("fails when the tool page does not carry the kn templates", () => {
+    const { kn: _kn, ...rest } = templates;
+    void _kn;
+    const result = run(leakScript, project({ toolScript: toolScript(rest) }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the fee reminder page does not carry the kn templates");
+    expect(result.out).toContain("/en/tools/fee-reminder/");
+    // The Kannada page has its own templates missing too, but that is not another language's.
+    expect(result.out).not.toContain("does not carry the en templates");
+  });
+
+  it("fails when a template line rides in a script the landing loads", () => {
+    const result = run(leakScript, project({ scriptText: { "chunk.js": `var t=${JSON.stringify(hiLine)}` } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the hi templates leaked onto /en/:");
+    expect(result.out).toContain("out/_next/chunk.js");
+    // The same script on the Hindi landing is its own language: not reported there.
+    expect(result.out).not.toContain("the hi templates leaked onto /hi/:");
+  });
+
+  it("fails when a Hindi interface word is in the tool page's script outside any template", () => {
+    const result = run(leakScript, project({ toolScript: `${toolScript(templates)};var w="${messages.hi.home.placeholder}"` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("en page loads a hi message");
+    expect(result.out).toContain("out/_next/tool.js");
+  });
+
+  // A word that is both a Hindi interface value and part of a Hindi template line.
+  const shared = "ट्यूशन फ़ीस";
+  const sharedMessages = { ...messages, hi: { home: { placeholder: messages.hi.home.placeholder, word: shared } } };
+
+  it("passes when that word is only inside a template line of the tool page's script", () => {
+    expect(hiLine).toContain(shared);
+    const result = run(leakScript, project({ messages: sharedMessages }));
+    expect(result.status).toBe(0);
+  });
+
+  it("still fails when the same word is also outside the templates in that script", () => {
+    const result = run(leakScript, project({ messages: sharedMessages, toolScript: `${toolScript(templates)};var w="${shared}"` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`en page loads a hi message: "${shared}"`);
+  });
+
+  it("does not except the tool page's HTML: the same word there fails", () => {
+    const result = run(leakScript, project({ messages: sharedMessages, toolBody: (l) => (l === "en" ? `${own(l)}<p>${shared}</p>` : own(l)) }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("en page loads a hi message");
+    expect(result.out).toContain("out/en/tools/fee-reminder/index.html");
+  });
+
+  it("fails when another language's template line is in a tool page's HTML", () => {
+    const result = run(leakScript, project({ toolBody: (l) => (l === "te" ? `${own(l)}<p>${hiLine}</p>` : own(l)) }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the hi templates leaked onto /te/tools/fee-reminder/");
+    expect(result.out).toContain("out/te/tools/fee-reminder/index.html");
+  });
+
+  it("does not except a month name outside the tool page: an English page elsewhere may say March", () => {
+    // Month names are too short and too common to forbid anywhere; only template lines are tracked.
+    const result = run(leakScript, project({ body: (l) => `${own(l)}<p>${templates.en.months[2]}</p>` }));
+    expect(result.status).toBe(0);
+  });
+});
+
+describe("pnpm check:leak counts a word, not a piece of a longer name (R0-2)", () => {
+  // The English tool page says "Missing" beside an empty field, and every language translates it. The
+  // framework's own code has names like MissingSlotContext; that is not an English word on a Hindi page.
+  const withWord = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, word: "Missing", verb: "Remind" } } };
+  const own = (l: string) => `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`;
+
+  it("passes when the value is only inside identifiers in a script", () => {
+    const code = 'var MissingSlotContext=1;function findMissingCanonicalRoutes(){};e.s(["ReminderTool",0]);var a_Missing_b=2;';
+    const result = run(leakScript, project({ messages: withWord, scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(0);
+  });
+
+  it.each([
+    ["in quotes", 'var w="Missing";'],
+    ["as JSX children", 'jsx("span",{children:"Missing"})'],
+    ["in a sentence", 'var w="Fee is Missing. Type it";'],
+    ["after an escaped line break", 'var w="Total:\\nMissing";'],
+    ["at the very start of the file", "Missing;var a=1;"],
+  ])("still fails when the value stands as a word %s", (_name, code) => {
+    const result = run(leakScript, project({ messages: withWord, scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('hi page loads a en message: "Missing"');
+  });
+
+  it("still fails when the word is in a page's HTML between tags, even with an identifier holding it elsewhere", () => {
+    const body = (l: string) => (l === "kn" ? `${own(l)}<p class="MissingThing">Missing</p>` : own(l));
+    const result = run(leakScript, project({ messages: withWord, body }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('kn page loads a en message: "Missing"');
+  });
+
+  it("does not excuse an Indian-script value that touches Latin letters", () => {
+    const code = `var w="abc${messages.te.home.placeholder}def";`;
+    const result = run(leakScript, project({ scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("page loads a te message");
   });
 });
 

@@ -14,7 +14,8 @@
       "kicker": "The fee register for home tutors. Free.",
       "title": "Fees collected. Not chased.",
       "body": "The notebook you already keep, soon one that reminds parents on WhatsApp and gets paid by UPI.",
-      "join": "Join the waitlist"
+      "join": "Join the waitlist",
+      "tool": "or write a free reminder now"
     },
     "example": {
       "label": "Example",
@@ -51,7 +52,7 @@
       "stamp": "Paid"
     },
     "tools": {
-      "title": "Two free tools. Coming soon.",
+      "title": "Two free tools.",
       "tag": "Coming soon",
       "t1": {
         "no": "Tool no. 01",
@@ -61,7 +62,8 @@
       "t2": {
         "no": "Tool no. 02",
         "title": "Fee reminder writer",
-        "body": "Polite or firm, with your UPI link inside."
+        "body": "Polite or firm, with your UPI link inside.",
+        "open": "Write a reminder"
       }
     },
     "promises": {
@@ -94,6 +96,120 @@
       "line": "Free fee collection for home tutors in India.",
       "languages": "Languages"
     }
+  },
+  "reminder": {
+    "meta": {
+      "title": "Fee reminder writer for tutors: WhatsApp message + UPI link",
+      "description": "Write a polite or firm tuition fee reminder in English, Hindi, Kannada or Telugu, with your UPI payment link. Free, no sign-up, nothing saved."
+    },
+    "kicker": "Free tool · no sign-up",
+    "title": "Write the fee reminder you keep putting off.",
+    "noscript": "This tool needs JavaScript turned on.",
+    "promo": {
+      "title": "Doing this for 20 parents every month?",
+      "body": "The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
+      "join": "Join the waitlist"
+    }
+  },
+  "reminderForm": {
+    "language": "Message language",
+    "tone": "Tone",
+    "polite": "Polite",
+    "firm": "Firm",
+    "parent": {
+      "label": "Parent's name",
+      "placeholder": "Suresh",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type the parent's name."
+      },
+      "tooLong": {
+        "word": "Too long",
+        "fix": "Use 40 characters or fewer."
+      }
+    },
+    "month": {
+      "label": "Month"
+    },
+    "amount": {
+      "label": "Amount in ₹",
+      "placeholder": "1,200",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type the fee in rupees."
+      },
+      "paise": {
+        "word": "Check this",
+        "fix": "Whole rupees only. Leave out the paise."
+      },
+      "notDigits": {
+        "word": "Check this",
+        "fix": "Use digits only, for example 1200."
+      },
+      "tooLow": {
+        "word": "Too low",
+        "fix": "The amount must be at least ₹1."
+      },
+      "tooHigh": {
+        "word": "Too high",
+        "fix": "This tool allows up to ₹1,00,000."
+      }
+    },
+    "upi": {
+      "label": "Your UPI ID",
+      "placeholder": "name@bank",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your UPI ID, for example name@bank."
+      },
+      "space": {
+        "word": "Check this",
+        "fix": "Remove the spaces."
+      },
+      "noAt": {
+        "word": "Check this",
+        "fix": "A UPI ID has an @ in it, for example name@bank."
+      },
+      "format": {
+        "word": "Check this",
+        "fix": "This does not look like a UPI ID. Copy it from your UPI app."
+      },
+      "ok": {
+        "word": "Format looks right",
+        "note": "Format looks right. We cannot check this with your bank. Read it once more: the money goes to this ID."
+      }
+    },
+    "payee": {
+      "label": "Your name",
+      "placeholder": "Meena Rao",
+      "helper": "This goes in the payment link.",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your name."
+      },
+      "tooLong": {
+        "word": "Too long",
+        "fix": "Use 40 characters or fewer."
+      }
+    },
+    "remember": {
+      "label": "Remember my UPI ID and name on this phone",
+      "on": "ON",
+      "off": "OFF",
+      "note": "Turn this off to forget them."
+    },
+    "privacy": "Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
+    "preview": {
+      "title": "Your message",
+      "incomplete": "Fill in the fields above to finish the message.",
+      "blank": "blank"
+    },
+    "send": "Send on WhatsApp",
+    "copy": "Copy message",
+    "copied": "Copied",
+    "copiedStatus": "Message copied.",
+    "copyFailed": "Could not copy. Press and hold the message to select it.",
+    "fillFirst": "Fill in the fields above first."
   },
   "notFound": {
     "title": "This page does not exist.",

@@ -52,6 +52,7 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 
 - Borders: 2px `ink`. Dividers inside a slip: 1px `rule`.
 - Corners: 4px on buttons, 0 on slips, 6px on the top of index tabs. Stamps and the round remind button are circles.
+- The WhatsApp message preview bubble has 18px corners, 4px at its top-left. This is the one recorded exception to "corners 4px at most", for the message bubble only (token `--radius-bubble`, slice R0-2).
 - Shadow: solid, offset, no blur. Buttons `5px 5px 0 ink` (black buttons use `ink-label` as the shadow colour); slips `6px 6px 0 ink`.
 - Cloth surfaces carry a 2px dashed `stitch` outline inset 8–14px.
 - Rotation is for stamps only (about -12°). In code the stamp's ring stays unrotated and only its words tilt, so a large stamp cannot cause sideways scroll.

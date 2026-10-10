@@ -1,6 +1,7 @@
 // Criteria 19 to 25 and 28: the key check, run as a command in throwaway folders.
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -326,5 +327,256 @@ describe("duplicate keys (spec F3, Edge cases: 'Duplicates')", () => {
     const result = run(folder({ hi }));
     expect(result.status).toBe(0);
     expect(result.out).toContain("4 keys present in all 4 languages");
+  });
+});
+
+// Spec R0-2, criteria 21, 23, 28 and 30: the fee reminder's templates and their review record.
+describe("the reminder templates and their review record (R0-2)", () => {
+  type Entry = { polite: string[]; firm: string[]; months: string[] };
+  type Templates = Record<"en" | "hi" | "kn" | "te", Entry>;
+  type Review = Record<string, { status: string; reviewer: string; date: string; sha256: string }>;
+
+  const real = JSON.parse(readFileSync(join(process.cwd(), "src", "lib", "reminder", "templates.json"), "utf8")) as Templates;
+  const open = { status: "not reviewed", reviewer: "", date: "", sha256: "" };
+  const notReviewed: Review = { hi: { ...open }, kn: { ...open }, te: { ...open } };
+  const hash = (entry: Entry) =>
+    createHash("sha256").update(JSON.stringify({ polite: entry.polite, firm: entry.firm, months: entry.months })).digest("hex");
+  const signed = (entry: Entry, reviewer = "A Reader", date = "2026-10-20") => ({ status: "reviewed", reviewer, date, sha256: hash(entry) });
+  const allSigned = (t: Templates): Review => ({ hi: signed(t.hi), kn: signed(t.kn), te: signed(t.te) });
+
+  /** The passing message files plus a templates file and, unless `null`, a review record. */
+  function withTemplates(templates: unknown, review: unknown = notReviewed): string {
+    const root = folder();
+    const dir = join(root, "src", "lib", "reminder");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "templates.json"), typeof templates === "string" ? templates : JSON.stringify(templates));
+    if (review !== null) writeFileSync(join(dir, "templates.review.json"), typeof review === "string" ? review : JSON.stringify(review));
+    return root;
+  }
+
+  /** The real templates with one language changed. */
+  function changed(locale: keyof Templates, change: (entry: Entry) => void): Templates {
+    const copy = structuredClone(real);
+    change(copy[locale]);
+    return copy;
+  }
+
+  describe("pass", () => {
+    it("a folder with no templates file is checked as before, and the summary does not mention templates", () => {
+      const result = run(folder());
+      expect(result.status).toBe(0);
+      expect(result.out).not.toContain("templates");
+    });
+
+    it("the plain run passes drafts, and prints the count and each language's hash to copy", () => {
+      const result = run(withTemplates(real));
+      expect(result.status).toBe(0);
+      expect(result.out).toContain("8 templates, 3 languages not reviewed (hi, kn, te)");
+      for (const locale of ["hi", "kn", "te"] as const) expect(result.out).toContain(`${locale}: not reviewed; current text ${hash(real[locale])}`);
+    });
+
+    it("the real files pass the plain run and say what is not reviewed", () => {
+      const result = run(process.cwd());
+      expect(result.status).toBe(0);
+      expect(result.out).toMatch(/8 templates, (all 3 languages reviewed|\d languages? not reviewed \([a-z, ]+\))/);
+    });
+  });
+
+  describe("fail: the shape (criterion 21)", () => {
+    it("a missing language", () => {
+      const { te: _te, ...rest } = real;
+      void _te;
+      const result = run(withTemplates(rest));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json is missing "te"');
+    });
+
+    it("a language that is not one of the four", () => {
+      const result = run(withTemplates({ ...real, ta: real.te }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json has "ta"');
+    });
+
+    it("a template that is a string, not a list of lines", () => {
+      const result = run(withTemplates({ ...real, kn: { ...real.kn, firm: real.kn.firm.join("\n") } }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "kn.firm" must be a list of lines');
+    });
+
+    it("an empty line in a template", () => {
+      const result = run(withTemplates(changed("hi", (e) => e.polite.push(" "))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "hi.polite" must be a list of lines, none of them empty');
+    });
+
+    it("eleven month names", () => {
+      const result = run(withTemplates(changed("kn", (e) => e.months.pop())));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "kn.months" has 11 names, expected 12');
+    });
+
+    it("the same month name twice", () => {
+      const result = run(withTemplates(changed("te", (e) => (e.months[11] = e.months[10]))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "te.months" has the same name twice');
+    });
+
+    it("a file that is not JSON", () => {
+      const result = run(withTemplates("{ nope"));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("templates.json is not valid JSON");
+    });
+  });
+
+  describe("fail: the placeholders (criteria 21, 23)", () => {
+    it("a missing {link}", () => {
+      const result = run(withTemplates(changed("te", (e) => e.firm.splice(1, 1))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "te.firm": {link} appears 0 times');
+    });
+
+    it("{amount} twice", () => {
+      const result = run(withTemplates(changed("en", (e) => (e.polite[3] = "Thank you! {amount}"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "en.polite": {amount} appears 2 times');
+    });
+
+    it("a placeholder the code does not know", () => {
+      const result = run(withTemplates(changed("hi", (e) => (e.firm[3] = "धन्यवाद। {student}"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "hi.firm" has a brace that is not one of');
+    });
+
+    it("{link} with words glued to it", () => {
+      const result = run(withTemplates(changed("hi", (e) => (e.polite[1] = "{link} देखें"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "hi.polite": {link} must be alone on its line');
+    });
+  });
+
+  describe("fail: a template is never English in disguise (criterion 28)", () => {
+    it("a TODO-translate marker", () => {
+      const result = run(withTemplates(changed("kn", (e) => (e.polite[3] = "TODO-translate: Thank you!"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "kn.polite" contains TODO-translate; a template cannot be marked, see the review record');
+    });
+
+    it("a marked month name", () => {
+      const result = run(withTemplates(changed("te", (e) => (e.months[0] = "TODO-translate: January"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "te.months" contains TODO-translate');
+    });
+
+    it("the English template pasted into Hindi", () => {
+      const result = run(withTemplates(changed("hi", (e) => (e.firm = [...real.en.firm]))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "hi.firm" has no Devanagari text');
+      expect(result.out).toContain('templates.json "hi.firm" is the same as the English template');
+    });
+
+    it("Telugu text where Kannada belongs", () => {
+      const result = run(withTemplates(changed("kn", (e) => (e.polite = [...real.te.polite]))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "kn.polite" has no Kannada text');
+    });
+
+    it("an English month name in the Telugu list", () => {
+      const result = run(withTemplates(changed("te", (e) => (e.months[4] = "May"))));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.json "te.months" name 5 has no Telugu text');
+    });
+  });
+
+  describe("the review record (criterion 30)", () => {
+    it("--strict fails while a language is not reviewed, naming each one", () => {
+      const cwd = withTemplates(real);
+      expect(run(cwd).status).toBe(0);
+      const strict = run(cwd, "--strict");
+      expect(strict.status).toBe(1);
+      for (const locale of ["hi", "kn", "te"]) {
+        expect(strict.out).toContain(
+          `templates.json "${locale}" is not reviewed (2 templates, 12 month names): get a native reader's sign-off and record it in templates.review.json`,
+        );
+      }
+      expect(strict.out).toContain("i18n: 3 problems");
+    });
+
+    it("--strict names only the languages still waiting", () => {
+      const strict = run(withTemplates(real, { ...notReviewed, hi: signed(real.hi) }), "--strict");
+      expect(strict.status).toBe(1);
+      expect(strict.out).not.toContain('templates.json "hi" is not reviewed');
+      expect(strict.out).toContain('templates.json "kn" is not reviewed');
+      expect(strict.out).toContain("i18n: 2 problems");
+    });
+
+    it("a matching hash with a name and a date passes --strict", () => {
+      const cwd = withTemplates(real, allSigned(real));
+      const strict = run(cwd, "--strict");
+      expect(strict.status).toBe(0);
+      expect(strict.out).toContain("8 templates, all 3 languages reviewed");
+    });
+
+    it("a template changed after the review fails --strict, naming the review", () => {
+      const edited = changed("hi", (e) => (e.polite[3] = "बहुत धन्यवाद!"));
+      const cwd = withTemplates(edited, allSigned(real));
+      const strict = run(cwd, "--strict");
+      expect(strict.status).toBe(1);
+      expect(strict.out).toContain('templates.json "hi" changed after the review of 2026-10-20 by A Reader');
+      expect(strict.out).not.toContain('templates.json "kn"');
+    });
+
+    it("a month name changed after the review reopens that language in the plain run too, without failing it", () => {
+      const edited = changed("te", (e) => (e.months[2] = "మార్చ్"));
+      const result = run(withTemplates(edited, allSigned(real)));
+      expect(result.status).toBe(0);
+      expect(result.out).toContain("8 templates, 1 language not reviewed (te)");
+      expect(result.out).toContain('templates.json "te" changed after the review of 2026-10-20 by A Reader');
+      expect(result.out).toContain(hash(edited.te));
+    });
+
+    it("a missing record fails the plain run", () => {
+      const result = run(withTemplates(real, null));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("templates.review.json does not exist");
+    });
+
+    it("a record with a language missing fails the plain run", () => {
+      const result = run(withTemplates(real, { hi: { ...open }, kn: { ...open } }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.review.json is missing "te"');
+    });
+
+    it("a status that is neither of the two fails the plain run", () => {
+      const result = run(withTemplates(real, { ...notReviewed, kn: { ...open, status: "ok" } }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.review.json "kn": status must be "reviewed" or "not reviewed"');
+    });
+
+    it("reviewed with no name fails the plain run", () => {
+      const result = run(withTemplates(real, { ...notReviewed, hi: signed(real.hi, " ") }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.review.json "hi" is marked reviewed with no reviewer\'s name');
+    });
+
+    it("reviewed with no proper date, or no hash, fails the plain run", () => {
+      const noDate = run(withTemplates(real, { ...notReviewed, hi: signed(real.hi, "A Reader", "20 Oct") }));
+      expect(noDate.status).toBe(1);
+      expect(noDate.out).toContain('templates.review.json "hi" is marked reviewed with no date written YYYY-MM-DD');
+      const noHash = run(withTemplates(real, { ...notReviewed, te: { ...signed(real.te), sha256: "" } }));
+      expect(noHash.status).toBe(1);
+      expect(noHash.out).toContain('templates.review.json "te" is marked reviewed with no sha256');
+    });
+
+    it("a record that is not JSON fails the plain run", () => {
+      const result = run(withTemplates(real, "{ nope"));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("templates.review.json is not valid JSON");
+    });
+
+    it("an entry for English, which is the source, fails the plain run", () => {
+      const result = run(withTemplates(real, { ...notReviewed, en: { ...open } }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain('templates.review.json has "en"');
+    });
   });
 });

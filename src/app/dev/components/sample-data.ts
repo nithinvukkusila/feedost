@@ -130,6 +130,7 @@ export type Sample = {
     longA: string;
     longB: string;
   };
+  select: { month: string; helper: string };
   switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
   /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
   strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
@@ -251,6 +252,7 @@ export const sample: Record<Lang, Sample> = {
       longA: "A polite first reminder this week",
       longB: "A firm final reminder",
     },
+    select: { month: "Month", helper: "The month the fee is for" },
     switch: {
       name: "Automatic reminders",
       on: "ON",
@@ -391,6 +393,7 @@ export const sample: Record<Lang, Sample> = {
       longA: "इस हफ़्ते विनम्रता से पहली याद",
       longB: "सख़्ती से आख़िरी याद",
     },
+    select: { month: "महीना", helper: "जिस महीने की फ़ीस है" },
     switch: {
       name: "अपने-आप याद दिलाना",
       on: "चालू",
@@ -531,6 +534,7 @@ export const sample: Record<Lang, Sample> = {
       longA: "ಈ ವಾರ ಸೌಮ್ಯವಾಗಿ ಮೊದಲ ನೆನಪು",
       longB: "ಕಟ್ಟುನಿಟ್ಟಾಗಿ ಕೊನೆಯ ನೆನಪು",
     },
+    select: { month: "ತಿಂಗಳು", helper: "ಶುಲ್ಕ ಯಾವ ತಿಂಗಳದ್ದು" },
     switch: {
       name: "ಸ್ವಯಂಚಾಲಿತ ನೆನಪು",
       on: "ಆನ್",
@@ -671,6 +675,7 @@ export const sample: Record<Lang, Sample> = {
       longA: "ఈ వారం మర్యాదగా మొదటి గుర్తు",
       longB: "గట్టిగా చివరి గుర్తు",
     },
+    select: { month: "నెల", helper: "ఫీజు ఏ నెలది" },
     switch: {
       name: "ఆటోమేటిక్ గుర్తు",
       on: "ఆన్",
@@ -846,6 +851,14 @@ export const copy = {
     focusOther: "Keyboard focus on another one: the ring is inside, in blue",
     live: "Try it: the screen holds the choice",
     chosen: "Chosen:",
+  },
+  selectField: {
+    title: "Select field",
+    note: "A real select under a copy of its chosen name: the name wraps at a large font, where a select's own text would be cut off. Tap the line to open the phone's list.",
+    rest: "At rest",
+    long: "The longest month, with helper text",
+    focus: "Keyboard focus",
+    disabled: "Unavailable",
   },
   switch: {
     title: "Switch",

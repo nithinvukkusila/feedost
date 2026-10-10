@@ -167,12 +167,12 @@ for (const lang of langs) {
       expect(await page.evaluate(() => getComputedStyle(document.body).backgroundImage.includes("url(") || [...document.querySelectorAll("*")].some((e) => getComputedStyle(e).backgroundImage.includes("url(")))).toBe(false);
     });
 
-    test(`criterion 10 [${lang}]: every a[href] is #waitlist or a language page, and resolves`, async ({ page }) => {
+    test(`criterion 10 [${lang}]: every a[href] is #waitlist, a language page or the reminder writer (R0-2), and resolves`, async ({ page }) => {
       await openLanding(page, lang);
       await expect(page.locator("a:not([href])")).toHaveCount(0);
       const hrefs = await page.locator("a").evaluateAll((els) => els.map((a) => a.getAttribute("href") ?? ""));
-      expect(hrefs.length).toBeGreaterThanOrEqual(5);
-      expect([...new Set(hrefs)].sort()).toEqual(["#waitlist", "/en/", "/hi/", "/kn/", "/te/"].filter((h) => h !== path(lang)).sort());
+      expect(hrefs.length).toBeGreaterThanOrEqual(7);
+      expect([...new Set(hrefs)].sort()).toEqual(["#waitlist", "/en/", "/hi/", "/kn/", "/te/", `/${lang}/tools/fee-reminder/`].filter((h) => h !== path(lang)).sort());
       for (const href of hrefs) {
         if (href.startsWith("#")) {
           expect(href).not.toBe("#");
@@ -186,9 +186,10 @@ for (const lang of langs) {
     test(`criterion 11 [${lang}]: header and hero buttons go to #waitlist; header 44px or more, hero 56px or more and full width`, async ({ page }) => {
       await openLanding(page, lang);
       const header = page.locator("header a");
-      const hero = page.locator("main section").first().locator("a");
+      // The hero's first link is the button; R0-2 added a text link to the reminder writer under it.
+      const hero = page.locator("main section").first().locator("a").first();
       await expect(header).toHaveCount(1);
-      await expect(hero).toHaveCount(1);
+      await expect(page.locator("main section").first().locator("a")).toHaveCount(2);
       await expect(header).toHaveAttribute("href", "#waitlist");
       await expect(hero).toHaveAttribute("href", "#waitlist");
       await expect(header).toHaveText(shown(lang, "landing.header.join"));
@@ -251,33 +252,50 @@ for (const lang of langs) {
       expect(await page.evaluate(() => localStorage.length + sessionStorage.length)).toBe(0);
     });
 
-    test(`criterion 15 [${lang}]: two tool cards with number, title, body and a Coming soon mark; they are not links`, async ({ page }) => {
+    test(`criterion 15 [${lang}]: two tool cards with number, title and body; card 1 has the Coming soon mark and is not a link; card 2 has one link to the reminder writer (R0-2, criterion 3)`, async ({ page }) => {
       await openLanding(page, lang);
       const section = page.locator("section#tools");
       const cards = section.locator("article");
       await expect(cards).toHaveCount(2);
-      await expect(section.locator("a, [role='link'], button, [onclick], [tabindex]")).toHaveCount(0);
-      await expect(cards.locator("a")).toHaveCount(0);
       for (const [i, tool] of ["t1", "t2"].entries()) {
         const card = cards.nth(i);
         await expect(card.getByText(shown(lang, `landing.tools.${tool}.no`), { exact: true })).toBeVisible();
         await expect(card.locator("h3")).toHaveText(shown(lang, `landing.tools.${tool}.title`));
         await expect(card.getByText(shown(lang, `landing.tools.${tool}.body`), { exact: true })).toBeVisible();
-        // The mark is a word with a dashed outline, not colour alone.
-        const mark = card.getByText(shown(lang, "landing.tools.tag"), { exact: true });
-        await expect(mark).toBeVisible();
-        expect((await css(mark, ["border-top-style"]))["border-top-style"]).toBe("dashed");
       }
+      // Card 1, the receipt maker: unchanged. The mark is a word with a dashed outline, not colour alone.
+      await expect(cards.nth(0).locator("a, [role='link'], button, [onclick], [tabindex]")).toHaveCount(0);
+      const mark = cards.nth(0).getByText(shown(lang, "landing.tools.tag"), { exact: true });
+      await expect(mark).toBeVisible();
+      expect((await css(mark, ["border-top-style"]))["border-top-style"]).toBe("dashed");
+      // Card 2, the reminder writer: no mark, exactly one link, to the tool in this language, 44px high or more.
+      await expect(cards.nth(1).getByText(shown(lang, "landing.tools.tag"), { exact: true })).toHaveCount(0);
+      await expect(section.locator("a, [role='link'], button")).toHaveCount(1);
+      const link = cards.nth(1).locator("a");
+      await expect(link).toHaveCount(1);
+      await expect(link).toHaveAttribute("href", `/${lang}/tools/fee-reminder/`);
+      await expect(link).toHaveText(shown(lang, "landing.tools.t2.open"));
+      expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      expect(builtFileFor(`/${lang}/tools/fee-reminder/`)).toBe(true);
     });
 
-    test(`criterion 16 [${lang}]: no tool links, no second hero link, no Receipt maker or Reminder writer link`, async ({ page }) => {
+    test(`criterion 16 [${lang}]: exactly two links to the reminder writer (hero and card 2, R0-2 criteria 3 and 5), none to a receipt maker, none in the header`, async ({ page }) => {
       await openLanding(page, lang);
-      await expect(page.locator('a[href*="tools"], a[href*="reminder"], a[href*="receipt"]')).toHaveCount(0);
+      await expect(page.locator('a[href*="tools"]')).toHaveCount(2);
+      await expect(page.locator(`a[href="/${lang}/tools/fee-reminder/"]`)).toHaveCount(2);
+      await expect(page.locator('a[href*="receipt"]')).toHaveCount(0);
       await expect(page.locator('a[href="#waitlist"]')).toHaveCount(2);
-      await expect(page.locator("main a")).toHaveCount(1);
+      await expect(page.locator("main a")).toHaveCount(3);
       await expect(page.locator("header a")).toHaveCount(1);
+      await expect(page.locator('header a[href*="tools"]')).toHaveCount(0);
+      // The hero's second link, at least 44px high.
+      const heroTool = page.locator("main section").first().locator("a").nth(1);
+      await expect(heroTool).toHaveAttribute("href", `/${lang}/tools/fee-reminder/`);
+      await expect(heroTool).toHaveText(shown(lang, "landing.hero.tool"));
+      expect((await heroTool.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      // The receipt maker's title is still not the name of any link.
       const names = (await page.locator("a").allTextContents()).join(" | ");
-      for (const key of ["landing.tools.t1.title", "landing.tools.t2.title"]) expect(names).not.toContain(shown(lang, key));
+      expect(names).not.toContain(shown(lang, "landing.tools.t1.title"));
     });
 
     test(`criterion 17 [${lang}]: no price, no Pro plan; the only rupee amounts are the two example ones; the kicker says free once`, async ({ page }) => {
@@ -517,7 +535,7 @@ test.describe("the key flow on slow 4G, one run per language (criteria 2, 11, 12
       await expect(page.locator("h1")).toHaveText(shown(lang, "landing.hero.title"));
       const waitlist = page.locator("section#waitlist");
       await expect(waitlist).not.toBeInViewport();
-      await page.locator("main section").first().getByRole("link").tap();
+      await page.locator("main section").first().getByRole("link").first().tap();
       await expect(page).toHaveURL(new RegExp(`${path(lang)}#waitlist$`));
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
       await expect(waitlist.getByText(shown(lang, "landing.waitlist.reason"), { exact: true })).toBeInViewport();
@@ -552,9 +570,15 @@ test.describe("JavaScript off (criterion 2)", () => {
       await expect(page).toHaveURL(new RegExp(`#waitlist$`));
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
       await page.goto(path(lang));
-      await page.locator("main section").first().getByRole("link").click();
+      await page.locator("main section").first().getByRole("link").first().click();
       await expect(page).toHaveURL(new RegExp(`#waitlist$`));
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
+      // The hero's link to the reminder writer is a plain link too (R0-2, criterion 5).
+      await page.goto(path(lang));
+      await page.locator("main section").first().getByRole("link").nth(1).click();
+      await expect(page).toHaveURL(`/${lang}/tools/fee-reminder/`);
+      await expect(page.locator("h1")).toHaveText(shown(lang, "reminder.title"));
+      await page.goto(path(lang));
       // A footer language link is a plain link to that page.
       const other = langs.find((l) => l !== lang)!;
       await page.locator("footer nav").getByRole("link", { name: localeNames[other] }).click();

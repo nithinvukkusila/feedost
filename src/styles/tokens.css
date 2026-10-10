@@ -32,11 +32,15 @@
   --text-xs: initial;
   --text-xs--line-height: initial;
 
-  /* Radius: square, 4px, 6px (top of index tabs only), full circle (stamps, round button). */
+  /*
+   * Radius: square, 4px, 6px (top of index tabs only), full circle (stamps, round button), and 18px
+   * for the WhatsApp message preview bubble only (a recorded exception, docs/DESIGN.md "Shape and depth").
+   */
   --radius-*: initial;
   --radius-none: 0px;
   --radius-sm: 4px;
   --radius-tab: 6px;
+  --radius-bubble: 18px;
   --radius-full: 9999px;
 
   /* Shadow: solid offsets, zero blur. On cloth the colour changes through the ground utility. */

@@ -323,6 +323,62 @@ describe("Field holds one line of text that wraps (criterion 63)", () => {
   });
 });
 
+describe("Field latinValue: a value that is always Latin letters and digits (R0-2 fix)", () => {
+  const mirrorOf = (input: Element) => input.parentElement!.querySelector("[data-field-mirror]")!;
+
+  it("is off unless asked for: the value follows the page's script, so a name in Devanagari is drawn in Anek", () => {
+    render(<Field label="Parent's name" defaultValue="सुरेश" />);
+    const input = screen.getByRole("textbox");
+    for (const el of [input, mirrorOf(input)]) {
+      expect(classes(el)).toContain("type-value");
+      expect(classes(el)).not.toContain("type-value-latin");
+    }
+  });
+
+  it("when on, the control and its copy use the Latin value role in place of the script one", () => {
+    render(<Field label="Amount" placeholder="1,200" defaultValue="1200" latinValue />);
+    const input = screen.getByRole("textbox");
+    for (const el of [input, mirrorOf(input)]) {
+      expect(classes(el)).toContain("type-value-latin");
+      // Never both: two roles on one element would leave the face to the order of the stylesheet.
+      expect(classes(el)).not.toContain("type-value");
+    }
+    // The placeholder is drawn by the control, so it takes the same face; it only loses its weight.
+    expect(classes(input)).toContain("placeholder:font-normal");
+    expect(input.className).not.toMatch(/placeholder:type-|font-sans|font-mono|tracking-/);
+  });
+
+  it("changes nothing else: the same text box, so the field grows and wraps as before", () => {
+    const { container } = render(
+      <>
+        <Field label="A" defaultValue="meena.tuitions@okhdfc" />
+        <Field label="B" defaultValue="meena.tuitions@okhdfc" latinValue />
+      </>,
+    );
+    const [plain, latin] = [...container.querySelectorAll("textarea")];
+    const without = (el: Element) => classes(el).filter((name) => name !== "type-value" && name !== "type-value-latin");
+    expect(without(latin)).toEqual(without(plain));
+    expect(without(mirrorOf(latin))).toEqual(without(mirrorOf(plain)));
+    expect(latin.hasAttribute("latinvalue")).toBe(false);
+    expect(latin.hasAttribute("latinValue")).toBe(false);
+  });
+
+  it("leaves the label, the helper and the message in the page's own face", () => {
+    render(
+      <>
+        <Field label="Amount" helper="Whole rupees." latinValue />
+        <Field label="UPI ID" state="error" stateLabel="needs fixing" message="Add the part after @." latinValue />
+      </>,
+    );
+    expect(classes(screen.getByText("Amount"))).toContain("type-label");
+    expect(classes(screen.getByText("Whole rupees."))).toContain("type-caption");
+    expect(classes(screen.getByText("Add the part after @."))).toContain("type-caption");
+    for (const el of [screen.getByText("Amount"), screen.getByText("Whole rupees."), screen.getByText("Add the part after @."), screen.getByText("needs fixing")]) {
+      expect(el.className).not.toContain("type-value-latin");
+    }
+  });
+});
+
 describe("oneLine", () => {
   it("leaves a single line alone", () => {
     expect(oneLine("meena.tuitions@okhdfc")).toBe("meena.tuitions@okhdfc");

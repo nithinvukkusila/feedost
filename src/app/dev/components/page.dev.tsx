@@ -11,6 +11,7 @@ import { FormatsSection } from "./sections/formats";
 import { RowSection } from "./sections/row";
 import { RupeeSection } from "./sections/rupee";
 import { SegmentedSection } from "./sections/segmented";
+import { SelectFieldSection } from "./sections/select-field";
 import { SheetSection } from "./sections/sheet";
 import { SlipSection } from "./sections/slip";
 import { StampSection } from "./sections/stamp";
@@ -50,6 +51,8 @@ export default function DevComponentsPage() {
       <StudentStripSection />
       <BottomNavSection />
       <BannerSection />
+      {/* After the thirteen F2 components: SelectField arrived with slice R0-2. */}
+      <SelectFieldSection />
       <FormatsSection />
     </main>
   );

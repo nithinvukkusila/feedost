@@ -7,8 +7,14 @@ const OUT = "out";
 const LIMIT = 200 * 1024;
 // F3 target: aim for 150 KB or less on every route so the next slices have room. Over it only warns.
 const TARGET = 150 * 1024;
-// The home page and the four language pages must all be there, so the budget cannot pass by omission.
-const REQUIRED = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", "te/index.html"];
+// The home page, the four language pages and the four fee reminder pages must all be there, so the
+// budget cannot pass by omission.
+const LANGUAGES = ["en", "hi", "kn", "te"];
+const REQUIRED = [
+  "index.html",
+  ...LANGUAGES.map((locale) => `${locale}/index.html`),
+  ...LANGUAGES.map((locale) => `${locale}/tools/fee-reminder/index.html`),
+];
 
 if (!existsSync(OUT)) {
   console.error("No out/ folder. Run `pnpm build` first.");

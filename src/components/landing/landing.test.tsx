@@ -36,9 +36,21 @@ describe("header and hero (criteria 11)", () => {
     expect(screen.getByRole("group", { name: "Example" })).toBeTruthy();
   });
 
-  it("has no link to a tool and none to a form that does not exist (criterion 16)", () => {
+  it("has two links: the waitlist button and, under it, a text link to the reminder writer (R0-2, criterion 5)", () => {
     const { container } = renderLanding(<Hero />);
-    for (const a of container.querySelectorAll("a[href]")) expect(a.getAttribute("href")).toBe("#waitlist");
+    expect([...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href"))).toEqual(["#waitlist", "/en/tools/fee-reminder/"]);
+    const link = screen.getByRole("link", { name: "or write a free reminder now" });
+    expect(link.getAttribute("href")).toBe("/en/tools/fee-reminder/");
+    expect(link.className).toContain("min-h-tap");
+    expect(link.className).toContain("underline");
+    expect(link.className).toContain("ring:ground-ring");
+    // A text link, not a second button, and not blue or red.
+    expect(link.className).not.toMatch(/bg-|shadow-/);
+  });
+
+  it("points the hero's tool link at the page's own language", () => {
+    renderLanding(<Hero />, "hi");
+    expect(screen.getByRole("link", { name: "या अभी मुफ़्त रिमाइंडर लिखें" }).getAttribute("href")).toBe("/hi/tools/fee-reminder/");
   });
 });
 
@@ -97,15 +109,33 @@ describe("steps (criterion 3)", () => {
   });
 });
 
-describe("tools (criteria 15 and 16)", () => {
-  it("has two cards that are not links, each with a Coming soon mark", () => {
+describe("tools (R0-1 criterion 15; R0-2 criteria 3 and 4)", () => {
+  it("has two cards: the receipt maker still coming soon and not a link, the reminder writer with one link to the tool", () => {
     const { container } = renderLanding(<Tools />);
-    expect(container.querySelectorAll("a, button")).toHaveLength(0);
-    expect(screen.getAllByText("Coming soon")).toHaveLength(2);
+    const cards = container.querySelectorAll("article");
+    expect(cards).toHaveLength(2);
+    expect(screen.getAllByText("Coming soon")).toHaveLength(1);
+    expect(within(cards[0] as HTMLElement).getByText("Coming soon")).toBeTruthy();
+    expect(cards[0].querySelectorAll("a, button")).toHaveLength(0);
     expect(screen.getByText("Tool no. 01")).toBeTruthy();
     expect(screen.getByText("Tool no. 02")).toBeTruthy();
+
+    expect(container.querySelectorAll("a, button")).toHaveLength(1);
+    const link = within(cards[1] as HTMLElement).getByRole("link", { name: "Write a reminder" });
+    expect(link.getAttribute("href")).toBe("/en/tools/fee-reminder/");
+    expect(link.className).toContain("min-h-control");
+    expect(link.className).toContain("w-full");
+    // Outline: opening a page neither sends nor pays, so it is not blue.
+    expect(link.className).toContain("bg-slip");
+    expect(link.className).not.toMatch(/bg-blue|bg-cloth/);
+
     expect(container.querySelector("section")?.id).toBe("tools");
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Two free tools. Coming soon.");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Two free tools.");
+  });
+
+  it("links card 2 to the tool in the page's own language", () => {
+    const { container } = renderLanding(<Tools />, "hi");
+    expect(container.querySelector("article a")?.getAttribute("href")).toBe("/hi/tools/fee-reminder/");
   });
 });
 

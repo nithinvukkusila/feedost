@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { brand } from "@/config/brand";
 import { locales } from "@/config/locales";
+import { feeReminderPath } from "@/config/routes";
 import { alternateUrls, canonicalUrl, ogLocale } from "./seo";
 
 describe("canonicalUrl", () => {
@@ -10,7 +11,20 @@ describe("canonicalUrl", () => {
   });
 
   it("is different for every language", () => {
-    expect(new Set(locales.map(canonicalUrl)).size).toBe(locales.length);
+    expect(new Set(locales.map((locale) => canonicalUrl(locale))).size).toBe(locales.length);
+  });
+
+  it.each(locales)("%s with the tool path is that language's tool page (R0-2, criterion 66)", (locale) => {
+    expect(canonicalUrl(locale, feeReminderPath)).toBe(`https://${brand.domain}/${locale}/tools/fee-reminder/`);
+  });
+
+  it("with an empty path is the landing, as with no path", () => {
+    expect(canonicalUrl("hi", "")).toBe(canonicalUrl("hi"));
+  });
+
+  it.each(["/tools/", "tools/fee-reminder", "a//b/", "/", "tools", "//"])("throws RangeError for the path %j", (path) => {
+    expect(() => canonicalUrl("en", path)).toThrow(RangeError);
+    expect(() => alternateUrls(path)).toThrow(RangeError);
   });
 });
 
@@ -31,6 +45,24 @@ describe("alternateUrls", () => {
 
   it("is absolute with a trailing slash throughout", () => {
     for (const url of Object.values(urls)) expect(url).toMatch(/^https:\/\/[^/]+\/[a-z]{2}\/$/);
+  });
+});
+
+describe("alternateUrls with a path (R0-2, criterion 66)", () => {
+  const urls = alternateUrls(feeReminderPath);
+
+  it("has the same five keys, in the same order", () => {
+    expect(Object.keys(urls)).toEqual(["en", "hi", "kn", "te", "x-default"]);
+  });
+
+  it("points each language at its own tool page and x-default at the English one", () => {
+    for (const locale of locales) expect(urls[locale]).toBe(`https://${brand.domain}/${locale}/tools/fee-reminder/`);
+    expect(urls["x-default"]).toBe(`https://${brand.domain}/en/tools/fee-reminder/`);
+  });
+
+  it("leaves the landing's own five addresses as they were", () => {
+    expect(alternateUrls()).toEqual(alternateUrls(""));
+    expect(alternateUrls().en).toBe(`https://${brand.domain}/en/`);
   });
 });
 
