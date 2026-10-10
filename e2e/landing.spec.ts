@@ -356,14 +356,20 @@ for (const lang of langs) {
           return widest;
         });
         expect(width, `row ${i + 1} name is ${width}px wide, its longest word needs ${longestWord}px`).toBeGreaterThanOrEqual(longestWord - 1);
-        // The row's amount does not overlap the stamp or the name.
-        const amount = await row.locator(".type-amount-row").boundingBox();
-        const nameBox = await name.boundingBox();
-        expect(amount!.x).toBeGreaterThanOrEqual(nameBox!.x + nameBox!.width - 1);
+        // The amount never overlaps the name or the stamp. At this size the card is too narrow to put the
+        // name, the amount and the stamp side by side, so they may wrap onto their own lines.
+        const amount = (await row.locator(".type-amount-row").boundingBox())!;
+        const nameBox = (await name.boundingBox())!;
+        const apart = (a: typeof amount, b: typeof amount) =>
+          a.x + a.width <= b.x + 1 || b.x + b.width <= a.x + 1 || a.y + a.height <= b.y + 1 || b.y + b.height <= a.y + 1;
+        expect(apart(amount, nameBox), "the amount overlaps the name").toBe(true);
         const stamp = row.locator('[data-size="sm"]');
         if ((await stamp.count()) > 0) {
           const ring = (await stamp.boundingBox())!;
-          expect(amount!.x + amount!.width, "the amount ends before the stamp begins").toBeLessThanOrEqual(ring.x + 1);
+          expect(apart(amount, ring), "the amount overlaps the stamp").toBe(true);
+          expect(apart(nameBox, ring), "the name overlaps the stamp").toBe(true);
+          const sameLine = amount.y < ring.y + ring.height && ring.y < amount.y + amount.height;
+          if (sameLine) expect(amount.x + amount.width, "on one line, the amount ends before the stamp begins").toBeLessThanOrEqual(ring.x + 1);
         }
       }
     });
