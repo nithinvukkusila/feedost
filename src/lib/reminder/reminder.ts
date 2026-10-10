@@ -35,9 +35,15 @@ export function cleanName(raw: string): string {
     if (WHITE_SPACE.test(char)) out += " ";
     else if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) continue;
     else if (code >= 0xd800 && code <= 0xdfff) continue;
+    // Invisible direction marks and zero-width characters: a pasted one can turn the greeting round or
+    // make an empty name look filled in. The joiners U+200C and U+200D stay; Indian scripts need them.
+    else if ((code >= 0x202a && code <= 0x202e) || (code >= 0x2066 && code <= 0x2069)) continue;
+    else if (code === 0x200b || code === 0x200e || code === 0x200f || code === 0xfeff) continue;
     else out += char;
   }
-  return out.replace(/ +/g, " ").trim();
+  out = out.replace(/ +/g, " ").trim();
+  // Joiners alone draw nothing: that is not a name.
+  return /[^\u200c\u200d ]/.test(out) ? out : "";
 }
 
 /** The parent's name and "Your name": 1 to 40 characters after cleaning, counted in code points. */

@@ -423,3 +423,24 @@ describe("whatsAppLink (criteria 35, 36, 38)", () => {
     }
   });
 });
+
+describe("names with invisible characters", () => {
+  const ch = (...codes: number[]) => String.fromCodePoint(...codes);
+
+  it("cleanName drops direction marks and zero-width characters", () => {
+    expect(cleanName(`Su${ch(0x202e)}resh`)).toBe("Suresh");
+    expect(cleanName(`${ch(0x2066)}Meena${ch(0x2069)} ${ch(0x200e)}Rao${ch(0x200f)}`)).toBe("Meena Rao");
+    expect(cleanName(`Me${ch(0x200b)}ena${ch(0xfeff)}`)).toBe("Meena");
+  });
+
+  it("cleanName keeps the joiners that Indian scripts need", () => {
+    const conjunct = ch(0x0915, 0x094d, 0x200d, 0x0937);
+    expect(cleanName(conjunct)).toBe(conjunct);
+  });
+
+  it("a name with nothing visible is missing, not filled in", () => {
+    expect(cleanName(ch(0x200b))).toBe("");
+    expect(cleanName(ch(0x200d, 0x200c))).toBe("");
+    expect(checkName(ch(0x200b, 0x202e)).ok).toBe(false);
+  });
+});

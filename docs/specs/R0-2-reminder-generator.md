@@ -928,3 +928,16 @@ Items 5, 8, 10, 11 and 15 are small product or wording calls. I proceed on the c
 ### 20. Start
 
 `frontend-dev` starts with **step 1** of section 15: `src/lib/reminder/templates.json`, `reminder.ts` and the tables of section 6, after reading sections 5, 6 and 16. `test-engineer` starts `e2e/fee-reminder.spec.ts` when step 4 lands and joins step 6 for `e2e/landing.spec.ts`. There is no `backend-dev` task. Nothing waits on the founder to begin; the reviewer names and the phone checks are needed before Release 0, not before the merge.
+
+## Build record, 2026-10-10
+
+- **Sizes (gzipped initial JS):** the four tool pages 141.5 KB each (target 150 KB, limit 200 KB); `/`, the four landing pages and the 404 132.1 KB each, unchanged.
+- **Tests:** 1,484 unit tests pass. `e2e/fee-reminder.spec.ts` has 78 tests, all passing; the full e2e suite runs in CI.
+- **Checks:** lint, typecheck, `i18n:check` (122 keys in four languages), `check:leak` (8 pages), `check:404`, `check:secrets`, `check:db` pass.
+- **Not reviewed by a native reader:** the Hindi, Kannada and Telugu message templates (the review record lists all three as not reviewed, so `pnpm i18n:check --strict` fails by design), and 53 interface values marked `TODO-translate`. On the Kannada and Telugu pages the two safety lines (the UPI note that says where the money goes, and the privacy line) show in English until a native reader supplies them. These come first.
+- **Corrections made after the build:**
+  - The typed amount and UPI ID are drawn in the Latin face on the Hindi, Kannada and Telugu pages (`Field` `latinValue`); the plan had assumed Latin text would not use Anek.
+  - The leak check's template exception no longer cuts out texts shorter than six characters (short month names sat inside real interface sentences and hid them).
+  - Names lose invisible direction marks and zero-width characters; a name with nothing visible counts as missing.
+- **Follow-up, not done:** the review record's hash covers only each language's own text. If an English template changes, the other languages keep their sign-off. Include the English templates in the hash before the first sign-off is recorded (the hashes written in `src/lib/i18n-check.test.ts` change with it).
+- **Needs a phone (H1 to H3):** whether WhatsApp makes the `upi://` link tappable, and whether UPI apps accept a link payment to a personal ID. Every message carries the plain line "Or pay to UPI ID: …" as the fallback, and the page makes no one-tap promise.

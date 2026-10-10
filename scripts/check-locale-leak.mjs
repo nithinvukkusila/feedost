@@ -71,7 +71,10 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
     all.push(...templateLines, ...(entry.months ?? []).filter((name) => typeof name === "string"));
   }
   // Longest first, so a short month name is not cut out of the middle of a line that holds it.
-  const removable = [...new Set(all.flatMap(spellings))].filter((text) => text !== "").sort((a, b) => b.length - a.length);
+  // Nothing shorter than MIN_LENGTH is cut out: a short month name ("May") sits inside real interface
+  // sentences, and cutting it out of a script would hide those sentences from this check. A value the
+  // check looks for is at least MIN_LENGTH long, so it can never sit inside a shorter month name.
+  const removable = [...new Set(all.flatMap(spellings))].filter((text) => text.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
   return { ...exception, lines, removable };
 });
 
