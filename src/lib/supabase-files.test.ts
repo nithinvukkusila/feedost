@@ -262,8 +262,10 @@ describe("the shape of ci.yml, gaps found by mutation (criteria 5, 14, 15, 34, 4
     expect(ci).toContain("cancel-in-progress: true");
   });
 
-  it("the check job runs every gate, in order, and stops after 15 minutes", () => {
-    expect(check).toMatch(/timeout-minutes: 15/);
+  // 25, not 15: the browser suite alone takes about 12 minutes since R0-2, and the production build and
+  // its checks still run after it. The database job keeps its 15-minute cap (F4 criterion 15).
+  it("the check job runs every gate, in order, and stops after 25 minutes", () => {
+    expect(check).toMatch(/timeout-minutes: 25/);
     const steps = [
       "pnpm install --frozen-lockfile",
       "pnpm lint",
