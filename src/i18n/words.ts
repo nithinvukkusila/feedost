@@ -15,7 +15,8 @@ import type en from "../../messages/en.json";
 type Messages = typeof en;
 
 /** The namespaces that may be handed to an island as words. Each holds plain text only. */
-export const plainNamespaces: readonly (keyof Messages)[] = [];
+export const plainNamespaces = ["reminderForm"] as const satisfies readonly (keyof Messages)[];
+export type PlainNamespace = (typeof plainNamespaces)[number];
 
 type Tree = { [key: string]: string | Tree };
 
@@ -29,8 +30,9 @@ export function notPlain(tree: Tree, path = ""): string[] {
 }
 
 /** One plain-text namespace of the page's language, to pass to a client island as a prop. Server only. */
-export async function getWords<N extends keyof Messages>(namespace: N): Promise<Messages[N]> {
-  if (!plainNamespaces.includes(namespace)) {
+export async function getWords<N extends PlainNamespace>(namespace: N): Promise<Messages[N]> {
+  // The type already says so; this is for a caller that got round it.
+  if (!(plainNamespaces as readonly string[]).includes(namespace)) {
     throw new RangeError(`"${String(namespace)}" is not listed in plainNamespaces, so it cannot be handed to an island as words`);
   }
   const messages = (await getMessages()) as unknown as Messages;

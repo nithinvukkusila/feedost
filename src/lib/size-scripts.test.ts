@@ -185,8 +185,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.out).toContain("out/kn/later/page/index.html");
   });
 
-  // Skipped for build step 4 only: the page has no island yet, so the rule is off (see the script). Step 5 turns both on.
-  it.skip("fails when the tool page does not carry the kn templates", () => {
+  it("fails when the tool page does not carry the kn templates", () => {
     const { kn: _kn, ...rest } = templates;
     void _kn;
     const result = run(leakScript, project({ toolScript: toolScript(rest) }));
@@ -247,6 +246,45 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     // Month names are too short and too common to forbid anywhere; only template lines are tracked.
     const result = run(leakScript, project({ body: (l) => `${own(l)}<p>${templates.en.months[2]}</p>` }));
     expect(result.status).toBe(0);
+  });
+});
+
+describe("pnpm check:leak counts a word, not a piece of a longer name (R0-2)", () => {
+  // The English tool page says "Missing" beside an empty field, and every language translates it. The
+  // framework's own code has names like MissingSlotContext; that is not an English word on a Hindi page.
+  const withWord = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, word: "Missing", verb: "Remind" } } };
+  const own = (l: string) => `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`;
+
+  it("passes when the value is only inside identifiers in a script", () => {
+    const code = 'var MissingSlotContext=1;function findMissingCanonicalRoutes(){};e.s(["ReminderTool",0]);var a_Missing_b=2;';
+    const result = run(leakScript, project({ messages: withWord, scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(0);
+  });
+
+  it.each([
+    ["in quotes", 'var w="Missing";'],
+    ["as JSX children", 'jsx("span",{children:"Missing"})'],
+    ["in a sentence", 'var w="Fee is Missing. Type it";'],
+    ["after an escaped line break", 'var w="Total:\\nMissing";'],
+    ["at the very start of the file", "Missing;var a=1;"],
+  ])("still fails when the value stands as a word %s", (_name, code) => {
+    const result = run(leakScript, project({ messages: withWord, scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('hi page loads a en message: "Missing"');
+  });
+
+  it("still fails when the word is in a page's HTML between tags, even with an identifier holding it elsewhere", () => {
+    const body = (l: string) => (l === "kn" ? `${own(l)}<p class="MissingThing">Missing</p>` : own(l));
+    const result = run(leakScript, project({ messages: withWord, body }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('kn page loads a en message: "Missing"');
+  });
+
+  it("does not excuse an Indian-script value that touches Latin letters", () => {
+    const code = `var w="abc${messages.te.home.placeholder}def";`;
+    const result = run(leakScript, project({ scriptText: { "chunk.js": code } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("page loads a te message");
   });
 });
 

@@ -61,7 +61,7 @@
       "t2": {
         "no": "ಉಪಕರಣ ಸಂ. 02",
         "title": "TODO-translate: Fee reminder writer",
-        "body": "TODO-translate: Polite or firm, with your UPI link inside."
+        "body": "ಸೌಮ್ಯವಾಗಿ ಅಥವಾ ಕಟ್ಟುನಿಟ್ಟಾಗಿ, ನಿಮ್ಮ UPI ಲಿಂಕ್ ಜೊತೆಗೆ."
       }
     },
     "promises": {
@@ -108,6 +108,100 @@
       "body": "TODO-translate: The {brand} app is coming soon. It will remember every student and remind them all in a minute.",
       "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
     }
+  },
+  "reminderForm": {
+    "language": "ಸಂದೇಶದ ಭಾಷೆ",
+    "tone": "ಧಾಟಿ",
+    "polite": "ಸೌಮ್ಯ",
+    "firm": "ಕಟ್ಟುನಿಟ್ಟು",
+    "parent": {
+      "label": "ಪೋಷಕರ ಹೆಸರು",
+      "placeholder": "ಸುರೇಶ್",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ಪೋಷಕರ ಹೆಸರು ಬರೆಯಿರಿ."
+      },
+      "tooLong": {
+        "word": "ತುಂಬಾ ಉದ್ದ",
+        "fix": "40 ಅಥವಾ ಕಡಿಮೆ ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ."
+      }
+    },
+    "month": {
+      "label": "ತಿಂಗಳು"
+    },
+    "amount": {
+      "label": "ಮೊತ್ತ ₹ ನಲ್ಲಿ",
+      "placeholder": "1,200",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ಶುಲ್ಕವನ್ನು ರೂಪಾಯಿಗಳಲ್ಲಿ ಬರೆಯಿರಿ."
+      },
+      "paise": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಪೂರ್ಣ ರೂಪಾಯಿ ಮಾತ್ರ. ಪೈಸೆ ಬಿಡಿ."
+      },
+      "notDigits": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಅಂಕಿಗಳನ್ನು ಮಾತ್ರ ಬಳಸಿ, ಉದಾಹರಣೆಗೆ 1200."
+      },
+      "tooLow": {
+        "word": "ತುಂಬಾ ಕಡಿಮೆ",
+        "fix": "ಮೊತ್ತ ಕನಿಷ್ಠ ₹1 ಇರಬೇಕು."
+      },
+      "tooHigh": {
+        "word": "ತುಂಬಾ ಹೆಚ್ಚು",
+        "fix": "ಈ ಉಪಕರಣದಲ್ಲಿ ₹1,00,000 ವರೆಗೆ ಮಾತ್ರ."
+      }
+    },
+    "upi": {
+      "label": "ನಿಮ್ಮ UPI ID",
+      "placeholder": "name@bank",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ನಿಮ್ಮ UPI ID ಬರೆಯಿರಿ, ಉದಾಹರಣೆಗೆ name@bank."
+      },
+      "space": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಖಾಲಿ ಜಾಗಗಳನ್ನು ತೆಗೆಯಿರಿ."
+      },
+      "noAt": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "UPI ID ಯಲ್ಲಿ @ ಇರುತ್ತದೆ, ಉದಾಹರಣೆಗೆ name@bank."
+      },
+      "format": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಇದು UPI ID ಯಂತೆ ಕಾಣುತ್ತಿಲ್ಲ. ನಿಮ್ಮ UPI ಆ್ಯಪ್‌ನಿಂದ ಕಾಪಿ ಮಾಡಿ."
+      },
+      "ok": {
+        "word": "TODO-translate: Format looks right",
+        "note": "TODO-translate: Format looks right. We cannot check this with your bank. Read it once more: the money goes to this ID."
+      }
+    },
+    "payee": {
+      "label": "ನಿಮ್ಮ ಹೆಸರು",
+      "placeholder": "ಮೀನಾ ರಾವ್",
+      "helper": "ಇದು ಪಾವತಿ ಲಿಂಕ್‌ನಲ್ಲಿ ಹೋಗುತ್ತದೆ.",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ನಿಮ್ಮ ಹೆಸರು ಬರೆಯಿರಿ."
+      },
+      "tooLong": {
+        "word": "ತುಂಬಾ ಉದ್ದ",
+        "fix": "40 ಅಥವಾ ಕಡಿಮೆ ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ."
+      }
+    },
+    "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
+    "preview": {
+      "title": "ನಿಮ್ಮ ಸಂದೇಶ",
+      "incomplete": "ಸಂದೇಶ ಪೂರ್ಣಗೊಳಿಸಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ.",
+      "blank": "ಖಾಲಿ ಜಾಗ"
+    },
+    "send": "WhatsApp ನಲ್ಲಿ ಕಳುಹಿಸಿ",
+    "copy": "ಸಂದೇಶ ಕಾಪಿ ಮಾಡಿ",
+    "copied": "ಕಾಪಿ ಆಗಿದೆ",
+    "copiedStatus": "ಸಂದೇಶ ಕಾಪಿ ಆಗಿದೆ.",
+    "copyFailed": "TODO-translate: Could not copy. Press and hold the message to select it.",
+    "fillFirst": "ಮೊದಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ."
   },
   "notFound": {
     "title": "ಈ ಪುಟ ಇಲ್ಲ.",

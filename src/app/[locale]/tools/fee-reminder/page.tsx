@@ -1,14 +1,17 @@
 // The fee reminder writer (slice R0-2): a public page with no sign-in and no database. Everything
 // here is a Server Component whose words cost no JavaScript: the header, the kicker, the one h1,
-// the line for a browser with JavaScript off, the yellow block and the footer.
+// the line for a browser with JavaScript off, the yellow block and the footer. Around one client
+// island, ReminderTool, whose plain words are handed to it as a prop (see src/i18n/words.ts).
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { ReminderTool } from "@/components/reminder/reminder-tool";
 import { ToolHeader } from "@/components/tools/tool-header";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { isLocale } from "@/config/locales";
 import { feeReminderPath, localeHref } from "@/config/routes";
+import { getWords } from "@/i18n/words";
 import { alternateUrls, canonicalUrl, ogLocale } from "@/lib/seo";
 
 export async function generateMetadata({ params }: Readonly<{ params: Promise<{ locale: string }> }>): Promise<Metadata> {
@@ -27,7 +30,7 @@ export async function generateMetadata({ params }: Readonly<{ params: Promise<{ 
 }
 
 export default async function FeeReminderPage() {
-  const [locale, t] = await Promise.all([getLocale(), getTranslations("reminder")]);
+  const [locale, t, words] = await Promise.all([getLocale(), getTranslations("reminder"), getWords("reminderForm")]);
   return (
     <div className="bg-page-ruled">
       <ToolHeader />
@@ -41,6 +44,8 @@ export default async function FeeReminderPage() {
             {t("noscript")}
           </p>
         </noscript>
+
+        <ReminderTool words={words} pageLocale={locale} />
 
         {/* The yellow block from the canvas. It does not claim the app exists, and holds no form (R0-4). */}
         <section

@@ -23,9 +23,7 @@ const REQUIRED_PAGES = ["", "tools/fee-reminder/"];
 // the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
 // under `pages`, and only in its script files, never its HTML, every line of that file is taken out
 // of the text before the search for another language's interface words.
-// `carried: false` for this one commit (R0-2 build step 4): the page exists but its island, which
-// brings the templates, arrives in step 5. Step 5 removes the field and the rule below is always on.
-const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder", carried: false }];
+const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" }];
 
 function leaves(node, out = []) {
   for (const value of Object.values(node)) {
@@ -100,7 +98,30 @@ function pageFiles(locale, pagePath) {
   return { files, htmlGzip: gzipSync(Buffer.from(html)).length };
 }
 
-const has = (text, value) => spellings(value).some((spelling) => text.includes(spelling));
+const WORD_CHAR = /[A-Za-z0-9_$]/;
+
+/**
+ * Whether `spelling` is in `text` as words of its own. A value that starts or ends with a Latin
+ * letter or a digit is not counted where it is glued into a longer name: the English word "Missing"
+ * is not on a Hindi page because the framework's code has a `MissingSlotContext`, and "Remind" is
+ * not there because a component is called `ReminderTool`. The same word in quotes, between tags or
+ * in a sentence still counts, and so does one that follows an escaped line break inside a string.
+ */
+function appears(text, spelling) {
+  const startsWithWord = WORD_CHAR.test(spelling[0]);
+  const endsWithWord = WORD_CHAR.test(spelling[spelling.length - 1]);
+  for (let at = text.indexOf(spelling); at !== -1; at = text.indexOf(spelling, at + 1)) {
+    const before = text[at - 1] ?? "";
+    const after = text[at + spelling.length] ?? "";
+    const escapeBefore = /[nrt]/.test(before) && text[at - 2] === "\\";
+    const gluedBefore = startsWithWord && WORD_CHAR.test(before) && !escapeBefore;
+    const gluedAfter = endsWithWord && WORD_CHAR.test(after);
+    if (!gluedBefore && !gluedAfter) return true;
+  }
+  return false;
+}
+
+const has = (text, value) => spellings(value).some((spelling) => appears(text, spelling));
 
 let failed = false;
 let ownFound = 0;
@@ -150,7 +171,7 @@ for (const locale of locales) {
     }
 
     // The exception must be real: the page has to carry every other language's templates in its scripts.
-    for (const exception of excepted.filter((e) => e.carried !== false)) {
+    for (const exception of excepted) {
       const scriptText = page.files.filter((file) => !file.html).map((file) => file.text);
       for (const other of others) {
         if (!exception.lines[other].some((line) => scriptText.some((text) => has(text, line)))) {

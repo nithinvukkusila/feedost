@@ -43,10 +43,40 @@ describe("the plain namespaces", () => {
   });
 });
 
+describe("the fee reminder's words", () => {
+  it("are the one plain namespace", () => {
+    expect([...plainNamespaces]).toEqual(["reminderForm"]);
+  });
+
+  it.each(locales)("give every error a state word and a sentence that says how to fix it, in %s.json", (locale) => {
+    const form = files[locale].reminderForm as Record<string, Record<string, unknown>>;
+    const errors: [string, string[]][] = [
+      ["parent", ["missing", "tooLong"]],
+      ["amount", ["missing", "paise", "notDigits", "tooLow", "tooHigh"]],
+      ["upi", ["missing", "space", "noAt", "format"]],
+      ["payee", ["missing", "tooLong"]],
+    ];
+    for (const [field, codes] of errors) {
+      for (const code of codes) {
+        const words = form[field][code] as { word: string; fix: string };
+        expect(Object.keys(words), `${field}.${code}`).toEqual(["word", "fix"]);
+        expect(words.word.trim(), `${field}.${code}.word`).not.toBe("");
+        expect(words.fix.trim(), `${field}.${code}.fix`).not.toBe("");
+      }
+    }
+  });
+
+  it("keep the UPI placeholder the same in all four files, and never a real-looking ID (criterion 11)", () => {
+    for (const locale of locales) expect((files[locale].reminderForm as { upi: { placeholder: string } }).upi.placeholder).toBe("name@bank");
+  });
+});
+
 describe("getWords", () => {
   it("refuses a namespace that is not listed as plain text", async () => {
-    await expect(getWords("landing")).rejects.toThrow(RangeError);
-    await expect(getWords("landing")).rejects.toThrow(/plainNamespaces/);
+    // The type refuses it too; the cast stands in for a caller that got round the type.
+    const landing = "landing" as unknown as "reminderForm";
+    await expect(getWords(landing)).rejects.toThrow(RangeError);
+    await expect(getWords(landing)).rejects.toThrow(/plainNamespaces/);
   });
 
   it("returns the one namespace of the page's language, with no marker left in it", async () => {

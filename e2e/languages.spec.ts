@@ -174,7 +174,37 @@ test.describe("criterion 7: an unknown language segment is the 404 page", () => 
   }
 });
 
+/**
+ * Whether a message stands in the text as words of its own, the rule `pnpm check:leak` uses since
+ * R0-2. A value that starts or ends with a Latin letter or digit does not count where it is glued
+ * into a longer name: the English word "Missing" is not on a Hindi page because the framework's own
+ * code has a `MissingSlotContext`. In quotes, between tags, in a sentence or after an escaped line
+ * break it still counts.
+ */
+function standsAsWords(text: string, value: string): boolean {
+  const wordChar = /[A-Za-z0-9_$]/;
+  for (const spelling of [value, JSON.stringify(value).slice(1, -1)]) {
+    for (let at = text.indexOf(spelling); at !== -1; at = text.indexOf(spelling, at + 1)) {
+      const before = text[at - 1] ?? "";
+      const after = text[at + spelling.length] ?? "";
+      const escapeBefore = /[nrt]/.test(before) && text[at - 2] === "\\";
+      const gluedBefore = wordChar.test(spelling[0]) && wordChar.test(before) && !escapeBefore;
+      const gluedAfter = wordChar.test(spelling[spelling.length - 1]) && wordChar.test(after);
+      if (!gluedBefore && !gluedAfter) return true;
+    }
+  }
+  return false;
+}
+
 test.describe("criteria 29 and 41: only the active language ships", () => {
+  test("29: the word rule itself: a piece of a longer name is not the word, the word in quotes or a sentence is", () => {
+    expect(standsAsWords("var MissingSlotContext=1;findMissingRoutes()", "Missing")).toBe(false);
+    expect(standsAsWords('children:"Missing"', "Missing")).toBe(true);
+    expect(standsAsWords("<p>Fee is Missing.</p>", "Missing")).toBe(true);
+    expect(standsAsWords('"Total:\\nMissing"', "Missing")).toBe(true);
+    expect(standsAsWords("abcफ़ीस जमाdef", "फ़ीस जमा")).toBe(true);
+  });
+
   for (const lang of langs) {
     test(`29: /${lang}/ and every script it loads hold none of the other languages' words`, async ({ page }) => {
       const bodies: { url: string; text: string }[] = [];
@@ -196,7 +226,7 @@ test.describe("criteria 29 and 41: only the active language ships", () => {
         .filter(({ v }) => v.length >= 6 && !own.has(v));
       expect(theirs.length).toBeGreaterThan(0);
       for (const { other, v } of theirs) {
-        expect(all.includes(v) || all.includes(JSON.stringify(v).slice(1, -1)), `${other} text "${v}" found in ${lang} page`).toBe(false);
+        expect(standsAsWords(all, v), `${other} text "${v}" found in ${lang} page`).toBe(false);
       }
       expect(all, "the page's own line is in the delivered HTML").toContain(placeholderOf(lang));
     });
