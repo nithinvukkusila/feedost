@@ -214,5 +214,110 @@
   "notFound": {
     "title": "ఈ పేజీ లేదు.",
     "body": "TODO-translate: Check the address, or open the page in your language."
+  },
+  "language": {
+    "register": "TODO-translate: Fee register",
+    "title": "TODO-translate: Choose your language",
+    "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "chosen": "TODO-translate: Chosen",
+    "continue": "కొనసాగించండి",
+    "name": {
+      "en": "TODO-translate: English",
+      "hi": "TODO-translate: Hindi",
+      "kn": "TODO-translate: Kannada",
+      "te": "TODO-translate: Telugu"
+    }
+  },
+  "signIn": {
+    "headline": "TODO-translate: Fees collected. <accent>Not chased.</accent>",
+    "tapLabel": "TODO-translate: Tap {n}",
+    "tap1": "<b>మీరు గుర్తు చేయండి నొక్కుతారు.</b> WhatsApp తెరుచుకుంటుంది, సందేశం సిద్ధం.",
+    "tap2": "TODO-translate: <b>The parent taps Pay.</b> UPI opens, amount filled.",
+    "paid": "TODO-translate: <b>Straight to your UPI.</b> We never hold it.",
+    "stamp": "TODO-translate: Paid",
+    "google": "Google తో కొనసాగించండి",
+    "busy": "TODO-translate: Opening Google…",
+    "note": "TODO-translate: Free for tutors. No password, no OTP.",
+    "offline": "TODO-translate: You are offline. Connect to the internet to sign in.",
+    "cancelled": "సైన్-ఇన్ రద్దు అయింది. మళ్లీ ప్రయత్నించడానికి Google తో కొనసాగించండి నొక్కండి.",
+    "failed": "TODO-translate: Google sign-in did not finish. Nothing was saved. Try again.",
+    "expired": "TODO-translate: You were signed out. Sign in again to carry on.",
+    "callback": "TODO-translate: Signing you in…"
+  },
+  "more": {
+    "title": "TODO-translate: More",
+    "profile": "TODO-translate: Your profile",
+    "edit": "TODO-translate: Edit",
+    "language": "భాష",
+    "signOut": "TODO-translate: Sign out",
+    "back": "TODO-translate: Back to home"
+  },
+  "appState": {
+    "loading": "TODO-translate: Opening your book…",
+    "errorTitle": "TODO-translate: Couldn't load your details",
+    "errorBody": "TODO-translate: The network dropped. Nothing is lost.",
+    "retry": "TODO-translate: Try again",
+    "offlineTitle": "TODO-translate: You are offline",
+    "offlineBody": "TODO-translate: Connect to the internet to save your details."
+  },
+  "setup": {
+    "stepOf": "TODO-translate: Step {n} of {total}",
+    "back": "TODO-translate: Back",
+    "state": {
+      "correct": "TODO-translate: Correct",
+      "needsFixing": "TODO-translate: Needs fixing",
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long"
+    },
+    "saveFailed": "TODO-translate: Couldn't save just now. Your changes were not saved. Check your connection and tap {action} again.",
+    "rowMissing": "TODO-translate: We could not find your profile. Sign out, then sign in again.",
+    "profile": {
+      "title": "TODO-translate: What should parents call you?",
+      "body": "TODO-translate: This name goes on every reminder, pay page and receipt.",
+      "name": "TODO-translate: Your name",
+      "subjects": "TODO-translate: What do you teach?",
+      "other": "TODO-translate: + Other",
+      "otherLabel": "TODO-translate: Another subject",
+      "add": "TODO-translate: Add",
+      "next": "TODO-translate: Next: your UPI ID",
+      "nextWord": "TODO-translate: Next"
+    },
+    "name": {
+      "missing": "TODO-translate: Type your name.",
+      "tooLong": "TODO-translate: Use 80 characters or fewer."
+    },
+    "subjects": {
+      "missing": "TODO-translate: Pick at least one subject.",
+      "limit": "TODO-translate: Use up to 8 subjects, each short. Remove one or shorten a name."
+    },
+    "upi": {
+      "title": "TODO-translate: Where should the fees land?",
+      "body": "TODO-translate: Your UPI ID. Parents pay you directly. {brand} never touches the money.",
+      "label": "TODO-translate: Your UPI ID",
+      "placeholder": "name@bank",
+      "ok": "TODO-translate: That looks like a valid UPI ID.",
+      "missing": "TODO-translate: Type your UPI ID.",
+      "noAt": "TODO-translate: This is missing the part after @. A UPI ID looks like name@bank",
+      "bad": "TODO-translate: A UPI ID has letters, digits, dots and dashes, then @, then the bank's name. Check for spaces.",
+      "save": "TODO-translate: Save and finish"
+    }
+  },
+  "home": {
+    "hello": "TODO-translate: Hello, {name}",
+    "more": "TODO-translate: More",
+    "empty": {
+      "title": "TODO-translate: Your book is empty.",
+      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",
+      "soon": "TODO-translate: Adding students arrives in the next update."
+    }
+  },
+  "subjects": {
+    "maths": "TODO-translate: Maths",
+    "science": "TODO-translate: Science",
+    "english": "TODO-translate: English",
+    "hindi": "TODO-translate: Hindi",
+    "physics": "TODO-translate: Physics",
+    "chemistry": "TODO-translate: Chemistry",
+    "accounts": "TODO-translate: Accounts"
   }
 }

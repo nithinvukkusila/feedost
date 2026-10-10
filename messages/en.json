@@ -214,5 +214,110 @@
   "notFound": {
     "title": "This page does not exist.",
     "body": "Check the address, or open the page in your language."
+  },
+  "language": {
+    "register": "Fee register",
+    "title": "Choose your language",
+    "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "chosen": "Chosen",
+    "continue": "Continue",
+    "name": {
+      "en": "English",
+      "hi": "Hindi",
+      "kn": "Kannada",
+      "te": "Telugu"
+    }
+  },
+  "signIn": {
+    "headline": "Fees collected. <accent>Not chased.</accent>",
+    "tapLabel": "Tap {n}",
+    "tap1": "<b>You tap Remind.</b> WhatsApp opens, message ready.",
+    "tap2": "<b>The parent taps Pay.</b> UPI opens, amount filled.",
+    "paid": "<b>Straight to your UPI.</b> We never hold it.",
+    "stamp": "Paid",
+    "google": "Continue with Google",
+    "busy": "Opening Google…",
+    "note": "Free for tutors. No password, no OTP.",
+    "offline": "You are offline. Connect to the internet to sign in.",
+    "cancelled": "Sign-in was cancelled. Tap Continue with Google to try again.",
+    "failed": "Google sign-in did not finish. Nothing was saved. Try again.",
+    "expired": "You were signed out. Sign in again to carry on.",
+    "callback": "Signing you in…"
+  },
+  "more": {
+    "title": "More",
+    "profile": "Your profile",
+    "edit": "Edit",
+    "language": "Language",
+    "signOut": "Sign out",
+    "back": "Back to home"
+  },
+  "appState": {
+    "loading": "Opening your book…",
+    "errorTitle": "Couldn't load your details",
+    "errorBody": "The network dropped. Nothing is lost.",
+    "retry": "Try again",
+    "offlineTitle": "You are offline",
+    "offlineBody": "Connect to the internet to save your details."
+  },
+  "setup": {
+    "stepOf": "Step {n} of {total}",
+    "back": "Back",
+    "state": {
+      "correct": "Correct",
+      "needsFixing": "Needs fixing",
+      "missing": "Missing",
+      "tooLong": "Too long"
+    },
+    "saveFailed": "Couldn't save just now. Your changes were not saved. Check your connection and tap {action} again.",
+    "rowMissing": "We could not find your profile. Sign out, then sign in again.",
+    "profile": {
+      "title": "What should parents call you?",
+      "body": "This name goes on every reminder, pay page and receipt.",
+      "name": "Your name",
+      "subjects": "What do you teach?",
+      "other": "+ Other",
+      "otherLabel": "Another subject",
+      "add": "Add",
+      "next": "Next: your UPI ID",
+      "nextWord": "Next"
+    },
+    "name": {
+      "missing": "Type your name.",
+      "tooLong": "Use 80 characters or fewer."
+    },
+    "subjects": {
+      "missing": "Pick at least one subject.",
+      "limit": "Use up to 8 subjects, each short. Remove one or shorten a name."
+    },
+    "upi": {
+      "title": "Where should the fees land?",
+      "body": "Your UPI ID. Parents pay you directly. {brand} never touches the money.",
+      "label": "Your UPI ID",
+      "placeholder": "name@bank",
+      "ok": "That looks like a valid UPI ID.",
+      "missing": "Type your UPI ID.",
+      "noAt": "This is missing the part after @. A UPI ID looks like name@bank",
+      "bad": "A UPI ID has letters, digits, dots and dashes, then @, then the bank's name. Check for spaces.",
+      "save": "Save and finish"
+    }
+  },
+  "home": {
+    "hello": "Hello, {name}",
+    "more": "More",
+    "empty": {
+      "title": "Your book is empty.",
+      "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
+      "soon": "Adding students arrives in the next update."
+    }
+  },
+  "subjects": {
+    "maths": "Maths",
+    "science": "Science",
+    "english": "English",
+    "hindi": "Hindi",
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "accounts": "Accounts"
   }
 }

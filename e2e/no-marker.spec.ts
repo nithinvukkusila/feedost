@@ -1,0 +1,191 @@
+// Review fix for R1-1: no tutor ever sees the translator's marker, "TODO-translate", on a screen that is
+// drawn after the page loads (the server-rendered HTML was checked separately). Every app screen and
+// every state, in all four languages, against the build made with the CI's made-up Supabase address
+// (see auth-helpers.ts). It looks at the text, every attribute that holds words, the HTML as the browser
+// now has it, and the HTML the server sent.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { expect, test, type Page } from "@playwright/test";
+import { completeTutor, fakeSession, newTutor, seedSession, seedVerifier, stubSupabase } from "./auth-helpers";
+import { langs, type Lang } from "./helpers";
+
+const MARKER = "TODO-translate";
+
+/** Every message value that is still flagged for translation, exactly as written in the files. */
+function flaggedValues(lang: Lang): string[] {
+  const tree = JSON.parse(readFileSync(join(__dirname, "..", "messages", `${lang}.json`), "utf8")) as unknown;
+  const found: string[] = [];
+  const walk = (node: unknown) => {
+    if (typeof node === "string") {
+      if (node.startsWith(MARKER)) found.push(node);
+    } else if (node && typeof node === "object") Object.values(node).forEach(walk);
+  };
+  walk(tree);
+  return found;
+}
+
+/** Fails if the marker, or any flagged raw value, is anywhere the browser holds. */
+async function expectNoMarker(page: Page, lang: Lang, where: string) {
+  const flagged = flaggedValues(lang);
+  const seen = await page.evaluate(() => {
+    const attributes: string[] = [];
+    for (const el of document.querySelectorAll("*")) {
+      for (const name of ["placeholder", "aria-label", "title", "alt", "aria-description", "value"]) {
+        const value = el.getAttribute(name);
+        if (value) attributes.push(value);
+      }
+    }
+    return {
+      text: document.documentElement.textContent ?? "",
+      shown: document.body.innerText,
+      attributes,
+      html: document.documentElement.outerHTML,
+      title: document.title,
+    };
+  });
+  const sent = await (await page.request.get(page.url())).text();
+  const haystacks: [string, string][] = [
+    ["text", seen.text],
+    ["visible text", seen.shown],
+    ["attributes", seen.attributes.join("\n")],
+    ["title", seen.title],
+    ["html in the browser", seen.html],
+    ["html from the server", sent],
+  ];
+  for (const [name, hay] of haystacks) {
+    expect(hay.includes(MARKER), `${where}: "${MARKER}" in the ${name}`).toBe(false);
+    for (const raw of flagged) expect(hay.includes(raw), `${where}: raw value ${JSON.stringify(raw)} in the ${name}`).toBe(false);
+  }
+}
+
+const error = (page: Page) => page.locator('[role="alert"][data-kind="error"]');
+
+for (const lang of langs) {
+  test.describe(`/${lang}/: no marker on any screen or state`, () => {
+    test("language and sign-in, with every message the sign-in screen can carry", async ({ page }) => {
+      await stubSupabase(page);
+      await page.goto(`/${lang}/language/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "language");
+
+      await page.goto(`/${lang}/sign-in/`);
+      await expect(page.locator("main button").first()).toBeVisible();
+      await expectNoMarker(page, lang, "sign-in");
+
+      await page.goto(`/${lang}/auth/callback/?error=access_denied`);
+      await expect(page).toHaveURL(new RegExp(`/${lang}/sign-in/$`));
+      await expect(error(page)).toBeVisible();
+      await expectNoMarker(page, lang, "sign-in, cancelled");
+
+      await page.goto(`/${lang}/auth/callback/`);
+      await expect(page).toHaveURL(new RegExp(`/${lang}/sign-in/$`));
+      await expect(error(page)).toBeVisible();
+      await expectNoMarker(page, lang, "sign-in, failed");
+    });
+
+    test("sign-in offline, and the callback while it waits", async ({ page, context }) => {
+      const stub = await stubSupabase(page);
+      await page.goto(`/${lang}/sign-in/`);
+      const button = page.locator("main button").first();
+      await expect(button).toBeVisible();
+      await context.setOffline(true);
+      await button.click();
+      await expect(page.locator('[role="status"], [role="alert"]').filter({ hasText: /\S/ }).first()).toBeVisible();
+      await expectNoMarker(page, lang, "sign-in, offline");
+      await context.setOffline(false);
+
+      stub.tokenDelayMs = 3000;
+      await seedVerifier(page);
+      await page.goto(`/${lang}/auth/callback/?code=made-up-code`);
+      await expect(page.locator("body")).toContainText(/\S/);
+      await expectNoMarker(page, lang, "callback, waiting");
+    });
+
+    test("the signed-in screens: home, more, setup steps 1 and 2 and their errors", async ({ page }) => {
+      const stub = await stubSupabase(page, { tutor: completeTutor({ language: lang }) });
+      await seedSession(page);
+      for (const [path, name] of [
+        ["home", "home"],
+        ["more", "more"],
+        ["setup/profile", "setup step 1"],
+        ["setup/upi", "setup step 2"],
+      ] as const) {
+        await page.goto(`/${lang}/${path}/`);
+        await expect(page.locator("h1")).toBeVisible();
+        await expectNoMarker(page, lang, name);
+      }
+      // Step 2 with a UPI ID that is wrong, and a save the server refuses.
+      await page.goto(`/${lang}/setup/upi/`);
+      const field = page.getByRole("textbox").first();
+      await field.fill("not-a-upi-id");
+      await page.locator("main button:not([aria-pressed])").last().click();
+      await expect(error(page).or(page.locator('[aria-invalid="true"]')).first()).toBeVisible();
+      await expectNoMarker(page, lang, "setup step 2, wrong ID");
+      await field.fill("meena.tuitions@okhdfc");
+      stub.refuseWrites = true;
+      await page.locator("main button:not([aria-pressed])").last().click();
+      await expect(error(page).first()).toBeVisible();
+      await expectNoMarker(page, lang, "setup step 2, save failed");
+    });
+
+    test("setup step 1 with nothing filled in, and a new tutor's step 1", async ({ page }) => {
+      await stubSupabase(page, { tutor: newTutor() });
+      await seedSession(page);
+      await page.goto(`/${lang}/setup/profile/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "step 1, new tutor");
+      await page.locator("main button:not([aria-pressed])").last().click();
+      await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible();
+      await expectNoMarker(page, lang, "step 1, errors");
+    });
+
+    test("loading, error (network and 503), missing profile and expired", async ({ page }) => {
+      test.setTimeout(90_000);
+      const stub = await stubSupabase(page, { tutor: completeTutor({ language: lang }) });
+      await seedSession(page);
+
+      stub.tutorDelayMs = 3000;
+      await page.goto(`/${lang}/home/`);
+      await expect(page.getByRole("status")).toBeVisible();
+      await expectNoMarker(page, lang, "loading");
+      await expect(page.getByRole("status")).toHaveCount(0, { timeout: 15_000 });
+      stub.tutorDelayMs = 0;
+
+      stub.networkDown = true;
+      await page.goto(`/${lang}/home/`);
+      await expect(error(page)).toBeVisible({ timeout: 20_000 });
+      await expectNoMarker(page, lang, "error, network");
+      stub.networkDown = false;
+
+      stub.tutorReadStatus = 503;
+      await page.goto(`/${lang}/home/`);
+      await expect(error(page)).toBeVisible({ timeout: 20_000 });
+      await expectNoMarker(page, lang, "error, server");
+      stub.tutorReadStatus = null;
+
+      stub.tutor = null;
+      await page.goto(`/${lang}/home/`);
+      await expect(error(page)).toBeVisible();
+      await expectNoMarker(page, lang, "missing profile");
+    });
+
+    test("expired: a refused session and a refused renewal", async ({ page }) => {
+      const stub = await stubSupabase(page, { tutor: completeTutor({ language: lang }) });
+      stub.tutorReadStatus = 401;
+      await seedSession(page);
+      await page.goto(`/${lang}/home/`);
+      await expect(page).toHaveURL(new RegExp(`/${lang}/sign-in/$`));
+      await expect(error(page)).toBeVisible();
+      await expectNoMarker(page, lang, "expired, refused session");
+
+      const other = await page.context().newPage();
+      const second = await stubSupabase(other, { tutor: completeTutor({ language: lang }) });
+      second.refuseToken = true;
+      await seedSession(other, fakeSession("meena@example.com", -120));
+      await other.goto(`/${lang}/home/`);
+      await expect(other).toHaveURL(new RegExp(`/${lang}/sign-in/$`));
+      await expect(error(other)).toBeVisible();
+      await expectNoMarker(other, lang, "expired, refused renewal");
+    });
+  });
+}

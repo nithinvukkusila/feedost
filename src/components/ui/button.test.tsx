@@ -121,6 +121,18 @@ describe("Button element and content (criteria 18 and 19)", () => {
     expect(large).toContain("min-h-14");
     expect(large).not.toContain("min-h-control");
   });
+
+  it("is 60px high when xl, for the one primary action at the foot of an app screen", () => {
+    render(
+      <Button variant="record" size="xl">
+        Continue
+      </Button>,
+    );
+    const xl = classes(screen.getByRole("button", { name: "Continue" }));
+    expect(xl).toContain("min-h-15");
+    expect(xl).not.toContain("min-h-control");
+    expect(xl).not.toContain("min-h-14");
+  });
 });
 
 describe("Button busy (criterion 22)", () => {

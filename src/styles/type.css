@@ -263,6 +263,19 @@
 }
 
 /*
+ * A language's own name as the title of a row in the language picker: the same Latin stack as
+ * type-endonym, at the canvas's 28px and weight 800. Room for the vowel marks of Devanagari, Kannada
+ * and Telugu comes from the line-height. Fixed on purpose: it names a language, so it ignores the page's script.
+ */
+@utility type-endonym-row {
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0em;
+}
+
+/*
  * The fee reminder as WhatsApp will show it (the message preview bubble). Always the Latin stack at
  * 17px with room for vowel marks: Latin text is Bricolage, and Devanagari, Kannada and Telugu fall
  * through to the phone's own font, whatever the page language. It ignores the script variables on
