@@ -26,7 +26,7 @@ export default async function GlobalNotFound() {
             <section key={code} lang={code} className="border-t-3 border-ink pt-4">
               <h2 className="type-headline text-3xl wrap-break-word">{notFound.title}</h2>
               <p className="type-body mt-2">{notFound.body}</p>
-              <a href={`/${code}/`} hrefLang={code} className="type-control mt-3 flex min-h-tap w-fit items-center text-blue underline ring:ground-ring">
+              <a href={`/${code}/`} hrefLang={code} className="type-control mt-3 flex min-h-tap min-w-tap w-fit items-center text-blue underline ring:ground-ring">
                 {localeNames[code]}
               </a>
             </section>

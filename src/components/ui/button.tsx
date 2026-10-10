@@ -137,7 +137,7 @@ export function Button(props: ButtonProps) {
   return (
     <span className={cx("flex-col gap-2", full ? "flex w-full" : "inline-flex")}>
       {control}
-      <span id={reasonId} className="type-caption text-ink-soft">
+      <span id={reasonId} className="type-caption min-w-0 text-ink-soft wrap-anywhere">
         {disabledReason}
       </span>
     </span>

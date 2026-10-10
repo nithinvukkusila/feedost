@@ -4,8 +4,8 @@
   },
   "landing": {
     "meta": {
-      "title": "{brand}: free fee register for home tutors",
-      "description": "Send fee reminders on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Get on the waitlist."
+      "title": "{brand}: fee register for home tutors, coming soon",
+      "description": "The fee register for home tutors, coming soon: WhatsApp reminders, UPI payments, one book. Join the waitlist."
     },
     "header": {
       "join": "Join waitlist"
@@ -85,7 +85,7 @@
     },
     "waitlist": {
       "title": "Put your name in the book.",
-      "body": "We will message you on WhatsApp the day the app opens.",
+      "body": "The waitlist opens soon. You will be able to put your name here.",
       "soon": "The waitlist opens soon. Come back to this page to join.",
       "button": "Join the waitlist",
       "reason": "Opens soon"

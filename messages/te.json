@@ -4,8 +4,8 @@
   },
   "landing": {
     "meta": {
-      "title": "{brand}: హోమ్ ట్యూటర్ల కోసం ఉచిత ఫీజు రిజిస్టర్",
-      "description": "TODO-translate: Send fee reminders on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Get on the waitlist."
+      "title": "{brand}: హోమ్ ట్యూటర్ల కోసం ఫీజు రిజిస్టర్, త్వరలో రాబోతోంది",
+      "description": "TODO-translate: The fee register for home tutors, coming soon: WhatsApp reminders, UPI payments, one book. Get on the waitlist."
     },
     "header": {
       "join": "వెయిట్‌లిస్ట్‌లో చేరండి"
@@ -85,7 +85,7 @@
     },
     "waitlist": {
       "title": "పుస్తకంలో మీ పేరు రాయండి.",
-      "body": "TODO-translate: We will message you on WhatsApp the day the app opens.",
+      "body": "TODO-translate: The waitlist opens soon. You will be able to put your name here.",
       "soon": "TODO-translate: The waitlist opens soon. Come back to this page to join.",
       "button": "వెయిట్‌లిస్ట్‌లో చేరండి",
       "reason": "త్వరలో తెరుచుకుంటుంది"

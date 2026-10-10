@@ -4,8 +4,8 @@
   },
   "landing": {
     "meta": {
-      "title": "{brand}: होम ट्यूटर्स के लिए मुफ़्त फ़ीस रजिस्टर",
-      "description": "TODO-translate: Send fee reminders on WhatsApp, get paid by UPI and keep every fee in one book. Free for home tutors in India. Get on the waitlist."
+      "title": "{brand}: होम ट्यूटर्स के लिए फ़ीस रजिस्टर, जल्द आ रहा है",
+      "description": "होम ट्यूटर्स के लिए फ़ीस रजिस्टर, जल्द आ रहा है: WhatsApp रिमाइंडर, UPI भुगतान, एक ही बही। वेटलिस्ट में जुड़ें।"
     },
     "header": {
       "join": "वेटलिस्ट में जुड़ें"
@@ -85,7 +85,7 @@
     },
     "waitlist": {
       "title": "बही में अपना नाम लिखवाइए।",
-      "body": "ऐप खुलते ही हम आपको WhatsApp पर संदेश भेजेंगे।",
+      "body": "वेटलिस्ट जल्द खुलेगी। यहाँ आप अपना नाम लिखवा सकेंगे।",
       "soon": "वेटलिस्ट जल्द खुलेगी। जुड़ने के लिए इस पेज पर फिर आइए।",
       "button": "वेटलिस्ट में जुड़ें",
       "reason": "जल्द खुलेगी"

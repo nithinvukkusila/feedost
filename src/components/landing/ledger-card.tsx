@@ -26,12 +26,13 @@ export function LedgerCard() {
         </p>
       </div>
       <Rows className="mt-3 border-t-2 border-ink">
-        <Row name={t("example.student1")} meta={t("example.late")} tone="overdue" amount={fee} />
+        <Row name={t("example.student1")} meta={t("example.late")} tone="overdue" amount={fee} wrap />
         <Row
           name={t("example.student2")}
           meta={t("example.paid")}
           tone="paid"
           amount={fee}
+          wrap
           trailing={
             <Stamp size="sm" tone="stamp" decorative>
               {t("steps.stamp")}

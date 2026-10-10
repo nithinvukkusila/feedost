@@ -40,6 +40,8 @@ type RowBase = {
   href?: string;
   /** Layout only. */
   className?: string;
+  /** Let the amount and the trailing item wrap under the name when the row is too narrow (a small card at large text). */
+  wrap?: boolean;
 };
 
 // A row has an amount (with an optional action or small stamp), or a status tag, never both:
@@ -62,7 +64,7 @@ type WithTag = {
 
 export type RowProps = RowBase & (WithAmount | WithTag);
 
-export function Row({ name, meta, tone, amount, trailing, tag, href, className }: RowProps) {
+export function Row({ name, meta, tone, amount, trailing, tag, href, className, wrap = false }: RowProps) {
   // The types cannot see what is inside `trailing`, so a tag passed there beside an amount is caught here.
   if (process.env.NODE_ENV !== "production" && amount != null && isValidElement(trailing) && trailing.type === StatusTag) {
     console.error("Row: a row does not carry both an amount and a status tag. Pass the tag as `tag` and leave out `amount`, or say the status in `meta`.");
@@ -70,7 +72,7 @@ export function Row({ name, meta, tone, amount, trailing, tag, href, className }
   const last = tag ?? trailing;
   const main = (
     <>
-      <span className="flex min-w-0 flex-1 flex-col">
+      <span className={cx("flex flex-1 flex-col", wrap ? "min-w-20" : "min-w-0")}>
         <span className="type-name wrap-anywhere">{name}</span>
         <span data-tone={tone} className={cx("type-caption font-semibold wrap-anywhere", tones[tone])}>
           {meta}
@@ -84,9 +86,12 @@ export function Row({ name, meta, tone, amount, trailing, tag, href, className }
       ) : null}
     </>
   );
-  const mainClass = "flex min-h-tap min-w-0 flex-1 items-center gap-2 self-stretch py-2";
+  const mainClass = cx(
+    "flex min-h-tap min-w-0 items-center gap-2 self-stretch py-2",
+    wrap ? "flex-auto flex-wrap gap-y-1" : "flex-1",
+  );
   return (
-    <li className={cx("flex min-h-row items-center gap-2 border-b border-rule", className)}>
+    <li className={cx("flex min-h-row items-center gap-2 border-b border-rule", wrap && "flex-wrap gap-y-0", className)}>
       {href !== undefined ? (
         <a href={href} className={cx(mainClass, "ring:ground-ring")}>
           {main}
@@ -94,7 +99,7 @@ export function Row({ name, meta, tone, amount, trailing, tag, href, className }
       ) : (
         <div className={mainClass}>{main}</div>
       )}
-      {last != null ? <span className="flex shrink-0 items-center">{last}</span> : null}
+      {last != null ? <span className={cx("flex shrink-0 items-center", wrap && "ml-auto")}>{last}</span> : null}
     </li>
   );
 }
