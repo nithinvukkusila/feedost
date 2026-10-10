@@ -158,9 +158,11 @@ describe("the command", () => {
     expect(r.stderr).toContain("NEXT_PUBLIC_SUPABASE_URL is missing");
     expect(r.stderr).toContain("NEXT_PUBLIC_SUPABASE_ANON_KEY is missing");
   });
-  it("is not part of the build script yet", () => {
+  // Wired in F4b, once the Vercel Preview variables and the staging ref existed. It runs before the
+  // build, so a Vercel build with a missing or wrong Supabase project stops before anything is built.
+  it("runs first in the build script", () => {
     const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8"));
-    expect(pkg.scripts.build).toBe("next build");
+    expect(pkg.scripts.build).toBe("node scripts/check-build-env.mjs && next build");
     expect(pkg.scripts["check:build-env"]).toBe("node scripts/check-build-env.mjs");
   });
 });

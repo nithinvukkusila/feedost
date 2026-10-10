@@ -101,10 +101,11 @@ describe("resolving the target", () => {
 });
 
 describe("the command", () => {
-  it("fails with a clear message while no staging ref is recorded", () => {
-    const r = spawnSync("node", [join(process.cwd(), "scripts", "smoke-env.mjs"), "staging"], { encoding: "utf8" });
+  // Production, not staging: staging has its ref since F4b, and a unit test must not call the real project.
+  it("fails with a clear message while no production ref is recorded", () => {
+    const r = spawnSync("node", [join(process.cwd(), "scripts", "smoke-env.mjs"), "production"], { encoding: "utf8" });
     expect(r.status).toBe(1);
-    expect(r.stderr).toContain("no project recorded for staging");
+    expect(r.stderr).toContain("no project recorded for production");
   });
 });
 

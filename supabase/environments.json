@@ -1,5 +1,11 @@
 {
-  "local": { "url": "http://127.0.0.1:54321" },
-  "staging": { "ref": null },
-  "production": { "ref": null }
+  "local": {
+    "url": "http://127.0.0.1:54321"
+  },
+  "staging": {
+    "ref": "cujjgadbdqbxcsseogfx"
+  },
+  "production": {
+    "ref": null
+  }
 }
