@@ -68,12 +68,13 @@ test.describe("20 (review fix): a session the server refuses, and a server that 
     stub.tutorReadStatus = 503;
     await seedSession(page);
     await page.goto("/en/home/");
-    await expect(error(page)).toContainText("The network dropped. Nothing is lost.");
+    // The library tries a read three times (one, two and four seconds apart) before it gives up.
+    await expect(error(page)).toContainText("The network dropped. Nothing is lost.", { timeout: 20_000 });
     await expect(error(page).getByRole("button", { name: "Try again" })).toBeVisible();
     await expect(error(page).getByRole("button", { name: "Sign out" })).toBeVisible();
     // Try again reads again, and it still fails: no way to get stuck.
     await error(page).getByRole("button", { name: "Try again" }).click();
-    await expect(error(page).getByRole("button", { name: "Sign out" })).toBeVisible();
+    await expect(error(page).getByRole("button", { name: "Sign out" })).toBeVisible({ timeout: 20_000 });
     await error(page).getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(`${ORIGIN}/en/sign-in/`);
     expect(await stored(page)).toBe(false);
