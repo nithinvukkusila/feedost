@@ -248,6 +248,70 @@
     "signOut": "Sign out"
   },
   "appState": {
-    "loading": "Opening your book…"
+    "loading": "Opening your book…",
+    "errorTitle": "Couldn't load your details",
+    "errorBody": "The network dropped. Nothing is lost.",
+    "retry": "Try again",
+    "offlineTitle": "You are offline",
+    "offlineBody": "Connect to the internet to save your details."
+  },
+  "setup": {
+    "stepOf": "Step {n} of {total}",
+    "back": "Back",
+    "state": {
+      "correct": "Correct",
+      "needsFixing": "Needs fixing",
+      "missing": "Missing",
+      "tooLong": "Too long"
+    },
+    "saveFailed": "Couldn't save just now. Your changes were not saved. Check your connection and tap {action} again.",
+    "rowMissing": "We could not find your profile. Sign out, then sign in again.",
+    "profile": {
+      "title": "What should parents call you?",
+      "body": "This name goes on every reminder, pay page and receipt.",
+      "name": "Your name",
+      "subjects": "What do you teach?",
+      "other": "+ Other",
+      "otherLabel": "Another subject",
+      "add": "Add",
+      "next": "Next: your UPI ID",
+      "nextWord": "Next"
+    },
+    "name": {
+      "missing": "Type your name.",
+      "tooLong": "Use 80 characters or fewer."
+    },
+    "subjects": {
+      "missing": "Pick at least one subject.",
+      "limit": "Use up to 8 subjects, each short. Remove one or shorten a name."
+    },
+    "upi": {
+      "title": "Where should the fees land?",
+      "body": "Your UPI ID. Parents pay you directly. {brand} never touches the money.",
+      "label": "Your UPI ID",
+      "placeholder": "name@bank",
+      "ok": "That looks like a valid UPI ID.",
+      "missing": "Type your UPI ID.",
+      "noAt": "This is missing the part after @. A UPI ID looks like name@bank",
+      "bad": "A UPI ID has letters, digits, dots and dashes, then @, then the bank's name. Check for spaces.",
+      "save": "Save and finish"
+    }
+  },
+  "home": {
+    "hello": "Hello, {name}",
+    "empty": {
+      "title": "Your book is empty.",
+      "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
+      "soon": "Adding students arrives in the next update."
+    }
+  },
+  "subjects": {
+    "maths": "Maths",
+    "science": "Science",
+    "english": "English",
+    "hindi": "Hindi",
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "accounts": "Accounts"
   }
 }

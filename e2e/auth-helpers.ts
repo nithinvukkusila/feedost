@@ -6,7 +6,7 @@
 // PKCE, request shape) against answers written here.
 //   rm -rf .next out && NEXT_PUBLIC_SUPABASE_URL=https://cicicicicicicicicici.supabase.co \
 //     NEXT_PUBLIC_SUPABASE_ANON_KEY=ci-anon-key pnpm build
-import type { Page, Request, Route } from "@playwright/test";
+import type { BrowserContext, Page, Request, Route } from "@playwright/test";
 
 export const HOST = "https://cicicicicicicicicici.supabase.co";
 export const SESSION_KEY = "sb-cicicicicicicicicici-auth-token";
@@ -44,12 +44,12 @@ function fakeToken(expiresAt: number): string {
 }
 
 /** What the token endpoint returns and what the library stores. Valid for an hour from now. */
-export function fakeSession(email: string | null = "meena@example.com") {
-  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+export function fakeSession(email: string | null = "meena@example.com", validForSeconds = 3600) {
+  const expiresAt = Math.floor(Date.now() / 1000) + validForSeconds;
   return {
     access_token: fakeToken(expiresAt),
     token_type: "bearer",
-    expires_in: 3600,
+    expires_in: validForSeconds,
     expires_at: expiresAt,
     refresh_token: "made-up-refresh-token",
     user: {
@@ -68,7 +68,7 @@ export function fakeSession(email: string | null = "meena@example.com") {
  * Makes the phone look signed in before any page script runs. Written once per tab (a sign-out in the
  * test must stay a sign-out after the next page load).
  */
-export async function seedSession(page: Page, session: unknown = fakeSession()): Promise<void> {
+export async function seedSession(page: Page | BrowserContext, session: unknown = fakeSession()): Promise<void> {
   await page.addInitScript(
     ([key, value]) => {
       if (window.sessionStorage.getItem("e2e-seeded") === "1") return;
@@ -94,6 +94,10 @@ export type Stub = {
   refuseToken: boolean;
   /** Hold the token endpoint's answer back this many milliseconds, so a spec can look at the page in between. */
   tokenDelayMs: number;
+  /** Hold the tutor's row back this many milliseconds (the loading state). */
+  tutorDelayMs: number;
+  /** Answer the logout call by dropping the connection, as a dead network does. */
+  logoutFails: boolean;
   /** The authorize requests (the page is then answered with a plain page, never Google). */
   authorize: URL[];
   /** The bodies of every PATCH to the tutor's row. */
@@ -128,7 +132,7 @@ function json(route: Route, status: number, body: unknown) {
  * code exchange and refresh (a made-up session), logout, and the tutor's row (read and update). Returns
  * a handle the spec can read and change.
  */
-export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | null } = {}): Promise<Stub> {
+export async function stubSupabase(page: Page | BrowserContext, initial: { tutor?: FakeTutor | null } = {}): Promise<Stub> {
   const stub: Stub = {
     log: [],
     tutor: initial.tutor === undefined ? newTutor() : initial.tutor,
@@ -136,6 +140,8 @@ export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | nu
     refuseWrites: false,
     refuseToken: false,
     tokenDelayMs: 0,
+    tutorDelayMs: 0,
+    logoutFails: false,
     authorize: [],
     patches: [],
     unknown: [],
@@ -173,6 +179,10 @@ export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | nu
       return;
     }
     if (url.pathname === "/auth/v1/logout") {
+      if (stub.logoutFails) {
+        await route.abort("failed");
+        return;
+      }
       await route.fulfill({ status: 204, headers: cors(request) });
       return;
     }
@@ -181,6 +191,7 @@ export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | nu
         await route.abort("failed");
         return;
       }
+      if (stub.tutorDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stub.tutorDelayMs));
       const wantsObject = (request.headers()["accept"] ?? "").includes("vnd.pgrst.object");
       if (request.method() === "GET") {
         if (stub.tutor) await json(route, 200, wantsObject ? stub.tutor : [stub.tutor]);
@@ -226,7 +237,7 @@ export function watchOtherHosts(page: Page, ownOrigin: string): string[] {
 export const VERIFIER_KEY = `${SESSION_KEY}-code-verifier`;
 
 /** Makes the phone look as it does when it comes back from Google: a verifier is in storage. Once per tab. */
-export async function seedVerifier(page: Page): Promise<void> {
+export async function seedVerifier(page: Page | BrowserContext): Promise<void> {
   await page.addInitScript(
     ([key]) => {
       if (window.sessionStorage.getItem("e2e-verifier") === "1") return;

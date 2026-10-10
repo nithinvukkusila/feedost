@@ -106,7 +106,7 @@ export function SignInScreen({ locale, words }: Readonly<{ locale: Locale; words
     <div className="flex flex-col gap-4">
       {/* The live region stays mounted; the message goes in when there is one. */}
       <div aria-live="polite" aria-atomic="true" className="empty:hidden">
-        {message === null ? null : <Banner kind="error" title={message} detail={null} />}
+        {message === null ? null : <Banner kind="error" title={null} detail={message} />}
       </div>
       <div className="pr-1.5 pb-1.5">
         <Button variant="record" size="xl" full busy={busy} busyLabel={words.busy} iconStart={<GoogleMark />} onClick={start}>

@@ -125,6 +125,7 @@ test.describe("10, 11: the callback", () => {
   test("exchanges the code once, takes it out of the address, and goes on to the app", async ({ page }) => {
     const stub = await stubSupabase(page);
     stub.tokenDelayMs = 700;
+    stub.tutor = completeTutor();
     await seedVerifier(page);
     await page.goto("/en/auth/callback/?code=made-up-code");
     await expect(page.getByRole("status")).toHaveText("Signing you in…");
@@ -193,6 +194,22 @@ test.describe("10, 11: the callback", () => {
     await page.goto("/hi/auth/callback/?error=access_denied");
     await expect(page).toHaveURL(/\/hi\/sign-in\/$/);
     await expect(notice(page)).toHaveText(text("hi", "signIn.cancelled"));
+  });
+});
+
+test.describe("17: after the exchange, to where the profile says", () => {
+  test("a new tutor goes to step 1 of setup", async ({ page }) => {
+    await stubSupabase(page);
+    await seedVerifier(page);
+    await page.goto("/en/auth/callback/?code=made-up-code");
+    await expect(page).toHaveURL(/\/en\/setup\/profile\/$/);
+  });
+
+  test("a tutor with only the UPI ID missing goes to step 2", async ({ page }) => {
+    await stubSupabase(page, { tutor: completeTutor({ upi_id: null }) });
+    await seedVerifier(page);
+    await page.goto("/te/auth/callback/?code=made-up-code");
+    await expect(page).toHaveURL(/\/te\/setup\/upi\/$/);
   });
 });
 
