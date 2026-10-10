@@ -25,6 +25,7 @@
     "db:test": "SUPABASE_NO_UPDATE_CHECK=1 supabase test db"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.3",
     "next": "16.4.0",
     "next-intl": "4.14.7",
     "react": "19.3.0",
