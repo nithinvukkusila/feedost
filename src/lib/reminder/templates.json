@@ -1,0 +1,114 @@
+{
+  "en": {
+    "polite": [
+      "Hello {parent} ji, a gentle reminder that the tuition fee of {amount} for {month} is due. You can pay by UPI with this link:",
+      "{link}",
+      "Or pay to UPI ID: {upiId}",
+      "Thank you!"
+    ],
+    "firm": [
+      "Hello {parent} ji, the tuition fee of {amount} for {month} is still pending. Please pay it today by UPI with this link:",
+      "{link}",
+      "Or pay to UPI ID: {upiId}",
+      "Thank you."
+    ],
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ]
+  },
+  "hi": {
+    "polite": [
+      "नमस्ते {parent} जी, यह याद दिलाना था कि {month} की ट्यूशन फ़ीस {amount} बाकी है। आप इस लिंक से UPI द्वारा भुगतान कर सकते हैं:",
+      "{link}",
+      "या इस UPI ID पर भेजें: {upiId}",
+      "धन्यवाद!"
+    ],
+    "firm": [
+      "नमस्ते {parent} जी, {month} की ट्यूशन फ़ीस {amount} अभी तक बाकी है। कृपया आज ही इस लिंक से UPI द्वारा भुगतान कर दें:",
+      "{link}",
+      "या इस UPI ID पर भेजें: {upiId}",
+      "धन्यवाद।"
+    ],
+    "months": [
+      "जनवरी",
+      "फ़रवरी",
+      "मार्च",
+      "अप्रैल",
+      "मई",
+      "जून",
+      "जुलाई",
+      "अगस्त",
+      "सितंबर",
+      "अक्टूबर",
+      "नवंबर",
+      "दिसंबर"
+    ]
+  },
+  "kn": {
+    "polite": [
+      "ನಮಸ್ಕಾರ {parent} ಅವರೇ, {month} ತಿಂಗಳ ಟ್ಯೂಷನ್ ಶುಲ್ಕ {amount} ಬಾಕಿ ಇದೆ ಎಂದು ನೆನಪಿಸುತ್ತಿದ್ದೇನೆ. ಈ ಲಿಂಕ್ ಮೂಲಕ UPI ನಲ್ಲಿ ಪಾವತಿಸಬಹುದು:",
+      "{link}",
+      "ಅಥವಾ ಈ UPI ID ಗೆ ಕಳುಹಿಸಿ: {upiId}",
+      "ಧನ್ಯವಾದಗಳು!"
+    ],
+    "firm": [
+      "ನಮಸ್ಕಾರ {parent} ಅವರೇ, {month} ತಿಂಗಳ ಟ್ಯೂಷನ್ ಶುಲ್ಕ {amount} ಇನ್ನೂ ಬಾಕಿ ಇದೆ. ದಯವಿಟ್ಟು ಇಂದೇ ಈ ಲಿಂಕ್ ಮೂಲಕ UPI ನಲ್ಲಿ ಪಾವತಿಸಿ:",
+      "{link}",
+      "ಅಥವಾ ಈ UPI ID ಗೆ ಕಳುಹಿಸಿ: {upiId}",
+      "ಧನ್ಯವಾದಗಳು."
+    ],
+    "months": [
+      "ಜನವರಿ",
+      "ಫೆಬ್ರವರಿ",
+      "ಮಾರ್ಚ್",
+      "ಏಪ್ರಿಲ್",
+      "ಮೇ",
+      "ಜೂನ್",
+      "ಜುಲೈ",
+      "ಆಗಸ್ಟ್",
+      "ಸೆಪ್ಟೆಂಬರ್",
+      "ಅಕ್ಟೋಬರ್",
+      "ನವೆಂಬರ್",
+      "ಡಿಸೆಂಬರ್"
+    ]
+  },
+  "te": {
+    "polite": [
+      "నమస్కారం {parent} గారు, {month} నెల ట్యూషన్ ఫీజు {amount} చెల్లించాల్సి ఉందని గుర్తు చేస్తున్నాను. ఈ లింక్ ద్వారా UPI లో చెల్లించవచ్చు:",
+      "{link}",
+      "లేదా ఈ UPI ID కి పంపండి: {upiId}",
+      "ధన్యవాదాలు!"
+    ],
+    "firm": [
+      "నమస్కారం {parent} గారు, {month} నెల ట్యూషన్ ఫీజు {amount} ఇంకా బాకీ ఉంది. దయచేసి ఈ రోజే ఈ లింక్ ద్వారా UPI లో చెల్లించండి:",
+      "{link}",
+      "లేదా ఈ UPI ID కి పంపండి: {upiId}",
+      "ధన్యవాదాలు."
+    ],
+    "months": [
+      "జనవరి",
+      "ఫిబ్రవరి",
+      "మార్చి",
+      "ఏప్రిల్",
+      "మే",
+      "జూన్",
+      "జూలై",
+      "ఆగస్టు",
+      "సెప్టెంబర్",
+      "అక్టోబర్",
+      "నవంబర్",
+      "డిసెంబర్"
+    ]
+  }
+}
