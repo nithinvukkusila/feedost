@@ -127,7 +127,9 @@ On the free plan a project with no activity for about a week is paused. If `pnpm
 - **Staging project:** ref `cujjgadbdqbxcsseogfx`, region `ap-northeast-1` (Tokyo). The founder created one project and uses it as staging; a production project is created later, in Mumbai (`ap-south-1`), when the app is ready to release. A project's region cannot be changed afterwards.
 - **Applied to staging:** migration `20261009195132_f4_baseline` (`supabase db push`; the database was empty before it), the `health` function (`functions deploy health --use-api`, no Docker needed) and `APP_ENV=staging` (`secrets set`).
 - **Proved:** `pnpm smoke:env staging` prints `staging`. The hosted gateway answers an unauthenticated `GET /functions/v1/health` with 200, so `verify_jwt = false` works and no `apikey` header is needed. An agent's shell can use the token from `supabase login` (run in the macOS Terminal: the login needs a real terminal).
-- **Not done yet:** the Vercel Preview variables (the founder adds them), the build guard wired into `build` (waits for those variables and for the publishable-key check below), production (no project yet; `production.ref` stays null and `smoke:env production` fails on purpose).
+- **Vercel Preview variables:** added by the founder on 2026-10-11 (URL and the anon JWT key, type Config, Preview only).
+- **Build guard:** wired into `build` (`node scripts/check-build-env.mjs && next build`). It skips builds that are not on Vercel, stops a Preview build whose URL or key is missing or belongs to another project, and stops every Production build until a production ref is recorded. The key in use is an anon JWT, which the guard ties to the project; the gap for `sb_publishable_` keys (below) still stands and must be closed before one is used.
+- **Not done yet:** production (no project yet; `production.ref` stays null and `smoke:env production` fails on purpose).
 
 ## Verified and unverified today
 
