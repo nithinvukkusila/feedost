@@ -51,9 +51,15 @@ describe("colour tokens (criterion 1)", () => {
 });
 
 describe("radius tokens (criterion 5)", () => {
-  it("offers only square, 4px, 6px and full circle", () => {
+  it("offers only square, 4px, 6px, full circle and the message bubble's 18px (R0-2)", () => {
     expect(tokens["--radius-*"]).toBe("initial");
-    expect(group(tokens, "--radius-")).toEqual({ none: "0px", sm: "4px", tab: "6px", full: "9999px" });
+    expect(group(tokens, "--radius-")).toEqual({ none: "0px", sm: "4px", tab: "6px", bubble: "18px", full: "9999px" });
+  });
+
+  it("records the bubble radius in docs/DESIGN.md as an exception for the message preview only", () => {
+    const doc = readFileSync(join(process.cwd(), "docs", "DESIGN.md"), "utf8");
+    const shape = doc.slice(doc.indexOf("## Shape and depth"), doc.indexOf("## Components"));
+    expect(shape).toMatch(/WhatsApp message preview bubble[^\n]*18px[^\n]*4px at its top-left/);
   });
 });
 

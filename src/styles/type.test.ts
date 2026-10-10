@@ -212,6 +212,17 @@ describe("states (criteria 6, 21 and 69)", () => {
     expect(rule(states, "@utility press-round")).toEqual({ translate: "3px 3px", "box-shadow": "none" });
   });
 
+  it("the message preview role is the Latin stack at 17px and 1.6, and reads no script variable (R0-2, criterion 63)", () => {
+    const message = utility("type-message");
+    expect(message).toEqual({
+      "font-family": "var(--font-sans)",
+      "font-size": "1.0625rem",
+      "line-height": "1.6",
+      "letter-spacing": "0em",
+    });
+    expect(Object.values(message).join(" ")).not.toContain("--script");
+  });
+
   it("has no blur and no gradient", () => {
     expect(states + type).not.toMatch(/blur\(|gradient\(/);
   });
