@@ -254,6 +254,18 @@ describe("the one-time message (criterion 19)", () => {
     expect((await load()).readNotice()).toBeNull();
   });
 
+  it("tells a listener when a message arrives or is cleared, until it stops listening", async () => {
+    const { setNotice, clearNotice, subscribeNotice } = await load();
+    const heard = vi.fn();
+    const stop = subscribeNotice(heard);
+    setNotice("expired");
+    clearNotice();
+    expect(heard).toHaveBeenCalledTimes(2);
+    stop();
+    setNotice("failed");
+    expect(heard).toHaveBeenCalledTimes(2);
+  });
+
   it("a newer message replaces an older one that was already read", async () => {
     const { setNotice, readNotice, clearNotice } = await load();
     expect(readNotice()).toBeNull();

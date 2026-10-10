@@ -48,6 +48,19 @@ const notices: readonly string[] = ["expired", "cancelled", "failed"];
 // Kept in memory as well as in sessionStorage: in private mode storage can be blocked, and the message
 // must still reach the sign-in screen when the app moves there without a page load.
 let noticeNow: Notice | null | undefined;
+const noticeListeners = new Set<() => void>();
+
+function noticeChanged(): void {
+  for (const listener of noticeListeners) listener();
+}
+
+/** For useSyncExternalStore: the sign-in screen hears a message that arrives after it opened (a stored session that turned out to be dead). */
+export function subscribeNotice(listener: () => void): () => void {
+  noticeListeners.add(listener);
+  return () => {
+    noticeListeners.delete(listener);
+  };
+}
 
 /** Leaves a message for the next time the sign-in screen opens. */
 export function setNotice(notice: Notice): void {
@@ -57,6 +70,7 @@ export function setNotice(notice: Notice): void {
   } catch {
     // The in-memory copy is enough for a move inside the app.
   }
+  noticeChanged();
 }
 
 /** The waiting message, if any. The same answer on every call until it is cleared; a reload shows nothing, so it is seen once. */
@@ -83,6 +97,7 @@ export function readNotice(): Notice | null {
 /** The tutor has moved on (tapped the button): the message has done its work. */
 export function clearNotice(): void {
   noticeNow = null;
+  noticeChanged();
 }
 
 // ---------------------------------------------------------------------------------------------

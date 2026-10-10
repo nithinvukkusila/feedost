@@ -12,8 +12,9 @@ export type ButtonVariant = "send" | "record" | "outline";
 const shape =
   "inline-flex items-center justify-center gap-2 rounded-sm border-2 text-center whitespace-normal wrap-anywhere transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
 
-// Heights: 48px, or 56px for the one big call to action on a page (the landing hero).
-const sizes = { default: "min-h-control", large: "min-h-14" } as const;
+// Heights: 48px; 56px for the one big call to action on a page (the landing hero); 60px for the
+// one primary action at the foot of a screen in the app (sign-in, language, setup), as the canvas draws it.
+const sizes = { default: "min-h-control", large: "min-h-14", xl: "min-h-15" } as const;
 export type ButtonSize = keyof typeof sizes;
 
 const base = `type-control px-5 py-2.5 ${shape}`;
@@ -40,7 +41,7 @@ type Shared = {
   disabledReason?: ReactNode;
   /** Fill the width of the container. */
   full?: boolean;
-  /** `large` is 56px high instead of 48px. For the single main call to action on a page. */
+  /** `large` is 56px high instead of 48px; `xl` is 60px. For the single main call to action on a page or screen. */
   size?: ButtonSize;
 };
 

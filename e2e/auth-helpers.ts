@@ -92,6 +92,8 @@ export type Stub = {
   refuseWrites: boolean;
   /** Answer the token endpoint with a refusal, as for a used code. */
   refuseToken: boolean;
+  /** Hold the token endpoint's answer back this many milliseconds, so a spec can look at the page in between. */
+  tokenDelayMs: number;
   /** The authorize requests (the page is then answered with a plain page, never Google). */
   authorize: URL[];
   /** The bodies of every PATCH to the tutor's row. */
@@ -133,6 +135,7 @@ export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | nu
     networkDown: false,
     refuseWrites: false,
     refuseToken: false,
+    tokenDelayMs: 0,
     authorize: [],
     patches: [],
     unknown: [],
@@ -161,6 +164,7 @@ export async function stubSupabase(page: Page, initial: { tutor?: FakeTutor | nu
       return;
     }
     if (url.pathname === "/auth/v1/token") {
+      if (stub.tokenDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stub.tokenDelayMs));
       if (stub.refuseToken) {
         await json(route, 400, { error: "invalid_grant", error_description: "invalid flow state, no valid flow state found" });
         return;
@@ -216,4 +220,20 @@ export function watchOtherHosts(page: Page, ownOrigin: string): string[] {
     others.push(request.url());
   });
   return others;
+}
+
+/** What the library keeps while a Google sign-in is under way: the PKCE verifier, under the session key plus this. */
+export const VERIFIER_KEY = `${SESSION_KEY}-code-verifier`;
+
+/** Makes the phone look as it does when it comes back from Google: a verifier is in storage. Once per tab. */
+export async function seedVerifier(page: Page): Promise<void> {
+  await page.addInitScript(
+    ([key]) => {
+      if (window.sessionStorage.getItem("e2e-verifier") === "1") return;
+      window.sessionStorage.setItem("e2e-verifier", "1");
+      // The library writes every stored value as JSON, and treats anything else as corrupt.
+      window.localStorage.setItem(key, JSON.stringify("made-up-code-verifier-made-up-code-verifier-0000"));
+    },
+    [VERIFIER_KEY],
+  );
 }

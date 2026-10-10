@@ -214,5 +214,40 @@
   "notFound": {
     "title": "ಈ ಪುಟ ಇಲ್ಲ.",
     "body": "TODO-translate: Check the address, or open the page in your language."
+  },
+  "language": {
+    "register": "TODO-translate: Fee register",
+    "title": "TODO-translate: Choose your language",
+    "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "chosen": "TODO-translate: Chosen",
+    "continue": "ಮುಂದುವರಿಸಿ",
+    "name": {
+      "en": "TODO-translate: English",
+      "hi": "TODO-translate: Hindi",
+      "kn": "TODO-translate: Kannada",
+      "te": "TODO-translate: Telugu"
+    }
+  },
+  "signIn": {
+    "headline": "TODO-translate: Fees collected. <accent>Not chased.</accent>",
+    "tapLabel": "TODO-translate: Tap {n}",
+    "tap1": "<b>ನೀವು ನೆನಪಿಸಿ ಅನ್ನು ಟ್ಯಾಪ್ ಮಾಡುತ್ತೀರಿ.</b> WhatsApp ತೆರೆಯುತ್ತದೆ, ಸಂದೇಶ ಸಿದ್ಧ.",
+    "tap2": "TODO-translate: <b>The parent taps Pay.</b> UPI opens, amount filled.",
+    "paid": "TODO-translate: <b>Straight to your UPI.</b> We never hold it.",
+    "stamp": "TODO-translate: Paid",
+    "google": "Google ಮೂಲಕ ಮುಂದುವರಿಸಿ",
+    "busy": "TODO-translate: Opening Google…",
+    "note": "TODO-translate: Free for tutors. No password, no OTP.",
+    "offline": "TODO-translate: You are offline. Connect to the internet to sign in.",
+    "cancelled": "ಸೈನ್-ಇನ್ ರದ್ದಾಯಿತು. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಲು Google ಮೂಲಕ ಮುಂದುವರಿಸಿ ಟ್ಯಾಪ್ ಮಾಡಿ.",
+    "failed": "TODO-translate: Google sign-in did not finish. Nothing was saved. Try again.",
+    "expired": "TODO-translate: You were signed out. Sign in again to carry on.",
+    "callback": "TODO-translate: Signing you in…"
+  },
+  "more": {
+    "signOut": "TODO-translate: Sign out"
+  },
+  "appState": {
+    "loading": "TODO-translate: Opening your book…"
   }
 }

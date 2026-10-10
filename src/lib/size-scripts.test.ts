@@ -14,6 +14,9 @@ const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", 
 // The fee reminder page in each language (spec R0-2). It loads one more script, which holds the
 // message templates of all four languages: the leak check's one named exception.
 const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
+// The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
+const appRoutes = ["language", "sign-in", "auth/callback", "home"];
+const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
 const templatesPath = join("src", "lib", "reminder", "templates.json");
 type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;
 const templates = JSON.parse(readFileSync(join(process.cwd(), templatesPath), "utf8")) as Templates;
@@ -38,7 +41,7 @@ type Options = {
   messages?: Record<string, unknown>;
   /** The text of the script only the tool pages load. Default: all four languages' templates. */
   toolScript?: string;
-  /** The body of a language's tool page. Default: that language's own line. */
+  /** The body of a language's tool page and app pages. Default: that language's own line. */
   toolBody?: (locale: string) => string;
 };
 
@@ -68,6 +71,13 @@ function project(options: Options = {}): string {
     const body = options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`;
     writeFileSync(join(root, "out", page), html(body, script, "/_next/tool.js"));
   }
+  for (const page of appPages) {
+    if (options.skip?.includes(page)) continue;
+    const locale = page.split("/")[0] as keyof typeof messages;
+    mkdirSync(join(root, "out", page, ".."), { recursive: true });
+    const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
+    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, script));
+  }
   for (const [locale, tree] of Object.entries(options.messages ?? messages)) {
     writeFileSync(join(root, "messages", `${locale}.json`), JSON.stringify(tree));
   }
@@ -84,13 +94,13 @@ afterEach(() => {
 });
 
 describe("pnpm size (criterion 30)", () => {
-  it("passes when the five routes and the four tool pages exist and are small", () => {
+  it("passes when the five routes, the four tool pages and the app's sixteen pages exist and are small", () => {
     const result = run(sizeScript, project());
     expect(result.status).toBe(0);
-    for (const page of [...pages, ...toolPages]) expect(result.out).toContain(`out/${page}`);
+    for (const page of [...pages, ...toolPages, ...appPages]) expect(result.out).toContain(`out/${page}`);
   });
 
-  it.each([...pages, ...toolPages])("fails when %s is missing", (page) => {
+  it.each([...pages, ...toolPages, ...appPages])("fails when %s is missing", (page) => {
     const result = run(sizeScript, project({ skip: [page] }));
     expect(result.status).toBe(1);
     expect(result.out).toContain(`out/${page} is missing`);
@@ -172,7 +182,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("8 pages");
+    expect(result.out).toContain("24 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {

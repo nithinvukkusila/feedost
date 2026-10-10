@@ -214,5 +214,40 @@
   "notFound": {
     "title": "This page does not exist.",
     "body": "Check the address, or open the page in your language."
+  },
+  "language": {
+    "register": "Fee register",
+    "title": "Choose your language",
+    "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "chosen": "Chosen",
+    "continue": "Continue",
+    "name": {
+      "en": "English",
+      "hi": "Hindi",
+      "kn": "Kannada",
+      "te": "Telugu"
+    }
+  },
+  "signIn": {
+    "headline": "Fees collected. <accent>Not chased.</accent>",
+    "tapLabel": "Tap {n}",
+    "tap1": "<b>You tap Remind.</b> WhatsApp opens, message ready.",
+    "tap2": "<b>The parent taps Pay.</b> UPI opens, amount filled.",
+    "paid": "<b>Straight to your UPI.</b> We never hold it.",
+    "stamp": "Paid",
+    "google": "Continue with Google",
+    "busy": "Opening Google…",
+    "note": "Free for tutors. No password, no OTP.",
+    "offline": "You are offline. Connect to the internet to sign in.",
+    "cancelled": "Sign-in was cancelled. Tap Continue with Google to try again.",
+    "failed": "Google sign-in did not finish. Nothing was saved. Try again.",
+    "expired": "You were signed out. Sign in again to carry on.",
+    "callback": "Signing you in…"
+  },
+  "more": {
+    "signOut": "Sign out"
+  },
+  "appState": {
+    "loading": "Opening your book…"
   }
 }
