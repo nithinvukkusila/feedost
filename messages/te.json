@@ -192,6 +192,12 @@
         "fix": "40 లేదా అంతకంటే తక్కువ అక్షరాలు వాడండి."
       }
     },
+    "remember": {
+      "label": "ఈ ఫోన్‌లో నా UPI ID, పేరు గుర్తుంచుకో",
+      "on": "ఆన్",
+      "off": "ఆఫ్",
+      "note": "మర్చిపోవడానికి దీన్ని ఆఫ్ చేయండి."
+    },
     "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
     "preview": {
       "title": "మీ సందేశం",

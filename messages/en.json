@@ -192,6 +192,12 @@
         "fix": "Use 40 characters or fewer."
       }
     },
+    "remember": {
+      "label": "Remember my UPI ID and name on this phone",
+      "on": "ON",
+      "off": "OFF",
+      "note": "Turn this off to forget them."
+    },
     "privacy": "Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
     "preview": {
       "title": "Your message",

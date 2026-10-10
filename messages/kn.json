@@ -192,6 +192,12 @@
         "fix": "40 ಅಥವಾ ಕಡಿಮೆ ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ."
       }
     },
+    "remember": {
+      "label": "ಈ ಫೋನ್‌ನಲ್ಲಿ ನನ್ನ UPI ID ಮತ್ತು ಹೆಸರನ್ನು ನೆನಪಿಡಿ",
+      "on": "ಆನ್",
+      "off": "ಆಫ್",
+      "note": "ಮರೆಯಲು ಇದನ್ನು ಆಫ್ ಮಾಡಿ."
+    },
     "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The message goes to WhatsApp only when you tap Send.",
     "preview": {
       "title": "ನಿಮ್ಮ ಸಂದೇಶ",

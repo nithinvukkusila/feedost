@@ -9,16 +9,19 @@
 // script, or writes to the address bar or a cookie. There is no form element, so nothing on the
 // page can submit. The only request that carries typed text is the WhatsApp link the tutor taps.
 //
-// Effects here only write outward (the font call, clearing a timer); none sets state. Values that
-// exist only in the browser (hydrated or not, the phone's month) come through useSyncExternalStore.
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+// Effects here only write outward (the font call, clearing a timer, the phone's storage); none sets
+// state. Values that exist only in the browser (hydrated or not, the phone's month, what the phone
+// remembers) come through useSyncExternalStore, so the phone's storage is never read on the server.
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Segmented } from "@/components/ui/segmented";
 import { SelectField } from "@/components/ui/select-field";
 import { Slip } from "@/components/ui/slip";
+import { Switch } from "@/components/ui/switch";
 import { localeNames, locales, type Locale } from "@/config/locales";
 import { copyText } from "@/lib/reminder/copy-text";
+import { forgetPayee, parsePayee, readRaw, savePayee, storageWorks } from "@/lib/reminder/remember";
 import {
   amountInput,
   checkAmount,
@@ -125,14 +128,26 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
   const [picked, setPicked] = useState<number | null>(null);
   const [parent, setParent] = useState("");
   const [amount, setAmount] = useState("");
-  const [upi, setUpi] = useState("");
-  const [payee, setPayee] = useState("");
+  // The tutor's own UPI ID and name are derived, not copied into state: what was typed in this
+  // visit if anything was, otherwise what the phone remembers, otherwise nothing.
+  const [typedUpi, setTypedUpi] = useState<string | null>(null);
+  const [typedPayee, setTypedPayee] = useState<string | null>(null);
+  // The switch as tapped in this visit; until it is tapped, on exactly when something is remembered.
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const canRemember = useSyncExternalStore(subscribeToNothing, storageWorks, () => false);
+  const raw = useSyncExternalStore(subscribeToNothing, readRaw, () => null);
+  const saved = useMemo(() => parsePayee(raw), [raw]);
+  const upi = typedUpi ?? saved?.upiId ?? "";
+  const payee = typedPayee ?? saved?.name ?? "";
+  const remember = canRemember && (choice ?? saved !== null);
   const [touched, setTouched] = useState<Record<FieldName, boolean>>({ parent: false, amount: false, upi: false, payee: false });
   // What Copy last did, and the text it did it to: the confirmation stands only while the message is unchanged.
   const [copy, setCopy] = useState<{ result: "copied" | "failed"; text: string } | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reasonId = useId();
   const previewTitleId = useId();
+  const rememberId = useId();
+  const rememberLabelId = useId();
 
   // The link in the preview is the first thing on the page drawn in DM Mono. Ask for the font once
   // now, so it is not requested in the middle of typing.
@@ -175,6 +190,31 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
   const copied = copy !== null && copy.result === "copied" && copy.text === message;
   const copyFailed = copy !== null && copy.result === "failed" && copy.text === message;
 
+  // While the switch is on, keep the pair whenever both are valid. When one is not, write nothing:
+  // the last valid pair stays.
+  const upiToKeep = remember && upiCheck.ok ? upiCheck.value : null;
+  const nameToKeep = remember && payeeCheck.ok ? payeeCheck.value : null;
+  useEffect(() => {
+    if (upiToKeep !== null && nameToKeep !== null) savePayee({ upiId: upiToKeep, name: nameToKeep });
+  }, [upiToKeep, nameToKeep]);
+
+  // Something is stored that no longer passes the rules: it was ignored above; remove it.
+  const stale = raw !== null && saved === null;
+  useEffect(() => {
+    if (stale) forgetPayee();
+  }, [stale]);
+
+  function onRemember(next: boolean) {
+    if (!next) {
+      // A field filled from the phone shows the stored value, which is about to go. Pin what the
+      // two fields show first, so turning the switch off does not empty them.
+      setTypedUpi(upi);
+      setTypedPayee(payee);
+      forgetPayee();
+    }
+    setChoice(next);
+  }
+
   const touch = (name: FieldName) => setTouched((before) => (before[name] ? before : { ...before, [name]: true }));
 
   async function onCopy() {
@@ -202,7 +242,13 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
       <div className="mt-6 pr-1.5">
         <Slip className="p-4">
           {/* Inert until the page has woken up: text typed into a field before then would be lost. */}
-          <fieldset disabled={!hydrated} data-testid="reminder-form" className="flex min-w-0 flex-col gap-4">
+          <fieldset disabled={!hydrated} data-testid="reminder-form" className="min-w-0">
+            {/*
+              The column is a div inside the fieldset, not the fieldset itself. With the fieldset as the
+              flex column, Chromium kept its old height when the remember row arrived after the page
+              woke up, and took the missing room out of the language choices, which shrank to nothing.
+            */}
+            <div data-testid="reminder-fields" className="flex min-w-0 flex-col gap-4">
             <Segmented
               label={words.language}
               name="message-language"
@@ -259,7 +305,7 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
               label={words.upi.label}
               placeholder={words.upi.placeholder}
               value={upi}
-              onChange={(event) => setUpi(event.currentTarget.value)}
+              onChange={(event) => setTypedUpi(event.currentTarget.value)}
               onBlur={() => touch("upi")}
               autoCapitalize="none"
               autoCorrect="off"
@@ -277,13 +323,35 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
               placeholder={words.payee.placeholder}
               helper={words.payee.helper}
               value={payee}
-              onChange={(event) => setPayee(event.currentTarget.value)}
+              onChange={(event) => setTypedPayee(event.currentTarget.value)}
               onBlur={() => touch("payee")}
               autoComplete="off"
               data-testid="reminder-payee"
               {...guarded}
               {...problem(payeeCheck, touched.payee, words.payee)}
             />
+            {/* Not drawn at all where the browser blocks storage: never a switch that cannot work. */}
+            {canRemember ? (
+              <div data-testid="reminder-remember-row">
+                {/* The words ask for 10rem. Where that does not fit beside the switch (a large font), the switch moves under them. */}
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                  <label id={rememberLabelId} htmlFor={rememberId} className="type-body min-w-0 shrink grow basis-40 font-bold wrap-anywhere">
+                    {words.remember.label}
+                  </label>
+                  <Switch
+                    id={rememberId}
+                    labelledBy={rememberLabelId}
+                    checked={remember}
+                    onChange={onRemember}
+                    onText={words.remember.on}
+                    offText={words.remember.off}
+                    data-testid="reminder-remember"
+                  />
+                </div>
+                <p className="type-caption mt-1 text-ink-soft">{words.remember.note}</p>
+              </div>
+            ) : null}
+            </div>
           </fieldset>
         </Slip>
       </div>

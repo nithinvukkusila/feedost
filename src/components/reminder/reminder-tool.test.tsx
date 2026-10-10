@@ -28,6 +28,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
   vi.useRealTimers();
   vi.restoreAllMocks();
   setClipboard(undefined);
@@ -55,11 +56,20 @@ function fillAll() {
 }
 
 describe("the form at the start (criteria 9, 10, 11, 13, 20)", () => {
-  it("has the seven inputs in the spec's order", () => {
+  it("has the seven inputs in the spec's order, then the remember switch", () => {
     show();
     const form = screen.getByTestId("reminder-form");
     const labels = [...form.querySelectorAll("legend, label[for]")].map((el) => el.textContent);
-    expect(labels).toEqual(["Message language", "Tone", "Parent's name", "Month", "Amount in ₹", "Your UPI ID", "Your name"]);
+    expect(labels).toEqual([
+      "Message language",
+      "Tone",
+      "Parent's name",
+      "Month",
+      "Amount in ₹",
+      "Your UPI ID",
+      "Your name",
+      "Remember my UPI ID and name on this phone",
+    ]);
   });
 
   it("starts every text field empty, with an example only as a placeholder", () => {
@@ -443,6 +453,156 @@ describe("Send and Copy (criteria 35 to 37, 41 to 45)", () => {
   });
 });
 
+describe("remember on this phone (criteria 51 to 54)", () => {
+  const KEY = "reminder-payee";
+  const stored = () => localStorage.getItem(KEY);
+  const toggle = () => screen.getByTestId("reminder-remember");
+  const keep = (value: unknown) => localStorage.setItem(KEY, JSON.stringify(value));
+
+  it("is a switch under Your name, named by its visible words, off at the start, with the line that says how to forget", () => {
+    show();
+    const control = screen.getByRole("switch", { name: "Remember my UPI ID and name on this phone" });
+    expect(control).toBe(toggle());
+    expect(control.getAttribute("aria-checked")).toBe("false");
+    expect(control.textContent).toContain("OFF");
+    const row = screen.getByTestId("reminder-remember-row");
+    expect(row.textContent).toContain("Turn this off to forget them.");
+    // Tapping the words works too: they are a label for the switch.
+    expect(row.querySelector("label")!.getAttribute("for")).toBe(control.id);
+    const order = [...screen.getByTestId("reminder-form").querySelectorAll("textarea, [role=switch]")].map((el) => el.getAttribute("data-testid"));
+    expect(order.slice(-2)).toEqual(["reminder-payee", "reminder-remember"]);
+    expect(localStorage.length).toBe(0);
+  });
+
+  it("stores nothing while the switch is off", () => {
+    show();
+    fillAll();
+    expect(localStorage.length).toBe(0);
+  });
+
+  it("once on, keeps only the cleaned UPI ID and name, under one key", async () => {
+    show();
+    fillAll();
+    type(payee(), "  Meena   Rao ");
+    await userEvent.click(toggle());
+    expect(toggle().getAttribute("aria-checked")).toBe("true");
+    expect(JSON.parse(stored()!)).toEqual({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+    expect(localStorage.length).toBe(1);
+    // Nothing about the parent, the amount, the month, the tone or the language.
+    expect(stored()).not.toMatch(/Suresh|1200|1,200|October|polite|"en"/);
+  });
+
+  it("follows later edits while on, and keeps the last valid pair while a field is wrong", async () => {
+    show();
+    fillAll();
+    await userEvent.click(toggle());
+    type(upi(), "meena@okaxis");
+    expect(JSON.parse(stored()!).upiId).toBe("meena@okaxis");
+    type(upi(), "meena okaxis");
+    expect(JSON.parse(stored()!)).toEqual({ v: 1, upiId: "meena@okaxis", name: "Meena Rao" });
+  });
+
+  it("turned on with a field still wrong, stores nothing until both are valid", async () => {
+    show();
+    type(upi(), "meena.tuitions@okhdfc");
+    await userEvent.click(toggle());
+    expect(stored()).toBeNull();
+    type(payee(), "Meena Rao");
+    expect(JSON.parse(stored()!)).toEqual({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+  });
+
+  it("on the next visit, in any language, fills both fields and shows the switch on; nothing else is filled", () => {
+    keep({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+    show("hi", hi.reminderForm);
+    expect(upi().value).toBe("meena.tuitions@okhdfc");
+    expect(payee().value).toBe("Meena Rao");
+    expect(toggle().getAttribute("aria-checked")).toBe("true");
+    expect([parent().value, amount().value]).toEqual(["", ""]);
+    // Filled from the phone, not touched: the name shows no error, the ID shows its format note.
+    expect(block(payee()).getAttribute("data-state")).toBe("idle");
+    expect(block(upi()).getAttribute("data-state")).toBe("correct");
+  });
+
+  it("turning it off deletes the stored values at once and leaves the two fields as they are", async () => {
+    keep({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+    show();
+    type(parent(), "Suresh");
+    type(amount(), "1200");
+    await userEvent.click(toggle());
+    expect(stored()).toBeNull();
+    expect(localStorage.length).toBe(0);
+    expect(toggle().getAttribute("aria-checked")).toBe("false");
+    expect(upi().value).toBe("meena.tuitions@okhdfc");
+    expect(payee().value).toBe("Meena Rao");
+    expect(preview().textContent).toBe(POLITE);
+    // And it stays forgotten while the tutor goes on typing.
+    type(payee(), "Meena R");
+    expect(stored()).toBeNull();
+  });
+
+  it("can be turned on again after being turned off", async () => {
+    show();
+    fillAll();
+    await userEvent.click(toggle());
+    await userEvent.click(toggle());
+    expect(stored()).toBeNull();
+    await userEvent.click(toggle());
+    expect(JSON.parse(stored()!)).toEqual({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+  });
+
+  it.each([
+    ["not JSON", "{ nope"],
+    ["an ID that no longer passes", JSON.stringify({ v: 1, upiId: "meena tuitions", name: "Meena Rao" })],
+    ["a name that is too long", JSON.stringify({ v: 1, upiId: "meena.tuitions@okhdfc", name: "a".repeat(41) })],
+  ])("ignores and removes a stored value that is %s", (_name, value) => {
+    localStorage.setItem(KEY, value);
+    show();
+    expect(upi().value).toBe("");
+    expect(payee().value).toBe("");
+    expect(toggle().getAttribute("aria-checked")).toBe("false");
+    expect(stored()).toBeNull();
+  });
+
+  it("is never read while the page is rendered on the server", () => {
+    keep({ v: 1, upiId: "meena.tuitions@okhdfc", name: "Meena Rao" });
+    const html = renderToString(<ReminderTool words={words} pageLocale="en" />);
+    expect(html).not.toContain("meena.tuitions@okhdfc");
+    expect(html).not.toContain("Meena Rao</");
+    expect(html).not.toContain('role="switch"');
+  });
+
+  it("where storage is blocked, shows no switch and the tool still builds a message", async () => {
+    const real = Object.getOwnPropertyDescriptor(window, "localStorage")!;
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: () => null,
+        setItem: () => {
+          throw new DOMException("blocked", "SecurityError");
+        },
+        removeItem: () => {},
+        clear: () => {},
+        length: 0,
+      },
+    });
+    try {
+      // A fresh copy of the modules, so the one-time storage probe runs against the blocked store.
+      vi.resetModules();
+      const fresh = await import("./reminder-tool");
+      render(<fresh.ReminderTool words={words} pageLocale="en" />);
+      expect(screen.queryByRole("switch")).toBeNull();
+      expect(screen.queryByTestId("reminder-remember-row")).toBeNull();
+      expect(document.body.textContent).not.toContain("Remember my UPI ID");
+      fillAll();
+      expect(preview().textContent).toBe(POLITE);
+      expect(send().hasAttribute("href")).toBe(true);
+    } finally {
+      Object.defineProperty(window, "localStorage", real);
+      vi.resetModules();
+    }
+  });
+});
+
 describe("the privacy line (criterion 50)", () => {
   it("is always on the page, in full, and not behind a link", () => {
     show();
@@ -468,6 +628,18 @@ describe("before the page wakes up (plan section 4, criteria 13 and 46)", () => 
     expect(holder.querySelector('[data-testid="reminder-send"]')!.hasAttribute("href")).toBe(false);
     expect(holder.textContent).toContain("Message language");
     expect(holder.querySelector("form")).toBeNull();
+  });
+
+  it("keeps the flex column in a div inside the fieldset, not on the fieldset itself", () => {
+    // Found in the build: with the fieldset as the flex column, Chromium kept the form's old height
+    // when the remember row arrived after hydration, and the language choices shrank to nothing on
+    // the Hindi, Kannada and Telugu pages. The e2e suite measures the group's height on a real page.
+    show();
+    const form = screen.getByTestId("reminder-form");
+    expect(form.className.split(/\s+/)).not.toContain("flex");
+    expect(form.children).toHaveLength(1);
+    expect(form.firstElementChild).toBe(screen.getByTestId("reminder-fields"));
+    expect(screen.getByTestId("reminder-fields").className.split(/\s+/)).toEqual(expect.arrayContaining(["flex", "flex-col", "min-w-0"]));
   });
 
   it("is awake once rendered in the browser", () => {
