@@ -3,7 +3,7 @@
 -- client-writable, and the constraints hold. Self-contained: makes its own two users and rolls everything back.
 begin;
 select tests.assert_ready();
-select plan(42);
+select plan(48);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -47,6 +47,14 @@ select tests.reset();
 select is((select name from public.students where id = 'a1000000-0000-4000-8000-000000000001'), 'Asha',
   'A student is intact after B tried to change and delete it');
 
+-- B changing batch_id on A's student: the update policy hides the row, so it runs and changes zero rows
+select tests.act_as(tests.tutor_b());
+select lives_ok($$update public.students set batch_id = 'b0000000-0000-4000-8000-000000000001' where id = 'a1000000-0000-4000-8000-000000000001'$$,
+  'B update of batch_id on A student runs and matches no row');
+select tests.reset();
+select ok((select batch_id is null and tutor_id = tests.tutor_a() from public.students where id = 'a1000000-0000-4000-8000-000000000001'),
+  'A student still has no batch and is still A');
+
 -- Columns A may not write
 select tests.act_as(tests.tutor_a());
 select throws_ok(
@@ -58,6 +66,9 @@ select throws_ok($$update public.students set tutor_id = tests.tutor_b() where i
   '42501', null, 'A cannot update tutor_id');
 select throws_ok($$update public.students set created_at = now() where id = 'a1000000-0000-4000-8000-000000000001'$$,
   '42501', null, 'A cannot update created_at');
+-- A moving own student onto B's batch: the composite key (tutor_id, batch_id) has no row (A, B batch)
+select throws_ok($$update public.students set batch_id = 'b0000000-0000-4000-8000-000000000001' where id = 'a1000000-0000-4000-8000-000000000001'$$,
+  '23503', null, 'A cannot move own student onto B batch');
 select tests.reset();
 
 -- Tokens are distinct
@@ -91,6 +102,11 @@ select throws_ok($$insert into public.students (tutor_id, name, parent_language)
 select throws_ok($$insert into public.students (tutor_id, name) values (tests.tutor_a(), '  ')$$, '23514', null, 'blank name is refused');
 select lives_ok($$insert into public.students (tutor_id, name, parent_phone, monthly_fee, due_day) values (tests.tutor_a(), 'ok1', '+919845012345', 0, 1)$$, 'valid phone, fee 0 and due day 1 are accepted');
 select lives_ok($$insert into public.students (tutor_id, name, due_day) values (tests.tutor_a(), 'ok28', 28)$$, 'due day 28 is accepted');
+
+-- The raw length is capped too: padding does not count towards the 80 but does towards 400
+select throws_ok(format('insert into public.students (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 400) || 'x'), '23514', null, 'a name of 401 raw characters is refused');
+select lives_ok(format('insert into public.students (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 399) || 'x'), 'a name of 400 raw characters is accepted');
+select throws_ok(format('insert into public.students (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 5000) || 'a'), '23514', null, 'a name of 5000 spaces then a letter is refused');
 
 -- Removing a user removes their tutor, batches and students, and only theirs
 delete from auth.users where id = tests.tutor_a();

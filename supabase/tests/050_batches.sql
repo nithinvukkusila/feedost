@@ -3,7 +3,7 @@
 -- Self-contained: makes its own two users and rolls everything back.
 begin;
 select tests.assert_ready();
-select plan(24);
+select plan(31);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -39,6 +39,18 @@ select throws_ok($$update public.batches set tutor_id = tests.tutor_b() where id
   '42501', null, 'A cannot move a batch to B');
 select tests.reset();
 
+-- A cannot write id or the timestamps (column grants), on update or on insert
+select tests.act_as(tests.tutor_a());
+select throws_ok($$update public.batches set id = 'a0000000-0000-4000-8000-0000000000ff' where id = 'a0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'A cannot update batch id');
+select throws_ok($$update public.batches set created_at = now() where id = 'a0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'A cannot update batch created_at');
+select throws_ok($$update public.batches set updated_at = now() where id = 'a0000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'A cannot update batch updated_at');
+select throws_ok($$insert into public.batches (name, created_at) values ('dated', now())$$,
+  '42501', null, 'A cannot choose created_at on insert');
+select tests.reset();
+
 -- No session
 select tests.act_as_anon();
 select throws_ok($$select count(*) from public.batches$$, '42501', null, 'no session cannot select');
@@ -69,6 +81,11 @@ select lives_ok($$delete from public.batches where id = 'a0000000-0000-4000-8000
 select tests.reset();
 select ok((select batch_id is null and tutor_id = tests.tutor_a() from public.students where id = 'a1000000-0000-4000-8000-000000000001'),
   'the student stays, with no batch and the same tutor');
+
+-- The raw length is capped too (as the test runner): padding does not count towards the 60 but does towards 400
+select throws_ok(format('insert into public.batches (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 400) || 'x'), '23514', null, 'a name of 401 raw characters is refused');
+select lives_ok(format('insert into public.batches (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 399) || 'x'), 'a name of 400 raw characters is accepted');
+select throws_ok(format('insert into public.batches (tutor_id, name) values (tests.tutor_a(), %L)', repeat(' ', 5000) || 'a'), '23514', null, 'a name of 5000 spaces then a letter is refused');
 
 select * from finish();
 rollback;

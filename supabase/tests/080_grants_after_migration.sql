@@ -3,7 +3,7 @@
 -- and only the planned columns writable. Reads the catalogue only; changes nothing.
 begin;
 select tests.assert_ready();
-select plan(23);
+select plan(28);
 
 -- anon: nothing at all, on the table or on any column
 select ok(not has_table_privilege('anon', 'public.tutors', 'select,insert,update,delete,truncate,references,trigger'), 'anon holds no privilege on tutors');
@@ -30,8 +30,23 @@ select is_empty(
   $$select c from unnest(array['id','email','created_at','updated_at']) as c where has_column_privilege('authenticated', 'public.tutors', c, 'update')$$,
   'authenticated cannot update id, email, created_at or updated_at');
 
--- batches: all four operations, table-wide
-select ok(has_table_privilege('authenticated', 'public.batches', 'select,insert,update,delete'), 'authenticated has select, insert, update and delete on batches');
+-- batches: select and delete table-wide; insert and update by column (changed by the hardening migration)
+select ok(has_table_privilege('authenticated', 'public.batches', 'select') and has_table_privilege('authenticated', 'public.batches', 'delete'),
+  'authenticated reads and deletes batches');
+select ok(not has_table_privilege('authenticated', 'public.batches', 'insert') and not has_table_privilege('authenticated', 'public.batches', 'update'),
+  'authenticated has no table-wide insert or update on batches');
+select is_empty(
+  $$select c from unnest(array['id','name','timings']) as c where not has_column_privilege('authenticated', 'public.batches', c, 'insert')$$,
+  'authenticated inserts id, name and timings on batches');
+select is_empty(
+  $$select c from unnest(array['tutor_id','created_at','updated_at']) as c where has_column_privilege('authenticated', 'public.batches', c, 'insert')$$,
+  'authenticated cannot insert tutor_id, created_at or updated_at on batches');
+select is_empty(
+  $$select c from unnest(array['name','timings']) as c where not has_column_privilege('authenticated', 'public.batches', c, 'update')$$,
+  'authenticated updates name and timings on batches');
+select is_empty(
+  $$select c from unnest(array['id','tutor_id','created_at','updated_at']) as c where has_column_privilege('authenticated', 'public.batches', c, 'update')$$,
+  'authenticated cannot update id, tutor_id, created_at or updated_at on batches');
 
 -- students: select and delete table-wide; insert and update by column
 select ok(has_table_privilege('authenticated', 'public.students', 'select') and has_table_privilege('authenticated', 'public.students', 'delete'),

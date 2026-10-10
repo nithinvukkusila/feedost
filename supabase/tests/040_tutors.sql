@@ -3,7 +3,7 @@
 -- own two users (the trigger makes their tutors rows) and rolls everything back.
 begin;
 select tests.assert_ready();
-select plan(37);
+select plan(40);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -76,6 +76,11 @@ select lives_ok($$update public.tutors set upi_id = 'ravi-9@ybl' where id = test
 select lives_ok(format('update public.tutors set upi_id = %L where id = tests.tutor_a()', repeat('a', 256) || '@okhdfc'), 'a 256-character UPI name is accepted');
 select throws_ok(format('update public.tutors set upi_id = %L where id = tests.tutor_a()', repeat('a', 257) || '@okhdfc'), '23514', null, 'a 257-character UPI name is refused');
 select throws_ok($$update public.tutors set upi_id = 'a@okhdfc' where id = tests.tutor_a()$$, '23514', null, 'a 1-character UPI name is refused');
+
+-- The raw length is capped too: padding does not count towards the 80 but does towards 400
+select throws_ok(format('update public.tutors set name = %L where id = tests.tutor_a()', repeat(' ', 400) || 'x'), '23514', null, 'a name of 401 raw characters is refused');
+select lives_ok(format('update public.tutors set name = %L where id = tests.tutor_a()', repeat(' ', 399) || 'x'), 'a name of 400 raw characters is accepted');
+select throws_ok(format('update public.tutors set name = %L where id = tests.tutor_a()', repeat(' ', 5000) || 'a'), '23514', null, 'a name of 5000 spaces then a letter is refused');
 
 -- updated_at moves forward on update
 create temp table updated_before as select updated_at from public.tutors where id = tests.tutor_a();
