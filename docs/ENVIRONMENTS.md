@@ -143,14 +143,14 @@ Verified (run in CI or by unit tests, or read in the code):
 
 Unverified until F4b or later:
 
-- `check:build-env` ties an anon JWT key to its project, but not an `sb_publishable_` key: a Preview build with the staging URL and the production publishable key would pass. When F4b records the keys, add the key prefix to `supabase/environments.json` and compare against it, before the guard is wired into `build`.
+- `check:build-env` ties an anon JWT key to its project, but not an `sb_publishable_` key: a Preview build with the staging URL and the production publishable key would pass. Before any `sb_publishable_` key is used, add the key prefix to `supabase/environments.json` and compare against it. The key in use today is an anon JWT, which the guard does tie to the project.
 - ~~**The hosted gateway and `verify_jwt = false`.**~~ Proved on staging, 2026-10-10 (see above). Was: whether the hosted gateway lets an unauthenticated `GET` through. If it wants a key, `smoke:env` and the dev page add the `apikey` header (the preflight already allows it). The first staging deploy settles it.
 - ~~**`supabase functions deploy health --use-api`** without Docker, and `supabase secrets set APP_ENV=...`.~~ Both worked on staging, 2026-10-10.
 - **The deploy hook** building `main` (section above).
 - **`pull_request` base wiring of `check:db`.** CI passes `origin/<base ref>` on `pull_request` and the previous commit on push to `main`. The push-to-`main` path and the pull-request path with the final `ci.yml` have not been seen running. Watch the first pull request.
 - **The final `ci.yml`** after the temporary branch trigger was removed. The file is as intended, but the first run on the pull request is the check.
-- **The build guard on Vercel.** `check:build-env` is tested on fake environments only. It is wired into `build` in F4b, after the variables and refs exist.
+- ~~**The build guard on Vercel.**~~ Seen working on 2026-10-11: two Preview builds were stopped by it with "NEXT_PUBLIC_SUPABASE_URL is missing" (the variables were not yet applied to Preview), and the third built and its `/dev/supabase` page said staging.
 - ~~**Whether an agent's shell can read the keychain token** from `supabase login`.~~ It can, 2026-10-10.
 - **Docker on the founder's machine.** Not working today (the disk is nearly full and the socket link points at another account). The local commands are proved by CI only.
-- **The hosted auth settings** on both projects, until the founder reads them back in the dashboard.
+- ~~**The hosted auth settings** on staging.~~ The founder read them back on 2026-10-11: Email on; Phone, Anonymous sign-ins off. Google was switched on afterwards, for sign-in (R1-1).
 - **Browser access from a `*.vercel.app` preview and from the LAN address** (no blocked-request error).
