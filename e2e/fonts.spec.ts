@@ -556,3 +556,99 @@ test.describe("criteria 14, 40, 60 and 16 (automatic part): amounts, digits and 
     expect(text.match(/[०-९೦-೯౦-౯]/g)).toBeNull();
   });
 });
+
+// Slice R0-2, fix after step 7. Each Anek family has Latin letters and digits of its own, so a value
+// typed under the script's face was drawn in Anek. Field's `latinValue` puts the amount and the UPI ID
+// in the Latin stack; the name fields keep the script's face.
+test.describe("R0-2: a typed amount and UPI ID are never drawn in Anek", () => {
+  const typedName: Record<IndicLang, string> = { hi: "सुरेश", kn: "ಸುರೇಶ್", te: "సురేష్" };
+
+  for (const lang of indicLangs) {
+    test(`/${lang}/tools/fee-reminder/: the amount and the UPI ID are drawn by Bricolage, a name in the page's script by its Anek, and no other script's file is fetched`, async ({ page }) => {
+      const urls = recordRequests(page);
+      await page.goto(`/${lang}/tools/fee-reminder/`);
+      const anek = await familyOf(page, scriptFontVariable[lang]);
+      expect(anek).toMatch(ANEK);
+      const probe = await fontProbe(page);
+      const amount = page.getByTestId("reminder-amount");
+      const upi = page.getByTestId("reminder-upi");
+      const parent = page.getByTestId("reminder-parent");
+      // Chromium does not report the faces inside a textarea (its text sits in the browser's own
+      // shadow tree). The field's invisible copy holds the same text in the same role and is laid out
+      // beside it, so the copy is probed, and the control is checked to have the copy's exact font.
+      const copyOf = (field: Locator) => field.locator("xpath=preceding-sibling::*[@data-field-mirror]");
+      const font = (node: Locator) =>
+        node.evaluate((el) => {
+          const s = getComputedStyle(el);
+          return [s.fontFamily, s.fontSize, s.fontWeight, s.lineHeight, s.letterSpacing];
+        });
+
+      // Before anything is typed: the placeholders ("1,200", "name@bank") are in the Latin face too.
+      await fontsSettled(page);
+      for (const field of [amount, upi]) {
+        const faces = await probe.facesFor(copyOf(field));
+        expect(faces.length).toBeGreaterThan(0);
+        for (const face of faces) expect(face.family, `placeholder drawn by ${face.family}`).toMatch(/^Bricolage Grotesque/);
+      }
+
+      await amount.fill("1200");
+      await upi.fill("meena.tuitions@okhdfc");
+      await parent.fill(typedName[lang]);
+      await fontsSettled(page);
+
+      for (const field of [amount, upi]) {
+        expect(await firstFamily(field)).toBe("Bricolage Grotesque");
+        expect(await font(field)).toEqual(await font(copyOf(field)));
+        await expect(copyOf(field)).toContainText(await field.inputValue());
+        const faces = await probe.facesFor(copyOf(field));
+        expect(faces.length).toBeGreaterThan(0);
+        for (const face of faces) {
+          expect(face.family, `"${await field.inputValue()}" was drawn by ${face.family}`).toMatch(/^Bricolage Grotesque/);
+          expect(face.family).not.toMatch(ANEK);
+        }
+        // Digits stay 0-9, and the value keeps the size and weight of the other fields' values.
+        expect(await field.inputValue()).toMatch(/^[\x20-\x7e]+$/);
+        expect((await font(field)).slice(1)).toEqual((await font(parent)).slice(1));
+      }
+
+      // The name field is unchanged: its script's own Anek file draws a name typed in that script.
+      expect(await firstFamily(parent)).toBe(anek);
+      await expect(parent).toHaveValue(scriptPattern[lang]);
+      expect(await font(parent)).toEqual(await font(copyOf(parent)));
+      const nameFaces = await probe.facesFor(copyOf(parent));
+      expect(nameFaces.length).toBeGreaterThan(0);
+      for (const face of nameFaces) expect(face.family, `the name was drawn by ${face.family}`).toMatch(new RegExp(`^${anek}`));
+
+      // The F3 rule holds: this page fetched its own script's Anek file and no other script's.
+      const fetched = urls.filter((u) => u.endsWith(".woff2"));
+      const families = new Map((await fontFiles(page)).map((f) => [f.url, f.family]));
+      const anekFetched = [...new Set(fetched.map((u) => families.get(u) ?? "").filter((f) => ANEK.test(f)))];
+      expect(anekFetched).toEqual([anek]);
+    });
+  }
+
+  test("/en/tools/fee-reminder/: the two fields look as the name fields do, and no Anek file is fetched", async ({ page }) => {
+    const urls = recordRequests(page);
+    await page.goto("/en/tools/fee-reminder/");
+    const probe = await fontProbe(page);
+    await page.getByTestId("reminder-amount").fill("1200");
+    await page.getByTestId("reminder-upi").fill("meena.tuitions@okhdfc");
+    await page.getByTestId("reminder-parent").fill("Suresh");
+    await fontsSettled(page);
+    const look = (id: string) =>
+      page.getByTestId(id).evaluate((el) => {
+        const s = getComputedStyle(el);
+        return [s.fontFamily, s.fontSize, s.fontWeight, s.lineHeight, s.letterSpacing];
+      });
+    const name = await look("reminder-parent");
+    expect(await look("reminder-amount")).toEqual(name);
+    expect(await look("reminder-upi")).toEqual(name);
+    for (const id of ["reminder-amount", "reminder-upi", "reminder-parent"]) {
+      const faces = await probe.facesFor(page.getByTestId(id).locator("xpath=preceding-sibling::*[@data-field-mirror]"));
+      expect(faces.length, id).toBeGreaterThan(0);
+      for (const face of faces) expect(face.family, id).toMatch(/^Bricolage Grotesque/);
+    }
+    const families = new Map((await fontFiles(page)).map((f) => [f.url, f.family]));
+    expect(urls.filter((u) => u.endsWith(".woff2")).map((u) => families.get(u) ?? "").filter((f) => ANEK.test(f))).toEqual([]);
+  });
+});

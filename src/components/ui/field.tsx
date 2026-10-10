@@ -49,6 +49,12 @@ export type FieldProps = Stated & {
   defaultValue?: string;
   /** The control itself, for example to focus it. */
   ref?: Ref<HTMLTextAreaElement>;
+  /**
+   * For a value that is always Latin letters and digits, such as an amount or a UPI ID: the typed
+   * value and the placeholder are drawn in the Latin face whatever the page language. The label,
+   * the helper and the message keep the page's own face. Leave it off for names and other words.
+   */
+  latinValue?: boolean;
 } & Native;
 
 const labelTone: Record<FieldState, string> = {
@@ -76,8 +82,7 @@ const messageTone: Record<FieldState, string> = {
 };
 
 // The text box shared by the control and its mirror: they must wrap at exactly the same places.
-const textBox =
-  "type-value col-start-1 row-start-1 min-h-tap min-w-0 py-2 whitespace-pre-wrap wrap-anywhere";
+const textBox = "col-start-1 row-start-1 min-h-tap min-w-0 py-2 whitespace-pre-wrap wrap-anywhere";
 
 /** A field holds one line of text however it arrives: line breaks become single spaces. */
 export function oneLine(text: string): string {
@@ -159,6 +164,7 @@ export function Field(props: FieldProps) {
     defaultValue,
     placeholder,
     ref,
+    latinValue = false,
     id: givenId,
     "aria-describedby": describedBy,
     onChange,
@@ -172,6 +178,8 @@ export function Field(props: FieldProps) {
   const showMessage = state !== "idle" && message != null;
   const note = showMessage ? message : helper;
   const hasNote = note != null;
+  // One role or the other, never both: the two differ only in the face, and the control and its copy share it.
+  const valueRole = latinValue ? "type-value-latin" : "type-value";
 
   const controlled = value !== undefined;
   const element = useRef<HTMLTextAreaElement | null>(null);
@@ -313,7 +321,7 @@ export function Field(props: FieldProps) {
           translate="no"
           data-ph-no-capture=""
           data-sentry-mask=""
-          className={cx(textBox, "invisible")}
+          className={cx(valueRole, textBox, "invisible")}
         >
           {shown === "" ? placeholder : shown}
           {"​"}
@@ -336,6 +344,7 @@ export function Field(props: FieldProps) {
           aria-describedby={cx(describedBy, hasNote && noteId) || undefined}
           // The thick blue line and blue label are the focus indicator, so the default outline is removed.
           className={cx(
+            valueRole,
             textBox,
             "block w-full resize-none overflow-hidden bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label group-typing/field:text-blue",
             valueTone[state],

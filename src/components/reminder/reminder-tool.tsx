@@ -297,6 +297,8 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
               }}
               inputMode="numeric"
               autoComplete="off"
+              // Digits are never drawn in Anek: the typed amount keeps the Latin face on every page.
+              latinValue
               data-testid="reminder-amount"
               {...guarded}
               {...problem(amountCheck, touched.amount, words.amount)}
@@ -311,6 +313,8 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
               autoCorrect="off"
               spellCheck={false}
               autoComplete="off"
+              // A UPI ID is Latin letters and digits: the same face on every page, as with the amount.
+              latinValue
               data-testid="reminder-upi"
               {...guarded}
               {...(upiCheck.ok

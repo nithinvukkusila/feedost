@@ -96,6 +96,21 @@ describe("the form at the start (criteria 9, 10, 11, 13, 20)", () => {
     expect(preview().getAttribute("lang")).toBe("kn");
   });
 
+  it.each(["en", "hi", "kn", "te"] as const)("on the %s page the amount and the UPI ID are typed in the Latin face; the two names follow the page's script (R0-2 fix)", (locale) => {
+    show(locale);
+    const roles = (el: HTMLElement) => el.className.split(/\s+/).filter((name) => name.startsWith("type-"));
+    const copyOf = (el: HTMLElement) => el.parentElement!.querySelector("[data-field-mirror]") as HTMLElement;
+    for (const el of [amount(), upi()]) {
+      expect(roles(el)).toEqual(["type-value-latin"]);
+      expect(roles(copyOf(el))).toEqual(["type-value-latin"]);
+    }
+    // A parent's name typed in Devanagari, Kannada or Telugu must be drawn in that script's own face.
+    for (const el of [parent(), payee()]) {
+      expect(roles(el)).toEqual(["type-value"]);
+      expect(roles(copyOf(el))).toEqual(["type-value"]);
+    }
+  });
+
   it("starts on Polite, with labels only", () => {
     show();
     const group = screen.getByRole("group", { name: "Tone" });
