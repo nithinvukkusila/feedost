@@ -444,7 +444,7 @@ On the staging-backed preview, at 360px width, then again with the system font s
 6. Tap More: your name, subjects and UPI ID are right. Edit changes them. Language switches the page. Sign out takes you to sign-in.
 7. Sign in again: you go straight to the empty home, not to setup.
 8. Close the browser tab, reopen `/en/home/`: still signed in.
-9. Turn on aeroplane mode on the sign-in screen and tap the button: it says you are offline. Turn on aeroplane mode on the home screen and reload: it says the network dropped and offers Try again; it does not sign you out.
+9. Turn on aeroplane mode on the sign-in screen and tap the button: it says you are offline. Open home while online, then switch the network off in DevTools (or turn on aeroplane mode) and tap an action that needs the network: it says the network dropped and offers Try again and Sign out; it does not sign you out by itself. Switch the network back on and tap Try again: the screen carries on. (Reloading while offline cannot work before R1-12: there is no service worker until then. With no network and a token that has run out, the library retries for about 26 seconds, which the screen shortens to a moment; after a failed token renewal it also holds the failure for a 60 second cooldown, so Try again may need to wait that long. A token the server refuses outright signs you out with the "You were signed out" message.)
 10. On the sign-in screen, in Google tap Cancel (or Back): you return with "Sign-in was cancelled."
 11. Check in Supabase (Table editor, staging): one `tutors` row for you, with your name, subjects, UPI ID and language. Nothing in `batches` or `students`.
 
