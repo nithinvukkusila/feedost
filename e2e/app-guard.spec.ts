@@ -10,6 +10,12 @@ const ORIGIN = "http://localhost:4173";
 const LOADING = "Opening your book…";
 const notice = (page: Page) => page.locator('[role="alert"][data-kind="error"]');
 const stored = (page: Page) => page.evaluate((k) => localStorage.getItem(k) !== null, SESSION_KEY);
+/** Sign out is on the More screen: open it from home, then tap the button. */
+async function signOutFromMore(page: Page) {
+  await page.getByRole("link", { name: "More", exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/more\/$/);
+  await page.getByRole("button", { name: "Sign out" }).click();
+}
 
 /** Remember, across the page's loads, if the words of the empty home were ever in the DOM. */
 async function watchForHomeContent(page: Page) {
@@ -23,7 +29,7 @@ async function watchForHomeContent(page: Page) {
 const sawHome = (page: Page) => page.evaluate(() => window.sessionStorage.getItem("saw-home"));
 
 test.describe("15, 16: a signed-out visitor", () => {
-  for (const route of ["home", "setup/profile", "setup/upi"]) {
+  for (const route of ["home", "more", "setup/profile", "setup/upi"]) {
     test(`/en/${route}/ never shows tutor content and is replaced with sign-in`, async ({ page }) => {
       await stubSupabase(page);
       await watchForHomeContent(page);
@@ -128,7 +134,7 @@ test.describe("18: signing out", () => {
     await page.goto("/en/home/");
     await expect(page.locator("h1")).toHaveText("Your book is empty.");
     expect(await stored(page)).toBe(true);
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signOutFromMore(page);
     await expect(page).toHaveURL(/\/en\/sign-in\/$/);
     expect(await stored(page)).toBe(false);
     const logout = stub.where((r) => r.path === "/auth/v1/logout");
@@ -147,7 +153,7 @@ test.describe("18: signing out", () => {
     await seedSession(page);
     await page.goto("/en/home/");
     await expect(page.locator("h1")).toBeVisible();
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signOutFromMore(page);
     await expect(page).toHaveURL(/\/en\/sign-in\/$/);
     expect(await stored(page)).toBe(false);
   });
@@ -176,7 +182,7 @@ test.describe("19: a session that ends on its own", () => {
     const other = await context.newPage();
     await other.goto("/en/home/");
     await expect(other.locator("h1")).toBeVisible();
-    await other.getByRole("button", { name: "Sign out" }).click();
+    await signOutFromMore(other);
     await expect(other).toHaveURL(/\/en\/sign-in\/$/);
     await expect(page).toHaveURL(/\/en\/sign-in\/$/);
     await expect(notice(page)).toHaveText("You were signed out. Sign in again to carry on.");
@@ -213,8 +219,9 @@ test.describe("32: the empty home", () => {
     await expect(page.getByText("Adding students arrives in the next update.")).toBeVisible();
     await expect(page.getByText(/add students/i)).toHaveCount(0);
     await expect(page.getByText(/sample data/i)).toHaveCount(0);
-    const signOut = page.getByRole("button", { name: "Sign out" });
-    expect((await box(signOut)).height).toBeGreaterThanOrEqual(44);
+    const more = page.getByRole("link", { name: "More", exact: true });
+    expect((await box(more)).height).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("button")).toHaveCount(0);
   });
 
   test("keeps the saved language of the tutor in step with the page (36)", async ({ page }) => {
@@ -256,7 +263,7 @@ test.describe("49: nothing leaves, nothing is set", () => {
 
 test.describe("46: every app screen, in each language, at 360px and with larger text", () => {
   for (const lang of langs) {
-    for (const route of ["home", "setup/profile", "setup/upi"]) {
+    for (const route of ["home", "more", "setup/profile", "setup/upi"]) {
       test(`/${lang}/${route}/: no sideways scroll, nothing cut, every link and button at least 44px, at 100% and at 130%`, async ({ page }) => {
         await stubSupabase(page, { tutor: completeTutor({ language: lang }) });
         await seedSession(page);

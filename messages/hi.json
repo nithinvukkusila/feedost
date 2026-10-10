@@ -245,7 +245,12 @@
     "callback": "TODO-translate: Signing you in…"
   },
   "more": {
-    "signOut": "TODO-translate: Sign out"
+    "title": "और",
+    "profile": "आपकी प्रोफ़ाइल",
+    "edit": "बदलें",
+    "language": "भाषा",
+    "signOut": "साइन आउट",
+    "back": "होम पर वापस जाएँ"
   },
   "appState": {
     "loading": "TODO-translate: Opening your book…",
@@ -299,6 +304,7 @@
   },
   "home": {
     "hello": "TODO-translate: Hello, {name}",
+    "more": "और",
     "empty": {
       "title": "TODO-translate: Your book is empty.",
       "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",

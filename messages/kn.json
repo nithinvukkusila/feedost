@@ -245,7 +245,12 @@
     "callback": "TODO-translate: Signing you in…"
   },
   "more": {
-    "signOut": "TODO-translate: Sign out"
+    "title": "TODO-translate: More",
+    "profile": "TODO-translate: Your profile",
+    "edit": "TODO-translate: Edit",
+    "language": "ಭಾಷೆ",
+    "signOut": "TODO-translate: Sign out",
+    "back": "TODO-translate: Back to home"
   },
   "appState": {
     "loading": "TODO-translate: Opening your book…",
@@ -299,6 +304,7 @@
   },
   "home": {
     "hello": "TODO-translate: Hello, {name}",
+    "more": "TODO-translate: More",
     "empty": {
       "title": "TODO-translate: Your book is empty.",
       "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",

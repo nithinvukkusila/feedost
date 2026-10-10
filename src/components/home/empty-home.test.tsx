@@ -1,25 +1,21 @@
 // Spec R1-1, criterion 32: the empty home, with the real English words.
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { brand } from "@/config/brand";
 import type { Tutor } from "@/lib/tutor";
 import { renderWithWords } from "@/test-utils/render-with-words";
 
-const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
+const push = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), push }) }));
 
 const held: { tutor: Tutor } = { tutor: { id: "u", email: "m@example.com", name: "Meena Iyer", language: "en", upiId: "m@okhdfc", subjects: ["maths"] } };
 vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: held.tutor, setTutor: vi.fn() }) }));
-const signOut = vi.fn();
-vi.mock("@/lib/auth", () => ({ signOut: () => signOut() }));
 
 import { EmptyHome, firstName } from "./empty-home";
 
 afterEach(cleanup);
 beforeEach(() => {
-  replace.mockReset();
-  signOut.mockReset();
-  signOut.mockResolvedValue(undefined);
+  push.mockReset();
 });
 
 describe("firstName", () => {
@@ -49,13 +45,22 @@ describe("EmptyHome", () => {
     renderWithWords(<EmptyHome />);
     expect(screen.queryByText(/add students/i)).toBeNull();
     expect(screen.queryByText(/sample data/i)).toBeNull();
-    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
-  it("has a plain Sign out button that signs out and goes to sign-in in the page's language", async () => {
-    renderWithWords(<EmptyHome />, "hi");
-    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/hi/sign-in/"));
-    expect(signOut).toHaveBeenCalledTimes(1);
+  it.each([
+    ["en", "More", "/en/more/"],
+    ["hi", "और", "/hi/more/"],
+  ] as const)("has a More link in %s that goes to the More screen in the page's language", (locale, word, href) => {
+    renderWithWords(<EmptyHome />, locale);
+    const link = screen.getByRole("link", { name: word });
+    expect(link.getAttribute("href")).toBe(href);
+    fireEvent.click(link);
+    expect(push).toHaveBeenCalledWith(href);
+  });
+
+  it("no longer carries a Sign out button: that is on the More screen", () => {
+    renderWithWords(<EmptyHome />);
+    expect(screen.queryByRole("button", { name: "Sign out" })).toBeNull();
   });
 });

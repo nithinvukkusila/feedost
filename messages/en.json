@@ -245,7 +245,12 @@
     "callback": "Signing you in…"
   },
   "more": {
-    "signOut": "Sign out"
+    "title": "More",
+    "profile": "Your profile",
+    "edit": "Edit",
+    "language": "Language",
+    "signOut": "Sign out",
+    "back": "Back to home"
   },
   "appState": {
     "loading": "Opening your book…",
@@ -299,6 +304,7 @@
   },
   "home": {
     "hello": "Hello, {name}",
+    "more": "More",
     "empty": {
       "title": "Your book is empty.",
       "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
