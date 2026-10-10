@@ -40,8 +40,9 @@ const go = (to: Place): Decision => ({ action: "go", to });
 const stay: Decision = { action: "stay" };
 const wait: Decision = { action: "wait" };
 
-const places: Place[] = ["sign-in", "callback", "home", "more", "setup-profile", "setup-upi"];
-const appPlaces: Place[] = ["home", "more", "setup-profile", "setup-upi"];
+const studentPlaces: Place[] = ["students", "student-new", "student-edit", "batches", "batch-edit", "attendance"];
+const places: Place[] = ["sign-in", "callback", "home", "more", ...studentPlaces, "setup-profile", "setup-upi"];
+const appPlaces: Place[] = ["home", "more", ...studentPlaces, "setup-profile", "setup-upi"];
 
 describe("nextRoute: the table (criterion 17)", () => {
   const cases: [string, RouteInput["session"], ProfileFields | undefined, Place, Decision][] = [
@@ -60,6 +61,7 @@ describe("nextRoute: the table (criterion 17)", () => {
       ["step 1 open", "signed-in", profile, "callback", go("setup-profile")],
       ["step 1 open", "signed-in", profile, "home", go("setup-profile")],
       ["step 1 open", "signed-in", profile, "more", go("setup-profile")],
+      ...studentPlaces.map((p) => ["step 1 open", "signed-in", profile, p, go("setup-profile")] as [string, RouteInput["session"], ProfileFields | undefined, Place, Decision]),
       ["step 1 open", "signed-in", profile, "setup-profile", stay],
       ["step 1 open", "signed-in", profile, "setup-upi", go("setup-profile")],
     ] as [string, RouteInput["session"], ProfileFields | undefined, Place, Decision][]),
@@ -68,6 +70,7 @@ describe("nextRoute: the table (criterion 17)", () => {
     ["step 2 open", "signed-in", noUpi, "callback", go("setup-upi")],
     ["step 2 open", "signed-in", noUpi, "home", go("setup-upi")],
     ["step 2 open", "signed-in", noUpi, "more", go("setup-upi")],
+    ...studentPlaces.map((p): [string, RouteInput["session"], ProfileFields | undefined, Place, Decision] => ["step 2 open", "signed-in", noUpi, p, go("setup-upi")]),
     ["step 2 open", "signed-in", noUpi, "setup-profile", stay],
     ["step 2 open", "signed-in", noUpi, "setup-upi", stay],
     // Complete: sign-in and callback go home; everything else stays.
@@ -75,6 +78,7 @@ describe("nextRoute: the table (criterion 17)", () => {
     ["complete", "signed-in", complete, "callback", go("home")],
     ["complete", "signed-in", complete, "home", stay],
     ["complete", "signed-in", complete, "more", stay],
+    ...studentPlaces.map((p): [string, RouteInput["session"], ProfileFields | undefined, Place, Decision] => ["complete", "signed-in", complete, p, stay]),
     ["complete", "signed-in", complete, "setup-profile", stay],
     ["complete", "signed-in", complete, "setup-upi", stay],
   ];
