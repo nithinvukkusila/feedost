@@ -92,6 +92,8 @@ export type Stub = {
   refuseWrites: boolean;
   /** Answer the token endpoint with a refusal, as for a used code. */
   refuseToken: boolean;
+  /** Answer the token endpoint by dropping the connection, as a dead network does (a refresh that cannot be tried). */
+  tokenDown: boolean;
   /** Hold the token endpoint's answer back this many milliseconds, so a spec can look at the page in between. */
   tokenDelayMs: number;
   /** Hold the tutor's row back this many milliseconds (the loading state). */
@@ -139,6 +141,7 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
     networkDown: false,
     refuseWrites: false,
     refuseToken: false,
+    tokenDown: false,
     tokenDelayMs: 0,
     tutorDelayMs: 0,
     logoutFails: false,
@@ -170,6 +173,10 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
       return;
     }
     if (url.pathname === "/auth/v1/token") {
+      if (stub.tokenDown) {
+        await route.abort("failed");
+        return;
+      }
       if (stub.tokenDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, stub.tokenDelayMs));
       if (stub.refuseToken) {
         await json(route, 400, { error: "invalid_grant", error_description: "invalid flow state, no valid flow state found" });
