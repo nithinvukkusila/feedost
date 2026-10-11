@@ -365,3 +365,21 @@ Folder `/private/tmp/claude-502/-Users-nithin-1-person-busnes-feedost-1/72bcbb2c
 - PDFs: `out/hi.pdf`, `out/kn.pdf`, `out/te.pdf` (full fonts); `outsub/hi.pdf`, `outsub/kn.pdf`, `outsub/te.pdf` (subset fonts, the ones to send to a phone).
 - PNGs: `out/{hi,kn,te}-{1,2,3}.png`, `out/{hi,kn,te}-zoom300-1.png`, `cmp/`; HarfBuzz references `ref/{hi,kn,te}.png`.
 - Fonts: `fonts/` (full), `sub/` (subset), `OFL.txt`.
+
+## Build result (R0-3b), 2026-10-11
+
+Built on branch `r0-3b-receipt-maker` by `frontend-dev`. The PDF library is the one in the spike result; the founder approved the two packages on 2026-10-11 (recorded in `docs/BUILD_PLAN.md`).
+
+### Review record: wording NOT reviewed by a native reader
+- **Receipt wording** (`src/lib/receipt/templates.json`): hi, kn, te drafted by `frontend-dev`; **not reviewed** (`templates.review.json`, `pnpm i18n:check --strict` fails until signed). English is the source.
+- **Interface wording** for kn and te in the receipt tool, written as real sentences and no longer marked `TODO-translate`, but **not reviewed by a reader**: `landing.tools.t1.title`, `t1.body`, `t2.title`, `receipt.promo.body`, `receiptForm.privacy`, `receiptForm.preview.unprintable`, `receiptForm.failed`, `receiptForm.saved`, `toolNav.receipt`, `toolNav.reminder`. Hindi interface wording is also an unreviewed draft.
+- Removed key: `landing.tools.tag` ("Coming soon"), unused now that card 1 is a link.
+
+### Changes beyond the plan
+- `Segmented` with three options stacks to one column below 16rem of group width (so at very large text), because Kannada and Telugu "Cash" and "Bank" were clipped at 200% text. At normal size nothing changes.
+- The preview amount is `text-2xl` (was 4xl) and may wrap, for the same reason.
+- `pnpm size` now requires the four receipt pages, reports the on-demand PDF chunks (390 KB gzipped, warn above 450 KB) and the four fonts, and fails if the library text appears in any page's initial scripts.
+
+### Not verified
+Native-reader check of the PDFs (criterion 1, H2), the Android default viewer and the WhatsApp preview, and PDF make time on a low-end phone. Only Chromium on a Mac was used.
+
