@@ -331,3 +331,110 @@ export function checkTemplates(file, reviewFile, { strict = false } = {}) {
 
   return { problems, templateCount, notReviewed, notes };
 }
+
+// ---------------------------------------------------------------------------------------------
+// The waitlist's promise sentences (spec R0-4, criterion 20). They are in messages/ like every
+// other word, but they are a promise about someone's phone number, so each of hi, kn and te also
+// needs a native reader's sign-off in its own review record, and may never be a TODO-translate.
+
+/** What a reader signs: the values of the listed keys in one language's file, as the file stands. */
+export function copyHash(messages, keys) {
+  const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
+  return createHash("sha256").update(JSON.stringify(keys.map((key) => [key, read(key)]))).digest("hex");
+}
+
+/**
+ * Checks the review record of the promise sentences: `keys` are dotted paths into the message files
+ * (for example "waitlistForm.consent"). Returns { problems, notReviewed, notes }. Under `strict` a
+ * language with no valid sign-off, or whose text changed after its sign-off, is a problem.
+ * A promise sentence still marked TODO-translate is always a problem: it cannot be reviewed.
+ */
+export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", strict = false } = {}) {
+  const problems = [];
+  const notes = [];
+  const notReviewed = [];
+  const label = "copy.review.json";
+  const reviewed = locales.filter((l) => l !== "en");
+
+  let record = null;
+  if (!existsSync(reviewFile)) {
+    problems.push(`${label} does not exist; it records who has read the ${reviewed.join(", ")} promise sentences`);
+  } else {
+    try {
+      record = JSON.parse(readFileSync(reviewFile, "utf8"));
+      if (!isObject(record)) {
+        problems.push(`${label} is ${describe(record)}, not an object`);
+        record = null;
+      }
+    } catch (error) {
+      problems.push(`${label} is not valid JSON: ${error.message}`);
+    }
+  }
+  if (record) {
+    for (const key of Object.keys(record)) {
+      if (!reviewed.includes(key)) problems.push(`${label} has "${key}", which is not one of ${reviewed.join(", ")}`);
+    }
+  }
+
+  for (const locale of reviewed) {
+    let messages;
+    try {
+      messages = JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), "utf8"));
+    } catch {
+      messages = null; // the main check reports the missing or broken file
+    }
+    let current = null;
+    if (messages) {
+      const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
+      const marked = keys.filter((key) => typeof read(key) === "string" && read(key).startsWith(TODO));
+      for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a promise sentence and cannot be marked ${TODO}; write it and have it read`);
+      if (marked.length === 0) current = copyHash(messages, keys);
+    }
+
+    const entry = record?.[locale];
+    if (!record) {
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!isObject(entry)) {
+      problems.push(`${label} is missing "${locale}"`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!STATUSES.includes(entry.status)) {
+      problems.push(`${label} "${locale}": status must be "reviewed" or "not reviewed", found ${JSON.stringify(entry.status)}`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (entry.status === "reviewed") {
+      let complete = true;
+      if (!isText(entry.reviewer)) {
+        problems.push(`${label} "${locale}" is marked reviewed with no reviewer's name`);
+        complete = false;
+      }
+      if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
+        problems.push(`${label} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
+        complete = false;
+      }
+      if (typeof entry.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(entry.sha256)) {
+        problems.push(`${label} "${locale}" is marked reviewed with no sha256 of the text that was read`);
+        complete = false;
+      }
+      if (complete && current !== null && entry.sha256 === current) continue; // signed off, and the text has not changed since
+      notReviewed.push(locale);
+      if (complete && current !== null) {
+        const changed = `messages/${locale}.json promise sentences changed after the review of ${entry.date} by ${entry.reviewer}`;
+        if (strict) problems.push(changed);
+        else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
+      }
+      continue;
+    }
+    notReviewed.push(locale);
+    if (strict) {
+      problems.push(`messages/${locale}.json promise sentences are not reviewed (${keys.length} keys): get a native reader's sign-off and record it in ${label}`);
+    } else if (current !== null) {
+      notes.push(`${locale}: promise sentences not reviewed; current text ${current}`);
+    }
+  }
+  return { problems, notReviewed, notes };
+}

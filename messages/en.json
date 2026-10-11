@@ -87,10 +87,7 @@
     },
     "waitlist": {
       "title": "Put your name in the book.",
-      "body": "The waitlist opens soon. You will be able to put your name here.",
-      "soon": "The waitlist opens soon. Come back to this page to join.",
-      "button": "Join the waitlist",
-      "reason": "Opens soon"
+      "body": "Put your name here and we will message you on WhatsApp the day the app opens."
     },
     "footer": {
       "line": "Free fee collection for home tutors in India.",
@@ -319,5 +316,70 @@
     "physics": "Physics",
     "chemistry": "Chemistry",
     "accounts": "Accounts"
+  },
+  "waitlistForm": {
+    "name": {
+      "label": "Your name",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your name."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use 60 characters or fewer. Leave out angle brackets."
+      }
+    },
+    "phone": {
+      "label": "WhatsApp number",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your WhatsApp number."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use a 10-digit mobile number."
+      },
+      "placeholder": "+91"
+    },
+    "city": {
+      "label": "City",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your city."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use 40 characters or fewer. Leave out angle brackets."
+      }
+    },
+    "students": {
+      "label": "How many students?",
+      "choose": "Choose how many",
+      "under10": "Under 10",
+      "from10": "10 to 30",
+      "from30": "30 to 60",
+      "over60": "More than 60",
+      "missing": {
+        "word": "Missing",
+        "fix": "Choose a number."
+      }
+    },
+    "consent": "We will use your number only to message you on WhatsApp when the app opens. Nothing is sold or shared.",
+    "submit": "Join the waitlist",
+    "working": "Saving…",
+    "done": {
+      "stamp": "Listed",
+      "title": "You are on the list.",
+      "body": "We will message you on WhatsApp the day the app opens."
+    },
+    "failed": {
+      "title": "Could not save.",
+      "detail": "Check your connection and try again."
+    },
+    "rateLimited": {
+      "title": "Too many tries.",
+      "detail": "Please try again in an hour."
+    },
+    "noScript": "This form needs JavaScript turned on."
   }
 }

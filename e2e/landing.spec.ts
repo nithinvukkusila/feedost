@@ -208,42 +208,35 @@ for (const lang of langs) {
       expect(b!.width).toBeGreaterThanOrEqual(360 * 0.8);
     });
 
-    test(`criterion 12 [${lang}]: the waitlist block is the unavailable Button: native disabled, dashed, no shadow, a reason, no inputs`, async ({ page }) => {
+    test(`criterion 12 [${lang}]: the waitlist block is the live form (R0-4): heading, body, one form, one black button, no leftover placeholder`, async ({ page }) => {
       await openLanding(page, lang);
       const section = page.locator("section#waitlist");
       await expect(section).toHaveCount(1);
       await expect(section.locator("h2")).toHaveText(shown(lang, "landing.waitlist.title"));
       await expect(section.getByText(shown(lang, "landing.waitlist.body"), { exact: true })).toBeVisible();
-      await expect(section.getByText(shown(lang, "landing.waitlist.soon"), { exact: true })).toBeVisible();
-      const button = section.locator("button");
+      await expect(section.locator("form")).toHaveCount(1);
+      const button = section.locator("form button[type=submit]");
       await expect(button).toHaveCount(1);
-      await expect(button).toHaveText(shown(lang, "landing.waitlist.button"));
-      await expect(button).toBeDisabled();
-      expect(await button.evaluate((el) => (el as HTMLButtonElement).disabled && el.hasAttribute("disabled"))).toBe(true);
-      const style = await css(button, ["border-top-style", "border-left-style", "background-color"]);
-      expect(style["border-top-style"]).toBe("dashed");
-      expect(style["border-left-style"]).toBe("dashed");
-      expect(style["background-color"]).toBe("rgba(0, 0, 0, 0)");
-      expect(await shadow(button)).toBe("none");
-      const reason = section.getByText(shown(lang, "landing.waitlist.reason"), { exact: true });
-      await expect(reason).toBeVisible();
-      const describedBy = await button.getAttribute("aria-describedby");
-      expect(describedBy).toBeTruthy();
-      await expect(page.locator(`[id="${describedBy}"]`)).toHaveText(shown(lang, "landing.waitlist.reason"));
-      // It must not look like a form: no field of any kind, no link, no other button.
-      await expect(section.locator("input, select, textarea, form, a, [contenteditable]")).toHaveCount(0);
-      // Native disabled means it is not in the tab order.
-      await button.focus({ timeout: 1000 }).catch(() => undefined);
-      expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("BUTTON");
+      await expect(button).toHaveText(shown(lang, "waitlistForm.submit"));
+      await expect(button).toBeEnabled();
+      // The old placeholder is gone: no disabled button, no "opens soon" line, no dashed outline.
+      await expect(section.locator("button[disabled]")).toHaveCount(0);
+      const style = await css(button, ["border-top-style"]);
+      expect(style["border-top-style"]).toBe("solid");
+      expect(await shadow(button)).not.toBe("none");
+      const words = await pageWords(page);
+      expect(words).not.toContain("TODO-translate");
     });
 
-    test(`criterion 14 [${lang}]: no form, input or select; no request to another origin; nothing sent or stored`, async ({ page, baseURL, context }) => {
+    test(`criterion 14 [${lang}]: the one waitlist form is there; from load to scroll-end no request to another origin, none but GET, nothing stored`, async ({ page, baseURL, context }) => {
       const requests: { url: string; method: string }[] = [];
       page.on("request", (r) => requests.push({ url: r.url(), method: r.method() }));
       await openLanding(page, lang);
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
       await page.waitForLoadState("networkidle");
-      await expect(page.locator("form, input, select, textarea, [contenteditable]")).toHaveCount(0);
+      // R0-4: exactly one form (the waitlist), and it sends nothing until someone submits.
+      await expect(page.locator("form")).toHaveCount(1);
+      await expect(page.locator("section#waitlist form")).toHaveCount(1);
       const origin = new URL(baseURL!).origin;
       expect(requests.length).toBeGreaterThan(0);
       expect(requests.filter((r) => new URL(r.url).origin !== origin)).toEqual([]);
@@ -529,7 +522,7 @@ test.describe("fonts and type (criterion 18)", () => {
 
 test.describe("the key flow on slow 4G, one run per language (criteria 2, 11, 12)", () => {
   for (const lang of langs) {
-    test(`criterion 11 and 12 [${lang}]: open on slow 4G, tap the hero button, land on the waitlist block that says it opens soon`, async ({ page }) => {
+    test(`criterion 11 and 12 [${lang}]: open on slow 4G, tap the hero button, land on the waitlist form`, async ({ page }) => {
       await slow4G(page);
       await page.goto(path(lang), { waitUntil: "load" });
       await expect(page.locator("h1")).toHaveText(shown(lang, "landing.hero.title"));
@@ -538,7 +531,7 @@ test.describe("the key flow on slow 4G, one run per language (criteria 2, 11, 12
       await page.locator("main section").first().getByRole("link").first().tap();
       await expect(page).toHaveURL(new RegExp(`${path(lang)}#waitlist$`));
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
-      await expect(waitlist.getByText(shown(lang, "landing.waitlist.reason"), { exact: true })).toBeInViewport();
+      await expect(waitlist.getByRole("button", { name: shown(lang, "waitlistForm.submit") })).toBeVisible();
       // The header button does the same from the top of the page.
       await page.evaluate(() => window.scrollTo(0, 0));
       await expect(waitlist).not.toBeInViewport();
@@ -557,7 +550,10 @@ test.describe("JavaScript off (criterion 2)", () => {
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
       await expect(page.locator("h1")).toHaveText(shown(lang, "landing.hero.title"));
       await expect(page.locator("main h2")).toHaveCount(4);
-      await expect(page.locator("section#waitlist").getByText(shown(lang, "landing.waitlist.reason"), { exact: true })).toBeAttached();
+      // R0-4, criterion 22: heading and the needs-JavaScript line, and no dead inputs.
+      await expect(page.locator("section#waitlist h2")).toHaveText(shown(lang, "landing.waitlist.title"));
+      await expect(page.locator("section#waitlist").getByText(shown(lang, "waitlistForm.noScript"), { exact: true })).toBeAttached();
+      await expect(page.locator("section#waitlist input, section#waitlist select, section#waitlist button")).toHaveCount(0);
       await expect(page.locator("section#tools article")).toHaveCount(2);
       await expect(page.locator('section[aria-labelledby="promises-title"] ol > li')).toHaveCount(4);
       await expect(page.locator('[role="group"]').getByText("₹18,500", { exact: true })).toBeVisible();

@@ -44,8 +44,8 @@ describe("the plain namespaces", () => {
 });
 
 describe("the fee reminder's words", () => {
-  it("are the one plain namespace", () => {
-    expect([...plainNamespaces]).toEqual(["reminderForm"]);
+  it("are one of the two plain namespaces, the other being the waitlist form's", () => {
+    expect([...plainNamespaces]).toEqual(["reminderForm", "waitlistForm"]);
   });
 
   it.each(locales)("give every error a state word and a sentence that says how to fix it, in %s.json", (locale) => {
