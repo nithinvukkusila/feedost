@@ -3,10 +3,13 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync } from "node:fs";
-import { check, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkReceiptTemplates, checkTemplates, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
+
+const RECEIPT_TEMPLATES = "src/lib/receipt/templates.json";
+const RECEIPT_REVIEW = "src/lib/receipt/templates.review.json";
 
 const strict = process.argv.includes("--strict");
 const { problems, keyCount, todoCount } = check("messages", { strict });
@@ -22,6 +25,18 @@ if (existsSync(TEMPLATES)) {
     waiting.length === 0
       ? `; ${templates.templateCount} templates, all ${total} languages reviewed`
       : `; ${templates.templateCount} templates, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
+}
+
+// The fee receipt's wording has its own file and its own review record (spec R0-3, criterion 26).
+if (existsSync(RECEIPT_TEMPLATES)) {
+  const receipt = checkReceiptTemplates(RECEIPT_TEMPLATES, RECEIPT_REVIEW, { strict });
+  problems.push(...receipt.problems);
+  for (const note of receipt.notes) console.log(`receipt ${note}`);
+  const waiting = receipt.notReviewed;
+  templateSummary +=
+    waiting.length === 0
+      ? `; receipt: ${receipt.templateCount} texts, all ${locales.length - 1} languages reviewed`
+      : `; receipt: ${receipt.templateCount} texts, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
 }
 
 for (const problem of problems) console.error(problem);

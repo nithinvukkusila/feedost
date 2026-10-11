@@ -2,7 +2,9 @@
 // One key in the browser's own storage, holding the tutor's cleaned UPI ID and name and nothing
 // else: no parent's name, amount, month, tone or language. It never leaves the phone. Every call is
 // guarded, so a browser that blocks storage (private mode, an in-app browser) just has no switch.
-import { checkName, checkUpiId } from "./reminder";
+// From fields.ts, not reminder.ts: the receipt maker reads the remembered name too, and must not pull
+// the reminder's message templates into its page.
+import { checkName, checkUpiId } from "@/lib/fields";
 
 /** The storage key. It does not contain the product name. */
 export const REMEMBER_KEY = "reminder-payee";

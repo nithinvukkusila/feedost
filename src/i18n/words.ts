@@ -15,7 +15,7 @@ import type en from "../../messages/en.json";
 type Messages = typeof en;
 
 /** The namespaces that may be handed to an island as words. Each holds plain text only. */
-export const plainNamespaces = ["reminderForm"] as const satisfies readonly (keyof Messages)[];
+export const plainNamespaces = ["reminderForm", "receiptForm"] as const satisfies readonly (keyof Messages)[];
 export type PlainNamespace = (typeof plainNamespaces)[number];
 
 type Tree = { [key: string]: string | Tree };

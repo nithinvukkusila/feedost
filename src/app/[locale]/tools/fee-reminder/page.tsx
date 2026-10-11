@@ -33,7 +33,7 @@ export default async function FeeReminderPage() {
   const [locale, t, words] = await Promise.all([getLocale(), getTranslations("reminder"), getWords("reminderForm")]);
   return (
     <div className="bg-page-ruled">
-      <ToolHeader />
+      <ToolHeader current="reminder" />
       <main className="mx-auto w-full max-w-2xl px-5 pt-6">
         <p className="type-label text-cloth">{t("kicker")}</p>
         <h1 className="type-headline mt-2 text-5xl wrap-break-word">{t("title")}</h1>

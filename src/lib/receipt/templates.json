@@ -1,0 +1,166 @@
+{
+  "en": {
+    "heading": "Fee receipt",
+    "date": "Date: {date}",
+    "sentence": "Received with thanks {amount} from the family of {student} by {mode} towards the tuition fee for {month}.",
+    "stamp": "PAID",
+    "footer": "Made with {brand} ({domain}), a free tool for tutors",
+    "whatsApp": "Fee receipt for {month}. The PDF is attached.",
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "shortMonths": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
+    "modes": {
+      "upi": "UPI",
+      "cash": "cash",
+      "bank": "bank transfer"
+    }
+  },
+  "hi": {
+    "heading": "फ़ीस रसीद",
+    "date": "दिनांक: {date}",
+    "sentence": "{student} के परिवार से {month} की ट्यूशन फ़ीस के रूप में {mode} {amount} धन्यवाद सहित प्राप्त हुए।",
+    "stamp": "भुगतान प्राप्त",
+    "footer": "{brand} ({domain}) से बनाया गया, ट्यूटरों के लिए एक मुफ़्त टूल",
+    "whatsApp": "{month} की फ़ीस रसीद। PDF साथ में है।",
+    "months": [
+      "जनवरी",
+      "फ़रवरी",
+      "मार्च",
+      "अप्रैल",
+      "मई",
+      "जून",
+      "जुलाई",
+      "अगस्त",
+      "सितंबर",
+      "अक्टूबर",
+      "नवंबर",
+      "दिसंबर"
+    ],
+    "shortMonths": [
+      "जन",
+      "फ़र",
+      "मार्च",
+      "अप्रै",
+      "मई",
+      "जून",
+      "जुला",
+      "अग",
+      "सित",
+      "अक्टू",
+      "नव",
+      "दिस"
+    ],
+    "modes": {
+      "upi": "UPI से",
+      "cash": "नकद में",
+      "bank": "बैंक से"
+    }
+  },
+  "kn": {
+    "heading": "ಶುಲ್ಕ ರಸೀದಿ",
+    "date": "ದಿನಾಂಕ: {date}",
+    "sentence": "{student} ಅವರ ಕುಟುಂಬದಿಂದ {month} ತಿಂಗಳ ಟ್ಯೂಷನ್ ಶುಲ್ಕವಾಗಿ {mode} {amount} ಅನ್ನು ಧನ್ಯವಾದಗಳೊಂದಿಗೆ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.",
+    "stamp": "ಪಾವತಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ",
+    "footer": "{brand} ({domain}) ಮೂಲಕ ರಚಿಸಲಾಗಿದೆ, ಟ್ಯೂಟರ್‌ಗಳಿಗಾಗಿ ಉಚಿತ ಉಪಕರಣ",
+    "whatsApp": "{month} ತಿಂಗಳ ಶುಲ್ಕ ರಸೀದಿ. PDF ಲಗತ್ತಿಸಲಾಗಿದೆ.",
+    "months": [
+      "ಜನವರಿ",
+      "ಫೆಬ್ರವರಿ",
+      "ಮಾರ್ಚ್",
+      "ಏಪ್ರಿಲ್",
+      "ಮೇ",
+      "ಜೂನ್",
+      "ಜುಲೈ",
+      "ಆಗಸ್ಟ್",
+      "ಸೆಪ್ಟೆಂಬರ್",
+      "ಅಕ್ಟೋಬರ್",
+      "ನವೆಂಬರ್",
+      "ಡಿಸೆಂಬರ್"
+    ],
+    "shortMonths": [
+      "ಜನ",
+      "ಫೆಬ್ರ",
+      "ಮಾರ್ಚ್",
+      "ಏಪ್ರಿ",
+      "ಮೇ",
+      "ಜೂನ್",
+      "ಜುಲೈ",
+      "ಆಗ",
+      "ಸೆಪ್ಟೆಂ",
+      "ಅಕ್ಟೋ",
+      "ನವೆಂ",
+      "ಡಿಸೆಂ"
+    ],
+    "modes": {
+      "upi": "UPI ಮೂಲಕ",
+      "cash": "ನಗದು ರೂಪದಲ್ಲಿ",
+      "bank": "ಬ್ಯಾಂಕ್ ಮೂಲಕ"
+    }
+  },
+  "te": {
+    "heading": "ఫీజు రసీదు",
+    "date": "తేదీ: {date}",
+    "sentence": "{student} కుటుంబం నుండి {month} నెల ట్యూషన్ ఫీజుగా {mode} {amount} కృతజ్ఞతలతో స్వీకరించాము.",
+    "stamp": "చెల్లింపు అందింది",
+    "footer": "{brand} ({domain}) తో తయారు చేయబడింది, ట్యూటర్ల కోసం ఉచిత సాధనం",
+    "whatsApp": "{month} నెల ఫీజు రసీదు. PDF జత చేయబడింది.",
+    "months": [
+      "జనవరి",
+      "ఫిబ్రవరి",
+      "మార్చి",
+      "ఏప్రిల్",
+      "మే",
+      "జూన్",
+      "జూలై",
+      "ఆగస్టు",
+      "సెప్టెంబర్",
+      "అక్టోబర్",
+      "నవంబర్",
+      "డిసెంబర్"
+    ],
+    "shortMonths": [
+      "జన",
+      "ఫిబ్ర",
+      "మార్చి",
+      "ఏప్రి",
+      "మే",
+      "జూన్",
+      "జూలై",
+      "ఆగ",
+      "సెప్టెం",
+      "అక్టో",
+      "నవం",
+      "డిసెం"
+    ],
+    "modes": {
+      "upi": "UPI ద్వారా",
+      "cash": "నగదు రూపంలో",
+      "bank": "బ్యాంక్ ద్వారా"
+    }
+  }
+}

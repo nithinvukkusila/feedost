@@ -165,6 +165,87 @@ export function templateHash(entry) {
 }
 
 /**
+ * The review record shared by both template files: one entry per language other than English, the
+ * source. Returns the languages with no valid sign-off. `usable` maps a language to its entry when the
+ * entry's shape is right (so it can be hashed); `hashOf` hashes one entry.
+ */
+function checkReview({ reviewFile, usable, hashOf, what, label, problems, notes, strict }) {
+  // The review record: one entry per language other than English, the source.
+  const reviewLabel = label.replace(/templates\.json$/, "templates.review.json");
+  const reviewed = locales.filter((l) => l !== "en");
+  let record = null;
+  if (!existsSync(reviewFile)) {
+    problems.push(`${reviewLabel} does not exist; it records who has read the ${reviewed.join(", ")} templates`);
+  } else {
+    try {
+      record = JSON.parse(readFileSync(reviewFile, "utf8"));
+      if (!isObject(record)) {
+        problems.push(`${reviewLabel} is ${describe(record)}, not an object`);
+        record = null;
+      }
+    } catch (error) {
+      problems.push(`${reviewLabel} is not valid JSON: ${error.message}`);
+    }
+  }
+
+  const notReviewed = [];
+  if (record) {
+    for (const key of Object.keys(record)) {
+      if (!reviewed.includes(key)) problems.push(`${reviewLabel} has "${key}", which is not one of ${reviewed.join(", ")}`);
+    }
+  }
+  for (const locale of reviewed) {
+    const entry = record?.[locale];
+    const current = usable[locale] ? hashOf(usable[locale]) : null;
+    if (!record) {
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!isObject(entry)) {
+      problems.push(`${reviewLabel} is missing "${locale}"`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!STATUSES.includes(entry.status)) {
+      problems.push(`${reviewLabel} "${locale}": status must be "reviewed" or "not reviewed", found ${JSON.stringify(entry.status)}`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (entry.status === "reviewed") {
+      let complete = true;
+      if (!isText(entry.reviewer)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no reviewer's name`);
+        complete = false;
+      }
+      if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
+        complete = false;
+      }
+      if (typeof entry.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(entry.sha256)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no sha256 of the text that was read`);
+        complete = false;
+      }
+      if (complete && current !== null && entry.sha256 === current) continue; // signed off, and the text has not changed since
+      notReviewed.push(locale);
+      if (complete && current !== null) {
+        const changed = `${label} "${locale}" changed after the review of ${entry.date} by ${entry.reviewer}`;
+        if (strict) problems.push(changed);
+        else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
+      }
+      continue;
+    }
+    notReviewed.push(locale);
+    if (strict) {
+      problems.push(`${label} "${locale}" is not reviewed (${what}): get a native reader's sign-off and record it in ${reviewLabel}`);
+    } else if (current !== null) {
+      notes.push(`${locale}: not reviewed; current text ${current}`);
+    }
+  }
+
+  return notReviewed;
+}
+
+/**
  * Checks the templates file and its review record.
  * Returns { problems, templateCount, notReviewed, notes }: `notReviewed` lists the languages with no
  * valid sign-off, `notes` are lines to print (the hash to copy into the record). Under `strict`
@@ -256,78 +337,144 @@ export function checkTemplates(file, reviewFile, { strict = false } = {}) {
     if (shapeOk) usable[locale] = entry;
   }
 
-  // The review record: one entry per language other than English, the source.
-  const reviewLabel = "templates.review.json";
-  const reviewed = locales.filter((l) => l !== "en");
-  let record = null;
-  if (!existsSync(reviewFile)) {
-    problems.push(`${reviewLabel} does not exist; it records who has read the ${reviewed.join(", ")} templates`);
-  } else {
-    try {
-      record = JSON.parse(readFileSync(reviewFile, "utf8"));
-      if (!isObject(record)) {
-        problems.push(`${reviewLabel} is ${describe(record)}, not an object`);
-        record = null;
-      }
-    } catch (error) {
-      problems.push(`${reviewLabel} is not valid JSON: ${error.message}`);
-    }
+  const notReviewed = checkReview({ reviewFile, usable, hashOf: templateHash, what: "2 templates, 12 month names", label, problems, notes, strict });
+
+  return { problems, templateCount, notReviewed, notes };
+}
+
+// ---------------------------------------------------------------------------------------------
+// The fee receipt's wording (spec R0-3, criteria 16, 17, 26 and 32). Same rules as the reminder's
+// templates, a different shape: six texts, 12 month names, 12 short month names and three payment
+// phrases per language. A parent reads the printed receipt, so none of it can be `TODO-translate`.
+
+const RECEIPT_TEXTS = {
+  heading: [],
+  date: ["{date}"],
+  sentence: ["{amount}", "{student}", "{mode}", "{month}"],
+  stamp: [],
+  footer: ["{brand}", "{domain}"],
+  whatsApp: ["{month}"],
+};
+const RECEIPT_MODES = ["upi", "cash", "bank"];
+const RECEIPT_LISTS = ["months", "shortMonths"];
+// Words a receipt must never use: it is a self-issued slip, it does not verify anything (criterion 17).
+const RECEIPT_FORBIDDEN = /verified|official|\bgst\b|tax invoice|tracked/i;
+
+/** What a reviewer signs: a language's receipt wording, as the file stands. */
+export function receiptHash(entry) {
+  const { heading, date, sentence, stamp, footer, whatsApp, months, shortMonths, modes } = entry;
+  return createHash("sha256").update(JSON.stringify({ heading, date, sentence, stamp, footer, whatsApp, months, shortMonths, modes })).digest("hex");
+}
+
+/**
+ * Checks the receipt wording file and its review record. Returns the same shape as checkTemplates.
+ */
+export function checkReceiptTemplates(file, reviewFile, { strict = false } = {}) {
+  const problems = [];
+  const notes = [];
+  const label = "receipt templates.json";
+  const empty = { problems, templateCount: 0, notReviewed: [], notes };
+
+  let tree;
+  try {
+    tree = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    problems.push(`${label} is not valid JSON: ${error.message}`);
+    return empty;
+  }
+  if (!isObject(tree)) {
+    problems.push(`${label} is ${describe(tree)}, not an object`);
+    return empty;
+  }
+  for (const key of Object.keys(tree)) {
+    if (!locales.includes(key)) problems.push(`${label} has "${key}", which is not one of ${locales.join(", ")}`);
   }
 
-  const notReviewed = [];
-  if (record) {
-    for (const key of Object.keys(record)) {
-      if (!reviewed.includes(key)) problems.push(`${reviewLabel} has "${key}", which is not one of ${reviewed.join(", ")}`);
-    }
-  }
-  for (const locale of reviewed) {
-    const entry = record?.[locale];
-    const current = usable[locale] ? templateHash(usable[locale]) : null;
-    const what = "2 templates, 12 month names";
-    if (!record) {
-      notReviewed.push(locale);
-      continue;
-    }
+  const allowed = [...Object.keys(RECEIPT_TEXTS), ...RECEIPT_LISTS, "modes"];
+  let templateCount = 0;
+  const usable = {};
+  for (const locale of locales) {
+    const entry = tree[locale];
     if (!isObject(entry)) {
-      problems.push(`${reviewLabel} is missing "${locale}"`);
-      notReviewed.push(locale);
+      problems.push(`${label} is missing "${locale}"`);
       continue;
     }
-    if (!STATUSES.includes(entry.status)) {
-      problems.push(`${reviewLabel} "${locale}": status must be "reviewed" or "not reviewed", found ${JSON.stringify(entry.status)}`);
-      notReviewed.push(locale);
-      continue;
+    for (const key of Object.keys(entry)) {
+      if (!allowed.includes(key)) problems.push(`${label} "${locale}" has "${key}", which is not one of ${allowed.join(", ")}`);
     }
-    if (entry.status === "reviewed") {
-      let complete = true;
-      if (!isText(entry.reviewer)) {
-        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no reviewer's name`);
-        complete = false;
+    let shapeOk = true;
+    const script = SCRIPTS[locale];
+    const check = (name, text) => {
+      if (text.includes(TODO)) problems.push(`${label} "${name}" contains ${TODO}; receipt wording cannot be marked, see the review record`);
+      if (RECEIPT_FORBIDDEN.test(text)) problems.push(`${label} "${name}" uses a word a receipt must not use (verified, official, GST, tax invoice, tracked)`);
+    };
+
+    for (const [key, slots] of Object.entries(RECEIPT_TEXTS)) {
+      const name = `${locale}.${key}`;
+      const text = entry[key];
+      if (!isText(text)) {
+        problems.push(`${label} "${name}" must be a text that is not empty`);
+        shapeOk = false;
+        continue;
       }
-      if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
-        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
-        complete = false;
+      templateCount += 1;
+      check(name, text);
+      for (const slot of slots) {
+        const times = count(text, slot);
+        if (times !== 1) problems.push(`${label} "${name}": ${slot} appears ${times} times`);
       }
-      if (typeof entry.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(entry.sha256)) {
-        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no sha256 of the text that was read`);
-        complete = false;
-      }
-      if (complete && current !== null && entry.sha256 === current) continue; // signed off, and the text has not changed since
-      notReviewed.push(locale);
-      if (complete && current !== null) {
-        const changed = `${label} "${locale}" changed after the review of ${entry.date} by ${entry.reviewer}`;
-        if (strict) problems.push(changed);
-        else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
-      }
-      continue;
+      let rest = text;
+      for (const slot of slots) rest = rest.split(slot).join("");
+      if (/[{}]/.test(rest)) problems.push(`${label} "${name}" has a brace that is not one of ${slots.join(" ") || "no placeholders"}`);
+      if (script && !script.test.test(text)) problems.push(`${label} "${name}" has no ${script.name} text`);
     }
-    notReviewed.push(locale);
-    if (strict) {
-      problems.push(`${label} "${locale}" is not reviewed (${what}): get a native reader's sign-off and record it in ${reviewLabel}`);
-    } else if (current !== null) {
-      notes.push(`${locale}: not reviewed; current text ${current}`);
+    // English pasted in is not a translation. The brand-only footer is the one line that may match.
+    if (locale !== "en" && isText(entry.sentence) && entry.sentence === tree.en?.sentence) {
+      problems.push(`${label} "${locale}.sentence" is the same as the English one`);
     }
+
+    for (const key of RECEIPT_LISTS) {
+      const list = entry[key];
+      if (!Array.isArray(list) || !list.every(isText)) {
+        problems.push(`${label} "${locale}.${key}" must be a list of 12 names, none of them empty`);
+        shapeOk = false;
+        continue;
+      }
+      if (list.length !== 12) {
+        problems.push(`${label} "${locale}.${key}" has ${list.length} names, expected 12`);
+        shapeOk = false;
+      } else if (new Set(list).size !== 12) {
+        problems.push(`${label} "${locale}.${key}" has the same name twice`);
+      }
+      list.forEach((name, index) => {
+        check(`${locale}.${key}`, name);
+        if (/[{}]/.test(name)) problems.push(`${label} "${locale}.${key}" name ${index + 1} has a brace`);
+        else if (script && !script.test.test(name)) problems.push(`${label} "${locale}.${key}" name ${index + 1} has no ${script.name} text`);
+      });
+    }
+
+    const modes = entry.modes;
+    if (!isObject(modes) || !RECEIPT_MODES.every((m) => isText(modes[m]))) {
+      problems.push(`${label} "${locale}.modes" must have a text for each of ${RECEIPT_MODES.join(", ")}`);
+      shapeOk = false;
+    } else {
+      for (const key of Object.keys(modes)) {
+        if (!RECEIPT_MODES.includes(key)) problems.push(`${label} "${locale}.modes" has "${key}", which is not one of ${RECEIPT_MODES.join(", ")}`);
+      }
+      for (const mode of RECEIPT_MODES) check(`${locale}.modes.${mode}`, modes[mode]);
+    }
+    if (shapeOk) usable[locale] = entry;
   }
 
+  const notReviewed = checkReview({
+    reviewFile,
+    usable,
+    hashOf: receiptHash,
+    what: "4 templates, 12 month names, 12 short month names, 3 payment phrases",
+    label,
+    problems,
+    notes,
+    strict,
+  });
   return { problems, templateCount, notReviewed, notes };
 }

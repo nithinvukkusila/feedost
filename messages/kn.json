@@ -57,7 +57,8 @@
       "t1": {
         "no": "ಉಪಕರಣ ಸಂ. 01",
         "title": "TODO-translate: Fee receipt maker",
-        "body": "TODO-translate: A proper PDF receipt in one minute."
+        "body": "TODO-translate: A proper PDF receipt in one minute.",
+        "open": "ರಸೀದಿ ಮಾಡಿ"
       },
       "t2": {
         "no": "ಉಪಕರಣ ಸಂ. 02",
@@ -210,6 +211,99 @@
     "copiedStatus": "ಸಂದೇಶ ಕಾಪಿ ಆಗಿದೆ.",
     "copyFailed": "TODO-translate: Could not copy. Press and hold the message to select it.",
     "fillFirst": "ಮೊದಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ."
+  },
+  "receipt": {
+    "meta": {
+      "title": "ಟ್ಯೂಟರ್‌ಗಳಿಗೆ ಉಚಿತ ಶುಲ್ಕ ರಸೀದಿ ತಯಾರಕ: 4 ಭಾಷೆಗಳಲ್ಲಿ PDF",
+      "description": "ಇಂಗ್ಲಿಷ್, ಹಿಂದಿ, ಕನ್ನಡ ಅಥವಾ ತೆಲುಗಿನಲ್ಲಿ ಶುಲ್ಕ ರಸೀದಿ PDF ಮಾಡಿ. ಉಚಿತ, ಸೈನ್-ಅಪ್ ಬೇಡ, ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲೇ ತಯಾರಾಗುತ್ತದೆ, ಎಲ್ಲಿಯೂ ಉಳಿಸುವುದಿಲ್ಲ."
+    },
+    "kicker": "ಉಚಿತ ಉಪಕರಣ · ಸೈನ್-ಅಪ್ ಬೇಡ",
+    "title": "ಒಂದು ನಿಮಿಷದಲ್ಲಿ ಸರಿಯಾದ ಶುಲ್ಕ ರಸೀದಿ.",
+    "noscript": "ಈ ಉಪಕರಣಕ್ಕೆ JavaScript ಆನ್ ಆಗಿರಬೇಕು.",
+    "promo": {
+      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
+      "title": "ಪ್ರತಿ ತಿಂಗಳು ರಸೀದಿ ಬರೆಯುತ್ತೀರಾ?",
+      "body": "TODO-translate: The {brand} app is coming soon. It will make and send receipts when you mark a fee as paid."
+    }
+  },
+  "receiptForm": {
+    "language": "ರಸೀದಿಯ ಭಾಷೆ",
+    "tutor": {
+      "label": "ನಿಮ್ಮ ಹೆಸರು",
+      "placeholder": "ಮೀನಾ ಅಯ್ಯರ್",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ನಿಮ್ಮ ಹೆಸರು ಬರೆಯಿರಿ."
+      },
+      "tooLong": {
+        "word": "ತುಂಬಾ ಉದ್ದ",
+        "fix": "40 ಅಥವಾ ಕಡಿಮೆ ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ."
+      }
+    },
+    "student": {
+      "label": "ವಿದ್ಯಾರ್ಥಿಯ ಹೆಸರು",
+      "placeholder": "ಅರ್ಜುನ್",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ವಿದ್ಯಾರ್ಥಿಯ ಹೆಸರು ಬರೆಯಿರಿ."
+      },
+      "tooLong": {
+        "word": "ತುಂಬಾ ಉದ್ದ",
+        "fix": "40 ಅಥವಾ ಕಡಿಮೆ ಅಕ್ಷರಗಳನ್ನು ಬಳಸಿ."
+      }
+    },
+    "amount": {
+      "label": "ಮೊತ್ತ ₹ ನಲ್ಲಿ",
+      "placeholder": "1,200",
+      "missing": {
+        "word": "ಖಾಲಿ ಇದೆ",
+        "fix": "ಶುಲ್ಕವನ್ನು ರೂಪಾಯಿಗಳಲ್ಲಿ ಬರೆಯಿರಿ."
+      },
+      "paise": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಪೂರ್ಣ ರೂಪಾಯಿ ಮಾತ್ರ. ಪೈಸೆ ಬಿಡಿ."
+      },
+      "notDigits": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "ಅಂಕಿಗಳನ್ನು ಮಾತ್ರ ಬಳಸಿ, ಉದಾಹರಣೆಗೆ 1200."
+      },
+      "tooLow": {
+        "word": "ತುಂಬಾ ಕಡಿಮೆ",
+        "fix": "ಮೊತ್ತ ಕನಿಷ್ಠ ₹1 ಇರಬೇಕು."
+      },
+      "tooHigh": {
+        "word": "ತುಂಬಾ ಹೆಚ್ಚು",
+        "fix": "ಈ ಉಪಕರಣದಲ್ಲಿ ₹1,00,000 ವರೆಗೆ ಮಾತ್ರ."
+      }
+    },
+    "month": {
+      "label": "ಶುಲ್ಕದ ತಿಂಗಳು"
+    },
+    "mode": {
+      "label": "ಪಾವತಿ ವಿಧಾನ",
+      "upi": "UPI",
+      "cash": "ನಗದು",
+      "bank": "ಬ್ಯಾಂಕ್"
+    },
+    "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The PDF is made on your phone.",
+    "preview": {
+      "title": "ನಿಮ್ಮ ರಸೀದಿ",
+      "blank": "ಖಾಲಿ ಜಾಗ",
+      "incomplete": "ರಸೀದಿ ಪೂರ್ಣಗೊಳಿಸಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ.",
+      "unprintable": "TODO-translate: Some characters cannot be printed and were left out."
+    },
+    "download": "PDF ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+    "share": "WhatsApp ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ",
+    "working": "ನಿಮ್ಮ PDF ತಯಾರಾಗುತ್ತಿದೆ…",
+    "fillFirst": "ಮೊದಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ.",
+    "failed": "TODO-translate: Could not make the PDF. Check your connection and try again.",
+    "saved": "TODO-translate: The PDF has been saved. Attach it in WhatsApp.",
+    "openWhatsApp": "WhatsApp ತೆರೆಯಿರಿ"
+  },
+  "toolNav": {
+    "label": "ಉಚಿತ ಉಪಕರಣಗಳು",
+    "receipt": "TODO-translate: Receipt maker",
+    "reminder": "TODO-translate: Reminder writer"
   },
   "notFound": {
     "title": "ಈ ಪುಟ ಇಲ್ಲ.",

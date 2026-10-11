@@ -25,6 +25,8 @@
     "db:test": "SUPABASE_NO_UPDATE_CHECK=1 supabase test db"
   },
   "dependencies": {
+    "@cantoo/fontkit": "2.0.12",
+    "@cantoo/pdf-lib": "2.11.1",
     "@supabase/supabase-js": "2.117.3",
     "next": "16.4.0",
     "next-intl": "4.14.7",
