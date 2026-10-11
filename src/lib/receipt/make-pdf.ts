@@ -15,6 +15,7 @@ import type { PDFFont } from "@cantoo/pdf-lib";
 import { checkName } from "@/lib/fields";
 import {
   dropUnprintable,
+  isAllUnprintable,
   receiptLines,
   scriptsNeeded,
   sentenceText,
@@ -27,14 +28,18 @@ import {
 import { wrapRuns, type Piece } from "./wrap";
 
 export type PdfErrorCode = "input" | "library" | "font";
+/** The field a value belongs to, named when an `input` error is about one value. */
+export type PdfField = "tutor" | "student" | "amount";
 
 /** Why a PDF could not be made. The page shows one sentence for every code. */
 export class PdfError extends Error {
   readonly code: PdfErrorCode;
-  constructor(code: PdfErrorCode, message: string) {
+  readonly field?: PdfField;
+  constructor(code: PdfErrorCode, message: string, field?: PdfField) {
     super(message);
     this.name = "PdfError";
     this.code = code;
+    this.field = field;
   }
 }
 
@@ -87,8 +92,12 @@ export async function makePdf(input: PdfInput, options: PdfOptions = {}): Promis
   const tutor = checkName(input.tutor);
   const student = checkName(input.student);
   if (!tutor.ok || !student.ok || !Number.isInteger(input.paise) || input.paise < 100) {
-    throw new PdfError("input", "the receipt needs a checked name, student name and amount");
+    throw new PdfError("input", "the receipt needs a checked name, student name and amount", !tutor.ok ? "tutor" : !student.ok ? "student" : "amount");
   }
+
+  // The written rule alone settles a name that is all emoji or another script, before anything is fetched.
+  if (isAllUnprintable(tutor.value)) throw new PdfError("input", "no character of the tutor's name can be printed", "tutor");
+  if (isAllUnprintable(student.value)) throw new PdfError("input", "no character of the student's name can be printed", "student");
 
   let pdfLib: typeof import("@cantoo/pdf-lib");
   let fontkit: typeof import("@cantoo/fontkit");
@@ -121,6 +130,9 @@ export async function makePdf(input: PdfInput, options: PdfOptions = {}): Promis
   const cleanStudent = dropUnprintable(student.value, canDraw);
   const lines = receiptLines({ ...input, tutor: cleanTutor.text, student: cleanStudent.text });
   const dropped = cleanTutor.dropped || cleanStudent.dropped;
+  // A name that drew as nothing would print "from the family of " with a blank: refuse, and say which.
+  if (cleanTutor.text === "") throw new PdfError("input", "no character of the tutor's name can be printed", "tutor");
+  if (cleanStudent.text === "") throw new PdfError("input", "no character of the student's name can be printed", "student");
 
   const doc = await pdfLib.PDFDocument.create({ updateMetadata: false });
   doc.registerFontkit(kit);

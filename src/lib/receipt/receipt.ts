@@ -197,7 +197,8 @@ export const FONT_SCRIPTS: readonly FontScript[] = ["latin", "devanagari", "kann
 /** `null` for a character that takes the script of its neighbours: space, digit, punctuation, joiner, combining mark. */
 function strongScript(cp: number): Script | null {
   if ((cp >= 0x41 && cp <= 0x5a) || (cp >= 0x61 && cp <= 0x7a)) return "latin";
-  if (cp >= 0xc0 && cp <= 0x24f && cp !== 0xd7 && cp !== 0xf7) return "latin";
+  // Latin-1 letters and Latin Extended-A (Ś, ī, ā): the Latin font file holds exactly these (spec R0-3, criterion 20).
+  if (cp >= 0xc0 && cp <= 0x17f && cp !== 0xd7 && cp !== 0xf7) return "latin";
   if (cp === 0x20b9) return "latin"; // ₹: only the Latin font has it
   if ((cp >= 0x900 && cp <= 0x97f) || (cp >= 0xa8e0 && cp <= 0xa8ff)) return "devanagari";
   if (cp >= 0xc80 && cp <= 0xcff) return "kannada";
@@ -291,4 +292,14 @@ export function dropUnprintable(
     }
   }
   return { text: out.replace(/ {2,}/g, " ").trim(), dropped };
+}
+
+/**
+ * Whether a name that has some text would draw as nothing: every character of it is one no font
+ * here draws (a Tamil name, an emoji). The preview and the PDF both refuse such a name, so a
+ * receipt never says "from the family of" with a blank. Uses the written rule only, as the preview
+ * has no fonts; the PDF repeats the check with the font's own glyph table.
+ */
+export function isAllUnprintable(text: string): boolean {
+  return text.trim() !== "" && dropUnprintable(text, () => true).text === "";
 }

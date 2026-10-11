@@ -24,7 +24,12 @@ async function fill(page: Page, tutor: string, student: string, amount: string):
   await part(page, "amount-field").fill(amount);
 }
 
-const libraryRequest = (url: string) => /\/_next\/static\/chunks\/.+\.js/.test(url);
+/** Requests for /_next/static/chunks/*.js that the built page does not list among its own scripts. */
+function lazyChunks(requests: readonly string[], lang: Lang): string[] {
+  const html = readFileSync(`${OUT}${tool(lang)}index.html`, "utf8");
+  const listed = new Set([...html.matchAll(/<script[^>]+src="([^"]+\.js)"/g)].map((m) => m[1].split("?")[0]));
+  return requests.map((url) => new URL(url).pathname).filter((path) => /^\/_next\/static\/chunks\/.+\.js$/.test(path) && !listed.has(path));
+}
 const fontRequest = (url: string) => /\/pdf-fonts\/.+\.ttf/.test(url);
 
 for (const lang of langs) {
@@ -58,12 +63,8 @@ for (const lang of langs) {
       await openTool(page, lang);
       await fill(page, "Meena Iyer", "Arjun", "1200");
       await expect(part(page, "download")).toBeEnabled();
-      // Neither the PDF library chunk (it is a lazy chunk, not in the page's script tags) nor a PDF font.
-      const html = readFileSync(`${OUT}${tool(lang)}index.html`, "utf8");
-      const initial = new Set([...html.matchAll(/<script[^>]+src="([^"]+\.js)"/g)].map((m) => m[1].split("?")[0]));
-      const lazy = requests.filter((url) => libraryRequest(new URL(url).pathname) && !initial.has(new URL(url).pathname));
-      const libraryLike = lazy.filter((url) => /pdf|font/i.test(url));
-      expect(libraryLike).toEqual([]);
+      // No script outside the page's own script list was requested: the library is a lazy chunk (named by a hash).
+      expect(lazyChunks(requests, lang)).toEqual([]);
       expect(requests.filter((url) => fontRequest(url))).toEqual([]);
       expect(requests.filter((url) => !url.startsWith("http://localhost"))).toEqual([]);
       expect(await context.cookies()).toEqual([]);
@@ -93,7 +94,10 @@ test("a tap makes a real one-page PDF, fetching only the Latin font, with a gene
   const requests = recordRequests(page);
   await openTool(page, "en");
   await fill(page, "Meena Iyer", "Arjun", "1200");
+  // Before the tap nothing lazy was fetched; after it, the PDF library chunks are.
+  expect(lazyChunks(requests, "en")).toEqual([]);
   const [file] = await Promise.all([page.waitForEvent("download"), part(page, "download").click()]);
+  expect(lazyChunks(requests, "en").length).toBeGreaterThanOrEqual(1);
   expect(file.suggestedFilename()).toMatch(/^fee-receipt-[A-Z][a-z]{2}-\d{4}\.pdf$/);
   const path = await file.path();
   const bytes = readFileSync(path);
@@ -134,6 +138,26 @@ test("Share without a share sheet saves the PDF and opens WhatsApp with a short 
   expect(url.searchParams.get("text")).toMatch(/^Fee receipt for [A-Z][a-z]+ \d{4}\./);
   await expect(part(page, "status")).toContainText(shown("en", "receiptForm.saved"));
   await expect(part(page, "open-whatsapp")).toHaveAttribute("rel", /noopener/);
+});
+
+test("a name that cannot be printed is a problem in words and nothing is made", async ({ page }) => {
+  const requests = recordRequests(page);
+  await openTool(page, "en");
+  await fill(page, "Meena Iyer", "அர்ஜுன்", "1200");
+  await part(page, "student").blur();
+  await expect(page.getByText(shown("en", "receiptForm.student.unprintable.fix"))).toBeVisible();
+  await expect(part(page, "download")).toBeDisabled();
+  await expect(part(page, "share")).toBeDisabled();
+  expect(lazyChunks(requests, "en")).toEqual([]);
+});
+
+test("a Latin Extended-A name draws in the Latin font and the preview does not warn", async ({ page }) => {
+  await openTool(page, "en");
+  await fill(page, "Śrīdhar Pātil", "Śrīnivās", "1200");
+  await expect(part(page, "unprintable")).toHaveCount(0);
+  const [file] = await Promise.all([page.waitForEvent("download"), part(page, "download").click()]);
+  expect(readFileSync(await file.path()).subarray(0, 5).toString()).toBe("%PDF-");
+  await expect(part(page, "unprintable")).toHaveCount(0);
 });
 
 test("when the library cannot load, one sentence with a mark is shown and the button works again", async ({ page }) => {

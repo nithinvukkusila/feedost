@@ -19,7 +19,7 @@ const receiptPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/f
 const receiptTemplatesPath = join("src", "lib", "receipt", "templates.json");
 const receiptTemplates = JSON.parse(readFileSync(join(process.cwd(), receiptTemplatesPath), "utf8")) as Record<
   "en" | "hi" | "kn" | "te",
-  { sentence: string; whatsApp: string; months: string[] }
+  { heading: string; sentence: string; whatsApp: string; months: string[] }
 >;
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
 const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "setup/profile", "setup/upi"];
@@ -512,5 +512,29 @@ describe("pnpm check:leak on the fee receipt page: the second named exception (R
     expect(short.length).toBeLessThan(20);
     const result = run(leakScript, project({ body: (l) => `${own(l)}<p>${short}</p>` }));
     expect(result.status).toBe(0);
+  });
+
+  // Spec R0-3, review: only whole sentences and month names are cut out of the receipt script, so a short
+  // interface phrase is still seen when it rides in the script outside the receipt wording.
+  const phrase = "Fee receipt maker";
+  const withPhrase = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, tool: phrase } } };
+
+  it("passes when the receipt script holds only the receipt wording, even with an interface phrase that is a prefix of nothing in it", () => {
+    const result = run(leakScript, project({ messages: withPhrase }));
+    expect(result.status).toBe(0);
+  });
+
+  it("still reports 'Fee receipt maker' when it is in a hi receipt-page script outside the wording", () => {
+    const result = run(leakScript, project({ messages: withPhrase, receiptScript: `${toolScript(receiptTemplates)};var m="${phrase}"` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`hi page loads a en message: "${phrase}"`);
+    expect(result.out).toContain("out/_next/receipt.js");
+  });
+
+  it("does not cut out a receipt heading: an interface phrase equal to a short template word is still reported", () => {
+    const heading = receiptTemplates.en.heading;
+    const shared = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, tool: heading + " xx" } } };
+    const result = run(leakScript, project({ messages: shared, receiptScript: `${toolScript(receiptTemplates)};var m="${heading} xx"` }));
+    expect(result.status).toBe(1);
   });
 });

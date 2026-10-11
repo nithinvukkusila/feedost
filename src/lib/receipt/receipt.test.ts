@@ -9,6 +9,7 @@ import {
   feeMonths,
   fileName,
   hasUnprintable,
+  isAllUnprintable,
   issueDate,
   monthFromKey,
   monthKey,
@@ -276,5 +277,26 @@ describe("the receipt wording", () => {
       expect(new Set(templates[lang].shortMonths).size).toBe(12);
       expect(new Set(templates[lang].months).size).toBe(12);
     }
+  });
+});
+
+describe("which Latin letters survive (preview and PDF agree)", () => {
+  it("keeps Latin-1 and Latin Extended-A letters as Latin, so the preview does not warn about Śrīnivās", () => {
+    expect(splitRuns("Śrīnivās")).toEqual([{ script: "latin", text: "Śrīnivās" }]);
+    expect(hasUnprintable("Śrīnivās Ānand Zoë")).toBe(false);
+  });
+
+  it("calls Latin Extended-B and Additional letters unprintable, as the Latin font file does not hold them", () => {
+    expect(hasUnprintable("Ơ")).toBe(true); // U+01A0
+    expect(hasUnprintable("Ṭ")).toBe(true); // U+1E6C
+    expect(dropUnprintable("Pāṭil", () => true)).toEqual({ text: "Pāil", dropped: true });
+  });
+
+  it("is all unprintable only when nothing is left", () => {
+    expect(isAllUnprintable("அர்ஜுன்")).toBe(true);
+    expect(isAllUnprintable("😀")).toBe(true);
+    expect(isAllUnprintable("😀 A")).toBe(false);
+    expect(isAllUnprintable("123")).toBe(false);
+    expect(isAllUnprintable("")).toBe(false);
   });
 });

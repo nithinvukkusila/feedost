@@ -112,6 +112,31 @@ describe("the preview", () => {
     expect(id("unprintable").textContent).toBe(words.preview.unprintable);
   });
 
+  it("a student name that is all unprintable is a problem in words with a mark, the receipt keeps its blank, and the buttons stay off", () => {
+    show();
+    fillAll();
+    type(id("student"), "அர்ஜுன்");
+    fireEvent.blur(id("student"));
+    expect(screen.getByText(words.student.unprintable.fix)).toBeTruthy();
+    expect(screen.getByText(words.student.unprintable.word, { exact: false })).toBeTruthy();
+    expect(id("preview").querySelector('[data-blank="student"]')).not.toBeNull();
+    expect((id("download") as HTMLButtonElement).disabled).toBe(true);
+    expect((id("share") as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(id("download"));
+    expect(makePdf).not.toHaveBeenCalled();
+  });
+
+  it("the same for the tutor's name, and typing a printable letter after it clears the problem", () => {
+    show();
+    fillAll();
+    type(id("tutor"), "😀");
+    fireEvent.blur(id("tutor"));
+    expect(screen.getByText(words.tutor.unprintable.fix)).toBeTruthy();
+    type(id("tutor"), "😀 Meena");
+    expect(screen.queryByText(words.tutor.unprintable.fix)).toBeNull();
+    expect((id("download") as HTMLButtonElement).disabled).toBe(false);
+  });
+
   it("names an invalid amount with a word and a fix, and keeps the buttons off", () => {
     show();
     fillAll();

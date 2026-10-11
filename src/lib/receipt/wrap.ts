@@ -42,25 +42,38 @@ function extend(chunk: readonly Piece[], script: FontScript, char: string): Piec
   return [...chunk, { script, text: char }];
 }
 
-/** A word cut into chunks that each fit `maxWidth`, as far as they can. */
+/** A flat range of a word's characters as pieces, merged where the script is the same. */
+function piecesOf(chars: readonly { script: FontScript; char: string }[], from: number, to: number): Piece[] {
+  let out: Piece[] = [];
+  for (let i = from; i < to; i++) out = extend(out, chars[i].script, chars[i].char);
+  return out;
+}
+
+/**
+ * A word cut into chunks that each fit `maxWidth`. When the next letter would not fit, the cut goes
+ * at the last place a cut is allowed (before a whole conjunct, not inside it), so a line never runs
+ * past the width by the length of a cluster. A single cluster wider than the line is the only thing
+ * that can still overshoot.
+ */
 function cutWord(word: readonly Piece[], measure: Measure, maxWidth: number): Piece[][] {
+  const chars = word.flatMap((piece) => Array.from(piece.text).map((char) => ({ script: piece.script, char })));
+  const canBreakAt = (i: number) => i > 0 && !NO_BREAK_BEFORE.test(chars[i].char) && !VIRAMAS.has(chars[i - 1].char.codePointAt(0) ?? 0);
   const chunks: Piece[][] = [];
-  let chunk: Piece[] = [];
-  let previous = 0;
-  for (const piece of word) {
-    for (const char of piece.text) {
-      const trial = extend(chunk, piece.script, char);
-      const canBreak = chunk.length > 0 && !NO_BREAK_BEFORE.test(char) && !VIRAMAS.has(previous);
-      if (canBreak && widthOf(trial, measure) > maxWidth) {
-        chunks.push(chunk);
-        chunk = [{ script: piece.script, text: char }];
-      } else {
-        chunk = trial;
-      }
-      previous = char.codePointAt(0) ?? 0;
+  let start = 0;
+  let i = 0;
+  while (i < chars.length) {
+    i += 1;
+    if (i >= chars.length || widthOf(piecesOf(chars, start, i + 1), measure) <= maxWidth) continue;
+    // Character i does not fit: cut at the last allowed place in (start, i].
+    let at = i;
+    while (at > start && !canBreakAt(at)) at -= 1;
+    if (at > start) {
+      chunks.push(piecesOf(chars, start, at));
+      start = at;
+      i = at;
     }
   }
-  if (chunk.length > 0) chunks.push(chunk);
+  if (start < chars.length) chunks.push(piecesOf(chars, start, chars.length));
   return chunks;
 }
 

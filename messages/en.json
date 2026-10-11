@@ -237,6 +237,10 @@
       "tooLong": {
         "word": "Too long",
         "fix": "Use 40 characters or fewer."
+      },
+      "unprintable": {
+        "word": "Cannot print",
+        "fix": "None of these characters can be printed. Use English, Hindi, Kannada or Telugu letters."
       }
     },
     "student": {
@@ -249,6 +253,10 @@
       "tooLong": {
         "word": "Too long",
         "fix": "Use 40 characters or fewer."
+      },
+      "unprintable": {
+        "word": "Cannot print",
+        "fix": "None of these characters can be printed. Use English, Hindi, Kannada or Telugu letters."
       }
     },
     "amount": {

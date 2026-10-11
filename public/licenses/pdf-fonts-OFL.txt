@@ -1,4 +1,14 @@
-Copyright 2022 The Noto Project Authors (https://github.com/notofonts/kannada)
+The fonts in /pdf-fonts/ are subsets of these Noto fonts, each under the SIL Open Font License,
+Version 1.1, copied below. Each font's own copyright line, as written in the font's name table:
+
+NotoSans.ttf (Latin; Basic Latin, Latin-1 and Latin Extended-A only)
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+NotoSansDevanagari.ttf
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/devanagari)
+NotoSansKannada.ttf
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/kannada)
+NotoSansTelugu.ttf
+  Copyright 2022 The Noto Project Authors (https://github.com/notofonts/telugu)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

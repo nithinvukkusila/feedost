@@ -48,3 +48,32 @@ describe("wrapRuns", () => {
     expect(lines[0].map((p) => p.script)).toEqual(["latin", "kannada", "latin"]);
   });
 });
+
+describe("every line fits the width, per script (criterion 21)", () => {
+  // A script-aware fake measure: Indic scripts are wider per character than Latin, as in the real fonts.
+  // Marks and joiners add no advance of their own, so only base letters are counted, as in a shaped line.
+  const bases = (text: string) => Array.from(text).filter((c) => /[^\p{M}\u200c\u200d]/u.test(c)).length;
+  const wide = (text: string, script: string) => bases(text) * (script === "latin" ? 10 : script === "devanagari" ? 14 : 18);
+  const names: [string, string][] = [
+    ["latin", "Venkata Subrahmanya Sharma Narayanan Iyer"],
+    ["latin", "W".repeat(40)],
+    ["devanagari", "क्षत्रिय श्रीनिवास द्वारका ज्ञानेश प्रिया कुमारी"],
+    ["devanagari", "क्षत्रिय".repeat(5)],
+    ["kannada", "ಶ್ರೀನಿವಾಸ್ ಪ್ರಜ್ವಲ್ ರಾಜೇಶ್ವರಿ ಕೃಷ್ಣ ಲಕ್ಷ್ಮಿ"],
+    ["kannada", "ಲಕ್ಷ್ಮಿ".repeat(8)],
+    ["telugu", "శ్రీనివాస్ ప్రజ్ఞ లక్ష్మి కృష్ణ సుబ్రహ్మణ్యం"],
+    ["telugu", "సుబ్రహ్మణ్యం".repeat(4)],
+  ];
+
+  it.each(names)("%s: no line is wider than the width, and no letter is lost (%s)", (_script, name) => {
+    for (const width of [120, 200, 340]) {
+      const lines = wrapRuns(splitRuns(name), wide, width);
+      for (const line of lines) {
+        // A single unbreakable cluster may exceed a very narrow width; the widths here are wider than any cluster.
+        expect(line.reduce((sum, p) => sum + wide(p.text, p.script), 0), `${name} at ${width}`).toBeLessThanOrEqual(width);
+      }
+      expect(lines.map((l) => l.map((p) => p.text).join("")).join("").replace(/ /g, "")).toBe(name.replace(/ /g, ""));
+    }
+  });
+});
+

@@ -4,8 +4,8 @@
 // here: it makes a PDF, fetches only the fonts it needs, drops what no font has, and carries no typed value in its metadata.
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { PDFDocument } from "@cantoo/pdf-lib";
-import { describe, expect, it } from "vitest";
+import { PDFDocument, PDFPage } from "@cantoo/pdf-lib";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FONT_FILES, PdfError, makePdf, type PdfInput } from "./make-pdf";
 
 const root = process.cwd();
@@ -127,6 +127,115 @@ describe("makePdf", { timeout: 30_000 }, () => {
       expect(error).toBeInstanceOf(PdfError);
       expect((error as PdfError).code).toBe("input");
     }
+  });
+});
+
+// The page geometry, read from what is really drawn: every drawText call with the font's own width, the
+// amount box and the stamp circles. 595.28 x 841.89 pt, 48 pt margins (make-pdf.ts).
+describe("the layout of what is drawn (criterion 21)", () => {
+  const PAGE_WIDTH = 595.28;
+  const MARGIN = 48;
+  type Text = { text: string; x: number; y: number; size: number; right: number };
+  type Box = { x: number; y: number; width: number; height: number };
+  type Circle = { x: number; y: number; size: number };
+
+  afterEach(() => vi.restoreAllMocks());
+
+  async function draw(over: Partial<PdfInput>) {
+    const texts: Text[] = [];
+    const boxes: Box[] = [];
+    const circles: Circle[] = [];
+    const drawText = PDFPage.prototype.drawText;
+    const drawRectangle = PDFPage.prototype.drawRectangle;
+    const drawCircle = PDFPage.prototype.drawCircle;
+    vi.spyOn(PDFPage.prototype, "drawText").mockImplementation(function (this: PDFPage, text, options) {
+      const font = options?.font as { widthOfTextAtSize(text: string, size: number): number };
+      const size = options?.size ?? 12;
+      const x = options?.x ?? 0;
+      texts.push({ text, x, y: options?.y ?? 0, size, right: x + font.widthOfTextAtSize(text, size) });
+      return drawText.call(this, text, options);
+    });
+    vi.spyOn(PDFPage.prototype, "drawRectangle").mockImplementation(function (this: PDFPage, options) {
+      boxes.push({ x: options?.x ?? 0, y: options?.y ?? 0, width: options?.width ?? 0, height: options?.height ?? 0 });
+      return drawRectangle.call(this, options);
+    });
+    vi.spyOn(PDFPage.prototype, "drawCircle").mockImplementation(function (this: PDFPage, options) {
+      circles.push({ x: options?.x ?? 0, y: options?.y ?? 0, size: options?.size ?? 0 });
+      return drawCircle.call(this, options);
+    });
+    await make(over);
+    vi.restoreAllMocks();
+    return { texts, boxes, circles };
+  }
+
+  const forty = (word: string) => Array.from(word.repeat(40)).slice(0, 40).join("");
+  const cases: [string, Partial<PdfInput>][] = [
+    ["en", { lang: "en", tutor: forty("W"), student: "Venkata Subrahmanya Sharma Narayanan" }],
+    ["hi", { lang: "hi", tutor: forty("क्षत्रिय "), student: "श्रीनिवास द्वारका ज्ञानेश प्रिया कुमारी" }],
+    ["kn", { lang: "kn", tutor: forty("ಲಕ್ಷ್ಮಿ"), student: "ಶ್ರೀನಿವಾಸ್ ಪ್ರಜ್ವಲ್ ರಾಜೇಶ್ವರಿ ಕೃಷ್ಣ" }],
+    ["te", { lang: "te", tutor: forty("సుబ్రహ్మణ్యం"), student: "శ్రీనివాస్ ప్రజ్ఞ లక్ష్మి కృష్ణ" }],
+  ];
+
+  it.each(cases)("%s: no drawn text crosses the margin, the amount box clears the stamp, the stamp text stays in its ring, nothing meets the footer", async (_lang, over) => {
+    const { texts, boxes, circles } = await draw({ ...over, paise: 10_000_000 });
+    expect(texts.length).toBeGreaterThan(5);
+    const [, amountBox] = boxes; // the first rectangle is the page frame
+    const ring = circles[0];
+    const footerY = Math.min(...texts.map((t) => t.y));
+    const stampTexts = texts.filter((t) => t.x > ring.x - ring.size && t.right < ring.x + ring.size && Math.abs(t.y - ring.y) < ring.size);
+    for (const t of texts) {
+      if (stampTexts.includes(t)) continue;
+      expect(t.x, t.text).toBeGreaterThanOrEqual(MARGIN - 0.5);
+      expect(t.right, t.text).toBeLessThanOrEqual(PAGE_WIDTH - MARGIN + 0.5);
+    }
+    // The stamp's words are inside its outer ring on both sides.
+    expect(stampTexts.length).toBeGreaterThanOrEqual(2);
+    for (const t of stampTexts) {
+      expect(t.x, t.text).toBeGreaterThanOrEqual(ring.x - ring.size);
+      expect(t.right, t.text).toBeLessThanOrEqual(ring.x + ring.size);
+    }
+    // The amount box: inside the margins, left of the stamp, and holds its figure.
+    expect(amountBox.x).toBeGreaterThanOrEqual(MARGIN - 0.5);
+    expect(amountBox.x + amountBox.width).toBeLessThan(ring.x - ring.size);
+    const amount = texts.find((t) => t.size === 36)!;
+    expect(amount.right).toBeLessThanOrEqual(amountBox.x + amountBox.width);
+    // Vertically the box is above the footer and the page frame.
+    expect(amountBox.y).toBeGreaterThan(footerY + 10);
+    expect(footerY).toBeGreaterThan(40);
+  });
+
+  it("a long Latin word is wider than the text width and is cut: every piece fits (criterion 21)", async () => {
+    const { texts } = await draw({ tutor: "W".repeat(40), student: "M".repeat(40) });
+    expect(Math.max(...texts.map((t) => t.right - t.x))).toBeLessThanOrEqual(PAGE_WIDTH - 2 * MARGIN + 0.5);
+  });
+});
+
+describe("a name no font can draw (review, criterion 20)", () => {
+  it.each([
+    ["a Tamil student", { student: "அர்ஜுன்" }, "student"],
+    ["an emoji tutor", { tutor: "😀" }, "tutor"],
+    ["a Tamil tutor with a good student", { tutor: "அர்ஜுன்", student: "Arjun" }, "tutor"],
+  ] as const)("%s: rejects with `input` naming the field, and fetches nothing", async (_label, over, field) => {
+    requested.length = 0;
+    const error = await makePdf(input(over), { fetchBytes }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(PdfError);
+    expect(error).toMatchObject({ code: "input", field });
+    expect(requested).toEqual([]);
+  });
+
+  it("a name with some printable letters still makes the PDF and says a character went", async () => {
+    const { dropped, bytes } = await make({ student: "Arjun அ" });
+    expect(dropped).toBe(true);
+    expect(bytes.length).toBeGreaterThan(1000);
+  });
+
+  it("draws Latin Extended-A letters from the Latin font, dropping nothing (preview and PDF agree)", async () => {
+    const { dropped, fonts } = await make({ student: "Śrīnivās Ānand", tutor: "Śrīdhar Pāṭil" });
+    // Ṭ (U+1E6C) is Latin Extended Additional: outside the rule, so the rule drops it and says so.
+    expect(dropped).toBe(true);
+    expect(fonts).toEqual([FONT_FILES.latin]);
+    const clean = await make({ student: "Śrīnivās Ānand", tutor: "Śrīdhar Pātil" });
+    expect(clean.dropped).toBe(false);
   });
 });
 

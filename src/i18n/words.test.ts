@@ -75,8 +75,8 @@ describe("the fee receipt's words", () => {
   it.each(locales)("give every error a state word and a sentence that says how to fix it, in %s.json", (locale) => {
     const form = files[locale].receiptForm as Record<string, Record<string, unknown>>;
     const errors: [string, string[]][] = [
-      ["tutor", ["missing", "tooLong"]],
-      ["student", ["missing", "tooLong"]],
+      ["tutor", ["missing", "tooLong", "unprintable"]],
+      ["student", ["missing", "tooLong", "unprintable"]],
       ["amount", ["missing", "paise", "notDigits", "tooLow", "tooHigh"]],
     ];
     for (const [field, codes] of errors) {

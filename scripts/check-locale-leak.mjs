@@ -84,7 +84,10 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
     // every string of the entry is a candidate line, and the length floor keeps out the short words.
     const templateLines = exception.lineKeys ? exception.lineKeys.flatMap((key) => strings(entry[key] ?? [])) : strings(entry);
     lines[locale] = [...new Set(templateLines)].filter((line) => line.length >= exception.minLine && !/^\{\w+\}$/.test(line));
-    all.push(...strings(entry));
+    // Cut out: whole sentences (at least minLine long) and whole month names. Short template words
+    // (a heading, a stamp, a payment phrase) are NOT cut out, so an interface phrase that happens to
+    // be one of them ("Fee receipt maker") is still reported when it rides in the script.
+    all.push(...templateLines.filter((line) => line.length >= exception.minLine), ...strings(entry.months ?? []), ...strings(entry.shortMonths ?? []));
   }
   // Longest first, so a short month name is not cut out of the middle of a line that holds it.
   // Nothing shorter than MIN_LENGTH is cut out: a short month name ("May") sits inside real interface

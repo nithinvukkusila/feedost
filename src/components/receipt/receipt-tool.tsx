@@ -28,6 +28,7 @@ import {
   feeMonths,
   fileName,
   hasUnprintable,
+  isAllUnprintable,
   monthKey,
   receiptLines,
   sentenceText,
@@ -80,13 +81,16 @@ export function ReceiptTool({ words, pageLocale }: Readonly<{ words: ReceiptWord
   const tutorCheck = checkName(tutor);
   const studentCheck = checkName(student);
   const amountCheck = checkAmount(amount);
-  const ready = tutorCheck.ok && studentCheck.ok && amountCheck.ok && month !== null;
+  // A name with text in it but no character any font here draws would print as a blank: it is a problem, said in words.
+  const tutorBlank = tutorCheck.ok && isAllUnprintable(tutorCheck.value);
+  const studentBlank = studentCheck.ok && isAllUnprintable(studentCheck.value);
+  const ready = tutorCheck.ok && studentCheck.ok && amountCheck.ok && month !== null && !tutorBlank && !studentBlank;
 
   // Only checked values reach the receipt, never raw field text.
   const lines = receiptLines({
     lang: receiptLang,
-    tutor: tutorCheck.ok ? tutorCheck.value : null,
-    student: studentCheck.ok ? studentCheck.value : null,
+    tutor: tutorCheck.ok && !tutorBlank ? tutorCheck.value : null,
+    student: studentCheck.ok && !studentBlank ? studentCheck.value : null,
     paise: amountCheck.ok ? amountCheck.value : null,
     month,
     mode,
@@ -94,6 +98,9 @@ export function ReceiptTool({ words, pageLocale }: Readonly<{ words: ReceiptWord
   });
   const complete = sentenceText(lines.sentence) !== null;
   const unprintable = dropped || hasUnprintable(tutor) || hasUnprintable(student);
+
+  const blankState = (blank: boolean, shown: boolean, w: { unprintable: { word: string; fix: string } }) =>
+    blank && shown ? { state: "error" as const, stateLabel: w.unprintable.word, message: w.unprintable.fix } : null;
 
   const touch = (name: FieldName) => setTouched((before) => (before[name] ? before : { ...before, [name]: true }));
 
@@ -130,7 +137,14 @@ export function ReceiptTool({ words, pageLocale }: Readonly<{ words: ReceiptWord
         const result = await shareOrDownload(made.blob, fileName(month), waText(receiptLang, month), waLink(receiptLang, month));
         if (result === "saved") setOutcome("saved");
       }
-    } catch {
+    } catch (error) {
+      // A value the PDF maker refused: show that field's problem in words instead of the general failure.
+      const refused = error as { code?: string; field?: FieldName };
+      if (refused.code === "input" && refused.field) {
+        const field = refused.field;
+        setTouched((before) => ({ ...before, [field]: true }));
+        return;
+      }
       // The library or a font did not load, the phone is offline or out of memory: one sentence, and the button works again.
       setOutcome("failed");
     } finally {
@@ -176,7 +190,7 @@ export function ReceiptTool({ words, pageLocale }: Readonly<{ words: ReceiptWord
                 autoComplete="off"
                 data-testid="receipt-tutor"
                 {...guarded}
-                {...problem(tutorCheck, touched.tutor, words.tutor)}
+                {...(blankState(tutorBlank, touched.tutor, words.tutor) ?? problem(tutorCheck, touched.tutor, words.tutor))}
               />
               <Field
                 label={words.student.label}
@@ -187,7 +201,7 @@ export function ReceiptTool({ words, pageLocale }: Readonly<{ words: ReceiptWord
                 autoComplete="off"
                 data-testid="receipt-student"
                 {...guarded}
-                {...problem(studentCheck, touched.student, words.student)}
+                {...(blankState(studentBlank, touched.student, words.student) ?? problem(studentCheck, touched.student, words.student))}
               />
               <Field
                 label={words.amount.label}
