@@ -1277,7 +1277,7 @@ test.describe("route, landmarks, links and copy", () => {
         await expect(page.locator("h1")).toHaveText(shown(lang, "reminder.title"));
         await expect(part(page, "parent")).toBeEnabled();
         // And back: the brand name in the tool's header is the way home.
-        await page.locator("header a").click();
+        await page.locator("header a").first().click();
         await expect(page).toHaveURL(`/${lang}/`);
       }
     });
@@ -1401,7 +1401,7 @@ test.describe("JavaScript off (criterion 46)", () => {
       await expect(part(page, "remember")).toHaveCount(0);
       expect(await sidewaysScroll(page)).toBe(0);
       // The plain links still work.
-      await page.locator("header a").click();
+      await page.locator("header a").first().click();
       await expect(page).toHaveURL(`/${lang}/`);
     });
   }
@@ -1434,6 +1434,10 @@ test.describe("keyboard only", () => {
 
     await page.keyboard.press("Tab");
     expect(await page.evaluate(() => document.activeElement?.closest("header") !== null && document.activeElement?.tagName === "A")).toBe(true);
+    expect((await focusMark()).ring).toBe(true);
+    // The header's second stop is the link to the receipt maker (R0-3).
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.getAttribute("href"))).toBe("/en/tools/fee-receipt/");
     expect((await focusMark()).ring).toBe(true);
 
     // Message language: one stop; arrows move the choice.

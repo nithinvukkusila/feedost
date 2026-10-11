@@ -44,7 +44,7 @@ export function ReceiptPreview({
         ))}
       </p>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-        <p data-testid="receipt-amount" className="type-amount border-2 border-ink px-3 py-2 text-4xl">
+        <p data-testid="receipt-amount" className="type-amount max-w-full min-w-0 border-2 border-ink px-3 py-2 text-2xl wrap-anywhere">
           {lines.amount ?? <Blank label={blank} slot="amount" />}
         </p>
         {/* The stamp: a double rule in ink and the word, as on the PDF. A long word in Kannada or Telugu wraps; nothing is cut. */}

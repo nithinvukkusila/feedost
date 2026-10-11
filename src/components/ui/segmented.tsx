@@ -34,11 +34,12 @@ export type SegmentedProps<V extends string = string> = Choice<V> & {
   options: Options<V>;
 };
 
-// Two or three sit in one row. Four are two rows of two, and one row of four only when the group
+// Two sit in one row. Three sit in one row while the group is at least 16rem wide, and stack when text is
+// set so large that they would not fit (rem grows with the phone's text size). Four are two rows of two, and one row of four only when the group
 // itself is at least 28rem wide: a fixed rule, not a measurement of the words.
 const columns: Record<2 | 3 | 4, string> = {
   2: "grid-cols-2",
-  3: "grid-cols-3",
+  3: "grid-cols-1 @2xs:grid-cols-3",
   4: "grid-cols-2 @md:grid-cols-4",
 };
 

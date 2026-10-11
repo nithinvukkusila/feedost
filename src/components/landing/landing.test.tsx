@@ -137,9 +137,10 @@ describe("tools (R0-1 criterion 15; R0-2 criteria 3 and 4)", () => {
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Two free tools.");
   });
 
-  it("links card 2 to the tool in the page's own language", () => {
+  it("links each card to its tool in the page's own language", () => {
     const { container } = renderLanding(<Tools />, "hi");
-    expect(container.querySelector("article a")?.getAttribute("href")).toBe("/hi/tools/fee-reminder/");
+    const hrefs = [...container.querySelectorAll("article a")].map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/hi/tools/fee-receipt/", "/hi/tools/fee-reminder/"]);
   });
 });
 

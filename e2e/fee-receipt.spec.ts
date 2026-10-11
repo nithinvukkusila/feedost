@@ -118,7 +118,7 @@ test("a Kannada name on a Hindi receipt fetches the Devanagari and Kannada fonts
 });
 
 test("Share without a share sheet saves the PDF and opens WhatsApp with a short text, no number", async ({ page }) => {
-  await page.route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>stub</p>" }));
+  await page.context().route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<p>stub</p>" }));
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "canShare", { configurable: true, value: undefined });
     Object.defineProperty(navigator, "share", { configurable: true, value: undefined });

@@ -141,7 +141,7 @@ describe("Segmented look (criteria 70, 71, 72 and 74)", () => {
     expect(grid()).not.toContain("@md:grid-cols-4");
     cleanup();
     render(<Segmented label="Three" name="g" options={three} defaultValue="today" />);
-    expect(grid()).toContain("grid-cols-3");
+    expect(grid()).toEqual(expect.arrayContaining(["grid-cols-1", "@2xs:grid-cols-3"]));
     cleanup();
     render(<Segmented label="Four" name="g" options={four} defaultValue="en" />);
     expect(grid()).toEqual(expect.arrayContaining(["grid-cols-2", "@md:grid-cols-4"]));
