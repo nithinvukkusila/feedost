@@ -476,7 +476,9 @@
       "confirm": "TODO-translate: Move {n, plural, one {# student} other {# students}} here",
       "cancel": "TODO-translate: Cancel",
       "failed": "TODO-translate: Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
-      "confirmNone": "TODO-translate: Move here"
+      "confirmNone": "TODO-translate: Move here",
+      "gone": "यह बैच अब मौजूद नहीं है। कोई छात्र नहीं हटाया गया।",
+      "goneBack": "बैचों पर वापस जाएँ"
     }
   },
   "waitlistForm": {

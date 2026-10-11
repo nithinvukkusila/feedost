@@ -17,6 +17,9 @@ const updateBatch = vi.fn();
 const deleteBatch = vi.fn();
 vi.mock("@/lib/batches", () => ({ updateBatch: (...args: unknown[]) => updateBatch(...args), deleteBatch: (id: string) => deleteBatch(id) }));
 
+const moveStudents = vi.fn();
+vi.mock("@/lib/students", () => ({ moveStudents: (...args: unknown[]) => moveStudents(...args) }));
+
 import { BatchScreen } from "./batch-screen";
 
 // jsdom does not open modal dialogs (see sheet.test.tsx).
@@ -68,6 +71,7 @@ beforeEach(() => {
   deleteBatch.mockReset();
   putBatch.mockReset();
   removeBatch.mockReset();
+  moveStudents.mockReset();
   roster();
   open();
 });
@@ -217,7 +221,7 @@ describe("delete (45)", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Delete batch" }));
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Delete Class 10 Maths?")).toBeTruthy();
-    expect(within(dialog).getByText("2 students stay in your book with no batch.")).toBeTruthy();
+    expect(within(dialog).getByText("3 students stay in your book with no batch.")).toBeTruthy();
     const cancels = within(dialog).getAllByRole("button", { name: "Cancel" });
     await userEvent.click(cancels[cancels.length - 1]);
     expect(deleteBatch).not.toHaveBeenCalled();
@@ -232,6 +236,15 @@ describe("delete (45)", () => {
     await waitFor(() => expect(deleteBatch).toHaveBeenCalledWith("b1"));
     expect(removeBatch).toHaveBeenCalledWith("b1");
     expect(push).toHaveBeenCalledWith("/en/batches/");
+    // The roster is changed after the move starts, so the screen never says "not found" on the way out.
+    expect(push.mock.invocationCallOrder[0]).toBeLessThan(removeBatch.mock.invocationCallOrder[0]);
+  });
+
+  it("counts every student that loses the batch, archived ones too", async () => {
+    deleteBatch.mockResolvedValue({ ok: true });
+    renderWithWords(<BatchScreen />);
+    await userEvent.click(await screen.findByRole("button", { name: "Delete batch" }));
+    expect(within(screen.getByRole("dialog")).getByText("3 students stay in your book with no batch.")).toBeTruthy();
   });
 
   it("stays on the sheet and says nothing was deleted when it fails", async () => {
@@ -242,5 +255,52 @@ describe("delete (45)", () => {
     expect(await within(screen.getByRole("dialog")).findByText(/Nothing was saved/)).toBeTruthy();
     expect(removeBatch).not.toHaveBeenCalled();
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("rename of a batch that is gone (review)", () => {
+  it("says it cannot be found when the update found no row", async () => {
+    updateBatch.mockResolvedValue({ ok: false, reason: "missing" });
+    renderWithWords(<BatchScreen />);
+    await userEvent.click(await screen.findByRole("button", { name: "Save timings" }));
+    expect((await screen.findByRole("alert")).textContent).toBe("Couldn't find this batch");
+  });
+});
+
+describe("Move students (44, review)", () => {
+  const tick = async () => {
+    await userEvent.click(await screen.findByRole("button", { name: "Move students" }));
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("checkbox", { name: /Student d/ }));
+  };
+
+  it("sends one move and puts the answered rows in the roster", async () => {
+    const moved = { ...student("d", "b1", 100000) };
+    moveStudents.mockResolvedValue({ ok: true, students: [moved] });
+    renderWithWords(<BatchScreen />);
+    await tick();
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Move 1 student here" }));
+    await waitFor(() => expect(moveStudents).toHaveBeenCalledWith(["d"], "b1"));
+    expect(held.roster.put).toHaveBeenCalledWith(moved);
+  });
+
+  it("says the phone is offline and keeps the sheet and tick", async () => {
+    moveStudents.mockResolvedValue({ ok: false, reason: "offline" });
+    renderWithWords(<BatchScreen />);
+    await tick();
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Move 1 student here" }));
+    expect(await within(screen.getByRole("dialog")).findByText("You are offline. Connect to the internet to save.")).toBeTruthy();
+    expect((within(screen.getByRole("dialog")).getByRole("checkbox", { name: /Student d/ }) as HTMLInputElement).checked).toBe(true);
+    expect(held.roster.reload).not.toHaveBeenCalled();
+  });
+
+  it("says the batch is gone in its own words, reads again, and goes back to the batches", async () => {
+    moveStudents.mockResolvedValue({ ok: false, reason: "batch-gone" });
+    renderWithWords(<BatchScreen />);
+    await tick();
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Move 1 student here" }));
+    expect(await screen.findByText("That batch no longer exists. Nothing was moved.")).toBeTruthy();
+    expect(held.roster.reload).toHaveBeenCalled();
+    await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Back to batches" }));
+    expect(push).toHaveBeenCalledWith("/en/batches/");
   });
 });

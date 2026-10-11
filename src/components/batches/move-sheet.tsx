@@ -4,11 +4,14 @@
 // each with a tick and the name of their present batch. A black "Move {n} here" puts the ticked ones in this
 // batch in one update. Nothing is sent while none is ticked. The rows the database answered with go into the
 // roster; a failure keeps the sheet and the ticks and says nothing was moved.
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRoster } from "@/components/app/roster";
 import { WriteNotice, type WriteProblem } from "@/components/app/write-notice";
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/config/locales";
+import { batchesPath, localeHref } from "@/config/routes";
 import { Sheet } from "@/components/ui/sheet";
 import type { Batch } from "@/lib/batches";
 import { activeStudents, sortStudents } from "@/lib/student-list";
@@ -18,6 +21,8 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
   const t = useTranslations("batches");
   const form = useTranslations("students.form");
   const roster = useRoster();
+  const router = useRouter();
+  const locale = useLocale() as Locale;
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set());
   const [moving, setMoving] = useState(false);
   const [problem, setProblem] = useState<WriteProblem>(null);
@@ -59,10 +64,30 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
       close();
       return;
     }
-    if (result.reason === "batch-gone") {
-      setGone(true);
-      roster.reload();
-    } else setProblem(result.reason === "offline" ? "offline" : "failed");
+    if (result.reason === "batch-gone") setGone(true);
+    else setProblem(result.reason === "offline" ? "offline" : "failed");
+    // Some students may have moved before a later request failed, and the batch may be gone: read again.
+    if (result.reason !== "offline") roster.reload();
+  }
+
+  function backToBatches() {
+    close();
+    router.push(localeHref(locale, batchesPath));
+  }
+
+  if (gone) {
+    return (
+      <Sheet open={open} onClose={backToBatches} title={<span translate="no">{t("move.title", { name: batch.name })}</span>} closeLabel={t("move.cancel")}>
+        <p role="alert" className="type-body font-semibold text-cloth wrap-anywhere">
+          {t("move.gone")}
+        </p>
+        <div className="mt-5 pr-1.5 pb-1.5">
+          <Button variant="record" full onClick={backToBatches}>
+            {t("move.goneBack")}
+          </Button>
+        </div>
+      </Sheet>
+    );
   }
 
   return (
@@ -99,11 +124,6 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
           </ul>
         </>
       )}
-      {gone ? (
-        <p role="alert" className="mt-4 type-body-sm font-semibold text-cloth wrap-anywhere">
-          {form("batchGone")}
-        </p>
-      ) : null}
       <div className="mt-4">
         <WriteNotice problem={problem} failed={t("move.failed")} offline={form("offline")} />
       </div>

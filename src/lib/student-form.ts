@@ -103,9 +103,9 @@ export function checkStudent(draft: StudentDraft, context: FormContext = {}): Fo
   const fee = parseRupees(draft.fee, FEE_LIMITS);
   if (!fee.ok) errors.fee = feeErrors[fee.error];
 
-  // Blank means 0.
-  const owes = draft.owes.trim() === "" ? ({ ok: true, paise: 0 } as const) : parseRupees(draft.owes, OWES_LIMITS);
-  if (!owes.ok && owes.error !== "missing" && owes.error !== "zero") errors.owes = owesErrors[owes.error];
+  // Blank means 0, and so does text with nothing but a rupee sign, commas or spaces in it.
+  const owes = draft.owes.replace(/[₹,\s]/g, "") === "" ? ({ ok: true, paise: 0 } as const) : parseRupees(draft.owes, OWES_LIMITS);
+  if (!owes.ok) errors.owes = owesErrors[owes.error === "missing" || owes.error === "zero" ? "chars" : owes.error];
 
   // The tick: asked for when a number is being saved that was not saved before.
   if (phone.ok && phone.value !== null && phone.value !== (context.savedPhone ?? null) && !draft.permission) {

@@ -46,7 +46,7 @@ test.describe("51: the new screens in each language, at 360px and with larger te
         await page.evaluate(() => document.fonts.ready);
         // The nav sticks to the bottom of the screen and so floats over whatever is scrolled under it; the overlap
         // check would report that on a long page. Put it back in the flow for the check (it is last in the page).
-        await page.addStyleTag({ content: "div.sticky { position: static !important; }" });
+        await page.addStyleTag({ content: "[data-sticky-nav] { position: static !important; }" });
         for (const size of ["100%", "130%"]) {
           await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
           expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
@@ -79,6 +79,28 @@ test.describe("51: the Move students sheet", () => {
           expect((await box(el)).height, `a control at ${size}`).toBeGreaterThanOrEqual(44);
         }
       }
+    });
+  }
+});
+
+test.describe("51: the sticky nav does not cover the last control", () => {
+  for (const path of ["students/", "batches/", "home/"]) {
+    test(`/en/${path} at 130% text: the last link or button is the element at its centre`, async ({ page }) => {
+      await stubSupabase(page, { tutor: completeTutor({ language: "en" }) });
+      await stubRoster(page, { students: STUDENTS, batches: BATCHES });
+      await seedSession(page);
+      await page.goto(`/en/${path}`);
+      await expect(page.locator("h1").first()).toBeVisible();
+      await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+      // The last control of the page's own content, above the nav.
+      const last = page.locator("main a:visible, main button:visible").last();
+      await last.scrollIntoViewIfNeeded();
+      const covered = await last.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        return !(top === el || el.contains(top));
+      });
+      expect(covered, "something (the nav) covers the last control").toBe(false);
     });
   }
 });

@@ -95,6 +95,8 @@ function ListBody() {
                 inputMode="search"
                 enterKeyHint="search"
                 autoComplete="off"
+                data-ph-no-capture=""
+                data-sentry-mask=""
                 value={text}
                 onChange={(event) => setText(event.currentTarget.value)}
                 placeholder={t("searchPlaceholder")}

@@ -46,8 +46,10 @@ for (const locale of locales) {
   values[locale] = new Set(leaves(JSON.parse(readFileSync(file, "utf8"))));
 }
 
-// What a language shows in English on purpose: the values still marked `TODO-translate`. A real English
-// value can sit inside one ("WhatsApp number" inside "Parent's WhatsApp number"), which is not a leak.
+// What a language shows in English on purpose: the values still marked `TODO-translate`. One of them is not
+// another language's leak, and is taken out of the text before the search, but only where it stands as a
+// whole string: quoted in a script or a JSON payload ("..." or \"...\"), or alone between tags (>...<). A
+// real English value that sits inside a longer sentence is still found.
 const untranslated = Object.fromEntries(
   locales.map((locale) => {
     const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"));
@@ -58,8 +60,13 @@ const untranslated = Object.fromEntries(
         else if (typeof value === "string" && value.startsWith(MARKER)) found.push(value.slice(MARKER.length));
       }
     })(tree);
-    const removable = [...new Set(found.flatMap(spellings))].filter((text) => text.length >= MIN_LENGTH);
-    return [locale, removable.sort((a, b) => b.length - a.length)];
+    const whole = [];
+    for (const value of new Set(found)) {
+      for (const spelling of spellings(value)) {
+        whole.push(`\\"${spelling}\\"`, `"${spelling}"`, `'${spelling}'`, `>${spelling}<`);
+      }
+    }
+    return [locale, whole.sort((x, y) => y.length - x.length)];
   }),
 );
 

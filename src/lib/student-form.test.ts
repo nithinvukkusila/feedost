@@ -228,3 +228,10 @@ describe("changedFields (33, 34)", () => {
     });
   });
 });
+
+describe("opening balance with nothing to count (review)", () => {
+  it.each(["₹", ",", "₹ ,", " , "])("%j means 0 and does not block Save", (owes) => {
+    const check = checkStudent(draft({ fee: "1200", owes }));
+    expect(check.ok && check.fields.openingBalance).toBe(0);
+  });
+});

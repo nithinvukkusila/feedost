@@ -41,11 +41,10 @@ function NotFound() {
   );
 }
 
-function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
+function BatchBody({ batch, onDeleted }: Readonly<{ batch: Batch; onDeleted: () => void }>) {
   const t = useTranslations("batches");
   const form = useTranslations("students.form");
   const locale = useLocale() as Locale;
-  const router = useRouter();
   const soft = useSoftLink();
   const roster = useRoster();
 
@@ -55,7 +54,7 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
   const [submitted, setSubmitted] = useState<"rename" | "timings" | null>(null);
   const [refused, setRefused] = useState<string | null>(null);
   const [saving, setSaving] = useState<"rename" | "timings" | null>(null);
-  const [problem, setProblem] = useState<WriteProblem>(null);
+  const [problem, setProblem] = useState<WriteProblem | "missing">(null);
   const [savedTimings, setSavedTimings] = useState(false);
   const [asking, setAsking] = useState(false);
   const [moving, setMoving] = useState(false);
@@ -107,7 +106,7 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
       nameField.current?.focus();
       return;
     }
-    setProblem(result.reason === "offline" ? "offline" : "failed");
+    setProblem(result.reason === "missing" ? "missing" : result.reason === "offline" ? "offline" : "failed");
   }
 
   function startRename() {
@@ -177,7 +176,12 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
           </div>
         </form>
 
-        <WriteNotice problem={problem} failed={t("saveFailed")} offline={form("offline")} />
+        <WriteNotice problem={problem === "missing" ? null : problem} failed={t("saveFailed")} offline={form("offline")} />
+        {problem === "missing" ? (
+          <p role="alert" className="type-body-sm font-semibold text-cloth wrap-anywhere">
+            {t("notFound.title")}
+          </p>
+        ) : null}
 
         <div className="mt-4 flex flex-col border-y-2 border-ink">
           <p className="type-headline border-b border-ink py-2 text-3xl wrap-break-word">{t("studentsCount", { n: count })}</p>
@@ -229,13 +233,10 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
 
       <DeleteSheet
         batch={batch}
-        studentCount={count}
+        studentCount={roster.students.filter((student) => student.batchId === batch.id).length}
         open={asking}
         onClose={() => setAsking(false)}
-        onDeleted={() => {
-          roster.removeBatch(batch.id);
-          router.push(localeHref(locale, batchesPath));
-        }}
+        onDeleted={onDeleted}
       />
     </div>
   );
@@ -244,10 +245,24 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
 function Chosen() {
   const id = useQueryParam("id");
   const roster = useRoster();
+  const router = useRouter();
+  const locale = useLocale() as Locale;
   const t = useTranslations("appState");
-  if (id === undefined) return <LoadingBook label={t("loading")} />;
+  // Set when this screen deleted the batch: the screen then waits for the list to open instead of saying "not found".
+  const [deleted, setDeleted] = useState(false);
+  if (id === undefined || deleted) return <LoadingBook label={t("loading")} />;
   const batch = id === null ? undefined : roster.batches.find((item) => item.id === id);
-  return <AppScreen>{batch ? <BatchBody key={batch.id} batch={batch} /> : <NotFound />}</AppScreen>;
+  return <AppScreen>{batch ? (
+        <BatchBody
+          key={batch.id}
+          batch={batch}
+          onDeleted={() => {
+            setDeleted(true);
+            router.push(localeHref(locale, batchesPath));
+            roster.removeBatch(batch.id);
+          }}
+        />
+      ) : <NotFound />}</AppScreen>;
 }
 
 export function BatchScreen() {

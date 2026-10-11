@@ -476,7 +476,9 @@
       "confirm": "Move {n, plural, one {# student} other {# students}} here",
       "cancel": "Cancel",
       "failed": "Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
-      "confirmNone": "Move here"
+      "confirmNone": "Move here",
+      "gone": "That batch no longer exists. Nothing was moved.",
+      "goneBack": "Back to batches"
     }
   },
   "waitlistForm": {

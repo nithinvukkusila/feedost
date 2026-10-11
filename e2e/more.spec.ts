@@ -121,7 +121,7 @@ test.describe("46: More in each language, at 360px and with larger text", () => 
       await page.evaluate(() => document.fonts.ready);
       // The nav sticks to the bottom of the screen and so floats over whatever is scrolled under it; the overlap
       // check would report that on a long page. Put it back in the flow for the check (it is last in the page).
-      await page.addStyleTag({ content: "div.sticky { position: static !important; }" });
+      await page.addStyleTag({ content: "[data-sticky-nav] { position: static !important; }" });
       for (const size of ["100%", "130%"]) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
@@ -132,4 +132,21 @@ test.describe("46: More in each language, at 360px and with larger text", () => 
       }
     });
   }
+});
+
+test.describe("46: the sticky nav does not cover the last control", () => {
+  test("at 130% text the Sign out button, scrolled into view, is the element at its centre", async ({ page }) => {
+    await stubSupabase(page, { tutor: completeTutor({ name: "Lakshmi Narasimhan Venkataramanan Subramaniam Iyengar" }) });
+    await seedSession(page);
+    await page.goto("/en/more/");
+    await page.evaluate(() => document.documentElement.style.setProperty("font-size", "130%"));
+    const last = page.getByRole("button", { name: "Sign out" });
+    await last.scrollIntoViewIfNeeded();
+    const covered = await last.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return !(top === el || el.contains(top));
+    });
+    expect(covered, "something (the nav) covers the Sign out button").toBe(false);
+  });
 });

@@ -303,7 +303,7 @@ test.describe("45: delete", () => {
     await link.click();
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText("Delete Class 10 Maths?")).toBeVisible();
-    await expect(sheet.getByText("2 students stay in your book with no batch.")).toBeVisible();
+    await expect(sheet.getByText("3 students stay in your book with no batch.")).toBeVisible();
     await sheet.getByRole("button", { name: "Cancel" }).last().click();
     await expect(sheet).toBeHidden();
     expect(roster.requests.filter((r) => r.method === "DELETE")).toEqual([]);

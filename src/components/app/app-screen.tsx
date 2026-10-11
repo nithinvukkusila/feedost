@@ -9,7 +9,7 @@ export function AppScreen({ nav, children }: Readonly<{ nav?: BottomNavKey; chil
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page">
       <main className="flex flex-1 flex-col">{children}</main>
       {nav ? (
-        <div className="sticky bottom-0 z-10">
+        <div data-sticky-nav="" className="sticky bottom-0 z-10">
           <AppNav current={nav} />
         </div>
       ) : null}

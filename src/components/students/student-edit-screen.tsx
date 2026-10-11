@@ -38,7 +38,7 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
   const router = useRouter();
   const roster = useRoster();
   const [working, setWorking] = useState(false);
-  const [problem, setProblem] = useState<WriteProblem>(null);
+  const [problem, setProblem] = useState<WriteProblem | "missing">(null);
 
   async function toggle() {
     if (working) return;
@@ -47,7 +47,7 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
     const result = await setActive(student.id, !student.active);
     setWorking(false);
     if (!result.ok) {
-      setProblem(result.reason === "offline" ? "offline" : "failed");
+      setProblem(result.reason === "missing" ? "missing" : result.reason === "offline" ? "offline" : "failed");
       return;
     }
     roster.put(result.student);
@@ -72,8 +72,13 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
       <section className="mt-6 border-t-2 border-ink pt-4">
         <p className="type-body-sm text-ink-soft">{t("edit.archiveNote")}</p>
         <div className="mt-3">
-          <WriteNotice problem={problem} failed={t("form.saveFailed")} offline={t("form.offline")} />
+          <WriteNotice problem={problem === "missing" ? null : problem} failed={t("form.saveFailed")} offline={t("form.offline")} />
         </div>
+        {problem === "missing" ? (
+          <p role="alert" className="mb-3 type-body-sm font-semibold text-cloth wrap-anywhere">
+            {t("edit.notFound")}
+          </p>
+        ) : null}
         <div className="mt-3 pr-1.5 pb-1.5">
           {student.active ? (
             <Button variant="outline" full busy={working} busyLabel={t("edit.archive")} onClick={toggle}>

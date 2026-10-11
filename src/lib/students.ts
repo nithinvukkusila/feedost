@@ -187,15 +187,30 @@ export function setActive(id: string, active: boolean): Promise<StudentResult> {
   return updateStudent(id, { active });
 }
 
-/** Puts these students in a batch, or in none (`null`), in one update. */
+/** How many ids go in one request: the ids sit in the address, which has a length limit. */
+export const MOVE_CHUNK = 100;
+
+/**
+ * Puts these students in a batch, or in none (`null`). At most MOVE_CHUNK ids per request. When a request
+ * fails, or answers with fewer rows than it was asked to change (a student archived-and-removed elsewhere, or
+ * not the tutor's), the move is reported as failed: some earlier students may already have moved, so the
+ * caller re-reads the roster.
+ */
 export async function moveStudents(ids: readonly string[], batchId: string | null): Promise<StudentsResult> {
   if (isOffline()) return { ok: false, reason: "offline" };
   if (ids.length === 0) return { ok: true, students: [] };
+  const moved: Student[] = [];
   try {
     const client = await getClient();
-    const { data, error } = await client.from("students").update({ batch_id: batchId }).in("id", [...ids]).select(STUDENT_COLUMNS);
-    if (error) return { ok: false, reason: failureOf(error) };
-    return { ok: true, students: ((data as Row[] | null) ?? []).map(studentFromRow) };
+    for (let at = 0; at < ids.length; at += MOVE_CHUNK) {
+      const chunk = ids.slice(at, at + MOVE_CHUNK);
+      const { data, error } = await client.from("students").update({ batch_id: batchId }).in("id", chunk).select(STUDENT_COLUMNS);
+      if (error) return { ok: false, reason: failureOf(error) };
+      const rows = ((data as Row[] | null) ?? []).map(studentFromRow);
+      if (rows.length < chunk.length) return { ok: false, reason: "failed" };
+      moved.push(...rows);
+    }
+    return { ok: true, students: moved };
   } catch {
     return { ok: false, reason: "failed" };
   }

@@ -222,3 +222,25 @@ describe("moveStudents (44)", () => {
     await expect(moveStudents([ID], "gone")).resolves.toEqual({ ok: false, reason: "batch-gone" });
   });
 });
+
+describe("moveStudents in chunks (review)", () => {
+  it("sends at most 100 ids per request", async () => {
+    const ids = Array.from({ length: 250 }, (_, i) => `id${i}`);
+    fake.answer(
+      { data: ids.slice(0, 100).map((id) => ({ ...row, id })), error: null },
+      { data: ids.slice(100, 200).map((id) => ({ ...row, id })), error: null },
+      { data: ids.slice(200).map((id) => ({ ...row, id })), error: null },
+    );
+    const { moveStudents } = await import("./students");
+    const result = await moveStudents(ids, "b1");
+    const sent = fake.calls.filter((c) => c.op === "in").map((c) => (c.args[1] as string[]).length);
+    expect(sent).toEqual([100, 100, 50]);
+    expect(result.ok && result.students).toHaveLength(250);
+  });
+
+  it("is a failure when fewer rows come back than were asked for", async () => {
+    fake.answer({ data: [{ ...row, id: "1" }], error: null });
+    const { moveStudents } = await import("./students");
+    await expect(moveStudents(["1", "2"], "b1")).resolves.toEqual({ ok: false, reason: "failed" });
+  });
+});
