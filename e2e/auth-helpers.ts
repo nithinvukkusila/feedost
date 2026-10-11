@@ -230,6 +230,16 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
         return;
       }
     }
+    // The students and batches tables: a signed-in tutor with nothing in them, unless a spec registers
+    // `stubRoster` (roster-helpers.ts), whose route is tried first.
+    if ((url.pathname === "/rest/v1/students" || url.pathname === "/rest/v1/batches") && request.method() === "GET") {
+      if (stub.networkDown) {
+        await route.abort("failed");
+        return;
+      }
+      await json(route, 200, []);
+      return;
+    }
     stub.unknown.push(logged);
     await json(route, 404, { message: "nothing is stubbed at this address" });
   });

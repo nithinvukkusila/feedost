@@ -304,8 +304,13 @@
     "more": "TODO-translate: More",
     "empty": {
       "title": "TODO-translate: Your book is empty.",
-      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "TODO-translate: Adding students arrives in the next update."
+      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "TODO-translate: Add a student",
+    "seeAll": "TODO-translate: See all students",
+    "filled": {
+      "total": "TODO-translate: {amount} each month",
+      "soon": "TODO-translate: Who owes what appears here in a later update."
     }
   },
   "subjects": {
@@ -316,6 +321,165 @@
     "physics": "TODO-translate: Physics",
     "chemistry": "TODO-translate: Chemistry",
     "accounts": "TODO-translate: Accounts"
+  },
+  "nav": {
+    "label": "TODO-translate: Main",
+    "home": "TODO-translate: Home",
+    "students": "TODO-translate: Students",
+    "attendance": "TODO-translate: Attendance",
+    "more": "TODO-translate: More"
+  },
+  "attendance": {
+    "title": "TODO-translate: Attendance",
+    "soon": "TODO-translate: Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "TODO-translate: Students",
+    "count": "TODO-translate: {n, plural, one {# student} other {# students}}",
+    "batchCount": "TODO-translate: {n, plural, =0 {No batches} one {# batch} other {# batches}}",
+    "add": "TODO-translate: Add",
+    "addFirst": "TODO-translate: Add a student",
+    "searchLabel": "TODO-translate: Search student or parent",
+    "searchPlaceholder": "TODO-translate: Search student or parent",
+    "noMatch": "TODO-translate: No student matches “{text}”.",
+    "clearSearch": "TODO-translate: Clear search",
+    "filterAll": "TODO-translate: All {n}",
+    "filterNone": "TODO-translate: No batch {n}",
+    "filterLabel": "TODO-translate: Show",
+    "meta": "TODO-translate: {amount} on the {day}",
+    "manageBatches": "TODO-translate: Batches",
+    "archivedLink": "TODO-translate: Archived students ({n})",
+    "archivedTag": "TODO-translate: Archived",
+    "empty": {
+      "title": "TODO-translate: No students yet.",
+      "body": "TODO-translate: Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "TODO-translate: Couldn't load your students",
+      "body": "TODO-translate: The network dropped. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    },
+    "stale": "TODO-translate: Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day}"
+    },
+    "form": {
+      "offline": "TODO-translate: You are offline. Connect to the internet to save.",
+      "addTitle": "TODO-translate: Add a student",
+      "back": "TODO-translate: Back to students",
+      "name": "TODO-translate: Student's name",
+      "parentName": "TODO-translate: Parent's name",
+      "phone": "TODO-translate: Parent's WhatsApp number",
+      "language": "TODO-translate: Send messages in",
+      "batch": "TODO-translate: Batch",
+      "dueDay": "TODO-translate: Fee due on",
+      "fee": "TODO-translate: Monthly fee ₹",
+      "owes": "TODO-translate: Already owes ₹",
+      "noBatch": "TODO-translate: No batch",
+      "permission": "TODO-translate: I have this parent's permission to save their number.",
+      "save": "TODO-translate: Save student",
+      "saveChanges": "TODO-translate: Save changes",
+      "saveAnother": "TODO-translate: Save and add another",
+      "saved": "TODO-translate: Saved {name}.",
+      "feeFromNextMonth": "TODO-translate: A new fee applies from the next month.",
+      "sameNumber": "TODO-translate: This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch."
+    },
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "tooShort": "TODO-translate: Too short",
+      "checkNumber": "TODO-translate: Check number",
+      "checkAmount": "TODO-translate: Check amount",
+      "wholeRupees": "TODO-translate: Whole rupees only",
+      "tooBig": "TODO-translate: Too big"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the student's name.",
+      "nameLong": "TODO-translate: Use 80 characters or fewer.",
+      "parentLong": "TODO-translate: Use 80 characters or fewer.",
+      "phoneShort": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "TODO-translate: Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "TODO-translate: Use digits only.",
+      "feeMissing": "TODO-translate: Type the monthly fee in rupees.",
+      "feeZero": "TODO-translate: The fee must be at least ₹1.",
+      "feeDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "feeBig": "TODO-translate: The most is ₹10,00,000.",
+      "feeChars": "TODO-translate: Use digits only.",
+      "owesDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "owesBig": "TODO-translate: The most is ₹10,00,000.",
+      "owesChars": "TODO-translate: Use digits only.",
+      "permissionNeeded": "TODO-translate: Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "TODO-translate: Couldn't find this student",
+      "notFoundBody": "TODO-translate: It may have been removed on another phone.",
+      "backLink": "TODO-translate: Back to students",
+      "archive": "TODO-translate: Archive student",
+      "archiveNote": "TODO-translate: Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "TODO-translate: Restore student"
+    }
+  },
+  "batches": {
+    "noStudents": "TODO-translate: No students in this batch yet.",
+    "title": "TODO-translate: Batches",
+    "back": "TODO-translate: Back to students",
+    "backToList": "TODO-translate: Back to batches",
+    "empty": {
+      "title": "TODO-translate: No batches yet.",
+      "body": "TODO-translate: A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "TODO-translate: {n, plural, one {# student} other {# students}}",
+    "monthly": "TODO-translate: {amount} each month",
+    "name": "TODO-translate: Batch name",
+    "timings": "TODO-translate: Timings (optional)",
+    "add": "TODO-translate: Add batch",
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "nameTaken": "TODO-translate: Name taken"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the batch name.",
+      "nameLong": "TODO-translate: Use 60 characters or fewer.",
+      "nameTaken": "TODO-translate: You already have a batch called {name}. Pick another name.",
+      "timingsLong": "TODO-translate: Use 100 characters or fewer."
+    },
+    "rename": "TODO-translate: Rename",
+    "save": "TODO-translate: Save",
+    "cancel": "TODO-translate: Cancel",
+    "saveTimings": "TODO-translate: Save timings",
+    "timingsSaved": "TODO-translate: Timings saved.",
+    "addStudent": "TODO-translate: Add a student",
+    "notFound": {
+      "title": "TODO-translate: Couldn't find this batch",
+      "body": "TODO-translate: It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "TODO-translate: Delete batch",
+      "note": "TODO-translate: Deleting keeps the students.",
+      "title": "TODO-translate: Delete {name}?",
+      "body": "TODO-translate: {n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "TODO-translate: Delete batch",
+      "cancel": "TODO-translate: Cancel"
+    },
+    "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "TODO-translate: Move students",
+      "title": "TODO-translate: Move students to {name}",
+      "none": "TODO-translate: No other students to move.",
+      "hint": "TODO-translate: Tick the students to move here.",
+      "inBatch": "TODO-translate: In {name}",
+      "noBatch": "TODO-translate: No batch",
+      "confirm": "TODO-translate: Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "TODO-translate: Cancel",
+      "failed": "TODO-translate: Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "TODO-translate: Move here",
+      "gone": "ಈ ಬ್ಯಾಚ್ ಈಗ ಇಲ್ಲ. ಯಾವ ವಿದ್ಯಾರ್ಥಿಯನ್ನೂ ಸರಿಸಲಾಗಿಲ್ಲ.",
+      "goneBack": "ಬ್ಯಾಚ್‌ಗಳಿಗೆ ಹಿಂತಿರುಗಿ"
+    }
   },
   "waitlistForm": {
     "name": {

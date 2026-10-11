@@ -304,8 +304,13 @@
     "more": "More",
     "empty": {
       "title": "Your book is empty.",
-      "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "Adding students arrives in the next update."
+      "body": "Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "Add a student",
+    "seeAll": "See all students",
+    "filled": {
+      "total": "{amount} each month",
+      "soon": "Who owes what appears here in a later update."
     }
   },
   "subjects": {
@@ -316,6 +321,165 @@
     "physics": "Physics",
     "chemistry": "Chemistry",
     "accounts": "Accounts"
+  },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "students": "Students",
+    "attendance": "Attendance",
+    "more": "More"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "soon": "Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "Students",
+    "count": "{n, plural, one {# student} other {# students}}",
+    "batchCount": "{n, plural, =0 {No batches} one {# batch} other {# batches}}",
+    "add": "Add",
+    "addFirst": "Add a student",
+    "searchLabel": "Search student or parent",
+    "searchPlaceholder": "Search student or parent",
+    "noMatch": "No student matches “{text}”.",
+    "clearSearch": "Clear search",
+    "filterAll": "All {n}",
+    "filterNone": "No batch {n}",
+    "filterLabel": "Show",
+    "meta": "{amount} on the {day}",
+    "manageBatches": "Batches",
+    "archivedLink": "Archived students ({n})",
+    "archivedTag": "Archived",
+    "empty": {
+      "title": "No students yet.",
+      "body": "Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "Couldn't load your students",
+      "body": "The network dropped. Nothing is lost.",
+      "retry": "Try again"
+    },
+    "stale": "Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+    },
+    "form": {
+      "offline": "You are offline. Connect to the internet to save.",
+      "addTitle": "Add a student",
+      "back": "Back to students",
+      "name": "Student's name",
+      "parentName": "Parent's name",
+      "phone": "Parent's WhatsApp number",
+      "language": "Send messages in",
+      "batch": "Batch",
+      "dueDay": "Fee due on",
+      "fee": "Monthly fee ₹",
+      "owes": "Already owes ₹",
+      "noBatch": "No batch",
+      "permission": "I have this parent's permission to save their number.",
+      "save": "Save student",
+      "saveChanges": "Save changes",
+      "saveAnother": "Save and add another",
+      "saved": "Saved {name}.",
+      "feeFromNextMonth": "A new fee applies from the next month.",
+      "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "That batch no longer exists. Pick another batch or No batch."
+    },
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "tooShort": "Too short",
+      "checkNumber": "Check number",
+      "checkAmount": "Check amount",
+      "wholeRupees": "Whole rupees only",
+      "tooBig": "Too big"
+    },
+    "err": {
+      "nameMissing": "Type the student's name.",
+      "nameLong": "Use 80 characters or fewer.",
+      "parentLong": "Use 80 characters or fewer.",
+      "phoneShort": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "Use digits only.",
+      "feeMissing": "Type the monthly fee in rupees.",
+      "feeZero": "The fee must be at least ₹1.",
+      "feeDecimal": "Type whole rupees, like 1200.",
+      "feeBig": "The most is ₹10,00,000.",
+      "feeChars": "Use digits only.",
+      "owesDecimal": "Type whole rupees, like 1200.",
+      "owesBig": "The most is ₹10,00,000.",
+      "owesChars": "Use digits only.",
+      "permissionNeeded": "Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "Couldn't find this student",
+      "notFoundBody": "It may have been removed on another phone.",
+      "backLink": "Back to students",
+      "archive": "Archive student",
+      "archiveNote": "Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "Restore student"
+    }
+  },
+  "batches": {
+    "noStudents": "No students in this batch yet.",
+    "title": "Batches",
+    "back": "Back to students",
+    "backToList": "Back to batches",
+    "empty": {
+      "title": "No batches yet.",
+      "body": "A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "{n, plural, one {# student} other {# students}}",
+    "monthly": "{amount} each month",
+    "name": "Batch name",
+    "timings": "Timings (optional)",
+    "add": "Add batch",
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "nameTaken": "Name taken"
+    },
+    "err": {
+      "nameMissing": "Type the batch name.",
+      "nameLong": "Use 60 characters or fewer.",
+      "nameTaken": "You already have a batch called {name}. Pick another name.",
+      "timingsLong": "Use 100 characters or fewer."
+    },
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveTimings": "Save timings",
+    "timingsSaved": "Timings saved.",
+    "addStudent": "Add a student",
+    "notFound": {
+      "title": "Couldn't find this batch",
+      "body": "It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "Delete batch",
+      "note": "Deleting keeps the students.",
+      "title": "Delete {name}?",
+      "body": "{n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "Delete batch",
+      "cancel": "Cancel"
+    },
+    "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "Move students",
+      "title": "Move students to {name}",
+      "none": "No other students to move.",
+      "hint": "Tick the students to move here.",
+      "inBatch": "In {name}",
+      "noBatch": "No batch",
+      "confirm": "Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "Cancel",
+      "failed": "Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "Move here",
+      "gone": "That batch no longer exists. Nothing was moved.",
+      "goneBack": "Back to batches"
+    }
   },
   "waitlistForm": {
     "name": {

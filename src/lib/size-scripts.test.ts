@@ -15,7 +15,7 @@ const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", 
 // message templates of all four languages: the leak check's one named exception.
 const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
-const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "setup/profile", "setup/upi"];
+const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
 const templatesPath = join("src", "lib", "reminder", "templates.json");
 type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;
@@ -94,7 +94,7 @@ afterEach(() => {
 });
 
 describe("pnpm size (criterion 30)", () => {
-  it("passes when the five routes, the four tool pages and the app's twenty-four pages exist and are small", () => {
+  it("passes when the five routes, the four tool pages and the app's pages exist and are small", () => {
     const result = run(sizeScript, project());
     expect(result.status).toBe(0);
     for (const page of [...pages, ...toolPages, ...appPages]) expect(result.out).toContain(`out/${page}`);
@@ -154,6 +154,19 @@ describe("pnpm check:leak (criterion 29)", () => {
     expect(result.status).toBe(0);
   });
 
+  it("lets an untranslated value stand whole, but still catches an English value inside a longer sentence (review)", () => {
+    const en = { home: { placeholder: "WhatsApp number now", other: "Parent's WhatsApp number now" } };
+    const hiTodo = { home: { placeholder: "TODO-translate: Parent's WhatsApp number now", other: "TODO-translate: Parent's WhatsApp number now" } };
+    const mine = { ...messages, en: en as unknown as typeof messages.en, hi: hiTodo as unknown as typeof messages.hi };
+    const page = (hiBody: string) => (l: string) => (l === "hi" ? hiBody : `<p>${(mine as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`);
+    // The whole untranslated string, between tags: not a leak.
+    expect(run(leakScript, project({ messages: mine, body: page("<p>Parent's WhatsApp number now</p>") })).status).toBe(0);
+    // The English value inside a longer sentence of that page: a leak.
+    const leaked = run(leakScript, project({ messages: mine, body: page("<p>Please send WhatsApp number now today</p>") }));
+    expect(leaked.status).toBe(1);
+    expect(leaked.out).toContain("hi page loads a en message");
+  });
+
   it("fails closed when no page shows any word of its own (an empty or stale out/)", () => {
     const result = run(leakScript, project({ body: () => "<p></p>", toolBody: () => "<p></p>" }));
     expect(result.status).toBe(1);
@@ -182,7 +195,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("36 pages");
+    expect(result.out).toContain("60 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {

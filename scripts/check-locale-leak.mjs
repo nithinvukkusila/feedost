@@ -25,6 +25,9 @@ const REQUIRED_PAGES = ["", "tools/fee-reminder/"];
 // of the text before the search for another language's interface words.
 const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" }];
 
+/** The ways a value can be written inside HTML or an inline JSON payload. */
+const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
+
 function leaves(node, out = []) {
   for (const value of Object.values(node)) {
     if (value && typeof value === "object") leaves(value, out);
@@ -43,6 +46,30 @@ for (const locale of locales) {
   values[locale] = new Set(leaves(JSON.parse(readFileSync(file, "utf8"))));
 }
 
+// What a language shows in English on purpose: the values still marked `TODO-translate`. One of them is not
+// another language's leak, and is taken out of the text before the search, but only where it stands as a
+// whole string: quoted in a script or a JSON payload ("..." or \"...\"), or alone between tags (>...<). A
+// real English value that sits inside a longer sentence is still found.
+const untranslated = Object.fromEntries(
+  locales.map((locale) => {
+    const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"));
+    const found = [];
+    (function walk(node) {
+      for (const value of Object.values(node)) {
+        if (value && typeof value === "object") walk(value);
+        else if (typeof value === "string" && value.startsWith(MARKER)) found.push(value.slice(MARKER.length));
+      }
+    })(tree);
+    const whole = [];
+    for (const value of new Set(found)) {
+      for (const spelling of spellings(value)) {
+        whole.push(`\\"${spelling}\\"`, `"${spelling}"`, `'${spelling}'`, `>${spelling}<`);
+      }
+    }
+    return [locale, whole.sort((x, y) => y.length - x.length)];
+  }),
+);
+
 const unique = Object.fromEntries(
   locales.map((locale) => [
     locale,
@@ -51,9 +78,6 @@ const unique = Object.fromEntries(
     ),
   ]),
 );
-
-/** The ways a value can be written inside HTML or an inline JSON payload. */
-const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
 
 /**
  * Each exception with its file read: `lines` is every template line of a language (long enough to
@@ -147,6 +171,7 @@ for (const locale of locales) {
     for (const file of page.files) {
       // The text searched for interface words: a script of an excepted page, with the templates taken out.
       let searched = file.text;
+      for (const text of untranslated[locale]) searched = searched.split(text).join("\n");
       if (!file.html) {
         for (const exception of excepted) {
           for (const text of exception.removable) searched = searched.split(text).join("\n");
