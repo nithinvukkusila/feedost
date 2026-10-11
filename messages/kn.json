@@ -481,6 +481,95 @@
       "goneBack": "ಬ್ಯಾಚ್‌ಗಳಿಗೆ ಹಿಂತಿರುಗಿ"
     }
   },
+  "board": {
+    "prev": "TODO-translate: Previous month",
+    "next": "TODO-translate: Next month",
+    "months": {
+      "january": "TODO-translate: January",
+      "february": "TODO-translate: February",
+      "march": "TODO-translate: March",
+      "april": "TODO-translate: April",
+      "may": "TODO-translate: May",
+      "june": "TODO-translate: June",
+      "july": "TODO-translate: July",
+      "august": "TODO-translate: August",
+      "september": "TODO-translate: September",
+      "october": "TODO-translate: October",
+      "november": "TODO-translate: November",
+      "december": "TODO-translate: December"
+    },
+    "monthYear": "TODO-translate: {month} {year}",
+    "hero": {
+      "label": "TODO-translate: Still to come in",
+      "from": "TODO-translate: {m, plural, one {from {n} of {m} student} other {from {n} of {m} students}}",
+      "collected": "TODO-translate: {amount} collected"
+    },
+    "tab": {
+      "overdue": "TODO-translate: Overdue",
+      "due": "TODO-translate: Due",
+      "paid": "TODO-translate: Paid"
+    },
+    "tabsLabel": "TODO-translate: Fees by status",
+    "legend": {
+      "paid": "TODO-translate: {n} paid",
+      "due": "TODO-translate: {n} due, hollow",
+      "overdue": "TODO-translate: {n} overdue, tall"
+    },
+    "strip": {
+      "label": "TODO-translate: {total} students: {paid} paid, {due} due, {overdue} overdue"
+    },
+    "tag": {
+      "overdue": "TODO-translate: Overdue {n, plural, one {{n} day} other {{n} days}}",
+      "overdueOpening": "TODO-translate: Overdue",
+      "due": "TODO-translate: Due",
+      "dueToday": "TODO-translate: Due today",
+      "partPaid": "TODO-translate: Part paid",
+      "paid": "TODO-translate: Paid"
+    },
+    "row": {
+      "dueOn": "TODO-translate: Due {date}",
+      "partPaid": "TODO-translate: Part paid {amount}",
+      "monthFee": "TODO-translate: {month} fee",
+      "earlier": "TODO-translate: Earlier balance"
+    },
+    "empty": {
+      "tab": {
+        "overdue": "TODO-translate: Nobody is overdue.",
+        "due": "TODO-translate: Nothing else is due this month.",
+        "paid": "TODO-translate: Nobody has paid yet this month.",
+        "dueOld": "TODO-translate: Nothing else was due that month.",
+        "paidOld": "TODO-translate: Nobody paid that month."
+      },
+      "none": {
+        "title": "TODO-translate: Nothing is due yet.",
+        "body": "TODO-translate: A student's fee appears here on their due day.",
+        "link": "TODO-translate: See your students"
+      },
+      "monthOld": "TODO-translate: No fees were due in {month}.",
+      "filter": "TODO-translate: Nothing in {batch} for {month}.",
+      "showAll": "TODO-translate: Show all batches"
+    },
+    "end": {
+      "overdue": "TODO-translate: That is everyone who is overdue.",
+      "due": "TODO-translate: That is everyone who is due.",
+      "paid": "TODO-translate: That is everyone who has paid."
+    },
+    "allPaid": {
+      "stamp": "TODO-translate: ALL PAID",
+      "title": "TODO-translate: Nothing left to collect.",
+      "collected": "TODO-translate: Collected",
+      "students": "TODO-translate: Students",
+      "of": "TODO-translate: {n} of {m}",
+      "next": "TODO-translate: {month} fees will appear here on each student's due day. You do not need to do anything."
+    },
+    "soon": "TODO-translate: Reminders and Mark paid arrive in a later update.",
+    "loadError": {
+      "title": "TODO-translate: Couldn't load your fees",
+      "body": "TODO-translate: The network dropped. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    },
+    "stale": "TODO-translate: Showing what was saved on this phone."
+  },
   "waitlistForm": {
     "name": {
       "label": "ನಿಮ್ಮ ಹೆಸರು",
