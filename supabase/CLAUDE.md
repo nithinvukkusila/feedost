@@ -23,11 +23,11 @@ supabase/environments.json  public identifiers per environment (staging and prod
 - Recording a payment is the database function `record_payment(...)`: it inserts the payment, takes the tutor's next `receipt_no` under a row lock, and updates the due's status, all in one transaction. Do not reimplement any part of that in the client or in an Edge Function.
 - Dues are created by the `pg_cron` job and by import (opening balance). Both rely on `unique(student_id, month)` and `on conflict do nothing`.
 - Edge Functions that serve public pages use the service role, look up by token only, return only the fields the page shows, and never return another student's data, the parent's phone, or internal ids.
-- Public write functions (`submit-claim`, `record-consent`, `waitlist-join`) validate input with zod and are rate-limited per token or IP.
+- Public write functions (`submit-claim`, `record-consent`, `waitlist-join`) validate input with a shared pure checker (one hand-written file the page and the function both import, with one vectors file; `zod` is not used because it has a single npm maintainer and would grow the landing bundle) and are rate-limited per token or IP.
 - Payment screenshots go to a private bucket. Storage policy: only the owning tutor can read. The pay page gets a short-lived signed upload URL from the Edge Function.
 - Every table migration says `grant ... to authenticated` itself. Never grant to `anon`. The baseline migration revokes the default `anon` access on new `public` tables, and `supabase/tests/030_default_privileges.sql` pins that.
 - Never run `supabase config push`, `supabase db push --include-seed`, or `supabase link` to production. Never change structure in the Supabase SQL editor.
-- No secrets in SQL or function source. Use `supabase secrets`. The only function secret so far is `APP_ENV`.
+- No secrets in SQL or function source. Use `supabase secrets`. Function secrets so far: `APP_ENV`, and `WAITLIST_HASH_SALT` (the HMAC key for the waitlist rate-limit hash; `waitlist-join` is deployed with `verify_jwt` off, which `config.toml` carries).
 
 ## Test helper
 
