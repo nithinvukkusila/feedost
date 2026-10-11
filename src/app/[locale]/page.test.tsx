@@ -1,23 +1,39 @@
 // The landing page as a whole (spec R0-1, criteria 1, 10, 14, 16, 17, 33), rendered with the real English messages.
 import { cleanup, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
-import LocaleHome from "./page";
+import { loadMessages } from "@/i18n/messages";
+
+vi.mock("next-intl/server", () => ({
+  getLocale: async () => "en",
+  getMessages: async () => loadMessages("en"),
+  getTranslations: async (namespace: string) => {
+    const messages = (await loadMessages("en")) as unknown as Record<string, unknown>;
+    return (key: string, values?: { brand?: string }) => {
+      let node: unknown = messages;
+      for (const part of `${namespace}.${key}`.split(".")) node = (node as Record<string, unknown>)[part];
+      return (node as string).replaceAll("{brand}", values?.brand ?? "");
+    };
+  },
+}));
+
+const { default: LocaleHome } = await import("./page");
 
 afterEach(cleanup);
 
-function renderPage() {
+async function renderPage() {
+  const page = await LocaleHome();
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <LocaleHome />
+      {page}
     </NextIntlClientProvider>,
   );
 }
 
 describe("the landing page", () => {
-  it("has one banner, one main, one contentinfo, one h1 and four h2 in order", () => {
-    renderPage();
+  it("has one banner, one main, one contentinfo, one h1 and four h2 in order", async () => {
+    await renderPage();
     expect(screen.getAllByRole("banner")).toHaveLength(1);
     expect(screen.getAllByRole("main")).toHaveLength(1);
     expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
@@ -31,14 +47,14 @@ describe("the landing page", () => {
     ]);
   });
 
-  it("has the waitlist section the buttons point at", () => {
-    const { container } = renderPage();
+  it("has the waitlist section the buttons point at", async () => {
+    const { container } = await renderPage();
     expect(container.querySelector("main section#waitlist")).not.toBeNull();
     expect(container.querySelector("#tools")).not.toBeNull();
   });
 
-  it("links only to #waitlist, a language's landing page, or the reminder writer (twice: hero and card 2)", () => {
-    const { container } = renderPage();
+  it("links only to #waitlist, a language's landing page, or the reminder writer (twice: hero and card 2)", async () => {
+    const { container } = await renderPage();
     const hrefs = [...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
     for (const href of hrefs) expect(href).toMatch(/^(#waitlist|\/(en|hi|kn|te)\/|\/en\/tools\/fee-reminder\/)$/);
@@ -46,9 +62,10 @@ describe("the landing page", () => {
     expect(hrefs.some((href) => href?.includes("receipt"))).toBe(false);
   });
 
-  it("has no form control, no price, no Pro plan and no support link", () => {
-    const { container } = renderPage();
-    expect(container.querySelectorAll("form, input, select, textarea")).toHaveLength(0);
+  it("has the waitlist form and no other form, no price, no Pro plan and no support link (R0-4)", async () => {
+    const { container } = await renderPage();
+    expect(container.querySelectorAll("form")).toHaveLength(1);
+    expect(container.querySelector("section#waitlist form")).not.toBeNull();
     expect(container.textContent).not.toMatch(/₹149|₹999|\bPro\b|whatsapp\.com|wa\.me|privacy/i);
   });
 });

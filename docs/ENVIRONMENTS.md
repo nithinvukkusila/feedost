@@ -84,6 +84,7 @@ The free plan has no automatic backups. Before each production migration the fou
 - The anon key is public. It is meant to be in the browser bundle.
 - The admin key is never in the browser, the repo, CI, or this machine. The static export has no server, so it can only be used inside an Edge Function.
 - The only function secret F4 sets is `APP_ENV` (`staging` or `production`), set with `supabase secrets set` on each project. Locally it is `local` in `supabase/config.toml`.
+- R0-4 adds one function secret, `WAITLIST_HASH_SALT` (a long random value, set with `supabase secrets set` on each project, never pasted into a chat or commit; locally a dummy in `supabase/config.toml`). `waitlist-join` is deployed with `verify_jwt` off; `config.toml` carries that. Not set or deployed yet.
 - The Vercel Development scope is not used. No variable is set per branch.
 - `.env.example` has placeholder names only. Its command-line-only block (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `VERCEL_AUTOMATION_BYPASS_SECRET`) is for your shell, never for Vercel.
 - The Vercel CLI is not installed. Agents cannot list deployments, read variables or deploy from the terminal. They use the GitHub pull request page for preview URLs. The founder uses the Vercel dashboard for anything else.

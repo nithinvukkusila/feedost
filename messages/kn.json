@@ -87,10 +87,7 @@
     },
     "waitlist": {
       "title": "ಪುಸ್ತಕದಲ್ಲಿ ನಿಮ್ಮ ಹೆಸರು ಬರೆಯಿರಿ.",
-      "body": "TODO-translate: The waitlist opens soon. You will be able to put your name here.",
-      "soon": "TODO-translate: The waitlist opens soon. Come back to this page to join.",
-      "button": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
-      "reason": "ಶೀಘ್ರದಲ್ಲೇ ತೆರೆಯುತ್ತದೆ"
+      "body": "ಇಲ್ಲಿ ನಿಮ್ಮ ಹೆಸರು ಬರೆಸಿ. ಆ್ಯಪ್ ತೆರೆಯುವ ದಿನ ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ನಿಮಗೆ ಸಂದೇಶ ಕಳುಹಿಸುತ್ತೇವೆ."
     },
     "footer": {
       "line": "TODO-translate: Free fee collection for home tutors in India.",
@@ -469,5 +466,70 @@
       "cancel": "TODO-translate: Cancel"
     },
     "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
+  },
+  "waitlistForm": {
+    "name": {
+      "label": "ನಿಮ್ಮ ಹೆಸರು",
+      "missing": {
+        "word": "ಬಿಟ್ಟಿದೆ",
+        "fix": "ನಿಮ್ಮ ಹೆಸರು ಬರೆಯಿರಿ."
+      },
+      "check": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "60 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚು ಬೇಡ. ಕೋನ ಆವರಣಗಳನ್ನು ಬಳಸಬೇಡಿ."
+      }
+    },
+    "phone": {
+      "label": "ವಾಟ್ಸಾಪ್ ಸಂಖ್ಯೆ",
+      "missing": {
+        "word": "ಬಿಟ್ಟಿದೆ",
+        "fix": "ನಿಮ್ಮ ವಾಟ್ಸಾಪ್ ಸಂಖ್ಯೆ ಬರೆಯಿರಿ."
+      },
+      "check": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "10 ಅಂಕಿಗಳ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಬಳಸಿ."
+      },
+      "placeholder": "+91"
+    },
+    "city": {
+      "label": "ಊರು",
+      "missing": {
+        "word": "ಬಿಟ್ಟಿದೆ",
+        "fix": "ನಿಮ್ಮ ಊರು ಬರೆಯಿರಿ."
+      },
+      "check": {
+        "word": "ಪರಿಶೀಲಿಸಿ",
+        "fix": "40 ಅಕ್ಷರಗಳಿಗಿಂತ ಹೆಚ್ಚು ಬೇಡ. ಕೋನ ಆವರಣಗಳನ್ನು ಬಳಸಬೇಡಿ."
+      }
+    },
+    "students": {
+      "label": "ಎಷ್ಟು ವಿದ್ಯಾರ್ಥಿಗಳು?",
+      "choose": "ಎಷ್ಟು ಎಂದು ಆಯ್ಕೆಮಾಡಿ",
+      "under10": "10 ಕ್ಕಿಂತ ಕಡಿಮೆ",
+      "from10": "10 ರಿಂದ 30",
+      "from30": "30 ರಿಂದ 60",
+      "over60": "60 ಕ್ಕಿಂತ ಹೆಚ್ಚು",
+      "missing": {
+        "word": "ಬಿಟ್ಟಿದೆ",
+        "fix": "ಒಂದು ಸಂಖ್ಯೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ."
+      }
+    },
+    "consent": "ಆ್ಯಪ್ ತೆರೆದಾಗ ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ನಿಮಗೆ ಸಂದೇಶ ಕಳುಹಿಸಲು ಮಾತ್ರ ನಿಮ್ಮ ಸಂಖ್ಯೆಯನ್ನು ಬಳಸುತ್ತೇವೆ. ಏನನ್ನೂ ಮಾರುವುದಿಲ್ಲ, ಹಂಚುವುದಿಲ್ಲ.",
+    "submit": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
+    "working": "ಉಳಿಸಲಾಗುತ್ತಿದೆ…",
+    "done": {
+      "stamp": "ದಾಖಲು",
+      "title": "ನೀವು ಪಟ್ಟಿಯಲ್ಲಿ ಇದ್ದೀರಿ.",
+      "body": "ಆ್ಯಪ್ ತೆರೆಯುವ ದಿನ ವಾಟ್ಸಾಪ್‌ನಲ್ಲಿ ನಿಮಗೆ ಸಂದೇಶ ಕಳುಹಿಸುತ್ತೇವೆ."
+    },
+    "failed": {
+      "title": "ಉಳಿಸಲಾಗಲಿಲ್ಲ.",
+      "detail": "ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+    },
+    "rateLimited": {
+      "title": "ತುಂಬಾ ಪ್ರಯತ್ನಗಳು.",
+      "detail": "ದಯವಿಟ್ಟು ಒಂದು ಗಂಟೆಯ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+    },
+    "noScript": "ಈ ಫಾರ್ಮ್‌ಗೆ JavaScript ಆನ್ ಆಗಿರಬೇಕು."
   }
 }

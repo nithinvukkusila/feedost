@@ -10,6 +10,36 @@ afterEach(cleanup);
 const classes = (el: Element) => el.className.split(/\s+/);
 const lineOf = (input: Element) => input.parentElement!;
 
+describe("Field single-line variant", () => {
+  it("draws a real input of the given type with the same line and label", () => {
+    render(<Field label="Phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="98765" />);
+    const input = screen.getByLabelText("Phone");
+    expect(input.tagName).toBe("INPUT");
+    expect(input.getAttribute("type")).toBe("tel");
+    expect(input.getAttribute("inputmode")).toBe("tel");
+    expect(input.getAttribute("autocomplete")).toBe("tel");
+    expect(classes(lineOf(input))).toEqual(expect.arrayContaining(["field-line-2", "border-ink", "min-h-control"]));
+  });
+
+  it("is controlled and reports changes", async () => {
+    const seen: string[] = [];
+    function Host() {
+      const [v, setV] = useState("");
+      return <Field label="Phone" type="tel" value={v} onChange={(e) => { seen.push(e.currentTarget.value); setV(e.currentTarget.value); }} />;
+    }
+    render(<Host />);
+    await userEvent.type(screen.getByLabelText("Phone"), "98");
+    expect(seen).toEqual(["9", "98"]);
+    expect((screen.getByLabelText("Phone") as HTMLInputElement).value).toBe("98");
+  });
+
+  it("shows the error words and mark", () => {
+    render(<Field label="Phone" type="tel" state="error" stateLabel="Fix this" message="Ten digits" />);
+    expect(screen.getByLabelText(/Phone/).getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText("Ten digits")).toBeTruthy();
+  });
+});
+
 describe("Field label and line (criteria 26 and 27)", () => {
   it("ties a visible label to the input", () => {
     render(<Field label="Your UPI ID" />);

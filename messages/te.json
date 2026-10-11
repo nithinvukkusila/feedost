@@ -87,10 +87,7 @@
     },
     "waitlist": {
       "title": "పుస్తకంలో మీ పేరు రాయండి.",
-      "body": "TODO-translate: The waitlist opens soon. You will be able to put your name here.",
-      "soon": "TODO-translate: The waitlist opens soon. Come back to this page to join.",
-      "button": "వెయిట్‌లిస్ట్‌లో చేరండి",
-      "reason": "త్వరలో తెరుచుకుంటుంది"
+      "body": "ఇక్కడ మీ పేరు నమోదు చేయండి. యాప్ తెరిచిన రోజు వాట్సాప్‌లో మీకు సందేశం పంపుతాము."
     },
     "footer": {
       "line": "TODO-translate: Free fee collection for home tutors in India.",
@@ -469,5 +466,70 @@
       "cancel": "TODO-translate: Cancel"
     },
     "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
+  },
+  "waitlistForm": {
+    "name": {
+      "label": "మీ పేరు",
+      "missing": {
+        "word": "లేదు",
+        "fix": "మీ పేరు రాయండి."
+      },
+      "check": {
+        "word": "చూడండి",
+        "fix": "60 అక్షరాలకు మించకూడదు. కోణ బ్రాకెట్లు వాడకండి."
+      }
+    },
+    "phone": {
+      "label": "వాట్సాప్ నంబర్",
+      "missing": {
+        "word": "లేదు",
+        "fix": "మీ వాట్సాప్ నంబర్ రాయండి."
+      },
+      "check": {
+        "word": "చూడండి",
+        "fix": "10 అంకెల మొబైల్ నంబర్ వాడండి."
+      },
+      "placeholder": "+91"
+    },
+    "city": {
+      "label": "ఊరు",
+      "missing": {
+        "word": "లేదు",
+        "fix": "మీ ఊరు రాయండి."
+      },
+      "check": {
+        "word": "చూడండి",
+        "fix": "40 అక్షరాలకు మించకూడదు. కోణ బ్రాకెట్లు వాడకండి."
+      }
+    },
+    "students": {
+      "label": "ఎంతమంది విద్యార్థులు?",
+      "choose": "ఎంత మంది అని ఎంచుకోండి",
+      "under10": "10 కంటే తక్కువ",
+      "from10": "10 నుండి 30",
+      "from30": "30 నుండి 60",
+      "over60": "60 కంటే ఎక్కువ",
+      "missing": {
+        "word": "లేదు",
+        "fix": "ఒక సంఖ్యను ఎంచుకోండి."
+      }
+    },
+    "consent": "యాప్ తెరిచినప్పుడు వాట్సాప్‌లో మీకు సందేశం పంపడానికి మాత్రమే మీ నంబర్‌ను వాడతాము. ఏదీ అమ్మము, ఇతరులతో పంచుకోము.",
+    "submit": "వెయిట్‌లిస్ట్‌లో చేరండి",
+    "working": "భద్రపరుస్తున్నాం…",
+    "done": {
+      "stamp": "నమోదు",
+      "title": "మీరు జాబితాలో ఉన్నారు.",
+      "body": "యాప్ తెరిచిన రోజు వాట్సాప్‌లో మీకు సందేశం పంపుతాము."
+    },
+    "failed": {
+      "title": "భద్రపరచడం కాలేదు.",
+      "detail": "మీ కనెక్షన్ చూసి, మళ్లీ ప్రయత్నించండి."
+    },
+    "rateLimited": {
+      "title": "చాలా ప్రయత్నాలు.",
+      "detail": "దయచేసి ఒక గంట తర్వాత మళ్లీ ప్రయత్నించండి."
+    },
+    "noScript": "ఈ ఫారమ్‌కు JavaScript ఆన్ చేసి ఉండాలి."
   }
 }
