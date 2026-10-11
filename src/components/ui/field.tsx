@@ -55,6 +55,12 @@ export type FieldProps = Stated & {
    * the helper and the message keep the page's own face. Leave it off for names and other words.
    */
   latinValue?: boolean;
+  /**
+   * Set to draw a single-line <input> of this type (for example "tel") instead of the wrapping
+   * textarea. Same line, label, states and tokens. A value wider than the line scrolls, so use it
+   * only for short values such as a phone number. Leave it off for everything else.
+   */
+  type?: "tel" | "text";
 } & Native;
 
 const labelTone: Record<FieldState, string> = {
@@ -165,12 +171,15 @@ export function Field(props: FieldProps) {
     placeholder,
     ref,
     latinValue = false,
+    type: givenType,
     id: givenId,
     "aria-describedby": describedBy,
     onChange,
     onKeyDown,
     ...control
   } = props;
+  // Only the two documented types draw an <input>; anything else is ignored, as before.
+  const inputType = givenType === "tel" || givenType === "text" ? givenType : undefined;
   const autoId = useId();
   const id = givenId ?? autoId;
   const noteId = `${id}-note`;
@@ -182,7 +191,7 @@ export function Field(props: FieldProps) {
   const valueRole = latinValue ? "type-value-latin" : "type-value";
 
   const controlled = value !== undefined;
-  const element = useRef<HTMLTextAreaElement | null>(null);
+  const element = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
   // What the control currently shows, when the screen does not hold the value itself. The invisible
   // copy below is drawn from this, so it must follow every way the control's value can change.
   const [typed, setTyped] = useState(() => oneLine(defaultValue ?? ""));
@@ -214,7 +223,7 @@ export function Field(props: FieldProps) {
     // Script that assigns `el.value = ...` fires no event at all. Watch the assignment itself, by
     // wrapping the element's own `value` accessor (React's own, when it has one) and passing through.
     const inherited =
-      Object.getOwnPropertyDescriptor(el, "value") ?? Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value");
+      Object.getOwnPropertyDescriptor(el, "value") ?? Object.getOwnPropertyDescriptor(inputType ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype, "value");
     const hadOwn = Object.prototype.hasOwnProperty.call(el, "value");
     if (inherited?.get && inherited.set) {
       const { get, set } = inherited;
@@ -251,7 +260,8 @@ export function Field(props: FieldProps) {
     const el = event.currentTarget;
     const dirty = el.value;
     const clean = oneLine(dirty);
-    if (clean !== dirty) {
+    // An <input> never holds a line break, and its caret cannot be read for a "tel" type.
+    if (clean !== dirty && !inputType) {
       // Keep the caret where the person is typing: "abc|def" plus a pasted "X\nY" ends after the Y.
       const caret = oneLine(dirty.slice(0, el.selectionStart)).length;
       el.value = clean;
@@ -276,10 +286,10 @@ export function Field(props: FieldProps) {
   // Stable for as long as the caller's ref is the same, so React does not detach and re-attach the
   // caller's ref on every render.
   const attach = useCallback(
-    (el: HTMLTextAreaElement | null) => {
+    (el: HTMLTextAreaElement | HTMLInputElement | null) => {
       element.current = el;
-      if (typeof ref === "function") return ref(el);
-      if (ref) ref.current = el;
+      if (typeof ref === "function") return ref(el as HTMLTextAreaElement | null);
+      if (ref) ref.current = el as HTMLTextAreaElement | null;
     },
     [ref],
   );
@@ -313,6 +323,7 @@ export function Field(props: FieldProps) {
           stays right when the width or the font changes. The zero-width space keeps one line of
           height when there is nothing to copy. See sync() for how the copy follows the control.
         */}
+        {inputType ? null : (
         <span
           aria-hidden="true"
           data-field-mirror=""
@@ -326,6 +337,29 @@ export function Field(props: FieldProps) {
           {shown === "" ? placeholder : shown}
           {"​"}
         </span>
+        )}
+        {inputType ? (
+          <input
+            enterKeyHint="done"
+            {...(control as object)}
+            type={inputType}
+            ref={attach}
+            id={id}
+            value={controlled ? shown : undefined}
+            defaultValue={controlled ? undefined : oneLine(defaultValue ?? "")}
+            placeholder={placeholder}
+            onChange={handleChange as unknown as (event: ChangeEvent<HTMLInputElement>) => void}
+            onKeyDown={handleKeyDown as unknown as (event: KeyboardEvent<HTMLInputElement>) => void}
+            aria-invalid={state === "error" ? "true" : undefined}
+            aria-describedby={cx(describedBy, hasNote && noteId) || undefined}
+            className={cx(
+              valueRole,
+              textBox,
+              "block w-full bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label group-typing/field:text-blue",
+              valueTone[state],
+            )}
+          />
+        ) : (
         <textarea
           // The key on the phone's keyboard says "done", not "return": Enter does not add a line.
           enterKeyHint="done"
@@ -350,6 +384,7 @@ export function Field(props: FieldProps) {
             valueTone[state],
           )}
         />
+        )}
         {state === "correct" ? <Tick /> : null}
         {state === "error" ? <ErrorMark /> : null}
       </div>

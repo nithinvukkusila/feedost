@@ -38,7 +38,7 @@ describe("the waitlist form", () => {
     expect(document.activeElement).toBe(document.body);
     const select = screen.getByRole("combobox") as HTMLSelectElement;
     expect(select.value).toBe("");
-    expect([...select.options].map((o) => o.textContent)).toEqual(["Choose", "Under 10", "10 to 30", "30 to 60", "More than 60"]);
+    expect([...select.options].map((o) => o.textContent)).toEqual(["Choose how many", "Under 10", "10 to 30", "30 to 60", "More than 60"]);
     const phone = screen.getByRole("textbox", { name: words.phone.label });
     expect(phone.getAttribute("inputmode")).toBe("tel");
     expect(phone.getAttribute("autocomplete")).toBe("tel");

@@ -354,7 +354,7 @@
     },
     "students": {
       "label": "How many students?",
-      "choose": "Choose",
+      "choose": "Choose how many",
       "under10": "Under 10",
       "from10": "10 to 30",
       "from30": "30 to 60",

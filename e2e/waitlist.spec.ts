@@ -24,7 +24,7 @@ const form = (page: Page) => section(page).locator("form");
 const word = (lang: Lang, key: string) => shown(lang, `waitlistForm.${key}`);
 
 // By position, not by label: a field in the needs-fixing state changes its accessible name, and the order is itself criterion 5.
-const CONTROLS = { name: "textarea >> nth=0", phone: "textarea >> nth=1", city: "textarea >> nth=2", students: "select" } as const;
+const CONTROLS = { name: "textarea >> nth=0", phone: "input[type=tel]", city: "textarea >> nth=1", students: "select" } as const;
 function control(page: Page, _lang: Lang, which: keyof typeof CONTROLS): Locator {
   return form(page).locator(CONTROLS[which]);
 }
@@ -81,7 +81,7 @@ test.describe("the form: fields, sizes, labels (criteria 4, 5, 9, 10, 18)", () =
       const items = [...f.querySelectorAll("textarea, input, select, button")].filter((e) => !(e.closest('[aria-hidden="true"]')));
       return items.map((e) => `${e.tagName.toLowerCase()}:${e.getAttribute("autocomplete") ?? e.getAttribute("type") ?? ""}`);
     });
-    expect(order).toEqual(["textarea:name", "textarea:tel", "textarea:address-level2", "select:", "button:submit"]);
+    expect(order).toEqual(["textarea:name", "input:tel", "textarea:address-level2", "select:", "button:submit"]);
     const labels = await form(page).locator("label").allTextContents();
     expect(labels.map((l) => l.trim())).toEqual([
       word("en", "name.label"),
@@ -94,7 +94,7 @@ test.describe("the form: fields, sizes, labels (criteria 4, 5, 9, 10, 18)", () =
     await expect(phone).toHaveAttribute("inputmode", "tel");
     await expect(phone).toHaveAttribute("autocomplete", "tel");
     await expect(phone).toHaveAttribute("placeholder", "+91");
-    // Select: native, four bands, first option "Choose", none chosen.
+    // Select: native, four bands, first option "Choose how many", none chosen.
     const select = control(page, "en", "students");
     expect(await select.evaluate((s) => s.tagName)).toBe("SELECT");
     expect(await select.locator("option").allTextContents()).toEqual([
@@ -151,7 +151,6 @@ test.describe("the form: fields, sizes, labels (criteria 4, 5, 9, 10, 18)", () =
 
   test("criterion 5 [en]: the phone field is type=tel (spec wording)", async ({ page }) => {
     await openForm(page, "en");
-    // The spec says type="tel". The shared Field draws every text field as a one-row textarea, which has no type.
     await expect(control(page, "en", "phone")).toHaveAttribute("type", "tel");
   });
 

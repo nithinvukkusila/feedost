@@ -164,6 +164,7 @@ export function WaitlistForm({ words, locale }: Readonly<{ words: WaitlistWords;
             if (phone !== null) set("phone", formatPhone(phone));
             touch("phone");
           }}
+          type="tel"
           inputMode="tel"
           autoComplete="tel"
           latinValue
