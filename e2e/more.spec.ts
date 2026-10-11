@@ -8,6 +8,18 @@ import { box, langs, messageText, sidewaysScroll, textProblems } from "./helpers
 
 const ORIGIN = "http://localhost:4173";
 
+test.describe("R1-3 criterion 2: the nav on More", () => {
+  test("shows the four items with More current", async ({ page }) => {
+    await stubSupabase(page, { tutor: completeTutor() });
+    await seedSession(page);
+    await page.goto("/en/more/");
+    const nav = page.getByRole("navigation", { name: "Main" });
+    await expect(nav.getByRole("link")).toHaveCount(4);
+    await expect(nav.locator('[data-item="more"]')).toHaveAttribute("aria-current", "page");
+    expect((await box(nav.locator('[data-item="home"]'))).height).toBeGreaterThanOrEqual(44);
+  });
+});
+
 test.describe("34: what More shows", () => {
   test("the profile, Edit, Language, Sign out and Back to home, and nothing else", async ({ page }) => {
     await stubSupabase(page, { tutor: completeTutor({ subjects: ["maths", "science", "Sanskrit"] }) });
@@ -107,6 +119,9 @@ test.describe("46: More in each language, at 360px and with larger text", () => 
       await page.goto(`/${lang}/more/`);
       await expect(page.locator("h1")).toHaveText(messageText(lang, "more.title"));
       await page.evaluate(() => document.fonts.ready);
+      // The nav sticks to the bottom of the screen and so floats over whatever is scrolled under it; the overlap
+      // check would report that on a long page. Put it back in the flow for the check (it is last in the page).
+      await page.addStyleTag({ content: "div.sticky { position: static !important; }" });
       for (const size of ["100%", "130%"]) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);

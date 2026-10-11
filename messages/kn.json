@@ -465,7 +465,19 @@
       "confirm": "TODO-translate: Delete batch",
       "cancel": "TODO-translate: Cancel"
     },
-    "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
+    "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "TODO-translate: Move students",
+      "title": "TODO-translate: Move students to {name}",
+      "none": "TODO-translate: No other students to move.",
+      "hint": "TODO-translate: Tick the students to move here.",
+      "inBatch": "TODO-translate: In {name}",
+      "noBatch": "TODO-translate: No batch",
+      "confirm": "TODO-translate: Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "TODO-translate: Cancel",
+      "failed": "TODO-translate: Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "TODO-translate: Move here"
+    }
   },
   "waitlistForm": {
     "name": {

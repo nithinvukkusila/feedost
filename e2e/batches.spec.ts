@@ -336,3 +336,41 @@ test.describe("45: delete", () => {
     expect(roster.batches).toHaveLength(2);
   });
 });
+
+test.describe("44: move students", () => {
+  test("lists active students from other batches with their batch, moves the ticked ones in one update", async ({ page }) => {
+    const roster = await signedIn(page, { students: STUDENTS, batches: BATCHES });
+    await page.goto(`/en/batches/edit/?id=${MATHS}`);
+    await page.getByRole("button", { name: "Move students" }).click();
+    const sheet = page.getByRole("dialog");
+    await expect(sheet.getByText("Move students to Class 10 Maths")).toBeVisible();
+    // Not those already here, and not the archived one.
+    await expect(sheet.getByRole("checkbox")).toHaveCount(2);
+    await expect(sheet.getByText("In Class 8 Science")).toBeVisible();
+    await expect(sheet.getByText("No batch", { exact: true })).toBeVisible();
+    // Nothing ticked: nothing to send.
+    await expect(sheet.getByRole("button", { name: "Move here" })).toBeDisabled();
+    for (const box of await sheet.getByRole("checkbox").all()) expect((await box.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(24);
+    await sheet.getByRole("checkbox", { name: /Meena Shetty/ }).check();
+    await sheet.getByRole("checkbox", { name: /No Batch Kid/ }).check();
+    await sheet.getByRole("button", { name: "Move 2 students here" }).click();
+    await expect(sheet).toBeHidden();
+    const patches = roster.requests.filter((r) => r.method === "PATCH");
+    expect(patches).toHaveLength(1);
+    expect(patches[0].body).toEqual({ batch_id: MATHS });
+    expect(roster.students.filter((s) => s.batch_id === MATHS && s.active)).toHaveLength(4);
+    await expect(page.getByText("4 students", { exact: true })).toBeVisible();
+  });
+
+  test("a failed move keeps the sheet and the ticks and says nothing was moved", async ({ page }) => {
+    const roster = await signedIn(page, { students: STUDENTS, batches: BATCHES });
+    await page.goto(`/en/batches/edit/?id=${MATHS}`);
+    await page.getByRole("button", { name: "Move students" }).click();
+    const sheet = page.getByRole("dialog");
+    await sheet.getByRole("checkbox", { name: /Meena Shetty/ }).check();
+    roster.refuseWrites = true;
+    await sheet.getByRole("button", { name: "Move 1 student here" }).click();
+    await expect(sheet.getByText(/Nothing was moved/)).toBeVisible();
+    await expect(sheet.getByRole("checkbox", { name: /Meena Shetty/ })).toBeChecked();
+  });
+});

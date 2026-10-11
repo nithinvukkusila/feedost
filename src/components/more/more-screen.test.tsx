@@ -74,7 +74,16 @@ describe("MoreScreen", () => {
     renderWithWords(<MoreScreen />);
     for (const word of [/\bpro\b/i, /export/i, /help/i, /delete/i, /batches/i, /reports/i]) expect(screen.queryByText(word)).toBeNull();
     // Edit, Language, Back to home: three links; one button.
-    expect(screen.getAllByRole("link")).toHaveLength(3);
-    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(within(screen.getByRole("main")).getAllByRole("link")).toHaveLength(3);
+    expect(within(screen.getByRole("main")).getAllByRole("button")).toHaveLength(1);
+  });
+});
+
+describe("MoreScreen nav (R1-3, criterion 2)", () => {
+  it("has the bottom nav with More current", () => {
+    renderWithWords(<MoreScreen />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getAllByRole("link")).toHaveLength(4);
+    expect(nav.querySelector('[data-item="more"]')?.getAttribute("aria-current")).toBe("page");
   });
 });

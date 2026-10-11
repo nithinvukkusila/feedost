@@ -9,6 +9,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTutor } from "@/components/app/app-gate";
+import { AppScreen } from "@/components/app/app-screen";
 import { useSoftLink } from "@/components/app/use-soft-link";
 import { Button } from "@/components/ui/button";
 import { Slip } from "@/components/ui/slip";
@@ -44,7 +45,7 @@ export function MoreScreen() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page">
+    <AppScreen nav="more">
       <header className="on-cloth-ground border-b-2 border-ink bg-cloth px-5 pt-3 pb-6 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed">
         <a href={home} onClick={soft(home)} className="type-control-sm -ml-3 inline-flex min-h-tap items-center gap-1 pr-3 pl-2 text-on-cloth ring:ground-ring">
           <BackArrow />
@@ -92,6 +93,6 @@ export function MoreScreen() {
           </Button>
         </div>
       </div>
-    </main>
+    </AppScreen>
   );
 }

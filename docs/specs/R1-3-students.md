@@ -351,13 +351,15 @@ Test method: as R1-1 section 9. A build made with the CI fake address; Playwrigh
 7. Search by the first letters of a name, then by part of a phone number, then by a parent's name. Clear the search.
 8. Go to Batches. Add "Class 10 Maths" with timings. Add "class 10 maths": it is refused with words. Add "Class 8 Science".
 9. Open a student, set the batch to Class 10 Maths, save. The list now shows the batch tab with a count. Tap the tab; tap All. Add two more batches: the tabs turn into a select.
-10. On the batch screen use Move students to bring two students in. Rename the batch. Check the totals.
+10. On the batch screen tap Move students: the button says "Move here" and is dimmed until you tick someone. Tick two students from other batches (each shows its present batch or "No batch"), tap "Move 2 students here". The sheet closes and the batch shows the new count and monthly total. Rename the batch. Check the totals.
 11. Archive a student. They leave the list; "Archived students (1)" appears. Open them, Restore.
 12. Delete a batch. The confirm sheet says its students stay. They show no batch afterwards.
 13. Turn on airplane mode and try to save a student: the offline words show, nothing is lost. Turn it off and save again.
 14. Sign in on a second phone or browser: the same students show.
 15. Reload on a student's edit screen: it opens that student. Change the address to a made-up id: "Couldn't find this student."
-16. Switch the app to Hindi, Kannada and Telugu: new screens show the canvas words or English placeholders (marked `TODO-translate`), and no layout breaks.
+16. Open More: the bottom nav shows with More marked; Home, Students and Attendance go to their screens.
+17. With a batch open on a second phone, delete that batch there. On the first phone, try Save on a new student in that batch: it says the batch no longer exists, and the batch list refreshes.
+18. Switch the app to Hindi, Kannada and Telugu: new screens show the canvas words or English placeholders (marked `TODO-translate`), and no layout breaks.
 
 ## 12. Risks and traps
 

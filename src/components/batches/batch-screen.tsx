@@ -27,6 +27,7 @@ import { checkBatch } from "@/lib/batch-form";
 import { formatRupees } from "@/lib/format";
 import { batchSummary, sortStudents } from "@/lib/student-list";
 import { DeleteSheet } from "./delete-sheet";
+import { MoveSheet } from "./move-sheet";
 
 function NotFound() {
   const t = useTranslations("batches");
@@ -57,6 +58,7 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
   const [problem, setProblem] = useState<WriteProblem>(null);
   const [savedTimings, setSavedTimings] = useState(false);
   const [asking, setAsking] = useState(false);
+  const [moving, setMoving] = useState(false);
   const nameField = useRef<HTMLTextAreaElement>(null);
   const timingsField = useRef<HTMLTextAreaElement>(null);
 
@@ -191,6 +193,11 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
       </div>
 
       <div className="mt-5 flex flex-col pr-5.5 pl-4">
+        <div className="mb-5 pr-1.5 pb-1.5">
+          <Button variant="outline" full onClick={() => setMoving(true)}>
+            {t("move.link")}
+          </Button>
+        </div>
         {inBatch.length === 0 ? (
           <p className="type-body px-1 text-ink-soft">{t("noStudents")}</p>
         ) : (
@@ -217,6 +224,8 @@ function BatchBody({ batch }: Readonly<{ batch: Batch }>) {
           {t("delete.link")}
         </button>
       </div>
+
+      <MoveSheet batch={batch} open={moving} onClose={() => setMoving(false)} />
 
       <DeleteSheet
         batch={batch}

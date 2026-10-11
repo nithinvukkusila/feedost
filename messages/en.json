@@ -465,7 +465,19 @@
       "confirm": "Delete batch",
       "cancel": "Cancel"
     },
-    "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
+    "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "Move students",
+      "title": "Move students to {name}",
+      "none": "No other students to move.",
+      "hint": "Tick the students to move here.",
+      "inBatch": "In {name}",
+      "noBatch": "No batch",
+      "confirm": "Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "Cancel",
+      "failed": "Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "Move here"
+    }
   },
   "waitlistForm": {
     "name": {
