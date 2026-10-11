@@ -53,16 +53,15 @@
     },
     "tools": {
       "title": "ಎರಡು ಉಚಿತ ಉಪಕರಣಗಳು.",
-      "tag": "ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ",
       "t1": {
         "no": "ಉಪಕರಣ ಸಂ. 01",
-        "title": "TODO-translate: Fee receipt maker",
-        "body": "TODO-translate: A proper PDF receipt in one minute.",
+        "title": "ಶುಲ್ಕ ರಸೀದಿ ತಯಾರಕ",
+        "body": "ಒಂದು ನಿಮಿಷದಲ್ಲಿ ಸರಿಯಾದ PDF ರಸೀದಿ.",
         "open": "ರಸೀದಿ ಮಾಡಿ"
       },
       "t2": {
         "no": "ಉಪಕರಣ ಸಂ. 02",
-        "title": "TODO-translate: Fee reminder writer",
+        "title": "ಶುಲ್ಕ ನೆನಪಿನ ಸಂದೇಶ ಬರಹಗಾರ",
         "body": "ಸೌಮ್ಯವಾಗಿ ಅಥವಾ ಕಟ್ಟುನಿಟ್ಟಾಗಿ, ನಿಮ್ಮ UPI ಲಿಂಕ್ ಜೊತೆಗೆ.",
         "open": "ನೆನಪಿನ ಸಂದೇಶ ಬರೆಯಿರಿ"
       }
@@ -223,7 +222,7 @@
     "promo": {
       "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
       "title": "ಪ್ರತಿ ತಿಂಗಳು ರಸೀದಿ ಬರೆಯುತ್ತೀರಾ?",
-      "body": "TODO-translate: The {brand} app is coming soon. It will make and send receipts when you mark a fee as paid."
+      "body": "{brand} ಆ್ಯಪ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ. ಶುಲ್ಕ ಪಾವತಿಯಾಗಿದೆ ಎಂದು ಗುರುತಿಸಿದ ತಕ್ಷಣ ಅದು ರಸೀದಿ ಮಾಡಿ ಕಳುಹಿಸುತ್ತದೆ."
     }
   },
   "receiptForm": {
@@ -285,25 +284,25 @@
       "cash": "ನಗದು",
       "bank": "ಬ್ಯಾಂಕ್"
     },
-    "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The PDF is made on your phone.",
+    "privacy": "ನೀವು ಬರೆದದ್ದು ನಮಗೆ ಕಳುಹಿಸಲ್ಪಡುವುದಿಲ್ಲ, ನಮ್ಮ ಸರ್ವರ್‌ನಲ್ಲಿ ಉಳಿಸಲ್ಪಡುವುದಿಲ್ಲ. PDF ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲೇ ತಯಾರಾಗುತ್ತದೆ.",
     "preview": {
       "title": "ನಿಮ್ಮ ರಸೀದಿ",
       "blank": "ಖಾಲಿ ಜಾಗ",
       "incomplete": "ರಸೀದಿ ಪೂರ್ಣಗೊಳಿಸಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ.",
-      "unprintable": "TODO-translate: Some characters cannot be printed and were left out."
+      "unprintable": "ಕೆಲವು ಅಕ್ಷರಗಳನ್ನು ಮುದ್ರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ, ಆದ್ದರಿಂದ ಬಿಟ್ಟಿದ್ದೇವೆ."
     },
     "download": "PDF ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
     "share": "WhatsApp ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ",
     "working": "ನಿಮ್ಮ PDF ತಯಾರಾಗುತ್ತಿದೆ…",
     "fillFirst": "ಮೊದಲು ಮೇಲಿನ ಖಾನೆಗಳನ್ನು ತುಂಬಿ.",
-    "failed": "TODO-translate: Could not make the PDF. Check your connection and try again.",
-    "saved": "TODO-translate: The PDF has been saved. Attach it in WhatsApp.",
+    "failed": "PDF ತಯಾರಾಗಲಿಲ್ಲ. ನಿಮ್ಮ ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+    "saved": "PDF ಉಳಿಸಲಾಗಿದೆ. ಅದನ್ನು WhatsApp ನಲ್ಲಿ ಲಗತ್ತಿಸಿ ಕಳುಹಿಸಿ.",
     "openWhatsApp": "WhatsApp ತೆರೆಯಿರಿ"
   },
   "toolNav": {
     "label": "ಉಚಿತ ಉಪಕರಣಗಳು",
-    "receipt": "TODO-translate: Receipt maker",
-    "reminder": "TODO-translate: Reminder writer"
+    "receipt": "ರಸೀದಿ ತಯಾರಕ",
+    "reminder": "ಜ್ಞಾಪನೆ ಬರಹಗಾರ"
   },
   "notFound": {
     "title": "ಈ ಪುಟ ಇಲ್ಲ.",

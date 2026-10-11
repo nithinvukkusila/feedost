@@ -53,16 +53,15 @@
     },
     "tools": {
       "title": "రెండు ఉచిత సాధనాలు.",
-      "tag": "త్వరలో వస్తుంది",
       "t1": {
         "no": "సాధనం నం. 01",
-        "title": "TODO-translate: Fee receipt maker",
-        "body": "TODO-translate: A proper PDF receipt in one minute.",
+        "title": "ఫీజు రసీదు తయారీ",
+        "body": "ఒక నిమిషంలో సరైన PDF రసీదు.",
         "open": "రసీదు తయారు చేయండి"
       },
       "t2": {
         "no": "సాధనం నం. 02",
-        "title": "TODO-translate: Fee reminder writer",
+        "title": "ఫీజు రిమైండర్ రైటర్",
         "body": "మర్యాదగా లేదా గట్టిగా, మీ UPI లింక్‌తో.",
         "open": "రిమైండర్ రాయండి"
       }
@@ -223,7 +222,7 @@
     "promo": {
       "join": "వెయిట్‌లిస్ట్‌లో చేరండి",
       "title": "ప్రతి నెలా రసీదులు రాస్తున్నారా?",
-      "body": "TODO-translate: The {brand} app is coming soon. It will make and send receipts when you mark a fee as paid."
+      "body": "{brand} యాప్ త్వరలో వస్తోంది. ఫీజు చెల్లించినట్లు గుర్తు పెట్టగానే అది రసీదు తయారు చేసి పంపుతుంది."
     }
   },
   "receiptForm": {
@@ -285,25 +284,25 @@
       "cash": "నగదు",
       "bank": "బ్యాంక్"
     },
-    "privacy": "TODO-translate: Nothing you type is sent to us or saved on our servers. The PDF is made on your phone.",
+    "privacy": "మీరు రాసినది మాకు పంపబడదు, మా సర్వర్‌లో సేవ్ కాదు. PDF మీ ఫోన్‌లోనే తయారవుతుంది.",
     "preview": {
       "title": "మీ రసీదు",
       "blank": "ఖాళీ",
       "incomplete": "రసీదు పూర్తి చేయడానికి పైన ఉన్న ఖాళీలను నింపండి.",
-      "unprintable": "TODO-translate: Some characters cannot be printed and were left out."
+      "unprintable": "కొన్ని అక్షరాలను ముద్రించలేకపోయాం, అందుకే వదిలేశాం."
     },
     "download": "PDF డౌన్‌లోడ్ చేయండి",
     "share": "WhatsAppలో షేర్ చేయండి",
     "working": "మీ PDF తయారవుతోంది…",
     "fillFirst": "ముందు పైన ఉన్న ఖాళీలను నింపండి.",
-    "failed": "TODO-translate: Could not make the PDF. Check your connection and try again.",
-    "saved": "TODO-translate: The PDF has been saved. Attach it in WhatsApp.",
+    "failed": "PDF తయారు కాలేదు. మీ కనెక్షన్ చూసి మళ్లీ ప్రయత్నించండి.",
+    "saved": "PDF సేవ్ అయింది. దాన్ని WhatsApp లో జత చేసి పంపండి.",
     "openWhatsApp": "WhatsApp తెరవండి"
   },
   "toolNav": {
     "label": "ఉచిత సాధనాలు",
-    "receipt": "TODO-translate: Receipt maker",
-    "reminder": "TODO-translate: Reminder writer"
+    "receipt": "రసీదు తయారీ",
+    "reminder": "రిమైండర్ రైటర్"
   },
   "notFound": {
     "title": "ఈ పేజీ లేదు.",

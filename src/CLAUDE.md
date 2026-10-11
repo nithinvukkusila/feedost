@@ -19,6 +19,7 @@ src/i18n/                      next-intl request config, message loading
 src/styles/                    design tokens, fonts and type roles (the only place hex values live)
 src/lib/                       supabase client, formatters, outbox, analytics
 src/lib/reminder/              the fee reminder: checks, UPI link, message, WhatsApp link, and its templates
+src/lib/receipt/               the fee receipt: its lines, wording (templates.json), PDF maker and share step. `make-pdf.ts` is the only file that may import the PDF library (`@cantoo/pdf-lib`, `@cantoo/fontkit`), and only through `await import()` inside a function, so it never enters a route's initial JS; `pnpm size` fails if it does
 src/config/brand.ts            product name and domain, the only place they appear
 src/config/locales.ts          the four languages and their own names, the only place they are listed
 ```

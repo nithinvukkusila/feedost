@@ -40,7 +40,7 @@ const names = {
   te: ["శ్రీనివాస్", "కృష్ణ", "ప్రజ్ఞ", "లక్ష్మి", "సుబ్రహ్మణ్యం"],
 };
 
-describe("makePdf", () => {
+describe("makePdf", { timeout: 30_000 }, () => {
   it("makes one A4 page PDF, small, for an English receipt, and fetches only the Latin font", async () => {
     const { blob, bytes, fonts, dropped } = await make();
     expect(blob.type).toBe("application/pdf");

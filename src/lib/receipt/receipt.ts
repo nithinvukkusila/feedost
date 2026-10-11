@@ -91,7 +91,7 @@ export type ReceiptLines = {
   stamp: string;
   /** "08 Oct 2026" */
   stampDate: string;
-  /** "Made with FeeDost (feedost.vercel.app), a free tool for tutors" */
+  /** "Made with (brand name, address), a free tool for tutors" */
   footer: string;
 };
 

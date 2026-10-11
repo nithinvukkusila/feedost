@@ -580,3 +580,120 @@ describe("the reminder templates and their review record (R0-2)", () => {
     });
   });
 });
+
+// Spec R0-3, criteria 16, 17, 26 and 32: the receipt wording and its review record.
+describe("the receipt wording and its review record (R0-3)", () => {
+  type Entry = {
+    heading: string;
+    date: string;
+    sentence: string;
+    stamp: string;
+    footer: string;
+    whatsApp: string;
+    months: string[];
+    shortMonths: string[];
+    modes: Record<string, string>;
+  };
+  type Wording = Record<"en" | "hi" | "kn" | "te", Entry>;
+
+  const real = JSON.parse(readFileSync(join(process.cwd(), "src", "lib", "receipt", "templates.json"), "utf8")) as Wording;
+  const open = { status: "not reviewed", reviewer: "", date: "", sha256: "" };
+  const notReviewed = { hi: { ...open }, kn: { ...open }, te: { ...open } };
+  const hash = (e: Entry) =>
+    createHash("sha256")
+      .update(JSON.stringify({ heading: e.heading, date: e.date, sentence: e.sentence, stamp: e.stamp, footer: e.footer, whatsApp: e.whatsApp, months: e.months, shortMonths: e.shortMonths, modes: e.modes }))
+      .digest("hex");
+  const signed = (e: Entry) => ({ status: "reviewed", reviewer: "A Reader", date: "2026-10-20", sha256: hash(e) });
+
+  function withWording(wording: unknown, review: unknown = notReviewed): string {
+    const root = folder();
+    const dir = join(root, "src", "lib", "receipt");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "templates.json"), typeof wording === "string" ? wording : JSON.stringify(wording));
+    if (review !== null) writeFileSync(join(dir, "templates.review.json"), JSON.stringify(review));
+    return root;
+  }
+  function changed(locale: keyof Wording, change: (entry: Entry) => void): Wording {
+    const copy = structuredClone(real);
+    change(copy[locale]);
+    return copy;
+  }
+
+  it("the real files pass the plain run, count 24 texts and print each language's hash to copy", () => {
+    const result = run(withWording(real));
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("receipt: 24 texts, 3 languages not reviewed (hi, kn, te)");
+    for (const locale of ["hi", "kn", "te"] as const) expect(result.out).toContain(`receipt ${locale}: not reviewed; current text ${hash(real[locale])}`);
+    expect(run(process.cwd()).status).toBe(0);
+  });
+
+  it("a folder with no receipt wording is checked as before", () => {
+    expect(run(folder()).out).not.toContain("receipt");
+  });
+
+  it("fails a sentence that lost a placeholder", () => {
+    const result = run(withWording(changed("en", (e) => (e.sentence = "Received with thanks from the family of {student} by {mode} for {month}."))));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json "en.sentence": {amount} appears 0 times');
+  });
+
+  it("fails a stray brace", () => {
+    const result = run(withWording(changed("hi", (e) => (e.stamp = "भुगतान {प्राप्त}"))));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json "hi.stamp" has a brace');
+  });
+
+  it("fails TODO-translate: a parent reads this, so it cannot be marked", () => {
+    const result = run(withWording(changed("kn", (e) => (e.heading = `TODO-translate: ${e.heading}`))));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json "kn.heading" contains TODO-translate');
+  });
+
+  it("fails English pasted into Telugu", () => {
+    const result = run(withWording(changed("te", (e) => (e.sentence = real.en.sentence))));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('"te.sentence" has no Telugu text');
+    expect(result.out).toContain('"te.sentence" is the same as the English one');
+  });
+
+  it.each(["verified", "Official receipt", "GST", "tax invoice", "tracked"])("fails the word a receipt must not use: %s (criterion 17)", (word) => {
+    const result = run(withWording(changed("en", (e) => (e.heading = `${word} fee receipt`))));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json "en.heading" uses a word a receipt must not use');
+  });
+
+  it("fails a month list with 11 names", () => {
+    const result = run(withWording(changed("kn", (e) => e.shortMonths.pop())));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('"kn.shortMonths" has 11 names, expected 12');
+  });
+
+  it("fails a missing payment phrase", () => {
+    const result = run(withWording(changed("hi", (e) => delete e.modes.bank)));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('"hi.modes" must have a text for each of upi, cash, bank');
+  });
+
+  it("fails a language that is missing", () => {
+    const { te: _te, ...rest } = real;
+    void _te;
+    const result = run(withWording(rest));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json is missing "te"');
+  });
+
+  it("--strict fails while any language is not reviewed, and passes when all three are signed", () => {
+    const strict = run(withWording(real), "--strict");
+    expect(strict.status).toBe(1);
+    expect(strict.out).toContain('receipt templates.json "kn" is not reviewed');
+    const signedAll = run(withWording(real, { hi: signed(real.hi), kn: signed(real.kn), te: signed(real.te) }), "--strict");
+    expect(signedAll.out).toContain("receipt: 24 texts, all 3 languages reviewed");
+  });
+
+  it("a text changed after the review is named", () => {
+    const edited = changed("hi", (e) => (e.heading = `${e.heading} `.trim() + "।"));
+    const result = run(withWording(edited, { hi: signed(real.hi), kn: signed(real.kn), te: signed(real.te) }), "--strict");
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('receipt templates.json "hi" changed after the review of 2026-10-20 by A Reader');
+  });
+});
