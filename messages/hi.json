@@ -365,9 +365,54 @@
     "stale": "TODO-translate: Showing what was saved on this phone.",
     "days": {
       "ordinal": "{day}"
+    },
+    "form": {
+      "offline": "TODO-translate: You are offline. Connect to the internet to save."
     }
   },
   "batches": {
-    "noStudents": "TODO-translate: No students in this batch yet."
+    "noStudents": "TODO-translate: No students in this batch yet.",
+    "title": "बैच",
+    "back": "TODO-translate: Back to students",
+    "backToList": "TODO-translate: Back to batches",
+    "empty": {
+      "title": "TODO-translate: No batches yet.",
+      "body": "TODO-translate: A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "{n, plural, one {# छात्र} other {# छात्र}}",
+    "monthly": "TODO-translate: {amount} each month",
+    "name": "TODO-translate: Batch name",
+    "timings": "TODO-translate: Timings (optional)",
+    "add": "TODO-translate: Add batch",
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "nameTaken": "TODO-translate: Name taken"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the batch name.",
+      "nameLong": "TODO-translate: Use 60 characters or fewer.",
+      "nameTaken": "TODO-translate: You already have a batch called {name}. Pick another name.",
+      "timingsLong": "TODO-translate: Use 100 characters or fewer."
+    },
+    "rename": "TODO-translate: Rename",
+    "save": "TODO-translate: Save",
+    "cancel": "TODO-translate: Cancel",
+    "saveTimings": "TODO-translate: Save timings",
+    "timingsSaved": "TODO-translate: Timings saved.",
+    "addStudent": "TODO-translate: Add a student",
+    "notFound": {
+      "title": "TODO-translate: Couldn't find this batch",
+      "body": "TODO-translate: It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "TODO-translate: Delete batch",
+      "note": "TODO-translate: Deleting keeps the students.",
+      "title": "TODO-translate: Delete {name}?",
+      "body": "TODO-translate: {n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "TODO-translate: Delete batch",
+      "cancel": "TODO-translate: Cancel"
+    },
+    "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
   }
 }

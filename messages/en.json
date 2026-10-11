@@ -365,9 +365,54 @@
     "stale": "Showing what was saved on this phone.",
     "days": {
       "ordinal": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+    },
+    "form": {
+      "offline": "You are offline. Connect to the internet to save."
     }
   },
   "batches": {
-    "noStudents": "No students in this batch yet."
+    "noStudents": "No students in this batch yet.",
+    "title": "Batches",
+    "back": "Back to students",
+    "backToList": "Back to batches",
+    "empty": {
+      "title": "No batches yet.",
+      "body": "A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "{n, plural, one {# student} other {# students}}",
+    "monthly": "{amount} each month",
+    "name": "Batch name",
+    "timings": "Timings (optional)",
+    "add": "Add batch",
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "nameTaken": "Name taken"
+    },
+    "err": {
+      "nameMissing": "Type the batch name.",
+      "nameLong": "Use 60 characters or fewer.",
+      "nameTaken": "You already have a batch called {name}. Pick another name.",
+      "timingsLong": "Use 100 characters or fewer."
+    },
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveTimings": "Save timings",
+    "timingsSaved": "Timings saved.",
+    "addStudent": "Add a student",
+    "notFound": {
+      "title": "Couldn't find this batch",
+      "body": "It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "Delete batch",
+      "note": "Deleting keeps the students.",
+      "title": "Delete {name}?",
+      "body": "{n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "Delete batch",
+      "cancel": "Cancel"
+    },
+    "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again."
   }
 }

@@ -11,7 +11,7 @@ const TARGET = 150 * 1024;
 // language picker, sign-in, its callback, home, more and the two setup steps; R1-3: the student screens) must all be there, so the budget cannot pass by
 // omission. Each slice that adds an app route adds it here.
 const LANGUAGES = ["en", "hi", "kn", "te"];
-const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "attendance", "setup/profile", "setup/upi"];
+const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const REQUIRED = [
   "index.html",
   ...LANGUAGES.map((locale) => `${locale}/index.html`),

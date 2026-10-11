@@ -164,6 +164,24 @@ for (const lang of langs) {
       await expect(page.locator("select")).toBeVisible();
       await expectNoMarker(page, lang, "students, batch select");
 
+      await page.goto(`/${lang}/batches/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batches");
+      await page.locator("textarea").first().fill("one");
+      await page.locator("main form button").first().click();
+      await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible();
+      await expectNoMarker(page, lang, "batches, name taken");
+      await page.goto(`/${lang}/batches/edit/?id=${batches[0].id}`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batch screen");
+      await page.locator("main button").last().click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await expectNoMarker(page, lang, "batch, delete sheet");
+      await page.keyboard.press("Escape");
+      await page.goto(`/${lang}/batches/edit/?id=nope`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batch not found");
+
       roster.listDelayMs = 2500;
       await page.goto(`/${lang}/students/`);
       await expect(page.getByRole("status")).toBeVisible();
