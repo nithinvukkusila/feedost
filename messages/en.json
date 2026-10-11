@@ -307,8 +307,13 @@
     "more": "More",
     "empty": {
       "title": "Your book is empty.",
-      "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "Adding students arrives in the next update."
+      "body": "Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "Add a student",
+    "seeAll": "See all students",
+    "filled": {
+      "total": "{amount} each month",
+      "soon": "Who owes what appears here in a later update."
     }
   },
   "subjects": {
@@ -319,5 +324,50 @@
     "physics": "Physics",
     "chemistry": "Chemistry",
     "accounts": "Accounts"
+  },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "students": "Students",
+    "attendance": "Attendance",
+    "more": "More"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "soon": "Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "Students",
+    "count": "{n, plural, one {# student} other {# students}}",
+    "batchCount": "{n, plural, =0 {No batches} one {# batch} other {# batches}}",
+    "add": "Add",
+    "addFirst": "Add a student",
+    "searchLabel": "Search student or parent",
+    "searchPlaceholder": "Search student or parent",
+    "noMatch": "No student matches “{text}”.",
+    "clearSearch": "Clear search",
+    "filterAll": "All {n}",
+    "filterNone": "No batch {n}",
+    "filterLabel": "Show",
+    "meta": "{amount} on the {day}",
+    "manageBatches": "Batches",
+    "archivedLink": "Archived students ({n})",
+    "archivedTag": "Archived",
+    "empty": {
+      "title": "No students yet.",
+      "body": "Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "Couldn't load your students",
+      "body": "The network dropped. Nothing is lost.",
+      "retry": "Try again"
+    },
+    "stale": "Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+    }
+  },
+  "batches": {
+    "noStudents": "No students in this batch yet."
   }
 }

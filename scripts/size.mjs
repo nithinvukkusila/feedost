@@ -8,10 +8,10 @@ const LIMIT = 200 * 1024;
 // F3 target: aim for 150 KB or less on every route so the next slices have room. Over it only warns.
 const TARGET = 150 * 1024;
 // The home page, the four language pages, the four fee reminder pages and the app's pages (R1-1: the
-// language picker, sign-in, its callback, home, more and the two setup steps) must all be there, so the budget cannot pass by
+// language picker, sign-in, its callback, home, more and the two setup steps; R1-3: the student screens) must all be there, so the budget cannot pass by
 // omission. Each slice that adds an app route adds it here.
 const LANGUAGES = ["en", "hi", "kn", "te"];
-const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "setup/profile", "setup/upi"];
+const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "attendance", "setup/profile", "setup/upi"];
 const REQUIRED = [
   "index.html",
   ...LANGUAGES.map((locale) => `${locale}/index.html`),

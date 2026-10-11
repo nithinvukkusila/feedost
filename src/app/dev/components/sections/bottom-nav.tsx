@@ -1,5 +1,5 @@
 import { BottomNav, type BottomNavItem, type BottomNavKey } from "@/components/ui/bottom-nav";
-import { NavAttendanceIcon, NavHomeIcon, NavMoreIcon, NavStudentsIcon } from "../sample-icons";
+import { NavAttendanceIcon, NavHomeIcon, NavMoreIcon, NavStudentsIcon } from "@/components/app/nav-icons";
 import { copy, langs, sample, type Lang } from "../sample-data";
 import { Example, ScriptBlock, Section } from "./parts";
 

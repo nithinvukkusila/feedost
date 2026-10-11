@@ -1,5 +1,5 @@
-// Spec R1-1, criterion 32: the empty home, with the real English words.
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+// Spec R1-1, criterion 32, and R1-3, criterion 13: the empty home, with the real English words.
+import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { brand } from "@/config/brand";
 import type { Tutor } from "@/lib/tutor";
@@ -32,31 +32,39 @@ describe("firstName", () => {
 });
 
 describe("EmptyHome", () => {
-  it("shows the brand, the tutor's first name, the heading, the body and the line about the next update", () => {
+  it("shows the brand, the tutor's first name, the heading and the body, and no line about the next update", () => {
     renderWithWords(<EmptyHome />);
     expect(screen.getByText(brand.name)).toBeTruthy();
     expect(screen.getByText("Hello, Meena")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Your book is empty.");
     expect(screen.getByText("Add your students and you will see who owes what, with one tap to remind each parent.")).toBeTruthy();
-    expect(screen.getByText("Adding students arrives in the next update.")).toBeTruthy();
+    expect(screen.queryByText("Adding students arrives in the next update.")).toBeNull();
   });
 
-  it("has no Add students button and no sample-data link: they cannot work yet", () => {
+  it("has a black Add a student button to the add form, and no sample-data link", () => {
     renderWithWords(<EmptyHome />);
-    expect(screen.queryByText(/add students/i)).toBeNull();
+    const add = screen.getByRole("link", { name: "Add a student" });
+    expect(add.getAttribute("href")).toBe("/en/students/new/");
+    fireEvent.click(add);
+    expect(push).toHaveBeenCalledWith("/en/students/new/");
     expect(screen.queryByText(/sample data/i)).toBeNull();
-    expect(screen.getAllByRole("link")).toHaveLength(1);
   });
 
   it.each([
-    ["en", "More", "/en/more/"],
-    ["hi", "और", "/hi/more/"],
-  ] as const)("has a More link in %s that goes to the More screen in the page's language", (locale, word, href) => {
+    ["en", "/en/students/new/"],
+    ["hi", "/hi/students/new/"],
+    ["kn", "/kn/students/new/"],
+    ["te", "/te/students/new/"],
+  ] as const)("points the button at the add form in the page's language (%s)", (locale, href) => {
     renderWithWords(<EmptyHome />, locale);
-    const link = screen.getByRole("link", { name: word });
-    expect(link.getAttribute("href")).toBe(href);
-    fireEvent.click(link);
-    expect(push).toHaveBeenCalledWith(href);
+    expect(screen.getAllByRole("link").some((link) => link.getAttribute("href") === href)).toBe(true);
+  });
+
+  it("has the bottom navigation with Home current, and the More link is in it", () => {
+    renderWithWords(<EmptyHome />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("link", { name: "Home" }).getAttribute("aria-current")).toBe("page");
+    expect(within(nav).getByRole("link", { name: "More" }).getAttribute("href")).toBe("/en/more/");
   });
 
   it("no longer carries a Sign out button: that is on the More screen", () => {

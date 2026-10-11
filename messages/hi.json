@@ -307,8 +307,13 @@
     "more": "और",
     "empty": {
       "title": "TODO-translate: Your book is empty.",
-      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "TODO-translate: Adding students arrives in the next update."
+      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "TODO-translate: Add a student",
+    "seeAll": "TODO-translate: See all students",
+    "filled": {
+      "total": "TODO-translate: {amount} each month",
+      "soon": "TODO-translate: Who owes what appears here in a later update."
     }
   },
   "subjects": {
@@ -319,5 +324,50 @@
     "physics": "TODO-translate: Physics",
     "chemistry": "TODO-translate: Chemistry",
     "accounts": "TODO-translate: Accounts"
+  },
+  "nav": {
+    "label": "TODO-translate: Main",
+    "home": "होम",
+    "students": "छात्र",
+    "attendance": "हाज़िरी",
+    "more": "और"
+  },
+  "attendance": {
+    "title": "हाज़िरी",
+    "soon": "TODO-translate: Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "छात्र",
+    "count": "{n, plural, one {# छात्र} other {# छात्र}}",
+    "batchCount": "{n, plural, =0 {कोई बैच नहीं} one {# बैच} other {# बैच}}",
+    "add": "TODO-translate: Add",
+    "addFirst": "TODO-translate: Add a student",
+    "searchLabel": "TODO-translate: Search student or parent",
+    "searchPlaceholder": "TODO-translate: Search student or parent",
+    "noMatch": "TODO-translate: No student matches “{text}”.",
+    "clearSearch": "TODO-translate: Clear search",
+    "filterAll": "सभी {n}",
+    "filterNone": "TODO-translate: No batch {n}",
+    "filterLabel": "TODO-translate: Show",
+    "meta": "TODO-translate: {amount} on the {day}",
+    "manageBatches": "बैच",
+    "archivedLink": "TODO-translate: Archived students ({n})",
+    "archivedTag": "TODO-translate: Archived",
+    "empty": {
+      "title": "TODO-translate: No students yet.",
+      "body": "TODO-translate: Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "TODO-translate: Couldn't load your students",
+      "body": "TODO-translate: The network dropped. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    },
+    "stale": "TODO-translate: Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day}"
+    }
+  },
+  "batches": {
+    "noStudents": "TODO-translate: No students in this batch yet."
   }
 }
