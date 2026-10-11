@@ -120,3 +120,17 @@ export function AllPaid({
     </section>
   );
 }
+
+/** A month that is not read yet or could not be read, under the month buttons: loading words, or the error with Try again. */
+export function InlineState({ failed, words, onRetry }: Readonly<{ failed: boolean; words: string; onRetry: () => void }>) {
+  const t = useTranslations("board");
+  return failed ? (
+    <div className="mt-4 mr-4 mb-4 ml-3">
+      <Banner kind="error" title={t("loadError.title")} detail={t("loadError.body")} actions={[{ label: t("loadError.retry"), onClick: onRetry }]} />
+    </div>
+  ) : (
+    <p role="status" className="type-body px-5 pt-6 font-bold text-ink-soft">
+      {words}
+    </p>
+  );
+}

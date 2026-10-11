@@ -18,7 +18,7 @@ import { currentMonth, defaultTab, indiaToday, monthMoves, shiftMonth, type Tab 
 import { activeStudents, batchCounts, sortBatches } from "@/lib/student-list";
 import { BoardList } from "./board-list";
 import { useBoard } from "./board-state";
-import { AllPaid, BoardError, BoardLoading, NothingInBatch, NothingYet } from "./board-states";
+import { AllPaid, BoardError, BoardLoading, InlineState, NothingInBatch, NothingYet } from "./board-states";
 import { HeroAmount } from "./hero-amount";
 import { MonthSwitcher, useMonthWords } from "./month-switcher";
 import { useBoardView } from "./use-board-view";
@@ -81,10 +81,20 @@ export function BoardScreen() {
   const go = (to: string) => selectMonth(to, today);
 
   if (!ready) {
-    return board.failed ? (
-      <BoardError month={months.label(month)} onRetry={() => retry(today)} />
-    ) : (
-      <BoardLoading month={months.label(month)} words={app("loading")} />
+    // Something is saved, or a past month was asked for: keep the month buttons and the navigation, so the tutor can go back.
+    const inline = Object.keys(board.months).length > 0 || !isCurrent;
+    if (!inline) {
+      return board.failed ? (
+        <BoardError month={months.label(month)} onRetry={() => retry(today)} />
+      ) : (
+        <BoardLoading month={months.label(month)} words={app("loading")} />
+      );
+    }
+    return (
+      <AppScreen nav="home">
+        <MonthSwitcher label={months.label(month)} canPrev={moves.prev} canNext={moves.next} onPrev={() => go(shiftMonth(month, -1))} onNext={() => go(shiftMonth(month, 1))} />
+        <InlineState failed={board.failed} words={app("loading")} onRetry={() => retry(today)} />
+      </AppScreen>
     );
   }
 
@@ -99,6 +109,12 @@ export function BoardScreen() {
   return (
     <AppScreen nav="home">
       <MonthSwitcher label={months.label(month)} canPrev={moves.prev} canNext={moves.next} onPrev={() => go(shiftMonth(month, -1))} onNext={() => go(shiftMonth(month, 1))} />
+
+      {board.blocked ? (
+        <p role="status" className="type-caption px-5 pt-2 text-ink-soft wrap-anywhere">
+          {t("offlineMonth", { month: months.label(board.blocked) })}
+        </p>
+      ) : null}
 
       {empty ? (
         filteredOut ? (

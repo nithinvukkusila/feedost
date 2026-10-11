@@ -19,6 +19,8 @@ export type BoardSnapshot = {
   earliest: { month: string | null; at: number } | null;
   /** The last read failed, so what is shown is what was saved on this phone, or nothing. */
   failed: boolean;
+  /** A month the tutor tried to open while offline that is not saved on this phone: the view stayed where it was. */
+  blocked: string | null;
   /** How many reads have been applied. The screen asks for the roster again once per read. */
   reads: number;
   settings: BoardSettings;
@@ -32,6 +34,7 @@ export class BoardStore {
     unpaid: null,
     earliest: null,
     failed: false,
+    blocked: null,
     reads: 0,
     settings: { month: null, tab: null, filter: "all" },
   };
@@ -58,7 +61,8 @@ export class BoardStore {
 
   // Reads what is wanted, in parallel. Each slice keeps only the newest answer asked for.
   private read(viewMonth: string, want: Want) {
-    const job = <T>(key: string, ask: () => Promise<T>, apply: (snapshot: BoardSnapshot, value: T, at: number) => BoardSnapshot): Promise<boolean | null> => {
+    // `fatal: false` is for the earliest month: if only that read fails, the month buttons stay as they were and nothing says the fees are old.
+    const job = <T>(key: string, ask: () => Promise<T>, apply: (snapshot: BoardSnapshot, value: T, at: number) => BoardSnapshot, fatal = true): Promise<boolean | null> => {
       const ticket = (this.tickets[key] ?? 0) + 1;
       this.tickets[key] = ticket;
       const newest = () => this.alive && this.tickets[key] === ticket;
@@ -68,13 +72,13 @@ export class BoardStore {
           this.change((s) => apply(s, value, Date.now()));
           return true;
         },
-        () => (newest() ? false : null),
+        () => (newest() && fatal ? false : null),
       );
     };
     const jobs: Promise<boolean | null>[] = [];
     if (want.month) jobs.push(job(`month:${viewMonth}`, () => readMonth(viewMonth), (s, rows, at) => ({ ...s, months: { ...s.months, [viewMonth]: { rows, at } } })));
     if (want.unpaid) jobs.push(job("unpaid", readUnpaid, (s, rows, at) => ({ ...s, unpaid: { rows, at } })));
-    if (want.earliest) jobs.push(job("earliest", readEarliestMonth, (s, month, at) => ({ ...s, earliest: { month, at } })));
+    if (want.earliest) jobs.push(job("earliest", readEarliestMonth, (s, month, at) => ({ ...s, earliest: { month, at } }), false));
     void Promise.all(jobs).then((results) => {
       const failed = results.includes(false);
       const done = results.includes(true);
@@ -96,6 +100,7 @@ export class BoardStore {
    * reads, in parallel; if it made some, reads once more. Offline, nothing is sent.
    */
   readonly open = (today: string): void => {
+    this.change((s) => ({ ...s, blocked: null }));
     if (isOffline()) return this.fail();
     const reread = () => {
       const month = this.viewMonth(today);
@@ -111,16 +116,28 @@ export class BoardStore {
   /** Show another month. Reads only what is missing or older than a minute. */
   readonly selectMonth = (month: string, today: string): void => {
     const current = currentMonth(today);
-    this.change((s) => ({ ...s, settings: { ...s.settings, month: month === current ? null : month } }));
     const now = Date.now();
+    const held = this.snapshot;
     const want: Want = {
-      month: needsRead(this.snapshot.months[month], now),
-      unpaid: month === current && needsRead(this.snapshot.unpaid, now),
+      month: needsRead(held.months[month], now),
+      unpaid: month === current && needsRead(held.unpaid, now),
       earliest: false,
     };
-    if (!want.month && !want.unpaid) return;
-    if (isOffline()) return this.fail();
-    this.read(month, want);
+    const unread = held.months[month] === undefined || (month === current && held.unpaid === null);
+    // Offline and nothing saved for that month: stay where we are and say so, rather than land on an error.
+    if (isOffline() && unread) {
+      this.change((s) => ({ ...s, blocked: month }));
+      return;
+    }
+    const reading = want.month || want.unpaid;
+    this.change((s) => ({
+      ...s,
+      blocked: null,
+      // Online, a new view starts clean (an uncached month shows loading, not an old error); offline, a stale month is saved data.
+      failed: isOffline() ? s.failed || reading : false,
+      settings: { ...s.settings, month: month === current ? null : month },
+    }));
+    if (reading && !isOffline()) this.read(month, want);
   };
 
   /** Read again what the view shows. */

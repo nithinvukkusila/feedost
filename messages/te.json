@@ -563,7 +563,8 @@
       "body": "TODO-translate: The network dropped. Nothing is lost.",
       "retry": "TODO-translate: Try again"
     },
-    "stale": "TODO-translate: Showing what was saved on this phone."
+    "stale": "TODO-translate: Showing what was saved on this phone.",
+    "offlineMonth": "TODO-translate: Can't open {month} without a network."
   },
   "waitlistForm": {
     "name": {

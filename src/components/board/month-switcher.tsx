@@ -36,7 +36,7 @@ export function MonthSwitcher({ label, canPrev, canNext, onPrev, onNext }: Reado
       <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
         <BackIcon />
       </button>
-      <p className="type-label min-w-0 px-1 text-center text-ink">
+      <p aria-live="polite" aria-atomic="true" className="type-label min-w-0 px-1 text-center text-ink">
         {label}
       </p>
       <button type="button" aria-label={t("next")} disabled={!canNext} onClick={onNext} className={arrow}>

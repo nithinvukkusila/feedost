@@ -46,6 +46,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     unpaid: { rows: [], at: 1 },
     earliest: { month: "2026-10-01", at: 1 },
     failed: false,
+    blocked: null,
     reads: 1,
     settings: { month: null, tab: null, filter: "all" },
     open,
@@ -143,6 +144,31 @@ describe("states", () => {
     renderWithWords(<BoardScreen />);
     expect(screen.getByText("Showing what was saved on this phone.")).toBeTruthy();
     expect(screen.getByText("Due today")).toBeTruthy();
+  });
+});
+
+describe("a month that cannot be read keeps the month buttons and the navigation", () => {
+  it("shows the switcher and the nav with the error under it, and Next goes back", () => {
+    const selectMonth = vi.fn();
+    setup({ settings: { month: "2026-09-01", tab: null, filter: "all" }, failed: true, selectMonth });
+    renderWithWords(<BoardScreen />);
+    expect(screen.getByText("Couldn't load your fees")).toBeTruthy();
+    expect(screen.getByRole("navigation", { name: "Main" })).toBeTruthy();
+    act(() => screen.getByRole("button", { name: "Next month" }).click());
+    expect(selectMonth).toHaveBeenCalledWith("2026-10-01", "2026-10-12");
+  });
+
+  it("an uncached month that is loading shows the words under the switcher, not the old error", () => {
+    setup({ settings: { month: "2026-09-01", tab: null, filter: "all" }, failed: false });
+    renderWithWords(<BoardScreen />);
+    expect(screen.getByRole("status").textContent).toBe("Opening your book…");
+    expect(screen.getByRole("button", { name: "Previous month" })).toBeTruthy();
+  });
+
+  it("says a month cannot be opened offline", () => {
+    setup({ blocked: "2026-09-01" });
+    renderWithWords(<BoardScreen />);
+    expect(screen.getByText("Can't open September 2026 without a network.")).toBeTruthy();
   });
 });
 

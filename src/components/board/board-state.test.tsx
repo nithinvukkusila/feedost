@@ -180,13 +180,44 @@ describe("selectMonth (28)", () => {
     expect(held.board.settings.month).toBeNull();
   });
 
-  it("sends nothing offline for a month it does not hold", async () => {
+  it("offline, a month it does not hold is not opened: the view stays and says so; the current month still works", async () => {
     await opened();
     onLine(false);
-    act(() => held.board.selectMonth("2026-08-01", TODAY));
+    act(() => held.board.selectMonth("2026-09-01", TODAY));
     await flush();
     expect(lib.readMonth).not.toHaveBeenCalled();
+    expect(held.board.blocked).toBe("2026-09-01");
+    expect(held.board.settings.month).toBeNull();
+    expect(held.board.failed).toBe(false);
+    act(() => held.board.selectMonth("2026-10-01", TODAY));
+    expect(held.board.blocked).toBeNull();
+    expect(held.board.settings.month).toBeNull();
+  });
+
+  it("a failed month read, then Next to the saved current month, works and starts the next read clean", async () => {
+    await opened();
+    lib.readMonth.mockRejectedValueOnce(new Error("network"));
+    act(() => held.board.selectMonth("2026-09-01", TODAY));
+    await flush();
     expect(held.board.failed).toBe(true);
+    expect(held.board.months["2026-09-01"]).toBeUndefined();
+    act(() => held.board.selectMonth("2026-10-01", TODAY));
+    expect(held.board.settings.month).toBeNull();
+    expect(held.board.months["2026-10-01"]).toBeDefined();
+    // Asking for an unread month clears the old failure while it reads.
+    lib.readMonth.mockReturnValueOnce(new Promise(() => undefined));
+    act(() => held.board.selectMonth("2026-08-01", TODAY));
+    expect(held.board.failed).toBe(false);
+  });
+
+  it("a failing earliest-month read alone is not a failure", async () => {
+    lib.readEarliestMonth.mockRejectedValue(new Error("network"));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(held.board.failed).toBe(false);
+    expect(held.board.months["2026-10-01"]).toBeDefined();
+    expect(held.board.earliest).toBeNull();
   });
 });
 

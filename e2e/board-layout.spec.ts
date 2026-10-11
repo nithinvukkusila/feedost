@@ -76,6 +76,12 @@ test.describe("34: 60 students in each language, at 360px and with larger text",
       // The largest text: the headline amount still fits its box.
       await page.evaluate(() => document.documentElement.style.setProperty("font-size", "200%"));
       expect(await sidewaysScroll(page), "sideways scroll at 200%").toBe(0);
+      for (const el of await page.locator("a:visible, button:visible, select:visible").all()) {
+        expect((await box(el)).height, "a link, button or select at 200%").toBeGreaterThanOrEqual(44);
+      }
+      for (const row of await page.locator('main li a[href*="/students/edit/"]').filter({ visible: true }).all()) {
+        expect((await box(row)).height, "a row at 200%").toBeGreaterThanOrEqual(66);
+      }
       const fits = await amount.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1);
       expect(fits, "the headline amount fits at 200%").toBe(true);
     });

@@ -563,7 +563,8 @@
       "body": "The network dropped. Nothing is lost.",
       "retry": "Try again"
     },
-    "stale": "Showing what was saved on this phone."
+    "stale": "Showing what was saved on this phone.",
+    "offlineMonth": "Can't open {month} without a network."
   },
   "waitlistForm": {
     "name": {

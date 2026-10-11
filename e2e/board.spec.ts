@@ -6,7 +6,7 @@ import { watchOtherHosts } from "./auth-helpers";
 import { BATCHES, DUES, MATHS, NOW, S, STUDENTS, signedIn } from "./board-fixture";
 import { box } from "./helpers";
 
-const ORIGIN = "http://localhost:4173";
+const ORIGIN = process.env.E2E_BASE_URL ?? "http://localhost:4173";
 const rows = (page: Page) => page.locator('main li a[href*="/students/edit/"]').filter({ visible: true });
 const tab = (page: Page, name: string) => page.getByRole("tab", { name: new RegExp(`^${name}`) });
 const month = (page: Page) => page.getByRole("button", { name: "Previous month" }).locator("xpath=following-sibling::p[1]");
@@ -357,6 +357,40 @@ test.describe("25 to 28, 30: loading, failing, offline and freshness", () => {
     await alert.getByRole("button", { name: "Try again" }).click();
     await expect(rows(page)).toHaveCount(4);
     expect(page.url()).toBe(`${ORIGIN}/en/home/`);
+  });
+
+  test("offline, Previous month is not opened and says so; the current month and the navigation stay", async ({ page }) => {
+    await signedIn(page);
+    await page.goto("/en/home/");
+    await expect(rows(page)).toHaveCount(4);
+    await page.evaluate(() => Object.defineProperty(navigator, "onLine", { configurable: true, get: () => false }));
+    await prev(page).click();
+    await expect(page.getByText("Can't open September 2026 without a network.")).toBeVisible();
+    await expect(month(page)).toHaveText(/october 2026/i);
+    await expect(rows(page)).toHaveCount(4);
+    await expect(nav(page)).toBeVisible();
+    // Reopening Home does not strand her either.
+    await bounce(page);
+    await expect(month(page)).toHaveText(/october 2026/i);
+  });
+
+  test("a month that fails to read keeps the month buttons and the navigation, and Next goes back", async ({ page }) => {
+    test.setTimeout(60_000);
+    const { dues } = await signedIn(page);
+    await page.goto("/en/home/");
+    await expect(rows(page)).toHaveCount(4);
+    dues.readStatus = 500;
+    await prev(page).click();
+    await expect(page.locator('[data-kind="error"]')).toContainText("Couldn't load your fees", { timeout: 25_000 });
+    await expect(month(page)).toHaveText(/september 2026/i);
+    await expect(nav(page)).toBeVisible();
+    dues.readStatus = null;
+    await next(page).click();
+    await expect(month(page)).toHaveText(/october 2026/i);
+    await expect(rows(page)).toHaveCount(4);
+    await prev(page).click();
+    await expect(month(page)).toHaveText(/september 2026/i);
+    await expect(page.getByText("Showing what was saved on this phone.")).toHaveCount(0);
   });
 
   test("a failed refresh keeps the saved board under a quiet line; offline sends no dues request", async ({ page }) => {
