@@ -13,7 +13,7 @@ export function makeFake() {
 
   function chain(): Record<string, unknown> {
     const proxy: Record<string, unknown> = {};
-    for (const op of ["select", "insert", "update", "delete", "eq", "in", "order"]) {
+    for (const op of ["select", "insert", "update", "delete", "eq", "neq", "not", "in", "order", "limit", "range"]) {
       proxy[op] = (...args: unknown[]) => {
         calls.push({ op, args });
         if (state.throwOnQuery) throw new Error("network");
@@ -43,6 +43,12 @@ export function makeFake() {
     auth: { getSession: () => Promise.resolve({ data: { session: { user: { id: "user-1" } } } }) },
     from: (table: string) => {
       calls.push({ op: "from", args: [table] });
+      return chain();
+    },
+    // A function call. Awaiting the chain gives the next answer; a client with no network throws.
+    rpc: (name: string, ...rest: unknown[]) => {
+      calls.push({ op: "rpc", args: [name, ...rest] });
+      if (state.throwOnQuery) throw new Error("network");
       return chain();
     },
   };
