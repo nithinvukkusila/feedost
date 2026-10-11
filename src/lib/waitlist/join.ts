@@ -22,6 +22,7 @@ export async function joinWaitlist(
   language: Language,
   signal?: AbortSignal,
   endpoint: string = `${supabaseUrl}/functions/v1/waitlist-join`,
+  trap: string = "",
 ): Promise<JoinResult> {
   const timer = new AbortController();
   const stop = setTimeout(() => timer.abort(), TIMEOUT_MS);
@@ -32,8 +33,8 @@ export async function joinWaitlist(
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      // `website` is the honeypot: a person never fills it, so it is always empty from this page.
-      body: JSON.stringify({ ...values, language, website: "" }),
+      // `website` is the honeypot: a person never fills it, so it is empty unless a bot filled the hidden box. Its real value is sent.
+      body: JSON.stringify({ ...values, language, website: trap }),
       signal: timer.signal,
       credentials: "omit",
       cache: "no-store",

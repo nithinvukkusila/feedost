@@ -137,7 +137,7 @@ describe("rate limit (criterion 15)", () => {
     expect(calls.hits[0]).not.toContain(IP);
   });
 
-  it("reads the IP from cf-connecting-ip, then x-real-ip, then the first x-forwarded-for entry", async () => {
+  it("reads the IP from cf-connecting-ip, then x-real-ip; x-forwarded-for is ignored and gives the one unknown bucket", async () => {
     const seen: string[] = [];
     const { deps } = fake({ hashIp: async (ip) => (seen.push(ip), "ab") });
     await handle(post(GOOD, { "x-real-ip": "10.0.0.2", "x-forwarded-for": "10.0.0.3, 10.0.0.4" }), deps);
@@ -145,7 +145,7 @@ describe("rate limit (criterion 15)", () => {
     await handle(noCf, deps);
     const xffOnly = new Request("https://x.test/", { method: "POST", headers: { "x-forwarded-for": "10.0.0.3, 10.0.0.4" }, body: JSON.stringify(GOOD) });
     await handle(xffOnly, deps);
-    expect(seen).toEqual([IP, "10.0.0.2", "10.0.0.3"]);
+    expect(seen).toEqual([IP, "10.0.0.2", "unknown"]);
   });
 
   it("fails closed with a code only when the counter is down", async () => {
@@ -251,10 +251,25 @@ describe("CORS (criterion 16)", () => {
     expect(calls.hits).toHaveLength(0);
   });
 
+  it("a foreign *.vercel.app origin gets no CORS header on OPTIONS or POST", async () => {
+    const { deps } = fake();
+    for (const origin of ["https://evil.vercel.app", "https://feedost-x.evil.vercel.app", "https://feedost.vercel.app.evil.test", "https://feedost-abc-otherperson-projects.vercel.app"]) {
+      const pre = await handle(new Request("https://x.test/", { method: "OPTIONS", headers: { origin } }), deps);
+      expect(pre.headers.get("access-control-allow-origin")).toBeNull();
+      expect((await handle(post(GOOD, { origin }), deps)).headers.get("access-control-allow-origin")).toBeNull();
+    }
+  });
+
+  it("the env value replaces the allowed hostnames", async () => {
+    const { deps } = fake({ env: { APP_ENV: "staging", WAITLIST_ALLOWED_HOSTS: "app.example.vercel.app" } });
+    expect((await handle(post(GOOD, { origin: "https://app.example.vercel.app" }), deps)).headers.get("access-control-allow-origin")).toBe("https://app.example.vercel.app");
+    expect((await handle(post(GOOD, { origin: "https://feedost.vercel.app" }), deps)).headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   it("a preview origin is allowed on a POST and echoed exactly", async () => {
     const { deps } = fake();
-    const res = await handle(post(GOOD, { origin: "https://feedost-git-r0-4-waitlist-me.vercel.app" }), deps);
-    expect(res.headers.get("access-control-allow-origin")).toBe("https://feedost-git-r0-4-waitlist-me.vercel.app");
+    const res = await handle(post(GOOD, { origin: "https://feedost-git-r0-4-waitlist-nithinvukkusilas-projects.vercel.app" }), deps);
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://feedost-git-r0-4-waitlist-nithinvukkusilas-projects.vercel.app");
   });
 
   it.each(["https://evil.test", "https://vercel.app.evil.test", "https://evilvercel.app", "http://feedost.vercel.app", "http://localhost:3000", "null"])(
@@ -353,7 +368,7 @@ describe("source rules", () => {
   it("index.ts reads only its own named variables and never logs", () => {
     const text = src("index.ts");
     expect(text.match(/Deno\.env\.get\("([^"]+)"\)/g)?.sort()).toEqual(
-      ['Deno.env.get("APP_ENV")', 'Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")', 'Deno.env.get("SUPABASE_URL")', 'Deno.env.get("WAITLIST_HASH_SALT")'].sort(),
+      ['Deno.env.get("APP_ENV")', 'Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")', 'Deno.env.get("SUPABASE_URL")', 'Deno.env.get("WAITLIST_ALLOWED_HOSTS")', 'Deno.env.get("WAITLIST_HASH_SALT")'].sort(),
     );
     expect(text).not.toMatch(/console\./);
   });

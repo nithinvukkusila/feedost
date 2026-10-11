@@ -13,7 +13,7 @@ export const HONEYPOT_FIELD = "website";
 export type Code = "ok" | "invalid" | "rate_limited" | "error";
 
 export type Deps = {
-  env: { APP_ENV?: string };
+  env: { APP_ENV?: string; /** Comma-separated hostnames; `*` stands for part of one label (the preview pattern). Unset means DEFAULT_ALLOWED_HOSTS. */ WAITLIST_ALLOWED_HOSTS?: string };
   now: () => Date;
   /** HMAC of the IP and the hour, with a secret the function holds. The raw IP goes no further than this call. */
   hashIp: (ip: string, hour: string) => Promise<string>;
@@ -25,14 +25,22 @@ export type Deps = {
   log?: (word: string) => void;
 };
 
-// Browsers on a Vercel project (production and previews), plus the local dev server when APP_ENV is local.
-const VERCEL = /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.vercel\.app$/;
+// Only this project's hostnames: the production domain (src/config/brand.ts: feedost.vercel.app) and this project's
+// preview pattern. Not every *.vercel.app site. Override with the WAITLIST_ALLOWED_HOSTS env value.
+export const DEFAULT_ALLOWED_HOSTS = "feedost.vercel.app,feedost-*-nithinvukkusilas-projects.vercel.app";
+
+function hostMatches(pattern: string, host: string): boolean {
+  const re = new RegExp("^" + pattern.split("*").map((part) => part.replace(/[^a-z0-9-]/g, "\\$&")).join("[a-z0-9-]+") + "$");
+  return re.test(host);
+}
 
 function allowedOrigin(origin: string | null, env: Deps["env"]): string | null {
   if (!origin) return null;
-  if (VERCEL.test(origin)) return origin;
   if (env.APP_ENV === "local" && origin === "http://localhost:3000") return origin;
-  return null;
+  const match = /^https:\/\/([a-z0-9.-]+)$/.exec(origin);
+  if (!match) return null;
+  const patterns = (env.WAITLIST_ALLOWED_HOSTS || DEFAULT_ALLOWED_HOSTS).split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+  return patterns.some((pattern) => hostMatches(pattern, match[1])) ? origin : null;
 }
 
 function respond(status: number, code: Code, cors: Record<string, string>, extra: Record<string, string> = {}): Response {
@@ -44,7 +52,10 @@ function respond(status: number, code: Code, cors: Record<string, string>, extra
 
 function clientIp(req: Request): string {
   const h = req.headers;
-  const ip = h.get("cf-connecting-ip") ?? h.get("x-real-ip") ?? h.get("x-forwarded-for")?.split(",")[0];
+  // x-forwarded-for is deliberately not read: a client can set it, which would let one caller pick a fresh
+  // rate-limit bucket per request. Staging step H7 must confirm which of these two headers the platform really sets;
+  // until then an unknown caller shares one "unknown" bucket.
+  const ip = h.get("cf-connecting-ip") ?? h.get("x-real-ip");
   return (ip ?? "").trim() || "unknown";
 }
 

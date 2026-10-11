@@ -316,6 +316,21 @@ test.describe("submitting, in each language (criteria 11, 12, 18, 23)", () => {
     });
   }
 
+  test("honeypot [en]: a value set in the hidden box through the DOM is sent as website; the box is not keyboard-reachable", async ({ page }) => {
+    const sent = await stub(page, OK);
+    await openForm(page, "en");
+    const trap = form(page).locator("input[name=website]");
+    await expect(trap).toHaveAttribute("tabindex", "-1");
+    await expect(trap.locator("xpath=..")).toHaveAttribute("aria-hidden", "true");
+    await fillAll(page, "en");
+    await trap.evaluate((el) => {
+      (el as HTMLInputElement).value = "http://spam.test";
+    });
+    await submitButton(page).tap();
+    await expect.poll(() => sent.length).toBe(1);
+    expect(sent[0].body.website).toBe("http://spam.test");
+  });
+
   test("criterion 11 [en]: back button / reload after success gives an empty form again", async ({ page }) => {
     await stub(page, OK);
     await openForm(page, "en");

@@ -105,7 +105,10 @@ export function WaitlistForm({ words, locale }: Readonly<{ words: WaitlistWords;
     setStatus("sending");
     const controller = new AbortController();
     request.current = controller;
-    const answer = await joinWaitlist(result.row, locale, controller.signal);
+    // The honeypot is read from the form itself, so a bot that sets the box in any way is seen.
+    const trapValue = new FormData(event.currentTarget).get("website");
+    const trap = typeof trapValue === "string" ? trapValue : "";
+    const answer = await joinWaitlist(result.row, locale, controller.signal, undefined, trap);
     inFlight.current = false;
     // The invalid answer means the page and the function disagree; to the person it is the same failure line.
     setStatus(answer === "ok" ? "done" : answer === "rate_limited" ? "rate_limited" : "error");

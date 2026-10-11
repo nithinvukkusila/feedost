@@ -25,6 +25,14 @@ describe("joinWaitlist", () => {
     expect(JSON.parse(init.body as string)).toEqual({ ...values, language: "hi", website: "" });
   });
 
+  it("sends the honeypot's real value as website", async () => {
+    const fetchMock = vi.fn(async () => reply(200, { code: "ok" }));
+    vi.stubGlobal("fetch", fetchMock);
+    await joinWaitlist(values, "en", undefined, URL, "http://spam.test");
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string).website).toBe("http://spam.test");
+  });
+
   it.each([
     [200, { code: "invalid" }, "invalid"],
     [400, { code: "invalid" }, "invalid"],

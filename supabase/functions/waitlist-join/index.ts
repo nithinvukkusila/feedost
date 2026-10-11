@@ -17,7 +17,7 @@ async function hashIp(ip: string, hour: string): Promise<string> {
 
 Deno.serve((req) =>
   handle(req, {
-    env: { APP_ENV: Deno.env.get("APP_ENV") },
+    env: { APP_ENV: Deno.env.get("APP_ENV"), WAITLIST_ALLOWED_HOSTS: Deno.env.get("WAITLIST_ALLOWED_HOSTS") },
     now: () => new Date(),
     hashIp,
     async hit(hash) {

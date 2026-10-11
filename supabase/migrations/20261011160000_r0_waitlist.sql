@@ -46,7 +46,8 @@ alter table public.waitlist_hits enable row level security;
 revoke all on public.waitlist_hits from public, anon, authenticated;
 
 -- Counts one request for this hash in the current hour and says whether it is still within the limit.
--- One statement does the increment, so two simultaneous requests cannot both slip under the limit.
+-- It deletes the stale hours, then does an atomic insert-or-increment (upsert) on this hash's row, so two simultaneous
+-- requests cannot both slip under the limit.
 -- security invoker: it runs with the caller's rights, and only the Edge Function's admin role keeps the right to call it.
 create function public.waitlist_hit(p_hash text, p_limit integer)
 returns boolean
