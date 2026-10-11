@@ -78,6 +78,7 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
   const tree = JSON.parse(readFileSync(exception.file, "utf8"));
   const lines = {};
   const all = [];
+  const quoted = [];
   for (const locale of locales) {
     const entry = tree[locale] ?? {};
     // With lineKeys, only those lists are sentences and the rest (month names) is cut out only; without,
@@ -88,12 +89,19 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
     // (a heading, a stamp, a payment phrase) are NOT cut out, so an interface phrase that happens to
     // be one of them ("Fee receipt maker") is still reported when it rides in the script.
     all.push(...templateLines.filter((line) => line.length >= exception.minLine), ...strings(entry.months ?? []), ...strings(entry.shortMonths ?? []));
+    // A shorter template word is cut out only as a whole quoted value ("Fee receipt"), never as a piece of a
+    // longer phrase, so "Fee receipt maker" is not hidden by the heading "Fee receipt" inside it.
+    quoted.push(...templateLines.filter((line) => line.length < exception.minLine && line.length >= MIN_LENGTH));
   }
   // Longest first, so a short month name is not cut out of the middle of a line that holds it.
   // Nothing shorter than MIN_LENGTH is cut out: a short month name ("May") sits inside real interface
   // sentences, and cutting it out of a script would hide those sentences from this check. A value the
   // check looks for is at least MIN_LENGTH long, so it can never sit inside a shorter month name.
-  const removable = [...new Set(all.flatMap(spellings))].filter((text) => text.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
+  const removable = [
+    ...new Set([...all.flatMap(spellings), ...quoted.flatMap((word) => spellings(word).map((spelling) => `"${spelling}"`))]),
+  ]
+    .filter((text) => text.length >= MIN_LENGTH)
+    .sort((a, b) => b.length - a.length);
   return { ...exception, lines, removable };
 });
 
