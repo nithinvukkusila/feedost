@@ -367,7 +367,62 @@
       "ordinal": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
     },
     "form": {
-      "offline": "You are offline. Connect to the internet to save."
+      "offline": "You are offline. Connect to the internet to save.",
+      "addTitle": "Add a student",
+      "back": "Back to students",
+      "name": "Student's name",
+      "parentName": "Parent's name",
+      "phone": "Parent's WhatsApp number",
+      "language": "Send messages in",
+      "batch": "Batch",
+      "dueDay": "Fee due on",
+      "fee": "Monthly fee ₹",
+      "owes": "Already owes ₹",
+      "noBatch": "No batch",
+      "permission": "I have this parent's permission to save their number.",
+      "save": "Save student",
+      "saveChanges": "Save changes",
+      "saveAnother": "Save and add another",
+      "saved": "Saved {name}.",
+      "feeFromNextMonth": "A new fee applies from the next month.",
+      "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "That batch no longer exists. Pick another batch or No batch."
+    },
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "tooShort": "Too short",
+      "checkNumber": "Check number",
+      "checkAmount": "Check amount",
+      "wholeRupees": "Whole rupees only",
+      "tooBig": "Too big"
+    },
+    "err": {
+      "nameMissing": "Type the student's name.",
+      "nameLong": "Use 80 characters or fewer.",
+      "parentLong": "Use 80 characters or fewer.",
+      "phoneShort": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "Use digits only.",
+      "feeMissing": "Type the monthly fee in rupees.",
+      "feeZero": "The fee must be at least ₹1.",
+      "feeDecimal": "Type whole rupees, like 1200.",
+      "feeBig": "The most is ₹10,00,000.",
+      "feeChars": "Use digits only.",
+      "owesDecimal": "Type whole rupees, like 1200.",
+      "owesBig": "The most is ₹10,00,000.",
+      "owesChars": "Use digits only.",
+      "permissionNeeded": "Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "Couldn't find this student",
+      "notFoundBody": "It may have been removed on another phone.",
+      "backLink": "Back to students",
+      "archive": "Archive student",
+      "archiveNote": "Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "Restore student"
     }
   },
   "batches": {

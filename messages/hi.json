@@ -367,7 +367,62 @@
       "ordinal": "{day}"
     },
     "form": {
-      "offline": "TODO-translate: You are offline. Connect to the internet to save."
+      "offline": "TODO-translate: You are offline. Connect to the internet to save.",
+      "addTitle": "TODO-translate: Add a student",
+      "back": "TODO-translate: Back to students",
+      "name": "TODO-translate: Student's name",
+      "parentName": "TODO-translate: Parent's name",
+      "phone": "TODO-translate: Parent's WhatsApp number",
+      "language": "TODO-translate: Send messages in",
+      "batch": "TODO-translate: Batch",
+      "dueDay": "TODO-translate: Fee due on",
+      "fee": "TODO-translate: Monthly fee ₹",
+      "owes": "TODO-translate: Already owes ₹",
+      "noBatch": "TODO-translate: No batch",
+      "permission": "TODO-translate: I have this parent's permission to save their number.",
+      "save": "TODO-translate: Save student",
+      "saveChanges": "TODO-translate: Save changes",
+      "saveAnother": "TODO-translate: Save and add another",
+      "saved": "TODO-translate: Saved {name}.",
+      "feeFromNextMonth": "TODO-translate: A new fee applies from the next month.",
+      "sameNumber": "TODO-translate: This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch."
+    },
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "tooShort": "TODO-translate: Too short",
+      "checkNumber": "TODO-translate: Check number",
+      "checkAmount": "TODO-translate: Check amount",
+      "wholeRupees": "TODO-translate: Whole rupees only",
+      "tooBig": "TODO-translate: Too big"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the student's name.",
+      "nameLong": "TODO-translate: Use 80 characters or fewer.",
+      "parentLong": "TODO-translate: Use 80 characters or fewer.",
+      "phoneShort": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "TODO-translate: Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "TODO-translate: Use digits only.",
+      "feeMissing": "TODO-translate: Type the monthly fee in rupees.",
+      "feeZero": "TODO-translate: The fee must be at least ₹1.",
+      "feeDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "feeBig": "TODO-translate: The most is ₹10,00,000.",
+      "feeChars": "TODO-translate: Use digits only.",
+      "owesDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "owesBig": "TODO-translate: The most is ₹10,00,000.",
+      "owesChars": "TODO-translate: Use digits only.",
+      "permissionNeeded": "TODO-translate: Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "TODO-translate: Couldn't find this student",
+      "notFoundBody": "TODO-translate: It may have been removed on another phone.",
+      "backLink": "TODO-translate: Back to students",
+      "archive": "TODO-translate: Archive student",
+      "archiveNote": "TODO-translate: Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "TODO-translate: Restore student"
     }
   },
   "batches": {

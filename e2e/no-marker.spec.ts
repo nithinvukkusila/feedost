@@ -182,6 +182,20 @@ for (const lang of langs) {
       await expect(page.locator("h1")).toBeVisible();
       await expectNoMarker(page, lang, "batch not found");
 
+      await page.goto(`/${lang}/students/new/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "add student");
+      await page.locator("textarea").nth(2).fill("123");
+      await page.locator("main form button").last().click();
+      await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible();
+      await expectNoMarker(page, lang, "add student, errors");
+      await page.goto(`/${lang}/students/edit/?id=${roster.students[0].id}`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "edit student");
+      await page.goto(`/${lang}/students/edit/?id=nope`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "student not found");
+
       roster.listDelayMs = 2500;
       await page.goto(`/${lang}/students/`);
       await expect(page.getByRole("status")).toBeVisible();

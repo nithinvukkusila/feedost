@@ -276,6 +276,8 @@ test.describe("46: every app screen, in each language, at 360px and with larger 
         for (const size of ["100%", "130%"]) {
           await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
           expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
+          // The bottom navigation is pinned over the page as it scrolls; at the end of the page it sits below the last line, so look there.
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
           expect(await textProblems(page, "body"), `text problems at ${size}`).toEqual([]);
           for (const el of await page.locator("a, button").all()) {
             expect((await box(el)).height, `a link or button at ${size}`).toBeGreaterThanOrEqual(44);
