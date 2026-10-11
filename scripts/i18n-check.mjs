@@ -3,10 +3,23 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync } from "node:fs";
-import { check, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
+
+// The waitlist's promise sentences (spec R0-4): the consent line and what the form says after it sends.
+const COPY_REVIEW = "src/lib/waitlist/copy.review.json";
+const COPY_KEYS = [
+  "waitlistForm.consent",
+  "waitlistForm.done.stamp",
+  "waitlistForm.done.title",
+  "waitlistForm.done.body",
+  "waitlistForm.failed.title",
+  "waitlistForm.failed.detail",
+  "waitlistForm.rateLimited.title",
+  "waitlistForm.rateLimited.detail",
+];
 
 const strict = process.argv.includes("--strict");
 const { problems, keyCount, todoCount } = check("messages", { strict });
@@ -24,9 +37,21 @@ if (existsSync(TEMPLATES)) {
       : `; ${templates.templateCount} templates, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
 }
 
+let copySummary = "";
+if (existsSync(COPY_REVIEW)) {
+  const copy = checkReviewRecord(COPY_REVIEW, COPY_KEYS, { strict });
+  problems.push(...copy.problems);
+  for (const note of copy.notes) console.log(note);
+  const waiting = copy.notReviewed;
+  copySummary =
+    waiting.length === 0
+      ? `; ${COPY_KEYS.length} promise sentences, all ${locales.length - 1} languages reviewed`
+      : `; ${COPY_KEYS.length} promise sentences, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
+}
+
 for (const problem of problems) console.error(problem);
 if (problems.length) {
   console.error(`i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
   process.exit(1);
 }
-console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}`);
+console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${copySummary}`);

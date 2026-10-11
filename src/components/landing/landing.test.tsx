@@ -13,7 +13,6 @@ import { renderLanding } from "./render-with-messages";
 import { Ribbon } from "./ribbon";
 import { Steps } from "./steps";
 import { Tools } from "./tools";
-import { WaitlistSlot } from "./waitlist-slot";
 
 afterEach(cleanup);
 
@@ -149,23 +148,6 @@ describe("promises (criterion 4)", () => {
       expect(within(item).getByRole("heading", { level: 3 }).textContent?.length).toBeGreaterThan(0);
       expect(item.querySelector("p")?.textContent?.length).toBeGreaterThan(0);
     });
-  });
-});
-
-describe("waitlist slot (criteria 12, 13, 14)", () => {
-  it("is the unavailable button with its reason, and no form control", () => {
-    const { container } = renderLanding(<WaitlistSlot />);
-    const button = screen.getByRole("button", { name: "Join the waitlist" }) as HTMLButtonElement;
-    expect(button.disabled).toBe(true);
-    expect(button.className).toContain("border-dashed");
-    expect(button.getAttribute("aria-describedby")).toBeTruthy();
-    expect(screen.getByText("Opens soon")).toBeTruthy();
-    expect(container.querySelectorAll("form, input, select, textarea")).toHaveLength(0);
-  });
-
-  it("says in its first lines that it is the one file R0-4 replaces", () => {
-    const source = readFileSync(join(process.cwd(), "src/components/landing/waitlist-slot.tsx"), "utf8");
-    expect(source.split("\n").slice(0, 3).join("\n")).toMatch(/R0-4 replaces the body of this one file/);
   });
 });
 
