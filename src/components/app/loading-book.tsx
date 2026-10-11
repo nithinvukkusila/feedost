@@ -6,10 +6,11 @@ import type { ReactNode } from "react";
 const block = "bg-tab-idle";
 const rowWidths = ["w-30", "w-38", "w-25", "w-35", "w-29"];
 
-/** The grey blocks, with `footer` (the words, or an error banner) pinned to the bottom of the screen. */
-export function BookBlocks({ footer }: Readonly<{ footer: ReactNode }>) {
+/** The grey blocks, with `footer` (the words, or an error banner) pinned to the bottom of the screen. `header` is real text above them (the dues board's month). */
+export function BookBlocks({ footer, header }: Readonly<{ footer: ReactNode; header?: ReactNode }>) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page">
+      {header}
       <div aria-hidden="true" className="flex flex-1 flex-col">
         <section className="flex flex-col gap-2.5 px-5 pt-5">
           <div className={`${block} h-14 w-58`} />

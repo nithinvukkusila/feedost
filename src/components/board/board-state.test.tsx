@@ -15,7 +15,8 @@ const lib = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/dues", () => lib);
 
-import { BoardProvider, useBoard, type Board } from "./board-state";
+import { BoardProvider } from "./board-holder";
+import { useBoard, type Board } from "./board-state";
 
 const TODAY = "2026-10-12";
 const due = (id: string, month = "2026-10-01"): Due => ({

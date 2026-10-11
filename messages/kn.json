@@ -306,12 +306,7 @@
       "title": "TODO-translate: Your book is empty.",
       "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent."
     },
-    "addStudent": "TODO-translate: Add a student",
-    "seeAll": "TODO-translate: See all students",
-    "filled": {
-      "total": "TODO-translate: {amount} each month",
-      "soon": "TODO-translate: Who owes what appears here in a later update."
-    }
+    "addStudent": "TODO-translate: Add a student"
   },
   "subjects": {
     "maths": "TODO-translate: Maths",

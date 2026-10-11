@@ -4,7 +4,7 @@
 // The inner provider replaces the outer one's words, so the list names everything these screens use.
 import { ClientMessages } from "@/components/i18n/client-messages";
 import { RosterProvider } from "@/components/app/roster";
-import { BoardProvider } from "@/components/board/board-state";
+import { BoardProvider } from "@/components/board/board-holder";
 
 const namespaces = ["appState", "home", "nav", "students", "batches", "attendance"] as const;
 

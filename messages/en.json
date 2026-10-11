@@ -306,12 +306,7 @@
       "title": "Your book is empty.",
       "body": "Add your students and you will see who owes what, with one tap to remind each parent."
     },
-    "addStudent": "Add a student",
-    "seeAll": "See all students",
-    "filled": {
-      "total": "{amount} each month",
-      "soon": "Who owes what appears here in a later update."
-    }
+    "addStudent": "Add a student"
   },
   "subjects": {
     "maths": "Maths",
