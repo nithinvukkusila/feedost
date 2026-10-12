@@ -36,7 +36,7 @@ import { newId } from "@/lib/uuid";
 export type StudentFormProps =
   | { mode: "add"; initialBatchId?: string }
   /** `owesLocked`: a payment has been recorded against the earlier balance, so "Already owes" cannot change (R1-7, criterion 20). */
-  | { mode: "edit"; student: Student; owesLocked?: boolean };
+  | { mode: "edit"; student: Student; owesLocked?: boolean; owesChecking?: boolean };
 
 const NO_BATCH = "";
 
@@ -65,6 +65,8 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const roster = useRoster();
   const editing = props.mode === "edit";
   const owesLocked = props.mode === "edit" && props.owesLocked === true;
+  // Held read-only (without the "payment recorded" words) until the edit screen has read whether a payment exists.
+  const owesChecking = props.mode === "edit" && props.owesChecking === true;
   const saved = props.mode === "edit" ? props.student : null;
 
   const [draft, setDraft] = useState<StudentDraft>(() => startDraft(props, locale));
@@ -204,7 +206,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
         autoComplete="off"
         latinValue
         placeholder="0"
-        readOnly={owesLocked}
+        readOnly={owesLocked || owesChecking}
         onChange={(e) => set("owes", e.currentTarget.value)}
         onBlur={() => set("owes", tidyRupees(draft.owes, OWES_LIMITS))}
         error={problemOf("owes", "")}

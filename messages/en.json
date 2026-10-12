@@ -653,7 +653,7 @@
     "pickLabel": "Date paid",
     "submit": "Mark as paid",
     "saving": "Saving…",
-    "note": "A numbered receipt is made for you. Send it on WhatsApp next.",
+    "note": "A numbered receipt is made for you. You can view it right after.",
     "slow": "Still trying. Please wait. It will not be saved twice.",
     "fix": "Needs fixing",
     "error": {
@@ -676,7 +676,7 @@
     "banner": {
       "paid": "{name} marked paid, {amount}",
       "undo": "Undo",
-      "send": "Send receipt",
+      "send": "View receipt",
       "undone": "Payment undone"
     },
     "receipt": {
@@ -696,7 +696,7 @@
       "paid": "PAID",
       "partPaid": "PART PAID",
       "cancelled": "CANCELLED",
-      "recorded": "Recorded {date} {time}",
+      "recorded": "Recorded <v>{date} {time}</v>",
       "undo": "Undo this payment",
       "undoAsk": "Undo this payment? The receipt will be cancelled.",
       "undoYes": "Yes, undo it",

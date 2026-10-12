@@ -1,7 +1,7 @@
 "use client";
 
 // The banner under the list after a payment (spec R1-7, criteria 14 and 15; canvas "State-undo"): "{name} marked
-// paid, {amount}" with Undo and Send receipt, for 10 seconds (the board's notice timer). Undo asks the
+// paid, {amount}" with Undo and View receipt, for 10 seconds (the board's notice timer). Undo asks the
 // database to void the payment, then the board takes the amount back and the banner says it was undone. A
 // failed undo says nothing was changed. The live region stays mounted and the banner goes into it, so it
 // is read out when it appears.

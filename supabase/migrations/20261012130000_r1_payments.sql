@@ -208,7 +208,7 @@ begin
   -- A retry returns the same receipt, before the due checks, so a retry after the fee became paid still works.
   select * into v_prior from public.payments where tutor_id = v_tutor and request_id = p_request_id;
   if found then
-    if v_prior.due_id <> p_due or v_prior.amount <> p_amount then
+    if v_prior.due_id <> p_due or v_prior.amount <> p_amount or v_prior.method <> p_method or v_prior.paid_on <> p_paid_on then
       raise exception 'request_reused' using errcode = 'P0001';
     end if;
     return v_prior;

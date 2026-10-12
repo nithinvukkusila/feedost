@@ -88,7 +88,7 @@ export function ReceiptCard({ payment, tutorName, studentName, parentName, feeLa
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="type-caption min-w-0 text-ink-soft wrap-anywhere">
-          <span translate="no">{t("recorded", { date: recorded, time: indiaClock(payment.createdAt) })}</span>
+          {t.rich("recorded", { date: recorded, time: indiaClock(payment.createdAt), v: (chunks) => <span translate="no">{chunks}</span> })}
         </p>
         <Stamp size="md" tone={cancelled || payment.balanceAfter > 0 ? "blue" : "stamp"} label={word}>
           {word}

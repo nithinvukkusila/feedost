@@ -84,8 +84,10 @@ export default function PaySheet({ row, batchName, today, onClose, onPaid, onSta
   const [problem, setProblem] = useState<Problem>(null);
   // What the database said was left, when this phone's number was out of date. Cleared when the amount changes.
   const [serverLeft, setServerLeft] = useState<number | null>(null);
-  // One per open sheet, sent again on every retry (criterion 16).
-  const [requestId] = useState(newId);
+  // Sent again on a retry (criterion 16). A retry of an attempt that may have reached the database keeps it, so a
+  // changed amount, method or day then gets the "request_reused" words. When the database refused the attempt
+  // outright, nothing was recorded, so the next attempt gets a new one and the changed details just go through.
+  const requestId = useRef(newId());
   const sending = useRef(false);
   const amountRef = useRef<HTMLTextAreaElement>(null);
   const pickId = useId();
@@ -137,11 +139,12 @@ export default function PaySheet({ row, batchName, today, onClose, onPaid, onSta
     sending.current = true;
     setSaving(true);
     try {
-      const payment = await recordPayment({ dueId: due.id, amount: amount.paise, method, paidOn: day.day, requestId });
+      const payment = await recordPayment({ dueId: due.id, amount: amount.paise, method, paidOn: day.day, requestId: requestId.current });
       onPaid(payment);
       onClose();
     } catch (error) {
       const code = error instanceof PaymentError ? error.code : "failed";
+      if (code !== "offline" && code !== "failed" && code !== "request_reused") requestId.current = newId();
       if (code === "amount_over_remaining" && error instanceof PaymentError && error.remaining !== null) {
         setServerLeft(error.remaining);
         onStale();

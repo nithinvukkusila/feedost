@@ -1,5 +1,5 @@
 // Spec R1-3, criteria 36 to 38: Archive and Restore on the edit screen, and what it says when they do not go through.
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Roster } from "@/components/app/roster";
@@ -15,7 +15,7 @@ const setActive = vi.fn();
 vi.mock("@/lib/students", () => ({ setActive: (...a: unknown[]) => setActive(...a), createStudent: vi.fn(), updateStudent: vi.fn() }));
 
 const readOpeningPaid = vi.fn();
-vi.mock("@/lib/dues", () => ({ readOpeningPaid: (...a: unknown[]) => readOpeningPaid(...a) }));
+vi.mock("@/lib/payments", () => ({ readOpeningPaid: (...a: unknown[]) => readOpeningPaid(...a) }));
 
 import { StudentEditScreen } from "./student-edit-screen";
 
@@ -96,11 +96,22 @@ describe("Already owes (R1-7, criterion 20)", () => {
     expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(true);
   });
 
+  it("holds the field until the read has answered", async () => {
+    show(true);
+    let answer: (paid: boolean) => void = () => {};
+    readOpeningPaid.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)));
+    renderWithWords(<StudentEditScreen />);
+    const field = await screen.findByLabelText("Already owes ₹");
+    expect((field as HTMLTextAreaElement).readOnly).toBe(true);
+    answer(false);
+    await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
+  });
+
   it("leaves it editable when nothing was paid", async () => {
     show(true);
     renderWithWords(<StudentEditScreen />);
     await screen.findByRole("button", { name: "Archive student" });
     expect(readOpeningPaid).toHaveBeenCalled();
-    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false);
+    await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
   });
 });

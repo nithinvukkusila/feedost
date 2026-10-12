@@ -144,19 +144,13 @@ export async function readDue(id: string): Promise<Due | null> {
   return first === undefined ? null : dueFromRow(first);
 }
 
-/**
- * Whether anything has been paid against this student's earlier balance (R1-7, criterion 20: "Already owes"
- * is then locked on the student's edit screen). Never throws: if it cannot be read the field stays editable,
- * and the database still refuses a change to a fee that has a payment.
- */
-export async function readOpeningPaid(studentId: string): Promise<boolean> {
-  try {
-    const client = await getClient();
-    const { data, error } = await client.from("dues").select("amount_paid").eq("student_id", studentId).eq("kind", "opening").limit(1);
-    if (error) return false;
-    const first = ((data as { amount_paid?: unknown }[] | null) ?? [])[0]?.amount_paid;
-    return typeof first === "number" && first > 0;
-  } catch {
-    return false;
-  }
+/** The id of this student's earlier-balance due, or null when there is none. Throws when it cannot be read. */
+export async function readOpeningDueId(studentId: string): Promise<string | null> {
+  const client = await getClient();
+  const { data, error } = await client.from("dues").select("id").eq("student_id", studentId).eq("kind", "opening").limit(1);
+  if (error) throw new DuesLoadError();
+  const id = ((data as { id?: unknown }[] | null) ?? [])[0]?.id;
+  if (id === undefined) return null;
+  if (typeof id !== "string") throw new DuesLoadError();
+  return id;
 }

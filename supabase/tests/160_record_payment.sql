@@ -4,7 +4,7 @@
 -- 20261012130000_r1_payments.sql. Times are relative to now(), which does not move inside this transaction.
 begin;
 select tests.assert_ready();
-select plan(63);
+select plan(65);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -57,6 +57,8 @@ select is((select last_no from public.receipt_counters where tutor_id = tests.tu
 select tests.act_as(tests.tutor_a());
 select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-000000000001', 40000, 'upi', (now() at time zone 'Asia/Kolkata')::date, 'a4000000-0000-4000-8000-000000000001')$$, 'P0001', 'request_reused', 'the same request id with another amount is refused');
 select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-000000000004', 50000, 'upi', (now() at time zone 'Asia/Kolkata')::date, 'a4000000-0000-4000-8000-000000000001')$$, 'P0001', 'request_reused', 'the same request id with another due is refused');
+select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-000000000001', 50000, 'cash', (now() at time zone 'Asia/Kolkata')::date, 'a4000000-0000-4000-8000-000000000001')$$, 'P0001', 'request_reused', 'the same request id with another method is refused');
+select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-000000000001', 50000, 'upi', (now() at time zone 'Asia/Kolkata')::date - 1, 'a4000000-0000-4000-8000-000000000001')$$, 'P0001', 'request_reused', 'the same request id with another date is refused');
 select tests.reset();
 
 -- Refusals: each changes nothing and uses no number. The counter is at 1 and the due at 50000 throughout.

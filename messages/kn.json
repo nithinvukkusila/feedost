@@ -653,7 +653,7 @@
     "pickLabel": "TODO-translate: Date paid",
     "submit": "TODO-translate: Mark as paid",
     "saving": "TODO-translate: Saving…",
-    "note": "TODO-translate: A numbered receipt is made for you. Send it on WhatsApp next.",
+    "note": "TODO-translate: A numbered receipt is made for you. You can view it right after.",
     "slow": "TODO-translate: Still trying. Please wait. It will not be saved twice.",
     "fix": "TODO-translate: Needs fixing",
     "error": {
@@ -676,7 +676,7 @@
     "banner": {
       "paid": "TODO-translate: {name} marked paid, {amount}",
       "undo": "TODO-translate: Undo",
-      "send": "TODO-translate: Send receipt",
+      "send": "TODO-translate: View receipt",
       "undone": "TODO-translate: Payment undone"
     },
     "receipt": {
@@ -696,7 +696,7 @@
       "paid": "TODO-translate: PAID",
       "partPaid": "TODO-translate: PART PAID",
       "cancelled": "TODO-translate: CANCELLED",
-      "recorded": "TODO-translate: Recorded {date} {time}",
+      "recorded": "TODO-translate: Recorded <v>{date} {time}</v>",
       "undo": "TODO-translate: Undo this payment",
       "undoAsk": "TODO-translate: Undo this payment? The receipt will be cancelled.",
       "undoYes": "TODO-translate: Yes, undo it",

@@ -211,6 +211,21 @@ describe("recording (14, 16, 17)", () => {
     expect(recordPayment.mock.calls[1][0].requestId).toBe(recordPayment.mock.calls[0][0].requestId);
   });
 
+  it("after a refusal that recorded nothing, a changed amount gets a new request id; after an unclear failure the id is kept", async () => {
+    recordPayment.mockRejectedValueOnce(new PaymentError("date_out_of_range")).mockRejectedValueOnce(new PaymentError("failed")).mockResolvedValueOnce(payment);
+    show();
+    await submit();
+    await screen.findByText("That date was refused. Check the date on your phone, or pick another date.");
+    await userEvent.click(screen.getByRole("radio", { name: "Cash" }));
+    await submit();
+    await screen.findByText("Couldn't save. Nothing was recorded. Try again.");
+    await submit();
+    await waitFor(() => expect(onPaid).toHaveBeenCalled());
+    const ids = recordPayment.mock.calls.map((c) => c[0].requestId);
+    expect(ids[1]).not.toBe(ids[0]);
+    expect(ids[2]).toBe(ids[1]);
+  });
+
   it("offline: the button works, says so, keeps the values; back online Try again sends", async () => {
     recordPayment.mockRejectedValueOnce(new PaymentError("offline")).mockResolvedValueOnce(payment);
     onLine(false);

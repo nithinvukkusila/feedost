@@ -7,7 +7,7 @@ import { makeFake } from "./db-fake.test-util";
 const fake = makeFake();
 vi.mock("./supabase", () => ({ getClient: () => Promise.resolve(fake.client) }));
 
-import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
+import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readOpeningPaid, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: "p1",
@@ -160,5 +160,32 @@ describe("only this file touches payments", () => {
       const text = readFileSync(file, "utf8");
       expect(text, file).not.toMatch(/record_payment|void_payment|from\(\s*["'`]payments["'`]/);
     }
+  });
+});
+
+describe("readOpeningPaid", () => {
+  it("is true when the earlier balance has any payment, voided or not", async () => {
+    fake.answer(ok([{ id: "D1" }]), ok([{ id: "P1" }]));
+    expect(await readOpeningPaid("S1")).toBe(true);
+    expect(fake.calls.filter((c) => c.op === "eq").map((c) => c.args)).toContainEqual(["due_id", "D1"]);
+  });
+
+  it("is false when there is no payment, or no earlier balance", async () => {
+    fake.answer(ok([{ id: "D1" }]), ok([]));
+    expect(await readOpeningPaid("S1")).toBe(false);
+    fake.reset();
+    fake.answer(ok([]));
+    expect(await readOpeningPaid("S1")).toBe(false);
+  });
+
+  it("never throws, and fails closed: an error or a dead network says locked", async () => {
+    fake.answer({ data: null, error: { code: "500" } });
+    expect(await readOpeningPaid("S1")).toBe(true);
+    fake.reset();
+    fake.answer(ok([{ id: "D1" }]), { data: null, error: { code: "500" } });
+    expect(await readOpeningPaid("S1")).toBe(true);
+    fake.reset();
+    fake.state.throwOnQuery = true;
+    expect(await readOpeningPaid("S1")).toBe(true);
   });
 });

@@ -11,6 +11,7 @@
 // the parent's link, Part B and C). Money is integer paise. A row the app does not understand fails the
 // whole read or call: better an error than a wrong amount on a money screen.
 import { getClient } from "./supabase";
+import { readOpeningDueId } from "./dues";
 import { isOffline } from "./students";
 
 export type PaymentMethod = "upi" | "cash";
@@ -166,4 +167,24 @@ export async function readPaymentsOfDue(dueId: string): Promise<Payment[]> {
   }
   if (result.error) throw new PaymentError("failed");
   return ((result.data as unknown[] | null) ?? []).map(paymentFromRow);
+}
+
+/**
+ * Whether any payment (voided or not) has been recorded against this student's earlier balance (criterion 20:
+ * "Already owes" is then locked on the student's edit screen). The database does not refuse a later change: it
+ * silently leaves the due as it was, so students.opening_balance would drift from the due. This lock is what
+ * keeps them together. Never throws. When it cannot be read the answer is true (locked), so a failed read can
+ * never let the two drift.
+ */
+export async function readOpeningPaid(studentId: string): Promise<boolean> {
+  try {
+    const id = await readOpeningDueId(studentId);
+    if (id === null) return false;
+    const client = await getClient();
+    const { data, error } = await client.from("payments").select("id").eq("due_id", id).limit(1);
+    if (error) return true;
+    return ((data as unknown[] | null) ?? []).length > 0;
+  } catch {
+    return true;
+  }
 }

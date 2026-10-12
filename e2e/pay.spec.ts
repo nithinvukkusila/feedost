@@ -138,7 +138,7 @@ test.describe("13: the amount", () => {
 });
 
 test.describe("14, 15: recording and undo", () => {
-  test("a full payment: Saving…, the sheet closes, the row moves to Paid, the total drops, the banner shows Undo and Send receipt; Undo puts it all back with no reload", async ({ page }) => {
+  test("a full payment: Saving…, the sheet closes, the row moves to Paid, the total drops, the banner shows Undo and View receipt; Undo puts it all back with no reload", async ({ page }) => {
     const { dues, pay } = await board(page);
     pay.delayMs = 600;
     await page.goto("/en/home/");
@@ -153,7 +153,7 @@ test.describe("14, 15: recording and undo", () => {
     await expect(sheet(page)).toHaveCount(0);
     await expect(banner(page)).toContainText("Ravi Kumar marked paid, ₹1,200");
     await expect(banner(page).getByRole("button", { name: "Undo" })).toBeVisible();
-    await expect(banner(page).getByRole("link", { name: "Send receipt" })).toBeVisible();
+    await expect(banner(page).getByRole("link", { name: "View receipt" })).toBeVisible();
     await expect(page.getByText("₹6,600", { exact: true })).toBeVisible();
     await expect(tab(page, "Overdue")).toContainText("3");
     await expect(row(page, "Ravi Kumar", "Overdue 7 days")).toHaveCount(0);
@@ -287,12 +287,12 @@ test.describe("21: a stale board", () => {
 });
 
 test.describe("18, 19: the receipt screen", () => {
-  test("Send receipt opens the receipt: number, month, amount, method, date, balance, names, stamp and the India time", async ({ page }) => {
+  test("View receipt opens the receipt: number, month, amount, method, date, balance, names, stamp and the India time", async ({ page }) => {
     await board(page);
     await page.goto("/en/home/");
     await openSheet(page);
     await markPaid(page).click();
-    await banner(page).getByRole("link", { name: "Send receipt" }).click();
+    await banner(page).getByRole("link", { name: "View receipt" }).click();
     await expect(page).toHaveURL(/\/en\/receipt\/\?due=/);
     await expect(page.locator("h1")).toHaveText("Receipt");
     const card = page.locator("article");
@@ -389,7 +389,7 @@ test.describe("38: privacy on the tutor side", () => {
     await openSheet(page);
     await markPaid(page).click();
     await expect(banner(page)).toBeVisible();
-    await banner(page).getByRole("link", { name: "Send receipt" }).click();
+    await banner(page).getByRole("link", { name: "View receipt" }).click();
     await expect(page.locator("article")).toBeVisible();
     await page.locator("article").getByRole("button", { name: "Undo this payment" }).click();
     await page.getByRole("button", { name: "Yes, undo it" }).click();

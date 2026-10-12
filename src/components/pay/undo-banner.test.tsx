@@ -35,12 +35,12 @@ describe("the banner", () => {
     expect(region.textContent).toBe("");
   });
 
-  it("says who was marked paid and how much, with Undo and Send receipt (a link to the receipt)", () => {
+  it("says who was marked paid and how much, with Undo and View receipt (a link to the receipt)", () => {
     board.notice = paid();
     renderWithWords(<UndoBanner today="2026-10-12" />);
     expect(screen.getByRole("status").textContent).toContain("Ravi Kumar marked paid, ₹1,200");
     expect(screen.getByRole("button", { name: "Undo" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Send receipt" }).getAttribute("href")).toBe("/en/receipt/?due=d1");
+    expect(screen.getByRole("link", { name: "View receipt" }).getAttribute("href")).toBe("/en/receipt/?due=d1");
   });
 
   it("Undo voids the payment, patches the board, re-reads it and says it was undone", async () => {

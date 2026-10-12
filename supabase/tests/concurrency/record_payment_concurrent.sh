@@ -16,8 +16,17 @@
 set -u
 
 URL="${1:-${DATABASE_URL:-postgresql://postgres:postgres@127.0.0.1:54322/postgres}}"
+# Parse the host, not the whole string: "user@127.0.0.1@evil" or "?host=..." must not pass.
+HOSTPART="${URL#*://}"          # drop the scheme
+HOSTPART="${HOSTPART%%/*}"      # drop the path and query
+HOSTPART="${HOSTPART%%\?*}"
+HOSTPART="${HOSTPART##*@}"      # drop the userinfo (everything up to the last @)
+HOST="${HOSTPART%%:*}"
 case "$URL" in
-  *@127.0.0.1:*|*@localhost:*) ;;
+  *'?'*|*'%'*) echo "refusing: no query string or escapes in the database URL" >&2; exit 2 ;;
+esac
+case "$HOST" in
+  127.0.0.1|localhost) ;;
   *) echo "refusing: this script only runs against a local database (127.0.0.1 or localhost)" >&2; exit 2 ;;
 esac
 command -v psql >/dev/null 2>&1 || { echo "psql is not installed" >&2; exit 2; }

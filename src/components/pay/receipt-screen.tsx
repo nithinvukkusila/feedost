@@ -3,7 +3,7 @@
 // The tutor's receipt screen (spec R1-7, criteria 18 and 19; canvas "Receipt"): every payment on one fee, newest
 // first, as a receipt each, with "Undo this payment" on the ones that can still be undone (24 hours; one
 // confirm). Named by `?due=` in the address: a static shell, because a static export cannot prerender a
-// path per fee. Reached from the banner's Send receipt and from the Receipt button on a row. Download and
+// path per fee. Reached from the banner's View receipt and from the Receipt button on a row. Download and
 // Share come in a later part; the parent's link page is Part B.
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
