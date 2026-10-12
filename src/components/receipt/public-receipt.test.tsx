@@ -1,5 +1,5 @@
 // The parent's receipt page (spec R1-7 Part B, criteria 28 to 31) with the function's reply stubbed.
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, configure, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
@@ -24,6 +24,8 @@ const paid = {
   balance_after: 0,
   language: "en",
 };
+// Finding text can take longer than a second when the whole suite runs at once.
+configure({ asyncUtilTimeout: 5000 });
 let fetchMock: ReturnType<typeof vi.fn>;
 
 function answer(status: number, body: unknown) {

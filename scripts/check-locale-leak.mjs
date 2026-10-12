@@ -114,7 +114,10 @@ function pagesOf(locale, dir = join(OUT, locale), path = "") {
 }
 
 function pageFiles(locale, pagePath) {
-  const path = join(OUT, locale, pagePath, "index.html");
+  return filesOf(join(OUT, locale, pagePath, "index.html"));
+}
+
+function filesOf(path) {
   const html = readFileSync(path, "utf8");
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+\.js)"[^>]*>/g)].map((m) => m[1].split("?")[0]);
   const files = [{ name: path, text: html, html: true }];
@@ -213,6 +216,56 @@ for (const locale of locales) {
     console.log(`${address}: ${(page.htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${page.files.length - 1} scripts`);
   }
 }
+// Pages outside every language folder that carry the words of all four languages on purpose, because the
+// language is chosen at run time (the parent's receipt, spec R1-7 Part B, criterion 31). The exception is
+// narrow: only the values of the named namespace, taken out of the page's HTML and scripts before the search.
+// Everything else a language owns must still be absent, no language may be missing from the page, and no
+// TODO-translate marker may be on it (a parent never sees one).
+const SHELLS = [{ path: "r/index.html", name: "parent receipt", namespace: "receipt" }];
+for (const shell of SHELLS) {
+  const file = join(OUT, shell.path);
+  if (!existsSync(file)) {
+    console.error(`${file} is missing, so the leak check cannot run on the ${shell.name} page.`);
+    failed = true;
+    continue;
+  }
+  pageCount += 1;
+  const { files, htmlGzip } = filesOf(file);
+  const own = {};
+  const removable = new Set();
+  for (const locale of locales) {
+    const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"))[shell.namespace] ?? {};
+    own[locale] = leaves(tree).filter((value) => value.length >= MIN_LENGTH);
+    for (const value of own[locale]) for (const spelling of spellings(value)) removable.add(spelling);
+  }
+  const cut = [...removable].sort((a, b) => b.length - a.length);
+  for (const f of files) {
+    if (f.text.includes(MARKER)) {
+      console.error(`the ${shell.name} page carries a ${MARKER.trim()} marker: it is in ${f.name}`);
+      failed = true;
+    }
+    let searched = f.text;
+    for (const text of cut) searched = searched.split(text).join("\n");
+    for (const locale of locales) {
+      for (const value of unique[locale]) {
+        if (has(searched, value)) {
+          console.error(`the ${shell.name} page loads a ${locale} message outside "${shell.namespace}": "${value}" is in ${f.name}`);
+          failed = true;
+        }
+      }
+    }
+  }
+  // The exception must be real: every language's own receipt words are on the page (not just English).
+  for (const locale of locales) {
+    const missing = own[locale].filter((value) => unique[locale].includes(value) || locale === "en").find((value) => !files.some((f) => has(f.text, value)));
+    if (missing !== undefined) {
+      console.error(`the ${shell.name} page does not carry the ${locale} words: "${missing}" is not in its HTML or scripts`);
+      failed = true;
+    }
+  }
+  console.log(`/${shell.path}: ${(htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${files.length - 1} scripts, all four languages' ${shell.namespace} words`);
+}
+
 // Fail closed: if no page shows any of its own words, the search above proved nothing.
 if (!failed && ownFound === 0) {
   console.error("No page shows any message of its own language, so the leak check proves nothing (stale or empty out/?).");
