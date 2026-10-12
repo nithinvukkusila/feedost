@@ -15,11 +15,12 @@ import {
   queueFromPick,
   queueItem,
   showManyNote,
+  tutorReady,
   templateTag,
   TEMPLATE_TAG,
   UPI_PATTERN,
 } from "./reminder-rules";
-import { PHONE_E164, UPI_ID } from "./reminder/reminder";
+import { cleanName, PHONE_E164, UPI_ID } from "./reminder/reminder";
 import type { Student } from "./students";
 
 const NOW = Date.UTC(2026, 9, 12, 5, 0, 0);
@@ -282,6 +283,8 @@ describe("the board never loads the builder or the templates (plan section 3, ri
     join(root, "src/lib/dues-board.ts"),
     join(root, "src/lib/reminders.ts"),
     join(root, "src/lib/reminder-rules.ts"),
+    join(root, "src/lib/reminder-log.ts"),
+    join(root, "src/components/remind/remind-provider.tsx"),
   ].filter((f) => existsSync(f));
 
   it("covers real files", () => {
@@ -308,5 +311,23 @@ describe("the board never loads the builder or the templates (plan section 3, ri
     const mine = [join(root, "src/lib/reminder-rules.ts"), join(root, "src/lib/reminders.ts"), join(root, "src/lib/reminder-log.ts"), ...files(join(root, "src/components/remind"))];
     expect(mine.length).toBeGreaterThan(6);
     for (const file of mine) expect(readFileSync(file, "utf8"), file).not.toMatch(banned);
+  });
+});
+
+describe("tutorReady and the name rule (R1-8, question 9)", () => {
+  const upi = "asha@okaxis";
+  it("a name of invisible characters only is not a name", () => {
+    for (const name of ["", "   ", "\u200b", "\u200b\u200e \ufeff", "\u202a\u202c", "\u200c\u200d", "\u0007"]) {
+      expect(tutorReady({ upiId: upi, name }), JSON.stringify(name)).toBe(false);
+    }
+    expect(tutorReady({ upiId: upi, name: "Asha" })).toBe(true);
+    expect(tutorReady({ upiId: upi, name: "आशा" })).toBe(true);
+    expect(tutorReady({ upiId: null, name: "Asha" })).toBe(false);
+    expect(tutorReady({ upiId: "bad", name: "Asha" })).toBe(false);
+  });
+  it("agrees with cleanName on whether a name is empty", () => {
+    for (const name of ["", " ", "\u200b", "\u200d", "\ufeff x", "a", "\u202e", "\ud800", "\u0085", "Ravi\u200b"]) {
+      expect(tutorReady({ upiId: upi, name }), JSON.stringify(name)).toBe(cleanName(name) !== "");
+    }
   });
 });

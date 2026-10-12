@@ -167,7 +167,7 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
             </ul>
           </section>
         ) : null}
-      </div>
+        {/* Inside the wrapper: the question names the parent. */}
       {item !== undefined && lastAt !== undefined ? (
         <AgainSheet
           item={item}
@@ -181,6 +181,7 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
           }}
         />
       ) : null}
+      </div>
     </AppScreen>
   );
 }

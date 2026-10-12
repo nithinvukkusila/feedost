@@ -32,9 +32,25 @@ export function canRemind(
   return { ok: true };
 }
 
+// A copy of the rule in `cleanName` (reminder.ts, which the board must not import): invisible marks and
+// zero-width characters draw nothing, so a name made only of them is not a name. A test keeps the two the same.
+function hasName(raw: string): boolean {
+  let out = "";
+  for (const char of raw) {
+    const code = char.codePointAt(0) ?? 0;
+    if (/\s/.test(char)) out += " ";
+    else if (code <= 0x1f || (code >= 0x7f && code <= 0x9f)) continue;
+    else if (code >= 0xd800 && code <= 0xdfff) continue;
+    else if ((code >= 0x202a && code <= 0x202e) || (code >= 0x2066 && code <= 0x2069)) continue;
+    else if (code === 0x200b || code === 0x200e || code === 0x200f || code === 0xfeff) continue;
+    else out += char;
+  }
+  return /[^\u200c\u200d ]/.test(out);
+}
+
 /** Whether the tutor has what every message needs: a valid UPI ID and a name. False means every Remind is "Add your UPI ID". */
 export function tutorReady(tutor: { upiId: string | null; name: string | null }): boolean {
-  return tutor.upiId !== null && UPI_PATTERN.test(tutor.upiId) && tutor.name !== null && tutor.name.trim() !== "";
+  return tutor.upiId !== null && UPI_PATTERN.test(tutor.upiId) && tutor.name !== null && hasName(tutor.name);
 }
 
 /** The log tag, like `polite:hi:month`. */

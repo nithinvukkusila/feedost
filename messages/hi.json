@@ -764,8 +764,8 @@
       "title": "आपने {parent} को आज {time} याद दिलाया था। फिर से?",
       "titleStudent": "आपने {student} के अभिभावक को आज {time} याद दिलाया था। फिर से?",
       "time": {
-        "am": "{hour}:{minute} am",
-        "pm": "{hour}:{minute} pm"
+        "am": "TODO-translate: {hour}:{minute} पूर्वाह्न",
+        "pm": "TODO-translate: {hour}:{minute} अपराह्न"
       },
       "yes": "फिर से याद दिलाएँ",
       "no": "अभी नहीं"

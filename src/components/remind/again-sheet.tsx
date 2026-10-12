@@ -26,7 +26,7 @@ export function AgainSheet({ item, lastAt, open, onYes, onNo }: Readonly<{ item:
   return (
     <Sheet open={open} onClose={onNo} title={title} closeLabel={t("again.no")}>
       <div className="flex flex-wrap gap-3 pr-1.5 pb-1.5">
-        <Button variant="record" onClick={onYes}>
+        <Button variant="send" onClick={onYes}>
           {t("again.yes")}
         </Button>
         <Button variant="outline" onClick={onNo}>

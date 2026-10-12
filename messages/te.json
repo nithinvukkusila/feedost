@@ -764,8 +764,8 @@
       "title": "TODO-translate: You reminded {parent} today at {time}. Remind again?",
       "titleStudent": "TODO-translate: You reminded the parent of {student} today at {time}. Remind again?",
       "time": {
-        "am": "TODO-translate: {hour}:{minute} am",
-        "pm": "TODO-translate: {hour}:{minute} pm"
+        "am": "TODO-translate: {hour}:{minute} ఉదయం",
+        "pm": "TODO-translate: {hour}:{minute} సాయంత్రం"
       },
       "yes": "TODO-translate: Remind again",
       "no": "TODO-translate: Not now"

@@ -115,6 +115,54 @@ describe("LogQueue.log", () => {
     expect(heard).toHaveBeenCalled();
   });
 
+  it("offline attempts do not use up the 5: six offline flushes, then online, and it is sent once with the same request id", async () => {
+    stub.impl = refuse("offline");
+    const queue = new LogQueue();
+    queue.log(args);
+    await settle();
+    for (let i = 0; i < 6; i++) await queue.flush();
+    expect(queue.isPending("r1")).toBe(true);
+    stub.impl = ok;
+    await queue.flush();
+    expect(queue.isPending("r1")).toBe(false);
+    expect(queue.saved()).toBe(1);
+    expect(stub.calls.filter((c) => c.requestId === "r1").length).toBe(8);
+    expect(new Set(stub.calls.map((c) => c.requestId))).toEqual(new Set(["r1"]));
+  });
+
+  it("makes no request at all from a flush while the phone is offline", async () => {
+    stub.impl = refuse("offline");
+    const queue = new LogQueue();
+    queue.log(args);
+    await settle();
+    const before = stub.calls.length;
+    vi.stubGlobal("navigator", { onLine: false });
+    for (let i = 0; i < 8; i++) await queue.flush();
+    vi.unstubAllGlobals();
+    expect(stub.calls.length).toBe(before);
+    expect(queue.isPending("r1")).toBe(true);
+  });
+
+  it("a flush asked for while another is running goes round once more afterwards", async () => {
+    stub.impl = refuse("failed");
+    const queue = new LogQueue();
+    queue.log({ ...args, requestId: "a" });
+    await settle();
+    stub.calls.length = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    stub.impl = async () => {
+      await gate;
+      throw new ReminderError("failed");
+    };
+    const first = queue.flush();
+    await settle();
+    const second = queue.flush();
+    release();
+    await Promise.all([first, second]);
+    expect(stub.calls.length).toBe(2);
+  });
+
   it("does not log again after it succeeded, even if asked again", async () => {
     stub.impl = ok;
     const queue = new LogQueue();

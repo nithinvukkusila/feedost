@@ -44,6 +44,7 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 | Labels, dates, receipt numbers | DM Mono 400–500 | 14px, uppercase, letter-spacing 0.04em |
 | Hindi, Kannada, Telugu | Anek Devanagari / Kannada / Telugu | headline weight 700, line-height ≥1.25, letter-spacing 0, reading text 17px at 1.6, labels 15px weight 600, no uppercase |
 
+- Headline amounts that may be wider than their box shrink to fit it (`amount-box` with `amount-size-*`, never under 14px): 72px and 60px for the board and receipts, and 36px (`amount-size-4xl`) for the amount in the Remind card (R1-8). The canvas draws that amount at 40px; 36px is the nearest token.
 - Minimum size 14px anywhere.
 - Amounts never use Anek and always use 0–9 digits and Indian grouping, in every language: Bricolage for headline amounts, DM Mono for amounts in rows (decided 2026-10-09).
 - Font stacks end in `'Anek Latin', system-ui` so a missing ₹ glyph falls back cleanly.
@@ -72,6 +73,7 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 | `Sheet` | bottom sheet on a dark ground `#2A0709` |
 | `StudentStrip` | one block per student: paid short and filled, due short and hollow, overdue tall and red; always with a text legend |
 | `Switch` | square, 76×44, ON in green |
+| `Check` | (R1-8) one tick box in a list for choosing several rows: a real `<input type="checkbox">` in its `<label>`, 28px box with a 2px border, black fill and a tick when selected; the row says the state in a word beside it ("Selected" / "Not selected"), so colour never carries it; the whole row is the target, min-height 44px, and grows with its words; focus ring 3px blue offset 4px |
 | `BottomNav` | Home, Students, Attendance, More; selected item has a 5px red bar on top |
 | `Banner` | offline (black), error (red outline, says what happened and what is safe), undo (black, two actions) |
 

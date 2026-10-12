@@ -6,6 +6,7 @@
 // changed meanwhile (paid, archived, no phone, gone) drops the entry silently. The list lives in memory
 // only and dies with the page: it is not saved, and the screen never says otherwise. R1-12's outbox takes
 // this over; `Entry` is the argument shape it will reuse.
+import { isOffline } from "./students";
 import { FINAL_REFUSALS, recordReminder, ReminderError, type RecordArgs } from "./reminders";
 
 export const MAX_ATTEMPTS = 5;
@@ -18,6 +19,7 @@ export class LogQueue {
   private done = new Set<string>();
   private listeners = new Set<() => void>();
   private flushing = false;
+  private again = false;
   private version = 0;
   private successes = 0;
 
@@ -53,8 +55,9 @@ export class LogQueue {
 
   private async attempt(entry: Entry): Promise<void> {
     this.inflight.add(entry.requestId);
-    const next: Entry = { ...entry, attempts: entry.attempts + 1 };
+    let next: Entry = entry;
     try {
+      next = { ...entry, attempts: entry.attempts + 1 };
       await recordReminder(next);
       this.done.add(next.requestId);
       this.successes += 1;
@@ -62,6 +65,8 @@ export class LogQueue {
       this.change();
     } catch (error) {
       const code = error instanceof ReminderError ? error.code : "failed";
+      // An attempt that never left the phone (offline) is not an attempt: only ones that reached the server count.
+      if (code === "offline") next = entry;
       if (FINAL_REFUSALS.includes(code)) this.remove(next.requestId);
       else if (next.attempts >= MAX_ATTEMPTS) this.remove(next.requestId);
       else this.keep(next);
@@ -85,13 +90,22 @@ export class LogQueue {
 
   /** Tries every waiting entry again, one at a time, in the order they were made. Safe to call often. */
   readonly flush = async (): Promise<void> => {
-    if (this.flushing) return;
+    // Offline there is nothing to try, and trying would only use up nothing: wait for the `online` event.
+    if (isOffline()) return;
+    // A call made while one is running is not lost: the running one goes round once more when it ends.
+    if (this.flushing) {
+      this.again = true;
+      return;
+    }
     this.flushing = true;
     try {
-      for (const entry of [...this.pending]) {
-        if (this.inflight.has(entry.requestId) || !this.isPending(entry.requestId)) continue;
-        await this.attempt(entry);
-      }
+      do {
+        this.again = false;
+        for (const entry of [...this.pending]) {
+          if (this.inflight.has(entry.requestId) || !this.isPending(entry.requestId)) continue;
+          await this.attempt(entry);
+        }
+      } while (this.again);
     } finally {
       this.flushing = false;
     }
