@@ -11,7 +11,7 @@ const TARGET = 150 * 1024;
 // language picker, sign-in, its callback, home, more and the two setup steps; R1-3: the student screens) must all be there, so the budget cannot pass by
 // omission. Each slice that adds an app route adds it here.
 const LANGUAGES = ["en", "hi", "kn", "te"];
-const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
+const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 // Pages outside a language folder. The parent's receipt (R1-7 Part B) is one static shell with no roster, no app
 // gate and no Supabase library, so it gets its own, smaller budget: a parent on a slow phone opens it from a link.
 // Measured 2026-10-12: Next's own runtime alone makes the plain "/" jump page 132.5 KB, and the receipt is 138.4 KB.

@@ -168,6 +168,7 @@ test.describe("the other states", () => {
   }
 });
 
+// The privacy test below needs a build made with the CI Supabase URL (NEXT_PUBLIC_SUPABASE_URL=https://cicicicicicicicicici.supabase.co): it names that host.
 test.describe("privacy (criteria 27 and 28)", () => {
   test("one request to the function, the token only in its body, and nowhere else", async ({ page }) => {
     const seen = await stubReceipt(page, okBody());

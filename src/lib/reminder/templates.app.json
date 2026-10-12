@@ -1,0 +1,62 @@
+{
+  "en": {
+    "polite": [
+      "Hello {parent} ji, a gentle reminder that the earlier tuition fee balance of {amount} is still due. You can pay by UPI with this link:",
+      "{link}",
+      "Or pay to UPI ID: {upiId}",
+      "Thank you!"
+    ],
+    "firm": [
+      "Hello {parent} ji, the earlier tuition fee balance of {amount} is still pending. Please pay it today by UPI with this link:",
+      "{link}",
+      "Or pay to UPI ID: {upiId}",
+      "Thank you."
+    ],
+    "parentWord": "Parent"
+  },
+  "hi": {
+    "polite": [
+      "नमस्ते {parent} जी, यह याद दिलाना था कि पिछली ट्यूशन फ़ीस का {amount} बाकी है। आप इस लिंक से UPI द्वारा भुगतान कर सकते हैं:",
+      "{link}",
+      "या इस UPI ID पर भेजें: {upiId}",
+      "धन्यवाद!"
+    ],
+    "firm": [
+      "नमस्ते {parent} जी, पिछली ट्यूशन फ़ीस का {amount} अभी तक बाकी है। कृपया आज ही इस लिंक से UPI द्वारा भुगतान कर दें:",
+      "{link}",
+      "या इस UPI ID पर भेजें: {upiId}",
+      "धन्यवाद।"
+    ],
+    "parentWord": "अभिभावक"
+  },
+  "kn": {
+    "polite": [
+      "ನಮಸ್ಕಾರ {parent} ಅವರೇ, ಹಿಂದಿನ ಟ್ಯೂಷನ್ ಶುಲ್ಕ {amount} ಬಾಕಿ ಇದೆ ಎಂದು ನೆನಪಿಸುತ್ತಿದ್ದೇನೆ. ಈ ಲಿಂಕ್ ಮೂಲಕ UPI ನಲ್ಲಿ ಪಾವತಿಸಬಹುದು:",
+      "{link}",
+      "ಅಥವಾ ಈ UPI ID ಗೆ ಕಳುಹಿಸಿ: {upiId}",
+      "ಧನ್ಯವಾದಗಳು!"
+    ],
+    "firm": [
+      "ನಮಸ್ಕಾರ {parent} ಅವರೇ, ಹಿಂದಿನ ಟ್ಯೂಷನ್ ಶುಲ್ಕ {amount} ಇನ್ನೂ ಬಾಕಿ ಇದೆ. ದಯವಿಟ್ಟು ಇಂದೇ ಈ ಲಿಂಕ್ ಮೂಲಕ UPI ನಲ್ಲಿ ಪಾವತಿಸಿ:",
+      "{link}",
+      "ಅಥವಾ ಈ UPI ID ಗೆ ಕಳುಹಿಸಿ: {upiId}",
+      "ಧನ್ಯವಾದಗಳು."
+    ],
+    "parentWord": "ಪೋಷಕರು"
+  },
+  "te": {
+    "polite": [
+      "నమస్కారం {parent} గారు, గత ట్యూషన్ ఫీజు {amount} చెల్లించాల్సి ఉందని గుర్తు చేస్తున్నాను. ఈ లింక్ ద్వారా UPI లో చెల్లించవచ్చు:",
+      "{link}",
+      "లేదా ఈ UPI ID కి పంపండి: {upiId}",
+      "ధన్యవాదాలు!"
+    ],
+    "firm": [
+      "నమస్కారం {parent} గారు, గత ట్యూషన్ ఫీజు {amount} ఇంకా బాకీ ఉంది. దయచేసి ఈ రోజే ఈ లింక్ ద్వారా UPI లో చెల్లించండి:",
+      "{link}",
+      "లేదా ఈ UPI ID కి పంపండి: {upiId}",
+      "ధన్యవాదాలు."
+    ],
+    "parentWord": "తల్లిదండ్రులు"
+  }
+}

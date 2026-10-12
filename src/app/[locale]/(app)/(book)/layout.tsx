@@ -5,14 +5,17 @@
 import { ClientMessages } from "@/components/i18n/client-messages";
 import { RosterProvider } from "@/components/app/roster";
 import { BoardProvider } from "@/components/board/board-holder";
+import { RemindProvider } from "@/components/remind/remind-provider";
 
-const namespaces = ["appState", "home", "nav", "students", "batches", "attendance"] as const;
+const namespaces = ["appState", "home", "nav", "students", "batches", "attendance", "remind"] as const;
 
 export default function BookLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClientMessages namespaces={namespaces}>
       <RosterProvider>
-        <BoardProvider>{children}</BoardProvider>
+        <BoardProvider>
+          <RemindProvider>{children}</RemindProvider>
+        </BoardProvider>
       </RosterProvider>
     </ClientMessages>
   );

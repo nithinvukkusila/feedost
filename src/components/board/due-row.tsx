@@ -7,25 +7,38 @@
 // owed, "Receipt" on a fee with something paid. Beside it when there is room, below it when the text is
 // large or the name is long. It grows with long names and large text and never cuts anything.
 import { useLocale, useTranslations } from "next-intl";
+import { RemindedIcon } from "@/components/app/icons";
 import { useSoftLink } from "@/components/app/use-soft-link";
 import { withNode } from "@/components/app/with-node";
 import { Button } from "@/components/ui/button";
 import { StatusTag } from "@/components/ui/status-tag";
 import { editHref } from "@/components/students/student-row";
 import type { Locale } from "@/config/locales";
-import { localeHref, receiptPath } from "@/config/routes";
+import { localeHref, receiptPath, setupUpiPath } from "@/config/routes";
 import { remaining, type Row } from "@/lib/dues-board";
 import { formatDate, formatRupees } from "@/lib/format";
+import { canRemind, lastRemindedOn } from "@/lib/reminder-rules";
 import { useMonthWords } from "./month-switcher";
+
+/** What the row knows about reminders (R1-8): who the tutor is (for her UPI ID), when this fee was last reminded, today, and what Remind does. */
+export type RemindProps = {
+  tutor: { upiId: string | null; name: string | null };
+  /** Milliseconds since 1970, or null when this fee was never reminded (or the read failed). */
+  lastAt: number | null;
+  today: string;
+  onRemind: (dueId: string) => void;
+};
 
 export function DueRow({
   row,
   month,
   batchName,
   onMarkPaid,
-}: Readonly<{ row: Row; month: string; batchName: string | null; onMarkPaid: (dueId: string) => void }>) {
+  remind,
+}: Readonly<{ row: Row; month: string; batchName: string | null; onMarkPaid: (dueId: string) => void; remind: RemindProps }>) {
   const t = useTranslations("board");
   const pay = useTranslations("pay");
+  const r = useTranslations("remind");
   const months = useMonthWords();
   const locale = useLocale() as Locale;
   const soft = useSoftLink();
@@ -49,6 +62,10 @@ export function DueRow({
   const canPay = due.status !== "paid";
   const hasReceipt = due.amountPaid > 0;
   const receiptHref = `${localeHref(locale, receiptPath)}?due=${encodeURIComponent(due.id)}`;
+  // Remind, or what to do first. A paid fee has none; the reason comes in the spec's order (criteria 1 to 4).
+  const can = canRemind(due, student, remind.tutor);
+  const reminded = canPay && remind.lastAt !== null ? lastRemindedOn(remind.lastAt, remind.today) : null;
+  const upiHref = localeHref(locale, setupUpiPath);
 
   return (
     <li className="flex flex-wrap items-center gap-x-2 border-b border-rule">
@@ -73,6 +90,12 @@ export function DueRow({
               </>
             ) : null}
           </span>
+          {reminded ? (
+            <span className="type-caption flex items-center gap-1.5 font-semibold text-ink">
+              <RemindedIcon />
+              <span className="min-w-0 wrap-anywhere">{reminded.key === "days" ? r("last.days", { n: reminded.n }) : r(`last.${reminded.key}`)}</span>
+            </span>
+          ) : null}
           {due.status === "partial" ? (
             <span className="type-caption text-blue wrap-anywhere">
               {withNode(
@@ -89,10 +112,23 @@ export function DueRow({
         </span>
       </a>
       {canPay || hasReceipt ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 py-2 pr-1.5 pb-3.5">
+        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2 py-2 pr-1.5 pb-3.5">
           {hasReceipt ? (
             <Button variant="outline" size="compact" href={receiptHref} onClick={soft(receiptHref)} aria-label={pay("receiptFor", { name: student.name })}>
               {pay("receiptButton")}
+            </Button>
+          ) : null}
+          {can.ok ? (
+            <Button variant="outline" size="compact" aria-label={r("buttonFor", { name: student.name })} onClick={() => remind.onRemind(due.id)}>
+              {r("button")}
+            </Button>
+          ) : !can.ok && can.reason === "noPhone" ? (
+            <Button variant="outline" size="compact" href={href} onClick={soft(href)} aria-label={r("addNumberFor", { name: student.name })}>
+              {r("addNumber")}
+            </Button>
+          ) : !can.ok && can.reason === "noUpi" ? (
+            <Button variant="outline" size="compact" href={upiHref} onClick={soft(upiHref)}>
+              {r("addUpi")}
             </Button>
           ) : null}
           {canPay ? (

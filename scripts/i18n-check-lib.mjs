@@ -333,6 +333,173 @@ export function checkTemplates(file, reviewFile, { strict = false } = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// The app's own reminder templates (spec R1-8, criteria 8, 11, 32): the 8 earlier-balance templates and
+// the 4 generic words for "parent". Same rules and the same kind of review record as the templates
+// above, with four slots (no {month}), no month names, and a parentWord per language.
+
+const APP_SLOTS = ["{parent}", "{amount}", "{link}", "{upiId}"];
+
+/** What a reviewer signs: a language's two balance templates and its parent word, as the file stands. */
+export function appTemplateHash(entry) {
+  return createHash("sha256").update(JSON.stringify({ polite: entry.polite, firm: entry.firm, parentWord: entry.parentWord })).digest("hex");
+}
+
+/**
+ * Checks templates.app.json and templates.app.review.json. Returns { problems, templateCount, wordCount,
+ * notReviewed, notes }, like checkTemplates. Under `strict` a language that is not reviewed is a problem.
+ */
+export function checkAppTemplates(file, reviewFile, { strict = false } = {}) {
+  const problems = [];
+  const notes = [];
+  const label = "templates.app.json";
+  const reviewLabel = "templates.app.review.json";
+  const empty = { problems, templateCount: 0, wordCount: 0, notReviewed: [], notes };
+
+  let tree;
+  try {
+    tree = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    problems.push(`${label} is not valid JSON: ${error.message}`);
+    return empty;
+  }
+  if (!isObject(tree)) {
+    problems.push(`${label} is ${describe(tree)}, not an object`);
+    return empty;
+  }
+  for (const key of Object.keys(tree)) {
+    if (!locales.includes(key)) problems.push(`${label} has "${key}", which is not one of ${locales.join(", ")}`);
+  }
+
+  let templateCount = 0;
+  let wordCount = 0;
+  const usable = {};
+  for (const locale of locales) {
+    const entry = tree[locale];
+    if (!isObject(entry)) {
+      problems.push(`${label} is missing "${locale}"`);
+      continue;
+    }
+    for (const key of Object.keys(entry)) {
+      if (![...TONES, "parentWord"].includes(key)) problems.push(`${label} "${locale}" has "${key}", which is not polite, firm or parentWord`);
+    }
+    let shapeOk = true;
+    const script = SCRIPTS[locale];
+
+    for (const tone of TONES) {
+      const name = `"${locale}.${tone}"`;
+      const lines = entry[tone];
+      if (!Array.isArray(lines) || lines.length === 0 || !lines.every(isText)) {
+        problems.push(`${label} ${name} must be a list of lines, none of them empty`);
+        shapeOk = false;
+        continue;
+      }
+      templateCount += 1;
+      const text = lines.join("\n");
+      if (text.includes(TODO)) problems.push(`${label} ${name} contains ${TODO}; a template cannot be marked, see the review record`);
+      for (const slot of APP_SLOTS) {
+        const times = count(text, slot);
+        if (times !== 1) problems.push(`${label} ${name}: ${slot} appears ${times} times`);
+      }
+      if (text.includes("{month}")) problems.push(`${label} ${name}: an earlier balance has no month, remove {month}`);
+      let rest = text;
+      for (const slot of APP_SLOTS) rest = rest.split(slot).join("");
+      if (/[{}]/.test(rest)) problems.push(`${label} ${name} has a brace that is not one of ${APP_SLOTS.join(" ")}`);
+      if (count(text, "{link}") === 1 && !lines.includes("{link}")) problems.push(`${label} ${name}: {link} must be alone on its line`);
+      if (script && !script.test.test(text)) problems.push(`${label} ${name} has no ${script.name} text`);
+      const english = tree.en?.[tone];
+      if (locale !== "en" && Array.isArray(english) && english.join("\n") === text) {
+        problems.push(`${label} ${name} is the same as the English template`);
+      }
+    }
+
+    const word = entry.parentWord;
+    if (!isText(word)) {
+      problems.push(`${label} "${locale}.parentWord" must be a word, not empty`);
+      shapeOk = false;
+    } else {
+      wordCount += 1;
+      if (word.includes(TODO)) problems.push(`${label} "${locale}.parentWord" contains ${TODO}; a word cannot be marked, see the review record`);
+      if (/[{}]/.test(word)) problems.push(`${label} "${locale}.parentWord" has a brace`);
+      if (script && !script.test.test(word)) problems.push(`${label} "${locale}.parentWord" has no ${script.name} text`);
+      if (locale !== "en" && word === tree.en?.parentWord) problems.push(`${label} "${locale}.parentWord" is the same as the English word`);
+    }
+    if (shapeOk) usable[locale] = entry;
+  }
+
+  const reviewed = locales.filter((l) => l !== "en");
+  let record = null;
+  if (!existsSync(reviewFile)) {
+    problems.push(`${reviewLabel} does not exist; it records who has read the ${reviewed.join(", ")} balance templates and parent words`);
+  } else {
+    try {
+      record = JSON.parse(readFileSync(reviewFile, "utf8"));
+      if (!isObject(record)) {
+        problems.push(`${reviewLabel} is ${describe(record)}, not an object`);
+        record = null;
+      }
+    } catch (error) {
+      problems.push(`${reviewLabel} is not valid JSON: ${error.message}`);
+    }
+  }
+
+  const notReviewed = [];
+  if (record) {
+    for (const key of Object.keys(record)) {
+      if (!reviewed.includes(key)) problems.push(`${reviewLabel} has "${key}", which is not one of ${reviewed.join(", ")}`);
+    }
+  }
+  for (const locale of reviewed) {
+    const entry = record?.[locale];
+    const current = usable[locale] ? appTemplateHash(usable[locale]) : null;
+    if (!record) {
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!isObject(entry)) {
+      problems.push(`${reviewLabel} is missing "${locale}"`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (!STATUSES.includes(entry.status)) {
+      problems.push(`${reviewLabel} "${locale}": status must be "reviewed" or "not reviewed", found ${JSON.stringify(entry.status)}`);
+      notReviewed.push(locale);
+      continue;
+    }
+    if (entry.status === "reviewed") {
+      let complete = true;
+      if (!isText(entry.reviewer)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no reviewer's name`);
+        complete = false;
+      }
+      if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
+        complete = false;
+      }
+      if (typeof entry.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(entry.sha256)) {
+        problems.push(`${reviewLabel} "${locale}" is marked reviewed with no sha256 of the text that was read`);
+        complete = false;
+      }
+      if (complete && current !== null && entry.sha256 === current) continue;
+      notReviewed.push(locale);
+      if (complete && current !== null) {
+        const changed = `${label} "${locale}" changed after the review of ${entry.date} by ${entry.reviewer}`;
+        if (strict) problems.push(changed);
+        else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
+      }
+      continue;
+    }
+    notReviewed.push(locale);
+    if (strict) {
+      problems.push(`${label} "${locale}" is not reviewed (2 balance templates, parent word): get a native reader's sign-off and record it in ${reviewLabel}`);
+    } else if (current !== null) {
+      notes.push(`${locale}: balance templates and parent word not reviewed; current text ${current}`);
+    }
+  }
+
+  return { problems, templateCount, wordCount, notReviewed, notes };
+}
+
+// ---------------------------------------------------------------------------------------------
 // The waitlist's promise sentences (spec R0-4, criterion 20). They are in messages/ like every
 // other word, but they are a promise about someone's phone number, so each of hi, kn and te also
 // needs a native reader's sign-off in its own review record, and may never be a TODO-translate.

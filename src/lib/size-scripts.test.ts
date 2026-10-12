@@ -15,7 +15,7 @@ const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", 
 // message templates of all four languages: the leak check's one named exception.
 const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
-const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
+const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
 const templatesPath = join("src", "lib", "reminder", "templates.json");
 type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;
@@ -83,7 +83,9 @@ function project(options: Options = {}): string {
     const locale = page.split("/")[0] as keyof typeof messages;
     mkdirSync(join(root, "out", page, ".."), { recursive: true });
     const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
-    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, script));
+    // The Remind screen (R1-8) carries the templates of all four languages, as the tool page does, so it loads the script that holds them.
+    const scripts = page.includes("/remind/") ? [script, "/_next/tool.js"] : [script];
+    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, ...scripts));
   }
   if (!options.skip?.includes(shellPage)) {
     mkdirSync(join(root, "out", "r"), { recursive: true });
@@ -261,7 +263,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("65 pages");
+    expect(result.out).toContain("69 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {

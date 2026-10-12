@@ -143,9 +143,9 @@ describe("amounts never follow the script (criteria 14 and 40)", () => {
     expect(type).not.toMatch(/text-size-adjust/);
   });
 
-  it("fits at the two headline sizes only, never a row or reading-text size (criterion 95)", () => {
+  it("fits at the headline sizes (60px, 72px) and the Remind card's 36px only, never a row or reading-text size (criterion 95)", () => {
     const sizes = [...type.matchAll(/@utility amount-size-([\w*-]+)/g)].map((m) => m[1]);
-    expect(sizes).toEqual(["6xl", "7xl"]);
+    expect(sizes).toEqual(["4xl", "6xl", "7xl"]);
     // No wildcard form, which would make every text size fittable.
     expect(type).not.toMatch(/amount-size-\*/);
     // The row amount role and the reading roles do not read the container or the amount width.
