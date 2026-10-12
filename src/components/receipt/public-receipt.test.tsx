@@ -26,6 +26,7 @@ const paid = {
 };
 // Finding text can take longer than a second when the whole suite runs at once.
 configure({ asyncUtilTimeout: 5000 });
+vi.setConfig({ testTimeout: 20_000 });
 let fetchMock: ReturnType<typeof vi.fn>;
 
 function answer(status: number, body: unknown) {

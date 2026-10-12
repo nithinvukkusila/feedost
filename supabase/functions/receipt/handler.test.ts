@@ -1,7 +1,7 @@
 // @vitest-environment node
 // R1-7 Part B criteria 23 to 27: the receipt handler, called directly with fake dependencies.
 import { describe, expect, it } from "vitest";
-import { CANCELLED_KEYS, DUMMY_TOKEN, LIMIT_PER_IP_PER_HOUR, LIMIT_PER_TOKEN_PER_HOUR, LIVE_KEYS, MAX_BODY_BYTES, handle, type Deps } from "./handler.ts";
+import { CANCELLED_KEYS, DUMMY_TOKEN, LIMIT_PER_IP_PER_HOUR, LIMIT_PER_TOKEN_PER_HOUR, LIMIT_UNKNOWN_IP_PER_HOUR, LIVE_KEYS, MAX_BODY_BYTES, handle, type Deps } from "./handler.ts";
 
 const IP = "203.0.113.77";
 const TOKEN = "AbCdEfGhIjKlMnOpQrStUvWx"; // 24 characters
@@ -187,6 +187,21 @@ describe("rate limits", () => {
     const res = await handle(post({ token: TOKEN }, { "cf-connecting-ip": "10.9.9.9" }), deps);
     expect(res.status).toBe(429);
     expect(calls.lookups.length).toBe(before);
+  });
+
+  it("callers with no known IP share a bucket with a much higher limit, so parents are not locked out together (H7)", async () => {
+    const { deps } = fake();
+    expect(LIMIT_UNKNOWN_IP_PER_HOUR).toBeGreaterThanOrEqual(1000);
+    const none = { "cf-connecting-ip": "" };
+    for (let i = 0; i < LIMIT_PER_IP_PER_HOUR + 5; i++) {
+      // Different tokens so only the per-IP bucket could trip.
+      const token = `Tok${String(i).padStart(3, "0")}abcdefghijklmnopq`;
+      expect((await handle(post({ token }, none), deps)).status, `request ${i + 1}`).toBe(404);
+    }
+    // A caller with a real IP still stops at 60.
+    const { deps: real } = fake();
+    for (let i = 0; i < LIMIT_PER_IP_PER_HOUR; i++) await handle(post({ token: OTHER }, { "cf-connecting-ip": "198.51.100.1" }), real);
+    expect((await handle(post({ token: OTHER }, { "cf-connecting-ip": "198.51.100.1" }), real)).status).toBe(429);
   });
 
   it("x-forwarded-for is not used to pick a bucket", async () => {

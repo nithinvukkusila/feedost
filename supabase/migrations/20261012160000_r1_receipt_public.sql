@@ -20,6 +20,10 @@ create table public.receipt_hits (
   primary key (key_hash, hour_bucket)
 );
 
+-- receipt_hit purges old hours on every public request (delete where hour_bucket < ...), which the primary key
+-- (key_hash first) cannot serve. Without this index each request scans the table.
+create index receipt_hits_hour_bucket_idx on public.receipt_hits (hour_bucket);
+
 alter table public.receipt_hits enable row level security;
 
 revoke all on public.receipt_hits from public, anon, authenticated;

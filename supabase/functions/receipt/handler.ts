@@ -5,6 +5,11 @@
 
 /** Founder-changeable: requests allowed per hashed IP per hour, and per hashed token per hour. */
 export const LIMIT_PER_IP_PER_HOUR = 60;
+// Callers whose IP the platform did not tell us share one bucket, so 60 would lock out every parent after 60 opens in an
+// hour. That bucket gets a high limit instead (privacy is unchanged: nothing about the caller is stored); the per-token
+// limit stays the real guard. preprod-qa must confirm on staging which header the platform sets (H7); once it is known
+// this bucket should never be used.
+export const LIMIT_UNKNOWN_IP_PER_HOUR = 2000;
 export const LIMIT_PER_TOKEN_PER_HOUR = 120;
 export const MAX_BODY_BYTES = 512;
 
@@ -148,7 +153,9 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     }
 
     const hour = deps.now().toISOString().slice(0, 13);
-    if (!(await deps.hitIp(await deps.hashIp(clientIp(req), hour), LIMIT_PER_IP_PER_HOUR))) {
+    const ip = clientIp(req);
+    const ipLimit = ip === "unknown" ? LIMIT_UNKNOWN_IP_PER_HOUR : LIMIT_PER_IP_PER_HOUR;
+    if (!(await deps.hitIp(await deps.hashIp(ip, hour), ipLimit))) {
       log("rate_limited");
       return codeOnly(429, "rate_limited", cors, { "Retry-After": "3600" });
     }

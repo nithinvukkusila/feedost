@@ -5,7 +5,7 @@
 -- Self-contained: makes its own users and rolls everything back.
 begin;
 select tests.assert_ready();
-select plan(49);
+select plan(50);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -116,6 +116,7 @@ select is(public.get_receipt('TutorBToken_bbbbbbbbbbbb'), null, 'after the tutor
 reset role;
 
 -- receipt_hit
+select has_index('public', 'receipt_hits', 'receipt_hits_hour_bucket_idx', array['hour_bucket'], 'the purge by hour has its own index');
 insert into public.receipt_hits (key_hash, hour_bucket, n) values ('old', date_trunc('hour', now()) - interval '25 hours', 3);
 set local role service_role;
 select is((select array_agg(public.receipt_hit('hash-a', 5) order by g) from generate_series(1, 6) g),

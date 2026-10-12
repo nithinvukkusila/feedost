@@ -498,3 +498,10 @@ A network error (no response) is the page's "network failure with Try again" sta
 **`receipt` when `status` is `cancelled`**: exactly 5 keys, `receipt_no`, `status` (`"cancelled"`), `tutor_name`, `student_name`, `language`. No amount, method, date or balance.
 
 Not returned: referral code (no column yet, R1-13), phone, email, UPI id, any id, other receipts. Secret to set before deploy (release-manager): `RECEIPT_HASH_SALT`. Nothing is deployed or set by this change.
+
+## Part B pending items (written by `frontend-dev`, 2026-10-12)
+
+- **Deferred to R1-13 (referral code, join link, footer link):** criterion 23's referral code, criterion 28's footer join link and criterion 31's 44px footer link are not built. The `receipt` function returns no referral code (no column exists yet). The page's footer is the plain words "Free for tutors" under the product name. Add the code to `get_receipt`, the link to the footer and the 44px check together in R1-13.
+- **Hindi, Kannada and Telugu parent words are unreviewed drafts** (`src/lib/receipt-words.review.json`); `pnpm i18n:check --strict` fails until each is signed off. Needed before production (question 5).
+- **H7:** `preprod-qa` must confirm on staging which client-IP header the platform sets. Until then callers with no known IP share one bucket limited to 2000 an hour (real IPs: 60), and the per-token limit of 120 an hour is the real guard.
+- **Vercel rewrite** (`vercel.json`) is checked locally only; confirm on a preview with a real token, with and without the trailing slash.
