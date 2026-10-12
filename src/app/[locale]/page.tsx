@@ -47,7 +47,7 @@ export default async function LocaleHome() {
           aria-labelledby="waitlist-title"
           className="on-cloth-ground mt-16 bg-cloth px-5 py-12 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed"
         >
-          <div className="mx-auto w-full max-w-2xl">
+          <div className="mx-auto w-full max-w-2xl lg:max-w-7xl">
             <h2 id="waitlist-title" className="type-headline text-4xl wrap-break-word">
               {t("title")}
             </h2>

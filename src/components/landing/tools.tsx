@@ -10,11 +10,11 @@ export function Tools() {
   const t = useTranslations("landing.tools");
   const locale = useLocale();
   return (
-    <section id="tools" aria-labelledby="tools-title" className="mx-auto w-full max-w-2xl px-5 pt-16">
+    <section id="tools" aria-labelledby="tools-title" className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-16">
       <h2 id="tools-title" className="type-headline text-4xl wrap-break-word">
         {t("title")}
       </h2>
-      <ul className="mt-6 flex flex-col gap-6 pr-1.5">
+      <ul className="mt-6 flex flex-col gap-6 pr-1.5 lg:grid lg:grid-cols-2 lg:gap-8">
         <li>
           <Slip as="article" className="flex flex-col gap-2 p-4">
             <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">

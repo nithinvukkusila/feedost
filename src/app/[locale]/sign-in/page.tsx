@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { ClothGround } from "@/components/app/cloth-ground";
 import { SignInScreen } from "@/components/auth/sign-in-screen";
 import { Stamp } from "@/components/ui/stamp";
 import { brand } from "@/config/brand";
@@ -22,10 +23,10 @@ export default async function SignInPage() {
   const [locale, t, state] = await Promise.all([getLocale(), getTranslations("signIn"), getTranslations("appState")]);
   if (!isLocale(locale)) notFound();
   return (
-    <div className="relative min-h-dvh bg-page">
+    <ClothGround>
       {/* The ledger's margin: two red lines down the left edge. */}
       <span aria-hidden="true" className="absolute inset-y-0 left-5.5 w-2 border-x-2 border-cloth" />
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-3.5 pr-5.5 pb-5.5 pl-10">
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-3.5 pr-5.5 pb-5.5 pl-10 md:min-h-0 md:max-w-none">
         <header className="flex items-center justify-between gap-3">
           <p className="type-headline text-2xl text-cloth">{brand.name}</p>
           <a
@@ -75,6 +76,6 @@ export default async function SignInPage() {
           </div>
         </main>
       </div>
-    </div>
+    </ClothGround>
   );
 }

@@ -17,9 +17,11 @@ export function Hero() {
   const t = useTranslations("landing.hero");
   const locale = useLocale();
   return (
-    <section>
-      <div className="on-cloth-ground bg-cloth px-5 pt-8 pb-28 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed">
-        <div className="mx-auto w-full max-w-2xl">
+    // From 1024 the ledger card stands in the cloth's right half instead of under it: the section is the
+    // positioning frame, the card's row is laid over the cloth and lets clicks through to the text.
+    <section className="lg:relative">
+      <div className="on-cloth-ground bg-cloth px-5 pt-8 pb-28 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed lg:py-20">
+        <div className="mx-auto w-full max-w-2xl lg:max-w-7xl lg:pr-[50%]">
           <p className="type-label">{t("kicker")}</p>
           <h1 className="type-headline mt-3 text-5xl wrap-break-word">{t("title")}</h1>
           <p className="type-body-lg mt-4 text-on-cloth-soft">{t("body")}</p>
@@ -36,8 +38,10 @@ export function Hero() {
           </a>
         </div>
       </div>
-      <div className="relative mx-auto -mt-24 w-full max-w-2xl pr-7 pl-5">
-        <LedgerCard />
+      <div className="relative mx-auto -mt-24 w-full max-w-2xl pr-7 pl-5 lg:pointer-events-none lg:absolute lg:inset-0 lg:mt-0 lg:flex lg:max-w-7xl lg:items-center lg:justify-end lg:px-5">
+        <div className="lg:pointer-events-auto lg:w-1/2 lg:pl-10">
+          <LedgerCard />
+        </div>
       </div>
     </section>
   );

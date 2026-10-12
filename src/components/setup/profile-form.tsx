@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { useTutor } from "@/components/app/app-gate";
+import { ClothGround } from "@/components/app/cloth-ground";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import type { Locale } from "@/config/locales";
@@ -97,34 +98,36 @@ export function ProfileForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page pt-1.5 pr-5.5 pb-5.5 pl-5">
-      <StepHeader step={1} />
-      <h1 className="type-headline mt-3.5 text-5xl wrap-break-word">{t("profile.title")}</h1>
-      <p className="type-body mt-2.5 text-ink-soft">{t("profile.body")}</p>
-
-      <form noValidate onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-6">
-        <Field
-          ref={nameField}
-          label={t("profile.name")}
-          value={name}
-          autoComplete="name"
-          autoCapitalize="words"
-          onChange={(event) => setName(event.currentTarget.value)}
-          onBlur={() => setNameTouched(true)}
-          {...guarded}
-          {...nameProblem}
-        />
-        <SubjectChips names={names} picked={picked} extras={extras} onToggle={toggle} onAdd={add} error={subjectsProblem} />
-
-        <div className="mt-auto flex flex-col gap-4 pt-4">
-          <SaveNotice problem={problem} offline={offline} action={t("profile.nextWord")} onSignOut={leave} />
-          <div className="pr-1.5 pb-1.5">
-            <Button type="submit" variant="record" size="xl" full busy={saving} busyLabel={t("profile.next")} iconEnd={<Arrow />}>
-              {t("profile.next")}
-            </Button>
+    <ClothGround width="form">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-1.5 pr-5.5 pb-5.5 pl-5 md:min-h-0 md:max-w-none md:px-8 md:pt-4">
+        <StepHeader step={1} />
+        <h1 className="type-headline mt-3.5 text-5xl wrap-break-word">{t("profile.title")}</h1>
+        <p className="type-body mt-2.5 text-ink-soft">{t("profile.body")}</p>
+  
+        <form noValidate onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-6">
+          <Field
+            ref={nameField}
+            label={t("profile.name")}
+            value={name}
+            autoComplete="name"
+            autoCapitalize="words"
+            onChange={(event) => setName(event.currentTarget.value)}
+            onBlur={() => setNameTouched(true)}
+            {...guarded}
+            {...nameProblem}
+          />
+          <SubjectChips names={names} picked={picked} extras={extras} onToggle={toggle} onAdd={add} error={subjectsProblem} />
+  
+          <div className="mt-auto flex flex-col gap-4 pt-4">
+            <SaveNotice problem={problem} offline={offline} action={t("profile.nextWord")} onSignOut={leave} />
+            <div className="pr-1.5 pb-1.5">
+              <Button type="submit" variant="record" size="xl" full busy={saving} busyLabel={t("profile.next")} iconEnd={<Arrow />}>
+                {t("profile.next")}
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-    </main>
+        </form>
+      </main>
+    </ClothGround>
   );
 }

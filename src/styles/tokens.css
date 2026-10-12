@@ -60,6 +60,9 @@
   --spacing-tap: 2.75rem;
   --spacing-control: 3rem;
   --spacing-row: 4rem;
+  /* Wide screens (docs/DESIGN.md "Wide screens"): the side navigation column, and the tallest a centred dialog may be. */
+  --spacing-sidenav: 15rem;
+  --spacing-modal: calc(100dvh - 4rem);
 }
 
 /*

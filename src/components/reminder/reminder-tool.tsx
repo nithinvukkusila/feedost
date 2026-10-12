@@ -238,7 +238,7 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
   });
 
   return (
-    <div data-testid="reminder-tool" {...guarded}>
+    <div data-testid="reminder-tool" {...guarded} className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-12">
       <div className="mt-6 pr-1.5">
         <Slip className="p-4">
           {/* Inert until the page has woken up: text typed into a field before then would be lost. */}
@@ -360,88 +360,91 @@ export function ReminderTool({ words, pageLocale }: Readonly<{ words: ReminderWo
         </Slip>
       </div>
 
-      <p data-testid="reminder-privacy" className="type-body-sm mt-5 text-ink-soft">
-        {words.privacy}
-      </p>
-
-      <h2 id={previewTitleId} className="type-label mt-8 mb-2 text-ink-label">
-        {words.preview.title}
-      </h2>
-      {/*
-        The message as WhatsApp will show it. `type-message` is the Latin stack whatever the page
-        language, so an Indian script is drawn in the phone's own font and no font file is asked for.
-      */}
-      <p
-        lang={messageLocale}
-        translate="no"
-        aria-labelledby={previewTitleId}
-        data-testid="reminder-preview"
-        {...guarded}
-        className="type-message rounded-bubble rounded-tl-sm border-2 border-ink bg-bubble px-4 py-3 whitespace-pre-wrap wrap-anywhere select-text"
-      >
-        {parts.map((part, index) => (
-          <Piece key={index} part={part} blank={words.preview.blank} />
-        ))}
-      </p>
-      {ready ? null : (
-        <p data-testid="reminder-incomplete" className="type-caption mt-2 text-ink-soft">
-          {words.preview.incomplete}
+      {/* From 1024 the message and its actions stand beside the form, as the canvas draws them. */}
+      <div className="min-w-0">
+        <p data-testid="reminder-privacy" className="type-body-sm mt-5 text-ink-soft">
+          {words.privacy}
         </p>
-      )}
 
-      <div className="mt-5 flex flex-col gap-4 pr-1.5">
-        <Button
-          variant="send"
-          size="large"
-          full
-          href={message === null ? "" : whatsAppLink(message)}
-          target="_blank"
-          rel="noopener noreferrer"
-          disabled={!ready}
-          aria-describedby={ready ? undefined : reasonId}
-          iconStart={<ChatIcon />}
-          data-testid="reminder-send"
+        <h2 id={previewTitleId} className="type-label mt-8 mb-2 text-ink-label">
+          {words.preview.title}
+        </h2>
+        {/*
+          The message as WhatsApp will show it. `type-message` is the Latin stack whatever the page
+          language, so an Indian script is drawn in the phone's own font and no font file is asked for.
+        */}
+        <p
+          lang={messageLocale}
+          translate="no"
+          aria-labelledby={previewTitleId}
+          data-testid="reminder-preview"
+          {...guarded}
+          className="type-message rounded-bubble rounded-tl-sm border-2 border-ink bg-bubble px-4 py-3 whitespace-pre-wrap wrap-anywhere select-text"
         >
-          {words.send}
-        </Button>
-        <Button
-          variant="outline"
-          full
-          disabled={!ready}
-          onClick={onCopy}
-          aria-describedby={ready ? undefined : reasonId}
-          iconStart={copied ? <Tick /> : undefined}
-          data-testid="reminder-copy"
-          data-copied={copied ? "true" : undefined}
-        >
-          {copied ? words.copied : words.copy}
-        </Button>
-        {/* One reason for both buttons, said once. */}
+          {parts.map((part, index) => (
+            <Piece key={index} part={part} blank={words.preview.blank} />
+          ))}
+        </p>
         {ready ? null : (
-          <p id={reasonId} data-testid="reminder-reason" className="type-caption text-ink-soft">
-            {words.fillFirst}
+          <p data-testid="reminder-incomplete" className="type-caption mt-2 text-ink-soft">
+            {words.preview.incomplete}
           </p>
         )}
-        {/* In the page from the first render and empty until Copy is pressed: a region that fills is read out, one that appears often is not. */}
-        <p
-          role="status"
-          data-testid="reminder-status"
-          data-result={copied ? "copied" : copyFailed ? "failed" : undefined}
-          className={`type-caption flex items-start gap-2 font-semibold wrap-anywhere ${copyFailed ? "text-cloth" : "text-stamp"}`}
-        >
-          {copied ? (
-            <>
-              <Tick />
-              <span>{words.copiedStatus}</span>
-            </>
-          ) : null}
-          {copyFailed ? (
-            <>
-              <ErrorMark />
-              <span>{words.copyFailed}</span>
-            </>
-          ) : null}
-        </p>
+
+        <div className="mt-5 flex flex-col gap-4 pr-1.5">
+          <Button
+            variant="send"
+            size="large"
+            full
+            href={message === null ? "" : whatsAppLink(message)}
+            target="_blank"
+            rel="noopener noreferrer"
+            disabled={!ready}
+            aria-describedby={ready ? undefined : reasonId}
+            iconStart={<ChatIcon />}
+            data-testid="reminder-send"
+          >
+            {words.send}
+          </Button>
+          <Button
+            variant="outline"
+            full
+            disabled={!ready}
+            onClick={onCopy}
+            aria-describedby={ready ? undefined : reasonId}
+            iconStart={copied ? <Tick /> : undefined}
+            data-testid="reminder-copy"
+            data-copied={copied ? "true" : undefined}
+          >
+            {copied ? words.copied : words.copy}
+          </Button>
+          {/* One reason for both buttons, said once. */}
+          {ready ? null : (
+            <p id={reasonId} data-testid="reminder-reason" className="type-caption text-ink-soft">
+              {words.fillFirst}
+            </p>
+          )}
+          {/* In the page from the first render and empty until Copy is pressed: a region that fills is read out, one that appears often is not. */}
+          <p
+            role="status"
+            data-testid="reminder-status"
+            data-result={copied ? "copied" : copyFailed ? "failed" : undefined}
+            className={`type-caption flex items-start gap-2 font-semibold wrap-anywhere ${copyFailed ? "text-cloth" : "text-stamp"}`}
+          >
+            {copied ? (
+              <>
+                <Tick />
+                <span>{words.copiedStatus}</span>
+              </>
+            ) : null}
+            {copyFailed ? (
+              <>
+                <ErrorMark />
+                <span>{words.copyFailed}</span>
+              </>
+            ) : null}
+          </p>
+        </div>
       </div>
     </div>
   );

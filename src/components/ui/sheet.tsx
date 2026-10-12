@@ -1,6 +1,7 @@
 "use client";
 
-// Sheet (docs/DESIGN.md): a bottom sheet on the dark ground. A native modal <dialog>: the browser
+// Sheet (docs/DESIGN.md): a bottom sheet on the dark ground; from 768 up (md) the same dialog is a
+// centred modal, at most 32rem wide, with the dark ground as its backdrop (CSS only; nothing measures the window). A native modal <dialog>: the browser
 // moves focus in, keeps it in, makes the page behind inert, closes on Escape and returns focus.
 // Every word is passed in.
 import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from "react";
@@ -27,7 +28,7 @@ export type SheetFrameProps = {
 export function SheetFrame({ title, titleId, closeLabel, onClose, context, children }: SheetFrameProps) {
   return (
     // Rings inside the dark area are yellow; the panel below resets to paper.
-    <div className="on-dark-ground flex h-full min-h-0 flex-col justify-end bg-sheet-ground">
+    <div className="on-dark-ground flex h-full min-h-0 flex-col justify-end bg-sheet-ground md:h-auto md:max-h-modal md:justify-start">
       {context ? (
         // At most 60% of the sheet and scrolls inside itself: a very long name at the largest text would otherwise take the whole screen and leave the panel, and its buttons, no room.
         <div className="max-h-3/5 shrink-0 overflow-y-auto px-6 pt-6 pb-4 text-on-cloth">
@@ -122,7 +123,7 @@ export function Sheet({ open, onClose, title, closeLabel, context, children }: S
         }
         if (open) onClose();
       }}
-      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-sheet-ground p-0 backdrop:bg-sheet-ground"
+      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-sheet-ground p-0 backdrop:bg-sheet-ground md:m-auto md:h-fit md:max-h-modal md:max-w-lg md:border-2 md:border-on-cloth-soft"
     >
       {open ? (
         <SheetFrame
