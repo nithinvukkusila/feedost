@@ -28,10 +28,13 @@ export function canRemind(
   if (!student.active) return { ok: false, reason: "archived" };
   if (student.parentPhone === null || !PHONE_PATTERN.test(student.parentPhone)) return { ok: false, reason: "noPhone" };
   // The tutor's name is the payee name of the link (question 9), so a missing name counts as no UPI ID.
-  if (tutor.upiId === null || !UPI_PATTERN.test(tutor.upiId) || tutor.name === null || tutor.name.trim() === "") {
-    return { ok: false, reason: "noUpi" };
-  }
+  if (!tutorReady(tutor)) return { ok: false, reason: "noUpi" };
   return { ok: true };
+}
+
+/** Whether the tutor has what every message needs: a valid UPI ID and a name. False means every Remind is "Add your UPI ID". */
+export function tutorReady(tutor: { upiId: string | null; name: string | null }): boolean {
+  return tutor.upiId !== null && UPI_PATTERN.test(tutor.upiId) && tutor.name !== null && tutor.name.trim() !== "";
 }
 
 /** The log tag, like `polite:hi:month`. */
@@ -51,7 +54,12 @@ export const LAST_OLD_AFTER = 30;
 
 /** How to say when the parent was last reminded: today, yesterday, n days ago (to 30), then "over 30". */
 export function lastRemindedWords(lastSentMs: number, nowMs: number): LastWords {
-  const days = daysBetween(indiaToday(lastSentMs), indiaToday(nowMs));
+  return lastRemindedOn(lastSentMs, indiaToday(nowMs));
+}
+
+/** The same, for a screen that already holds today's India day as `YYYY-MM-DD`. */
+export function lastRemindedOn(lastSentMs: number, today: string): LastWords {
+  const days = daysBetween(indiaToday(lastSentMs), today);
   if (days <= 0) return { key: "today", n: 0 };
   if (days === 1) return { key: "yesterday", n: 1 };
   if (days <= LAST_OLD_AFTER) return { key: "days", n: days };

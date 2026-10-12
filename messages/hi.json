@@ -558,7 +558,6 @@
       "of": "TODO-translate: {n} of {m}",
       "next": "TODO-translate: {month} fees will appear here on each student's due day. You do not need to do anything."
     },
-    "soon": "TODO-translate: Reminders arrive in a later update.",
     "loadError": {
       "title": "TODO-translate: Couldn't load your fees",
       "body": "TODO-translate: The network dropped. Nothing is lost.",
@@ -707,6 +706,69 @@
       "none": "TODO-translate: No payment has been recorded on this fee yet.",
       "loadError": "TODO-translate: Couldn't load the receipt. Nothing is lost.",
       "retry": "TODO-translate: Try again"
+    }
+  },
+  "remind": {
+    "button": "याद दिलाएँ",
+    "buttonFor": "{name} को याद दिलाएँ",
+    "addNumber": "नंबर जोड़ें",
+    "addNumberFor": "{name} का नंबर जोड़ें",
+    "addUpi": "अपनी UPI ID जोड़ें",
+    "noUpi": "रिमाइंडर में आपकी UPI ID जाती है ताकि अभिभावक भुगतान कर सकें। पहले इसे जोड़ें।",
+    "all": "सभी देर वालों को याद दिलाएँ ({n})",
+    "last": {
+      "today": "आज याद दिलाया",
+      "yesterday": "कल याद दिलाया",
+      "days": "{n} दिन पहले याद दिलाया",
+      "old": "30 दिन से पहले याद दिलाया"
+    }
+  },
+  "remindScreen": {
+    "progress": "रिमाइंडर {n} / {m}",
+    "stop": "रुकें",
+    "to": "{parent} को · {language}",
+    "toStudent": "{student} के अभिभावक को",
+    "late": "{month} · {n} दिन देर",
+    "earlier": "पिछला बकाया",
+    "tone": {
+      "label": "लहजा",
+      "polite": "विनम्र",
+      "firm": "सख़्त"
+    },
+    "message": "संदेश",
+    "open": "WhatsApp खोलें",
+    "hint": "वहाँ भेजें दबाएँ, फिर वापस आएँ।",
+    "opened": "{student} के अभिभावक के लिए खुला",
+    "openedNote": "WhatsApp सिर्फ़ संदेश खोलता है। भेजना आपको वहीं दबाना है।",
+    "next": "आगे",
+    "skip": "छोड़ें",
+    "upNext": "आगे",
+    "done": "{n} अभिभावक खोले, {k} छोड़े।",
+    "home": "होम पर वापस",
+    "logFailed": "TODO-translate: Couldn't save that you reminded them. We'll try again.",
+    "pick": {
+      "title": "किसे याद दिलाना है",
+      "more": "+{n} और देर से",
+      "late": "{n} दिन देर",
+      "today": "आज याद दिलाया",
+      "cannot": "याद नहीं दिला सकते ({n})",
+      "noPhone": "फ़ोन नंबर नहीं है",
+      "noUpi": "पहले अपनी UPI ID जोड़ें",
+      "selected": "चुना",
+      "notSelected": "नहीं चुना",
+      "start": "{n} अभिभावकों को याद दिलाएँ",
+      "none": "शुरू करने के लिए कम से कम एक अभिभावक चुनें।",
+      "many": "TODO-translate: That is a lot at once. WhatsApp can limit numbers that message many people. Do 20 now and the rest later if you like."
+    },
+    "again": {
+      "title": "आपने {parent} को आज {time} याद दिलाया था। फिर से?",
+      "titleStudent": "आपने {student} के अभिभावक को आज {time} याद दिलाया था। फिर से?",
+      "time": {
+        "am": "{hour}:{minute} am",
+        "pm": "{hour}:{minute} pm"
+      },
+      "yes": "फिर से याद दिलाएँ",
+      "no": "अभी नहीं"
     }
   }
 }

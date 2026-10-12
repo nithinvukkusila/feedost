@@ -13,10 +13,10 @@ const uiDir = join(root, "src", "components", "ui");
 describe("components hold no words of their own (criterion 66)", () => {
   const files = readdirSync(uiDir).filter((name) => name.endsWith(".tsx") && !name.endsWith(".test.tsx"));
 
-  it("finds the fourteen component files: the eight from F2a, the five from F2b and SelectField from R0-2", () => {
-    expect(files).toHaveLength(14);
+  it("finds the fifteen component files: the eight from F2a, the five from F2b, SelectField from R0-2 and Check from R1-8", () => {
+    expect(files).toHaveLength(15);
     expect(files.sort()).toEqual(
-      ["banner.tsx", "bottom-nav.tsx", "button.tsx", "field.tsx", "row.tsx", "segmented.tsx", "select-field.tsx", "sheet.tsx", "slip.tsx", "stamp.tsx", "status-tag.tsx", "student-strip.tsx", "switch.tsx", "tabs.tsx"].sort(),
+      ["banner.tsx", "bottom-nav.tsx", "button.tsx", "check.tsx", "field.tsx", "row.tsx", "segmented.tsx", "select-field.tsx", "sheet.tsx", "slip.tsx", "stamp.tsx", "status-tag.tsx", "student-strip.tsx", "switch.tsx", "tabs.tsx"].sort(),
     );
   });
 

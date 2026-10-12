@@ -558,7 +558,6 @@
       "of": "{n} of {m}",
       "next": "{month} fees will appear here on each student's due day. You do not need to do anything."
     },
-    "soon": "Reminders arrive in a later update.",
     "loadError": {
       "title": "Couldn't load your fees",
       "body": "The network dropped. Nothing is lost.",
@@ -707,6 +706,69 @@
       "none": "No payment has been recorded on this fee yet.",
       "loadError": "Couldn't load the receipt. Nothing is lost.",
       "retry": "Try again"
+    }
+  },
+  "remind": {
+    "button": "Remind",
+    "buttonFor": "Remind {name}",
+    "addNumber": "Add number",
+    "addNumberFor": "Add number for {name}",
+    "addUpi": "Add your UPI ID",
+    "noUpi": "Reminders carry your UPI ID so parents can pay. Add it first.",
+    "all": "Remind all overdue ({n})",
+    "last": {
+      "today": "Reminded today",
+      "yesterday": "Reminded yesterday",
+      "days": "Reminded {n} days ago",
+      "old": "Reminded over 30 days ago"
+    }
+  },
+  "remindScreen": {
+    "progress": "Reminder {n} of {m}",
+    "stop": "Stop",
+    "to": "To {parent} · {language}",
+    "toStudent": "To the parent of {student}",
+    "late": "{month} · {n, plural, one {# day} other {# days}} late",
+    "earlier": "Earlier balance",
+    "tone": {
+      "label": "Tone",
+      "polite": "Polite",
+      "firm": "Firm"
+    },
+    "message": "The message",
+    "open": "Open WhatsApp",
+    "hint": "Press send there, then come back.",
+    "opened": "Opened for {student}'s parent",
+    "openedNote": "WhatsApp only opens the message. You press send there.",
+    "next": "Next",
+    "skip": "Skip",
+    "upNext": "Up next",
+    "done": "{n, plural, one {# parent opened} other {# parents opened}}, {k} skipped.",
+    "home": "Back to home",
+    "logFailed": "Couldn't save that you reminded them. We'll try again.",
+    "pick": {
+      "title": "Who to remind",
+      "more": "+{n} more overdue",
+      "late": "{n, plural, one {# day late} other {# days late}}",
+      "today": "Reminded today",
+      "cannot": "Cannot remind ({n})",
+      "noPhone": "No phone number",
+      "noUpi": "Add your UPI ID first",
+      "selected": "Selected",
+      "notSelected": "Not selected",
+      "start": "Remind {n, plural, one {# parent} other {# parents}}",
+      "none": "Select at least one parent to start.",
+      "many": "That is a lot at once. WhatsApp can limit numbers that message many people. Do 20 now and the rest later if you like."
+    },
+    "again": {
+      "title": "You reminded {parent} today at {time}. Remind again?",
+      "titleStudent": "You reminded the parent of {student} today at {time}. Remind again?",
+      "time": {
+        "am": "{hour}:{minute} am",
+        "pm": "{hour}:{minute} pm"
+      },
+      "yes": "Remind again",
+      "no": "Not now"
     }
   }
 }

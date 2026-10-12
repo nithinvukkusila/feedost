@@ -5,19 +5,25 @@
 // the three tabs and the rows. It reads the cached roster and the board's cached dues and works out the view
 // on the phone; the only thing it asks the network for is through the board store, on opening and on a day
 // change. Its one write is Mark paid (R1-7): the sheet is a lazy chunk, loaded on the first tap, and what it
-// records goes through src/lib/payments.ts. Remind lands in R1-8.
-import { useTranslations } from "next-intl";
+// records goes through src/lib/payments.ts. Remind (R1-8) only queues the fee in memory and opens the Remind screen; nothing of that screen is loaded here.
+import { useLocale, useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useTutor } from "@/components/app/app-gate";
 import { AppScreen } from "@/components/app/app-screen";
 import { useRoster } from "@/components/app/roster";
 import { UndoBanner } from "@/components/pay/undo-banner";
+import { useRemind } from "@/components/remind/remind-provider";
 import { BatchFilter, effectiveFilter } from "@/components/students/batch-filter";
 import { Slip } from "@/components/ui/slip";
 import { StudentStrip } from "@/components/ui/student-strip";
 import { Tabs, tabId } from "@/components/ui/tabs";
+import type { Locale } from "@/config/locales";
+import { localeHref, remindPath } from "@/config/routes";
 import type { Due } from "@/lib/dues";
 import { currentMonth, defaultTab, indiaToday, monthMoves, shiftMonth, type Tab } from "@/lib/dues-board";
+import { pickList, queueItem, tutorReady } from "@/lib/reminder-rules";
 import { activeStudents, batchCounts, sortBatches } from "@/lib/student-list";
 import { BoardList } from "./board-list";
 import { useBoard } from "./board-state";
@@ -39,7 +45,11 @@ export function BoardScreen() {
   const months = useMonthWords();
   const roster = useRoster();
   const board = useBoard();
-  const { open, retry, selectMonth, setTab, setFilter } = board;
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const { tutor } = useTutor();
+  const remind = useRemind();
+  const { open, retry, selectMonth, setTab, setFilter, refresh } = board;
   const { reload } = roster;
   const panelId = useId();
   // The fee whose Mark paid sheet is open, by id; the row itself is looked up live, so the sheet follows the board.
@@ -62,6 +72,18 @@ export function BoardScreen() {
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [open]);
+
+  // A reminder the database has just confirmed (a log that was waiting for the network, or one that was still on its way when
+  // the tutor came back): read the marks again, so the row says so.
+  const saved = useSyncExternalStore(remind.log.subscribe, remind.log.saved, remind.log.saved);
+  const seenSaved = useRef(saved);
+  useEffect(() => {
+    if (saved === seenSaved.current) return;
+    seenSaved.current = saved;
+    refresh(latestToday.current);
+  }, [saved, refresh]);
+  const lastAt = useMemo(() => Object.fromEntries(Object.entries(board.reminders?.byDue ?? {}).map(([id, last]) => [id, last.lastAt])), [board.reminders]);
+  const going = useRef(false);
 
   const active = activeStudents(roster.students);
   const batches = sortBatches(roster.batches);
@@ -114,6 +136,25 @@ export function BoardScreen() {
   const stale = board.failed || roster.stale;
   const batchNames = new Map(batches.map((batch) => [batch.id, batch.name]));
   const batchName = batchNames.get(filter) ?? "";
+  const tutorFacts = { upiId: tutor.upiId, name: tutor.name };
+
+  // Remind: the fee is queued in memory (the parent's name and phone as they are now) and the Remind screen opens. Once per visit.
+  function goRemind(session: Parameters<typeof remind.begin>[0]) {
+    if (going.current) return;
+    going.current = true;
+    remind.begin(session);
+    router.push(localeHref(locale, remindPath));
+  }
+  function onRemind(dueId: string) {
+    const row = view.rows.find((r) => r.due.id === dueId);
+    if (!row || row.student.parentPhone === null) return;
+    goRemind({ kind: "run", queue: [queueItem(row, row.student.batchId ? (batchNames.get(row.student.batchId) ?? null) : null)], last: lastAt });
+  }
+  const overduePick = tab === "overdue" ? pickList(view.tabs.overdue, tutorFacts, board.reminders?.byDue ?? {}, Date.now()) : null;
+  const remindAll =
+    overduePick !== null && overduePick.items.length > 0
+      ? { count: overduePick.items.length, onClick: () => goRemind({ kind: "pick", pick: overduePick, batchNames: Object.fromEntries(batchNames), last: lastAt }) }
+      : null;
   const tabs = TABS.map((id) => ({ id, label: t(`tab.${id}`), count: <span translate="no">{view.counts[id]}</span> }));
 
   return (
@@ -173,7 +214,18 @@ export function BoardScreen() {
           <div className="pt-5 pr-5.5 pl-4">
             <Tabs tabs={tabs} value={tab} onChange={(id) => setTab(id as Tab)} label={t("tabsLabel")} panelId={panelId} />
             <Slip joined role="tabpanel" id={panelId} aria-labelledby={tabId(panelId, tab)} className="px-3">
-              <BoardList tab={tab} rows={view.tabs[tab]} month={month} isCurrent={isCurrent} batchNames={batchNames} onMarkPaid={setPaying} />
+              <BoardList
+                tab={tab}
+                rows={view.tabs[tab]}
+                month={month}
+                isCurrent={isCurrent}
+                batchNames={batchNames}
+                onMarkPaid={setPaying}
+                remind={{ tutor: tutorFacts, today, onRemind }}
+                lastAt={lastAt}
+                noUpiLine={tab !== "paid" && !tutorReady(tutorFacts)}
+                remindAll={remindAll}
+              />
             </Slip>
           </div>
         </>

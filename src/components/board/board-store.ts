@@ -7,10 +7,14 @@ import { ensureMyDues, readEarliestMonth, readMonth, readUnpaid, type Due } from
 import { currentMonth, needsRead, type Tab } from "@/lib/dues-board";
 import type { Payment } from "@/lib/payments";
 import { BANNER_MS, withPaid } from "@/lib/payments-view";
+import { readLastReminders, type LastReminder } from "@/lib/reminders";
 import type { BatchFilterValue } from "@/lib/student-list";
 import { isOffline } from "@/lib/students";
 
 export type Slice = { rows: Due[]; at: number };
+
+/** When each fee was last reminded, by fee id (spec R1-8, criterion 29). Read with the dues; only ever what the server said. */
+export type RemindersSlice = { byDue: Record<string, LastReminder>; at: number };
 
 /** `month: null` is the current month, so the view moves on by itself after midnight; `tab: null` is the default tab. */
 export type BoardSettings = { month: string | null; tab: Tab | null; filter: BatchFilterValue };
@@ -30,6 +34,8 @@ export type BoardSnapshot = {
   months: Record<string, Slice>;
   unpaid: Slice | null;
   earliest: { month: string | null; at: number } | null;
+  /** Null until a read of the reminders has worked. A failed read leaves it as it was and never sets `failed`: the board simply shows no marks. */
+  reminders: RemindersSlice | null;
   /** The last read failed, so what is shown is what was saved on this phone, or nothing. */
   failed: boolean;
   /** A month the tutor tried to open while offline that is not saved on this phone: the view stayed where it was. */
@@ -40,13 +46,14 @@ export type BoardSnapshot = {
   notice: Notice | null;
 };
 
-type Want = { month: boolean; unpaid: boolean; earliest: boolean };
+type Want = { month: boolean; unpaid: boolean; earliest: boolean; reminders: boolean };
 
 export class BoardStore {
   private snapshot: BoardSnapshot = {
     months: {},
     unpaid: null,
     earliest: null,
+    reminders: null,
     failed: false,
     blocked: null,
     reads: 0,
@@ -94,6 +101,8 @@ export class BoardStore {
     if (want.month) jobs.push(job(`month:${viewMonth}`, () => readMonth(viewMonth), (s, rows, at) => ({ ...s, months: { ...s.months, [viewMonth]: { rows, at } } })));
     if (want.unpaid) jobs.push(job("unpaid", readUnpaid, (s, rows, at) => ({ ...s, unpaid: { rows, at } })));
     if (want.earliest) jobs.push(job("earliest", readEarliestMonth, (s, month, at) => ({ ...s, earliest: { month, at } }), false));
+    // Not fatal either: if only this read fails, the marks stay as they were and nothing else changes.
+    if (want.reminders) jobs.push(job("reminders", readLastReminders, (s, byDue, at) => ({ ...s, reminders: { byDue, at } }), false));
     void Promise.all(jobs).then((results) => {
       const failed = results.includes(false);
       const done = results.includes(true);
@@ -119,7 +128,7 @@ export class BoardStore {
     if (isOffline()) return this.fail();
     const reread = () => {
       const month = this.viewMonth(today);
-      this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: true });
+      this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: true, reminders: true });
     };
     reread();
     // Never waited for. A failure or a slow answer changes nothing on screen.
@@ -137,6 +146,7 @@ export class BoardStore {
       month: needsRead(held.months[month], now),
       unpaid: month === current && needsRead(held.unpaid, now),
       earliest: false,
+      reminders: false,
     };
     const unread = held.months[month] === undefined || (month === current && held.unpaid === null);
     // Offline and nothing saved for that month: stay where we are and say so, rather than land on an error.
@@ -145,6 +155,7 @@ export class BoardStore {
       return;
     }
     const reading = want.month || want.unpaid;
+    want.reminders = reading;
     this.change((s) => ({
       ...s,
       blocked: null,
@@ -160,7 +171,7 @@ export class BoardStore {
     if (isOffline()) return this.fail();
     this.change((s) => ({ ...s, failed: false }));
     const month = this.viewMonth(today);
-    this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: this.snapshot.earliest === null });
+    this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: this.snapshot.earliest === null, reminders: true });
   };
 
   readonly setTab = (tab: Tab): void => this.change((s) => ({ ...s, settings: { ...s.settings, tab } }));
@@ -188,7 +199,7 @@ export class BoardStore {
   readonly refresh = (today: string): void => {
     if (isOffline()) return;
     const month = this.viewMonth(today);
-    this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: false });
+    this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: false, reminders: true });
   };
 
   /** Show a notice for a while: 10 seconds, or 5 for "undone". A newer one replaces it. */

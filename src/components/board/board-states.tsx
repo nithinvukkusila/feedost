@@ -116,7 +116,6 @@ export function AllPaid({
         </div>
       </div>
       {nextMonth ? <p className="type-body-lg mt-3.5 text-ink-soft">{t("allPaid.next", { month: nextMonth })}</p> : null}
-      <p className="type-caption mt-3 text-ink-soft">{t("soon")}</p>
     </section>
   );
 }
