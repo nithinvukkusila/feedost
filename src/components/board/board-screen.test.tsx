@@ -14,7 +14,10 @@ import { renderWithWords } from "@/test-utils/render-with-words";
 import type { Board } from "./board-state";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/en/home/" }));
-vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u" }, setTutor: vi.fn() }) }));
+vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u", upiId: "meena@okhdfc", name: "Meena Iyer" }, setTutor: vi.fn() }) }));
+vi.mock("@/components/remind/remind-provider", () => ({
+  useRemind: () => ({ tone: "polite", setTone: vi.fn(), session: null, begin: vi.fn(), clear: vi.fn(), log: { subscribe: () => () => {}, saved: () => 0 } }),
+}));
 
 const held: { roster: Roster; board: Board } = { roster: undefined as unknown as Roster, board: undefined as unknown as Board };
 vi.mock("@/components/app/roster", () => ({ useRoster: () => held.roster }));
@@ -45,6 +48,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     months: { "2026-10-01": { rows: [due("d1", "s1", "2026-10-12")], at: 1 } },
     unpaid: { rows: [], at: 1 },
     earliest: { month: "2026-10-01", at: 1 },
+    reminders: null,
     failed: false,
     blocked: null,
     reads: 1,
