@@ -26,7 +26,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 });
 const args = { dueId: "d1", amount: 120000, method: "upi" as const, paidOn: "2026-10-12", requestId: "r1" };
 const ok = (data: unknown) => ({ data, error: null });
-const fail = (message: string, extra: Record<string, unknown> = {}) => ({ data: null, error: { code: "P0001", message, details: null, ...extra } });
+const fail = (message: string, extra: Record<string, unknown> = {}) => ({ data: null, error: { code: "P0001", message, ...extra } });
 
 beforeEach(() => fake.reset());
 afterEach(() => vi.unstubAllGlobals());

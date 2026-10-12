@@ -635,6 +635,8 @@
   "pay": {
     "markPaid": "TODO-translate: Mark paid",
     "receiptButton": "TODO-translate: Receipt",
+    "markPaidFor": "TODO-translate: Mark paid, {name}",
+    "receiptFor": "TODO-translate: Receipt, {name}",
     "cancel": "TODO-translate: Cancel",
     "amount": "TODO-translate: Amount received ₹",
     "chipsLabel": "TODO-translate: Quick amounts",

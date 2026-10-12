@@ -635,6 +635,8 @@
   "pay": {
     "markPaid": "Mark paid",
     "receiptButton": "Receipt",
+    "markPaidFor": "Mark paid, {name}",
+    "receiptFor": "Receipt, {name}",
     "cancel": "Cancel",
     "amount": "Amount received ₹",
     "chipsLabel": "Quick amounts",

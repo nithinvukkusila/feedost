@@ -5,6 +5,8 @@
 // newer one. The only request that is not a read is `ensureMyDues`, made from `open` and nowhere else.
 import { ensureMyDues, readEarliestMonth, readMonth, readUnpaid, type Due } from "@/lib/dues";
 import { currentMonth, needsRead, type Tab } from "@/lib/dues-board";
+import type { Payment } from "@/lib/payments";
+import { BANNER_MS, withPaid } from "@/lib/payments-view";
 import type { BatchFilterValue } from "@/lib/student-list";
 import { isOffline } from "@/lib/students";
 
@@ -12,6 +14,17 @@ export type Slice = { rows: Due[]; at: number };
 
 /** `month: null` is the current month, so the view moves on by itself after midnight; `tab: null` is the default tab. */
 export type BoardSettings = { month: string | null; tab: Tab | null; filter: BatchFilterValue };
+
+/** What the banner under the list says (spec R1-7, criteria 14 and 15). */
+export type NoticeBody =
+  | { kind: "paid"; payment: Payment; name: string }
+  | { kind: "undone" }
+  | { kind: "undo-failed"; reason: "failed" | "offline" | "late" };
+
+/** A notice and the moment (milliseconds since 1970) it stops being shown. The banner takes it down then; the board keeps no timer. */
+export type Notice = NoticeBody & { until: number };
+
+const UNDONE_MS = 5_000;
 
 export type BoardSnapshot = {
   months: Record<string, Slice>;
@@ -24,6 +37,7 @@ export type BoardSnapshot = {
   /** How many reads have been applied. The screen asks for the roster again once per read. */
   reads: number;
   settings: BoardSettings;
+  notice: Notice | null;
 };
 
 type Want = { month: boolean; unpaid: boolean; earliest: boolean };
@@ -37,6 +51,7 @@ export class BoardStore {
     blocked: null,
     reads: 0,
     settings: { month: null, tab: null, filter: "all" },
+    notice: null,
   };
   private listeners = new Set<() => void>();
   private tickets: Record<string, number> = {};
@@ -151,4 +166,36 @@ export class BoardStore {
   readonly setTab = (tab: Tab): void => this.change((s) => ({ ...s, settings: { ...s.settings, tab } }));
 
   readonly setFilter = (filter: BatchFilterValue): void => this.change((s) => ({ ...s, settings: { ...s.settings, filter } }));
+
+  // A fee changed by a payment the database has confirmed: patched in every slice that holds it, and those slices marked old so the next read replaces them.
+  private patch(dueId: string, change: (due: Due) => Due) {
+    const touch = (slice: Slice | null): Slice | null =>
+      slice !== null && slice.rows.some((due) => due.id === dueId) ? { rows: slice.rows.map((due) => (due.id === dueId ? change(due) : due)), at: 0 } : slice;
+    this.change((s) => ({
+      ...s,
+      months: Object.fromEntries(Object.entries(s.months).map(([month, slice]) => [month, touch(slice) as Slice])),
+      unpaid: touch(s.unpaid),
+    }));
+  }
+
+  /** The database recorded this payment: the fee has what is left after it. There is no earlier, optimistic state. */
+  readonly applyPayment = (payment: Payment): void => this.patch(payment.dueId, (due) => withPaid(due, due.amount - payment.balanceAfter));
+
+  /** The database undid this payment: the fee has its amount back. */
+  readonly applyVoid = (payment: Payment): void => this.patch(payment.dueId, (due) => withPaid(due, due.amountPaid - payment.amount));
+
+  /** Read again what the view shows, quietly, to confirm a change. Offline, nothing is sent. */
+  readonly refresh = (today: string): void => {
+    if (isOffline()) return;
+    const month = this.viewMonth(today);
+    this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: false });
+  };
+
+  /** Show a notice for a while: 10 seconds, or 5 for "undone". A newer one replaces it. */
+  readonly showNotice = (notice: NoticeBody): void => {
+    const until = Date.now() + (notice.kind === "undone" ? UNDONE_MS : BANNER_MS);
+    this.change((s) => ({ ...s, notice: { ...notice, until } as Notice }));
+  };
+
+  readonly clearNotice = (): void => this.change((s) => (s.notice === null ? s : { ...s, notice: null }));
 }
