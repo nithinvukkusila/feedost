@@ -372,7 +372,7 @@ Built on branch `r0-3b-receipt-maker` by `frontend-dev`. The PDF library is the 
 
 ### Review record: wording NOT reviewed by a native reader
 - **Receipt wording** (`src/lib/receipt/templates.json`): hi, kn, te drafted by `frontend-dev`; **not reviewed** (`templates.review.json`, `pnpm i18n:check --strict` fails until signed). English is the source.
-- **Interface wording** for kn and te in the receipt tool, written as real sentences and no longer marked `TODO-translate`, but **not reviewed by a reader**: `landing.tools.t1.title`, `t1.body`, `t2.title`, `receipt.promo.body`, `receiptForm.privacy`, `receiptForm.preview.unprintable`, `receiptForm.failed`, `receiptForm.saved`, `toolNav.receipt`, `toolNav.reminder`. Hindi interface wording is also an unreviewed draft.
+- **Interface wording** for kn and te in the receipt tool, written as real sentences and no longer marked `TODO-translate`, but **not reviewed by a reader**: `landing.tools.t1.title`, `t1.body`, `t2.title`, `receiptTool.promo.body`, `receiptForm.privacy`, `receiptForm.preview.unprintable`, `receiptForm.failed`, `receiptForm.saved`, `toolNav.receipt`, `toolNav.reminder`. Hindi interface wording is also an unreviewed draft.
 - Removed key: `landing.tools.tag` ("Coming soon"), unused now that card 1 is a link.
 
 ### Changes beyond the plan

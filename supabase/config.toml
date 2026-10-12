@@ -385,12 +385,24 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-# Local value of the one secret F4 uses. Staging and production set theirs with `supabase secrets set`.
+# Local values of the function secrets. Staging and production set theirs with `supabase secrets set`.
+# WAITLIST_HASH_SALT here is a dummy so the local function runs; the real salt is set per environment, never in source.
 [edge_runtime.secrets]
 APP_ENV = "local"
+WAITLIST_HASH_SALT = "local-dummy-salt-not-a-secret"
+# A different salt from the waitlist's, so one leak does not cover both. Dummy locally; real values are set per environment.
+RECEIPT_HASH_SALT = "local-dummy-receipt-salt-not-a-secret"
 
 # The health function is public by design and answers one word.
 [functions.health]
+verify_jwt = false
+
+# The waitlist form posts from a browser with no token. The function defends itself: size, honeypot, rate limit, validation.
+[functions.waitlist-join]
+verify_jwt = false
+
+# R1-7 B: the public receipt page posts a token with no login. The function defends itself: method, size, token shape, two rate limits, allow-listed keys.
+[functions.receipt]
 verify_jwt = false
 
 [analytics]

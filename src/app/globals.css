@@ -3,3 +3,8 @@
 @import "../styles/tokens.css";
 @import "../styles/type.css";
 @import "../styles/states.css";
+
+/* A screen with the sticky bottom nav: keep what is scrolled into view (a focused control) clear of the bar. */
+html:has([data-sticky-nav]) {
+  scroll-padding-bottom: 8rem;
+}

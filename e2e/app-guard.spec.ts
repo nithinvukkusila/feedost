@@ -208,7 +208,7 @@ test.describe("20: the network is down", () => {
 });
 
 test.describe("32: the empty home", () => {
-  test("shows the brand, the first name, the heading, the body and the next-update line; no Add students button", async ({ page }) => {
+  test("shows the brand, the first name, the heading, the body and a black Add a student button to the add form; no sample data", async ({ page }) => {
     await stubSupabase(page, { tutor: completeTutor() });
     await seedSession(page);
     await page.goto("/en/home/");
@@ -216,10 +216,13 @@ test.describe("32: the empty home", () => {
     await expect(page.getByText(brand.name, { exact: true })).toBeVisible();
     await expect(page.getByText("Hello, Meena", { exact: true })).toBeVisible();
     await expect(page.getByText("Add your students and you will see who owes what, with one tap to remind each parent.")).toBeVisible();
-    await expect(page.getByText("Adding students arrives in the next update.")).toBeVisible();
-    await expect(page.getByText(/add students/i)).toHaveCount(0);
+    await expect(page.getByText("Adding students arrives in the next update.")).toHaveCount(0);
     await expect(page.getByText(/sample data/i)).toHaveCount(0);
-    const more = page.getByRole("link", { name: "More", exact: true });
+    const add = page.getByRole("link", { name: "Add a student" });
+    await expect(add).toHaveAttribute("href", "/en/students/new/");
+    expect((await box(add)).height).toBeGreaterThanOrEqual(48);
+    // More is on the bottom navigation now.
+    const more = page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "More", exact: true });
     expect((await box(more)).height).toBeGreaterThanOrEqual(44);
     await expect(page.getByRole("button")).toHaveCount(0);
   });
@@ -273,6 +276,8 @@ test.describe("46: every app screen, in each language, at 360px and with larger 
         for (const size of ["100%", "130%"]) {
           await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
           expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
+          // The bottom navigation is pinned over the page as it scrolls; at the end of the page it sits below the last line, so look there.
+          await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
           expect(await textProblems(page, "body"), `text problems at ${size}`).toEqual([]);
           for (const el of await page.locator("a, button").all()) {
             expect((await box(el)).height, `a link or button at ${size}`).toBeGreaterThanOrEqual(44);

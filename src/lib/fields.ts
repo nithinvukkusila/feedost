@@ -5,7 +5,11 @@ import { formatRupees } from "@/lib/format";
 
 export const NAME_MAX = 40;
 export const MIN_PAISE = 100; // ₹1
-export const MAX_PAISE = 10_000_000; // ₹1,00,000
+export const MAX_PAISE = 10_000_000; // ₹1,00,000, the free tool's ceiling
+/** The largest fee the app allows (₹10,00,000). Only the app path passes it; the tools never do. */
+export const APP_MAX_PAISE = 100_000_000;
+/** A saved parent phone: `+91` and ten digits. Kept equal to the copy in `reminder-rules.ts` by a test. */
+export const PHONE_E164 = /^\+91[0-9]{10}$/;
 /** The PRD pattern, exactly, with no flags. */
 export const UPI_ID = /^[\w.\-]{2,256}@[a-zA-Z]{2,64}$/;
 
@@ -94,4 +98,13 @@ export function amountInput(paise: number): string {
 /** No phone number: WhatsApp asks who to send to. The link inside is encoded a second time, which is right. */
 export function whatsAppLink(message: string): string {
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * The link that opens WhatsApp on the parent's number: `https://wa.me/91XXXXXXXXXX?text=`. The stored
+ * phone is `+91` and ten digits; the `+` is dropped and nothing else is added. Anything else throws.
+ */
+export function waLink(e164: string, text: string): string {
+  if (!PHONE_E164.test(e164)) throw new RangeError("waLink needs a phone as +91 and ten digits");
+  return `https://wa.me/${e164.slice(1)}?text=${encodeURIComponent(text)}`;
 }

@@ -2,8 +2,7 @@
 // are siblings of <main>, one landmark each. The waitlist section keeps its id here; R0-4 swaps only
 // src/components/landing/waitlist-slot.tsx.
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Hero } from "@/components/landing/hero";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
@@ -13,7 +12,8 @@ import { Steps } from "@/components/landing/steps";
 import { Tools } from "@/components/landing/tools";
 import { WaitlistSlot } from "@/components/landing/waitlist-slot";
 import { brand } from "@/config/brand";
-import { isLocale } from "@/config/locales";
+import { isLocale, type Locale } from "@/config/locales";
+import { getWords } from "@/i18n/words";
 import { alternateUrls, canonicalUrl, ogLocale } from "@/lib/seo";
 
 export async function generateMetadata({ params }: Readonly<{ params: Promise<{ locale: string }> }>): Promise<Metadata> {
@@ -31,8 +31,8 @@ export async function generateMetadata({ params }: Readonly<{ params: Promise<{ 
   };
 }
 
-export default function LocaleHome() {
-  const t = useTranslations("landing.waitlist");
+export default async function LocaleHome() {
+  const [locale, t, words] = await Promise.all([getLocale(), getTranslations("landing.waitlist"), getWords("waitlistForm")]);
   return (
     <div className="bg-page-ruled">
       <LandingHeader />
@@ -47,12 +47,12 @@ export default function LocaleHome() {
           aria-labelledby="waitlist-title"
           className="on-cloth-ground mt-16 bg-cloth px-5 py-12 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed"
         >
-          <div className="mx-auto w-full max-w-2xl">
+          <div className="mx-auto w-full max-w-2xl lg:max-w-7xl">
             <h2 id="waitlist-title" className="type-headline text-4xl wrap-break-word">
               {t("title")}
             </h2>
             <p className="type-body-lg mt-3 text-on-cloth-soft">{t("body")}</p>
-            <WaitlistSlot />
+            <WaitlistSlot words={words} locale={locale as Locale} />
           </div>
         </section>
       </main>

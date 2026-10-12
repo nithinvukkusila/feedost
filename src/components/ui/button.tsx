@@ -14,10 +14,12 @@ const shape =
 
 // Heights: 48px; 56px for the one big call to action on a page (the landing hero); 60px for the
 // one primary action at the foot of a screen in the app (sign-in, language, setup), as the canvas draws it.
-const sizes = { default: "min-h-control", large: "min-h-14", xl: "min-h-15" } as const;
+// `compact` is 44px with smaller type and padding, for the button inside a list row (Mark paid, Receipt).
+const sizes = { compact: "min-h-tap", default: "min-h-control", large: "min-h-14", xl: "min-h-15" } as const;
 export type ButtonSize = keyof typeof sizes;
 
 const base = `type-control px-5 py-2.5 ${shape}`;
+const compactBase = `type-control-sm px-3 py-2 ${shape}`;
 
 const rest: Record<ButtonVariant, string> = {
   send: "border-ink bg-blue text-slip shadow-button ground-shadow pressed:press-button pressed:bg-blue-pressed",
@@ -41,7 +43,7 @@ type Shared = {
   disabledReason?: ReactNode;
   /** Fill the width of the container. */
   full?: boolean;
-  /** `large` is 56px high instead of 48px; `xl` is 60px. For the single main call to action on a page or screen. */
+  /** `large` is 56px high instead of 48px; `xl` is 60px. For the single main call to action on a page or screen. `compact` is 44px, for a button inside a list row. */
   size?: ButtonSize;
 };
 
@@ -73,7 +75,7 @@ export function Button(props: ButtonProps) {
   const showReason = disabled && disabledReason != null;
   const working = busy && !disabled;
 
-  const className = cx(base, sizes[size], disabled ? unavailable : rest[variant], full && "w-full");
+  const className = cx(size === "compact" ? compactBase : base, sizes[size], disabled ? unavailable : rest[variant], full && "w-full");
   const describedBy = cx(native["aria-describedby"], showReason && reasonId) || undefined;
   const content = (
     <>

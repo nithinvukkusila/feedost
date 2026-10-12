@@ -22,7 +22,7 @@ const receiptTemplates = JSON.parse(readFileSync(join(process.cwd(), receiptTemp
   { heading: string; sentence: string; whatsApp: string; months: string[] }
 >;
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
-const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "setup/profile", "setup/upi"];
+const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
 const templatesPath = join("src", "lib", "reminder", "templates.json");
 type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;
@@ -30,11 +30,14 @@ const templates = JSON.parse(readFileSync(join(process.cwd(), templatesPath), "u
 const toolScript = (tree: unknown) => `var templates=JSON.parse(${JSON.stringify(JSON.stringify(tree))});var t=${JSON.stringify(tree)}`;
 
 const messages = {
-  en: { home: { placeholder: "English home line here" } },
-  hi: { home: { placeholder: "हिन्दी का घर वाक्य यहाँ" } },
-  kn: { home: { placeholder: "ಕನ್ನಡ ಮನೆ ವಾಕ್ಯ ಇಲ್ಲಿ" } },
-  te: { home: { placeholder: "తెలుగు ఇంటి వాక్యం ఇక్కడ" } },
+  en: { home: { placeholder: "English home line here" }, receipt: { footer: "English receipt footer" } },
+  hi: { home: { placeholder: "हिन्दी का घर वाक्य यहाँ" }, receipt: { footer: "हिन्दी रसीद का अंत यहाँ" } },
+  kn: { home: { placeholder: "ಕನ್ನಡ ಮನೆ ವಾಕ್ಯ ಇಲ್ಲಿ" }, receipt: { footer: "ಕನ್ನಡ ರಸೀದಿ ಕೊನೆ ಇಲ್ಲಿ" } },
+  te: { home: { placeholder: "తెలుగు ఇంటి వాక్యం ఇక్కడ" }, receipt: { footer: "తెలుగు రసీదు ముగింపు ఇక్కడ" } },
 };
+/** The parent's receipt shell (R1-7 Part B): every language's receipt words on one page, on purpose. */
+const shellPage = "r/index.html";
+const allReceiptWords = Object.values(messages).map((m) => m.receipt.footer).join(" ");
 
 function html(body: string, ...scripts: string[]) {
   return `<html><body>${body}${scripts.map((script) => `<script src="${script}" async></script>`).join("")}</body></html>`;
@@ -48,6 +51,10 @@ type Options = {
   messages?: Record<string, unknown>;
   /** The text of the script only the tool pages load. Default: all four languages' templates. */
   toolScript?: string;
+  /** The body of the parent's receipt shell. Default: every language's receipt footer. */
+  shellBody?: string;
+  /** The size of a script only the shell loads, in random bytes. */
+  shellScriptBytes?: number;
   /** The body of a language's tool page and app pages. Default: that language's own line. */
   toolBody?: (locale: string) => string;
   /** The text of the script only the receipt pages load. Default: all four languages' receipt wording. */
@@ -113,7 +120,14 @@ function project(options: Options = {}): string {
     const locale = page.split("/")[0] as keyof typeof messages;
     mkdirSync(join(root, "out", page, ".."), { recursive: true });
     const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
-    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, script));
+    // The Remind screen (R1-8) carries the templates of all four languages, as the tool page does, so it loads the script that holds them.
+    const scripts = page.includes("/remind/") ? [script, "/_next/tool.js"] : [script];
+    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, ...scripts));
+  }
+  if (!options.skip?.includes(shellPage)) {
+    mkdirSync(join(root, "out", "r"), { recursive: true });
+    writeFileSync(join(root, "out", "_next", "shell.js"), options.shellScriptBytes ? randomBytes(options.shellScriptBytes) : "console.log(2)");
+    writeFileSync(join(root, "out", shellPage), html(options.shellBody ?? `<p>${allReceiptWords}</p>`, "/_next/shell.js"));
   }
   for (const [locale, tree] of Object.entries(options.messages ?? messages)) {
     writeFileSync(join(root, "messages", `${locale}.json`), JSON.stringify(tree));
@@ -130,8 +144,29 @@ afterEach(() => {
   for (const dir of made.splice(0)) rmSync(dir, { recursive: true, force: true });
 });
 
+describe("pnpm size, the parent's receipt shell (R1-7 Part B)", () => {
+  it("is required, measured and passes when small", () => {
+    const result = run(sizeScript, project());
+    expect(result.status).toBe(0);
+    expect(result.out).toContain(`out/${shellPage}`);
+  });
+
+  it("is missing: fails", () => {
+    const result = run(sizeScript, project({ skip: [shellPage] }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`out/${shellPage} is missing`);
+  });
+
+  it("has a smaller budget than the app's pages: 150 KB passes for them and fails for it", () => {
+    const result = run(sizeScript, project({ shellScriptBytes: 150 * 1024 }));
+    expect(result.status).toBe(1);
+    expect(result.out).toMatch(/OVER .*out\/r\/index\.html/);
+    expect(result.out).not.toMatch(/OVER .*out\/en\//);
+  });
+});
+
 describe("pnpm size (criterion 30)", () => {
-  it("passes when the five routes, the four reminder pages, the four receipt pages and the app's twenty-eight pages exist and are small", () => {
+  it("passes when the five routes, the four tool pages, the four receipt pages and the app's pages exist and are small", () => {
     const result = run(sizeScript, project());
     expect(result.status).toBe(0);
     for (const page of [...pages, ...toolPages, ...receiptPages, ...appPages]) expect(result.out).toContain(`out/${page}`);
@@ -190,6 +225,39 @@ describe("pnpm size (criterion 30)", () => {
   });
 });
 
+describe("pnpm check:leak, the parent's receipt shell (R1-7 Part B, criterion 31)", () => {
+  it("passes when the shell carries every language's receipt words and nothing else of another language", () => {
+    const result = run(leakScript, project());
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("/r/index.html");
+  });
+
+  it("fails when the shell is missing", () => {
+    const result = run(leakScript, project({ skip: [shellPage] }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("r/index.html is missing");
+  });
+
+  it.each(["en", "hi", "kn", "te"] as const)("fails when the %s receipt words are not on the shell", (locale) => {
+    const others = Object.entries(messages).filter(([l]) => l !== locale).map(([, m]) => m.receipt.footer).join(" ");
+    const result = run(leakScript, project({ shellBody: `<p>${others}</p>` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`does not carry the ${locale} words`);
+  });
+
+  it("fails when the shell carries another namespace's words of another language", () => {
+    const result = run(leakScript, project({ shellBody: `<p>${allReceiptWords} ${messages.kn.home.placeholder}</p>` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain('the parent receipt page loads a kn message outside "receipt"');
+  });
+
+  it("fails when a TODO-translate marker is on the shell", () => {
+    const result = run(leakScript, project({ shellBody: `<p>${allReceiptWords} TODO-translate: something</p>` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("TODO-translate");
+  });
+});
+
 describe("pnpm check:leak (criterion 29)", () => {
   it("passes when each page holds only its own language", () => {
     const result = run(leakScript, project());
@@ -223,6 +291,19 @@ describe("pnpm check:leak (criterion 29)", () => {
       project({ messages: todo, body: (l) => (l === "hi" ? `<p>${messages.en.home.placeholder}</p>` : `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`) }),
     );
     expect(result.status).toBe(0);
+  });
+
+  it("lets an untranslated value stand whole, but still catches an English value inside a longer sentence (review)", () => {
+    const en = { home: { placeholder: "WhatsApp number now", other: "Parent's WhatsApp number now" } };
+    const hiTodo = { home: { placeholder: "TODO-translate: Parent's WhatsApp number now", other: "TODO-translate: Parent's WhatsApp number now" } };
+    const mine = { ...messages, en: en as unknown as typeof messages.en, hi: hiTodo as unknown as typeof messages.hi };
+    const page = (hiBody: string) => (l: string) => (l === "hi" ? hiBody : `<p>${(mine as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`);
+    // The whole untranslated string, between tags: not a leak.
+    expect(run(leakScript, project({ messages: mine, body: page("<p>Parent's WhatsApp number now</p>") })).status).toBe(0);
+    // The English value inside a longer sentence of that page: a leak.
+    const leaked = run(leakScript, project({ messages: mine, body: page("<p>Please send WhatsApp number now today</p>") }));
+    expect(leaked.status).toBe(1);
+    expect(leaked.out).toContain("hi page loads a en message");
   });
 
   it("fails closed when no page shows any word of its own (an empty or stale out/)", () => {
@@ -259,7 +340,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("40 pages");
+    expect(result.out).toContain("73 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {

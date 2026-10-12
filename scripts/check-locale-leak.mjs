@@ -24,13 +24,20 @@ const REQUIRED_PAGES = ["", "tools/fee-reminder/", "tools/fee-receipt/"];
 // the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
 // under `pages`, and only in its script files, never its HTML, every line of that file is taken out
 // of the text before the search for another language's interface words.
-// The fee receipt page (spec R0-3) is the second: the receipt is drawn in a language picked on the page,
+// The fee receipt page (spec R0-3) is another: the receipt is drawn in a language picked on the page,
 // so it carries the receipt wording of all four (src/lib/receipt/templates.json). `minLine` is the
 // shortest line that counts as a sentence of its own; short words (a month, "UPI से") are only cut out.
+// R1-8 adds the Remind screen: it writes the parent's message in the parent's language, whatever the tutor's
+// screen language is, so its page holds the same month templates and the app's earlier-balance templates and
+// generic parent words (src/lib/reminder/templates.app.json) of all four languages. Only that page.
 const EXCEPTIONS = [
-  { pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder", minLine: MIN_LENGTH, lineKeys: ["polite", "firm"] },
-  { pages: "tools/fee-receipt/", file: "src/lib/receipt/templates.json", name: "fee receipt", minLine: RECEIPT_MIN_LINE, lineKeys: null },
+  { pages: ["tools/fee-reminder/", "remind/"], file: "src/lib/reminder/templates.json", name: "fee reminder", minLine: MIN_LENGTH, lineKeys: ["polite", "firm"] },
+  { pages: ["remind/"], file: "src/lib/reminder/templates.app.json", name: "remind (balance templates)", minLine: MIN_LENGTH, lineKeys: ["polite", "firm"] },
+  { pages: ["tools/fee-receipt/"], file: "src/lib/receipt/templates.json", name: "fee receipt", minLine: RECEIPT_MIN_LINE, lineKeys: null },
 ];
+
+/** The ways a value can be written inside HTML or an inline JSON payload. */
+const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
 
 /** Every string in a value, however deep (lists and nested objects included). */
 function strings(node, out = []) {
@@ -57,6 +64,30 @@ for (const locale of locales) {
   values[locale] = new Set(leaves(JSON.parse(readFileSync(file, "utf8"))));
 }
 
+// What a language shows in English on purpose: the values still marked `TODO-translate`. One of them is not
+// another language's leak, and is taken out of the text before the search, but only where it stands as a
+// whole string: quoted in a script or a JSON payload ("..." or \"...\"), or alone between tags (>...<). A
+// real English value that sits inside a longer sentence is still found.
+const untranslated = Object.fromEntries(
+  locales.map((locale) => {
+    const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"));
+    const found = [];
+    (function walk(node) {
+      for (const value of Object.values(node)) {
+        if (value && typeof value === "object") walk(value);
+        else if (typeof value === "string" && value.startsWith(MARKER)) found.push(value.slice(MARKER.length));
+      }
+    })(tree);
+    const whole = [];
+    for (const value of new Set(found)) {
+      for (const spelling of spellings(value)) {
+        whole.push(`\\"${spelling}\\"`, `"${spelling}"`, `'${spelling}'`, `>${spelling}<`);
+      }
+    }
+    return [locale, whole.sort((x, y) => y.length - x.length)];
+  }),
+);
+
 const unique = Object.fromEntries(
   locales.map((locale) => [
     locale,
@@ -65,9 +96,6 @@ const unique = Object.fromEntries(
     ),
   ]),
 );
-
-/** The ways a value can be written inside HTML or an inline JSON payload. */
-const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
 
 /**
  * Each exception with its file read: `lines` is every template line of a language (long enough to
@@ -102,7 +130,12 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
   ]
     .filter((text) => text.length >= MIN_LENGTH)
     .sort((a, b) => b.length - a.length);
-  return { ...exception, lines, removable };
+  return { ...exception, pages: [exception.pages].flat(), lines, removable };
+}).map((exception, index, all) => {
+  // A line two files share (the earlier-balance templates end with the R0-2 lines) is searched for under the first file only.
+  const earlier = all.slice(0, index);
+  const lines = Object.fromEntries(locales.map((l) => [l, exception.lines[l].filter((line) => !earlier.some((e) => e.lines[l].includes(line)))]));
+  return { ...exception, lines };
 });
 
 /** Every page of a language: the folders under out/{locale}/ that hold an index.html. "" is the landing. */
@@ -117,7 +150,10 @@ function pagesOf(locale, dir = join(OUT, locale), path = "") {
 }
 
 function pageFiles(locale, pagePath) {
-  const path = join(OUT, locale, pagePath, "index.html");
+  return filesOf(join(OUT, locale, pagePath, "index.html"));
+}
+
+function filesOf(path) {
   const html = readFileSync(path, "utf8");
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+\.js)"[^>]*>/g)].map((m) => m[1].split("?")[0]);
   const files = [{ name: path, text: html, html: true }];
@@ -169,11 +205,12 @@ for (const locale of locales) {
     pageCount += 1;
     const page = pageFiles(locale, pagePath);
     const address = `/${locale}/${pagePath}`;
-    const excepted = exceptions.filter((exception) => pagePath.startsWith(exception.pages));
+    const excepted = exceptions.filter((exception) => exception.pages.some((prefix) => pagePath.startsWith(prefix)));
 
     for (const file of page.files) {
       // The text searched for interface words: a script of an excepted page, with the templates taken out.
       let searched = file.text;
+      for (const text of untranslated[locale]) searched = searched.split(text).join("\n");
       if (!file.html) {
         for (const exception of excepted) {
           for (const text of exception.removable) searched = searched.split(text).join("\n");
@@ -215,6 +252,56 @@ for (const locale of locales) {
     console.log(`${address}: ${(page.htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${page.files.length - 1} scripts`);
   }
 }
+// Pages outside every language folder that carry the words of all four languages on purpose, because the
+// language is chosen at run time (the parent's receipt, spec R1-7 Part B, criterion 31). The exception is
+// narrow: only the values of the named namespace, taken out of the page's HTML and scripts before the search.
+// Everything else a language owns must still be absent, no language may be missing from the page, and no
+// TODO-translate marker may be on it (a parent never sees one).
+const SHELLS = [{ path: "r/index.html", name: "parent receipt", namespace: "receipt" }];
+for (const shell of SHELLS) {
+  const file = join(OUT, shell.path);
+  if (!existsSync(file)) {
+    console.error(`${file} is missing, so the leak check cannot run on the ${shell.name} page.`);
+    failed = true;
+    continue;
+  }
+  pageCount += 1;
+  const { files, htmlGzip } = filesOf(file);
+  const own = {};
+  const removable = new Set();
+  for (const locale of locales) {
+    const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"))[shell.namespace] ?? {};
+    own[locale] = leaves(tree).filter((value) => value.length >= MIN_LENGTH);
+    for (const value of own[locale]) for (const spelling of spellings(value)) removable.add(spelling);
+  }
+  const cut = [...removable].sort((a, b) => b.length - a.length);
+  for (const f of files) {
+    if (f.text.includes(MARKER)) {
+      console.error(`the ${shell.name} page carries a ${MARKER.trim()} marker: it is in ${f.name}`);
+      failed = true;
+    }
+    let searched = f.text;
+    for (const text of cut) searched = searched.split(text).join("\n");
+    for (const locale of locales) {
+      for (const value of unique[locale]) {
+        if (has(searched, value)) {
+          console.error(`the ${shell.name} page loads a ${locale} message outside "${shell.namespace}": "${value}" is in ${f.name}`);
+          failed = true;
+        }
+      }
+    }
+  }
+  // The exception must be real: every language's own receipt words are on the page (not just English).
+  for (const locale of locales) {
+    const missing = own[locale].filter((value) => unique[locale].includes(value) || locale === "en").find((value) => !files.some((f) => has(f.text, value)));
+    if (missing !== undefined) {
+      console.error(`the ${shell.name} page does not carry the ${locale} words: "${missing}" is not in its HTML or scripts`);
+      failed = true;
+    }
+  }
+  console.log(`/${shell.path}: ${(htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${files.length - 1} scripts, all four languages' ${shell.namespace} words`);
+}
+
 // Fail closed: if no page shows any of its own words, the search above proved nothing.
 if (!failed && ownFound === 0) {
   console.error("No page shows any message of its own language, so the leak check proves nothing (stale or empty out/?).");

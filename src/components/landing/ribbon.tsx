@@ -9,7 +9,7 @@ export function Ribbon() {
   const t = useTranslations("landing.ribbon");
   return (
     <div aria-hidden="true" className="mt-10 overflow-hidden bg-ink px-5 py-3 text-on-cloth">
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap gap-x-5 gap-y-1">
+      <div className="mx-auto flex w-full max-w-2xl lg:max-w-7xl flex-wrap gap-x-5 gap-y-1">
         <span className="type-headline text-2xl">
           {t("fees")}
         </span>

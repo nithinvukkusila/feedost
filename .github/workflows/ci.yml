@@ -15,7 +15,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -107,6 +107,8 @@ jobs:
       - run: pnpm db:test
       - name: Run the tests a second time (nothing is left behind)
         run: pnpm db:test
+      - name: Two payments at the same moment (receipt numbering under concurrency)
+        run: bash supabase/tests/concurrency/record_payment_concurrent.sh
       - name: Stop the local stack
         if: always()
         run: pnpm db:stop

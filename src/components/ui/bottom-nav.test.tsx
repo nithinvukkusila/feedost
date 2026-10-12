@@ -125,3 +125,21 @@ describe("BottomNav look (criteria 84, 86 and 87)", () => {
     expect(screen.getByRole("navigation").outerHTML).not.toMatch(/\b(fixed|sticky|absolute)\b|transition|animate|duration-/);
   });
 });
+
+describe("BottomNav from 1024 (spec D1, criterion 7)", () => {
+  it("is still one nav with four links; the side-by-side look is classes only", () => {
+    render(<BottomNav label="Main" items={items} current="home" />);
+    expect(screen.getAllByRole("navigation")).toHaveLength(1);
+    expect(screen.getAllByRole("link")).toHaveLength(4);
+  });
+
+  it("stands in one column at lg, with the bar on the left edge, and keeps the phone classes", () => {
+    render(<BottomNav label="Main" items={items} current="home" />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(classes(nav)).toEqual(expect.arrayContaining(["grid-cols-4", "lg:grid-cols-1", "lg:border-t-0"]));
+    for (const link of screen.getAllByRole("link")) {
+      expect(classes(link)).toEqual(expect.arrayContaining(["flex-col", "border-t-5", "lg:flex-row", "lg:border-l-5", "lg:justify-start"]));
+    }
+  });
+});
+

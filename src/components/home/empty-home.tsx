@@ -1,16 +1,18 @@
 "use client";
 
-// The home screen of a tutor with no students yet (spec R1-1, criterion 32; canvas "State-empty").
-// There is no "Add students" button and no sample-data link: they cannot work yet (R1-3), and a button
-// that cannot work is not shown. The dashed rows are only the shape of the list to come. The More link
-// leads to the profile, the language and Sign out.
+// The home screen of a tutor with no students yet (spec R1-1, criterion 32, and R1-3, criterion 13; canvas
+// "State-empty"). The dashed rows are only the shape of the list to come. The black "Add a student" button
+// goes straight to the add form (R1-3, decision 11); "Try with sample data" is not here (decision 13).
+// The More screen is one tap away on the bottom navigation.
 import { useLocale, useTranslations } from "next-intl";
 import { useTutor } from "@/components/app/app-gate";
+import { AppScreen } from "@/components/app/app-screen";
+import { PlusIcon } from "@/components/app/icons";
 import { useSoftLink } from "@/components/app/use-soft-link";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import type { Locale } from "@/config/locales";
-import { localeHref, morePath } from "@/config/routes";
+import { localeHref, studentNewPath } from "@/config/routes";
 
 /** The first word of the name: "Meena" for "Meena Iyer". */
 export function firstName(name: string | null): string {
@@ -22,32 +24,31 @@ export function EmptyHome() {
   const locale = useLocale() as Locale;
   const soft = useSoftLink();
   const { tutor } = useTutor();
-  const more = localeHref(locale, morePath);
+  const add = localeHref(locale, studentNewPath);
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page pt-3 pr-5.5 pb-5.5 pl-5">
-      <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+    <AppScreen nav="home">
+      <div className="flex flex-1 flex-col pt-3 pr-5.5 pb-5.5 pl-5">
         <p className="type-headline text-2xl text-cloth">{brand.name}</p>
-        <div className="pr-1.5 pb-1.5">
-          <Button variant="outline" href={more} onClick={soft(more)}>
-            {t("more")}
+        <p translate="no" className="type-body-lg mt-3 font-bold text-ink-label wrap-anywhere">
+          {t("hello", { name: firstName(tutor.name) })}
+        </p>
+
+        <h1 className="type-headline mt-5 text-5xl wrap-break-word">{t("empty.title")}</h1>
+        <p className="type-body-lg mt-3 text-ink-soft">{t("empty.body")}</p>
+
+        <div aria-hidden="true" className="mt-6 mr-1.5 border-2 border-dashed border-ink bg-slip px-3.5 py-1">
+          <div className="h-14 border-b border-dashed border-rule" />
+          <div className="h-14 border-b border-dashed border-rule" />
+          <div className="h-14" />
+        </div>
+
+        <div className="mt-7 pr-1.5 pb-1.5">
+          <Button variant="record" size="xl" full href={add} onClick={soft(add)} iconStart={<PlusIcon />}>
+            {t("addStudent")}
           </Button>
         </div>
-      </header>
-      <p translate="no" className="type-body-lg mt-3 font-bold text-ink-label wrap-anywhere">
-        {t("hello", { name: firstName(tutor.name) })}
-      </p>
-
-      <h1 className="type-headline mt-5 text-5xl wrap-break-word">{t("empty.title")}</h1>
-      <p className="type-body-lg mt-3 text-ink-soft">{t("empty.body")}</p>
-
-      <div aria-hidden="true" className="mt-6 mr-1.5 border-2 border-dashed border-ink bg-slip px-3.5 py-1">
-        <div className="h-14 border-b border-dashed border-rule" />
-        <div className="h-14 border-b border-dashed border-rule" />
-        <div className="h-14" />
       </div>
-
-      <p className="type-body mt-7 mr-1.5 border-2 border-dashed border-ink px-3.5 py-3 font-bold">{t("empty.soon")}</p>
-    </main>
+    </AppScreen>
   );
 }

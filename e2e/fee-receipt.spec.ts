@@ -38,7 +38,7 @@ for (const lang of langs) {
       await openTool(page, lang);
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
       for (const landmark of ["header", "main", "footer", "h1"]) await expect(page.locator(landmark)).toHaveCount(1);
-      await expect(page.locator("h1")).toHaveText(shown(lang, "receipt.title"));
+      await expect(page.locator("h1")).toHaveText(shown(lang, "receiptTool.title"));
       await expect(page.locator("form")).toHaveCount(0);
       const header = page.locator("header a");
       await expect(header).toHaveCount(2);
@@ -51,7 +51,7 @@ for (const lang of langs) {
 
       const html = readFileSync(`${OUT}${tool(lang)}index.html`, "utf8");
       expect(htmlLang(html)).toBe(lang);
-      expect(titles(html)).toEqual([shown(lang, "receipt.meta.title")]);
+      expect(titles(html)).toEqual([shown(lang, "receiptTool.meta.title")]);
       const tags = headTags(html);
       expect(tags.find((t) => t.name === "link" && t.attrs.rel === "canonical")?.attrs.href).toBe(`https://${brand.domain}${tool(lang)}`);
       expect(tags.filter((t) => t.name === "link" && t.attrs.rel === "alternate")).toHaveLength(5);

@@ -1,6 +1,6 @@
 // Fails if the JavaScript a page loads up front exceeds the budget (PRD §9: 200 KB gzipped).
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative, sep } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const OUT = "out";
@@ -8,12 +8,19 @@ const LIMIT = 200 * 1024;
 // F3 target: aim for 150 KB or less on every route so the next slices have room. Over it only warns.
 const TARGET = 150 * 1024;
 // The home page, the four language pages, the four fee reminder pages, the four fee receipt pages (R0-3) and the app's pages (R1-1: the
-// language picker, sign-in, its callback, home, more and the two setup steps) must all be there, so the budget cannot pass by
+// language picker, sign-in, its callback, home, more and the two setup steps; R1-3: the student screens) must all be there, so the budget cannot pass by
 // omission. Each slice that adds an app route adds it here.
 const LANGUAGES = ["en", "hi", "kn", "te"];
-const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "setup/profile", "setup/upi"];
+const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
+// Pages outside a language folder. The parent's receipt (R1-7 Part B) is one static shell with no roster, no app
+// gate and no Supabase library, so it gets its own, smaller budget: a parent on a slow phone opens it from a link.
+// Measured 2026-10-12: Next's own runtime alone makes the plain "/" jump page 132.5 KB, and the receipt is 138.4 KB.
+// 145 KB leaves room for Part C's buttons (the PDF library is loaded on tap and is never in this number) and
+// fails on anything that brings the roster or the Supabase library in.
+const SHELL_BUDGETS = { "r/index.html": 145 * 1024 };
 const REQUIRED = [
   "index.html",
+  ...Object.keys(SHELL_BUDGETS),
   ...LANGUAGES.map((locale) => `${locale}/index.html`),
   ...LANGUAGES.map((locale) => `${locale}/tools/fee-reminder/index.html`),
   ...LANGUAGES.map((locale) => `${locale}/tools/fee-receipt/index.html`),
@@ -85,7 +92,8 @@ for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
     }
   }
   const kb = (total / 1024).toFixed(1);
-  const over = total > LIMIT;
+  const limit = SHELL_BUDGETS[relative(OUT, page).split(sep).join("/")] ?? LIMIT;
+  const over = total > limit;
   if (over) failed = true;
   const warn = !over && total > TARGET;
   console.log(`${over ? "OVER " : warn ? "WARN " : "ok   "} ${kb.padStart(7)} KB  ${page}`);
@@ -115,6 +123,6 @@ if (fonts.length === 0) {
 for (const name of fonts) console.log(`font   ${(gzipped(join(FONT_DIR, name)) / 1024).toFixed(1).padStart(7)} KB  ${join(FONT_DIR, name)} (gzipped, fetched only when a receipt needs it)`);
 
 if (failed) {
-  console.error(`Budget check failed: limit is ${LIMIT / 1024} KB of gzipped JavaScript per page, and every script must be measurable.`);
+  console.error(`Budget check failed: limit is ${LIMIT / 1024} KB (${SHELL_BUDGETS["r/index.html"] / 1024} KB for r/index.html) of gzipped JavaScript per page, and every script must be measurable.`);
   process.exit(1);
 }

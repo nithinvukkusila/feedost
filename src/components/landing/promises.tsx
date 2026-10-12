@@ -11,11 +11,11 @@ const promises = [
 export function Promises() {
   const t = useTranslations("landing.promises");
   return (
-    <section aria-labelledby="promises-title" className="mx-auto w-full max-w-2xl px-5 pt-16">
+    <section aria-labelledby="promises-title" className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-16">
       <h2 id="promises-title" className="type-headline text-4xl wrap-break-word">
         {t("title")}
       </h2>
-      <ol className="mt-6 border-t-3 border-ink">
+      <ol className="mt-6 border-t-3 border-ink lg:grid lg:grid-cols-2 lg:gap-x-10">
         {promises.map(({ key, no }) => (
           <li key={key} className="border-b border-ink py-4">
             <div className="flex items-baseline gap-3">

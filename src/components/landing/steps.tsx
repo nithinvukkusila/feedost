@@ -10,11 +10,11 @@ const textClass = "min-w-0 flex-1 basis-48";
 export function Steps() {
   const t = useTranslations("landing.steps");
   return (
-    <section aria-labelledby="steps-title" className="mx-auto w-full max-w-2xl px-5 pt-14">
+    <section aria-labelledby="steps-title" className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-14">
       <h2 id="steps-title" className="type-headline text-4xl wrap-break-word">
         {t("title")} <span className="text-cloth">{t("accent")}</span>
       </h2>
-      <ol className="mt-8 flex flex-col gap-7">
+      <ol className="mt-8 flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:gap-8">
         <li className={stepClass}>
           <span aria-hidden="true" translate="no" className={`${numberClass} text-blue`}>
             1

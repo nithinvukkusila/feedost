@@ -188,10 +188,24 @@ describe(".env.example and .gitignore (criteria 28 and 29)", () => {
 });
 
 describe("vercel.json (criterion 36)", () => {
-  it("only turns off auto-deploy for main", () => {
+  it("routes /r/{token} to the receipt shell, with no referrer and noindex, and turns off auto-deploy for main", () => {
     expect(JSON.parse(read("vercel.json"))).toEqual({
       $schema: "https://openapi.vercel.sh/vercel.json",
       git: { deploymentEnabled: { main: false } },
+      // The only production routing the app has (R1-7 Part B). /p/* and /join/* arrive with R1-9 and R1-13.
+      rewrites: [
+        { source: "/r/:token", destination: "/r/index.html" },
+        { source: "/r/:token/", destination: "/r/index.html" },
+      ],
+      headers: [
+        {
+          source: "/r/(.*)",
+          headers: [
+            { key: "Referrer-Policy", value: "no-referrer" },
+            { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          ],
+        },
+      ],
     });
   });
 });
@@ -262,10 +276,11 @@ describe("the shape of ci.yml, gaps found by mutation (criteria 5, 14, 15, 34, 4
     expect(ci).toContain("cancel-in-progress: true");
   });
 
-  // 25, not 15: the browser suite alone takes about 12 minutes since R0-2, and the production build and
-  // its checks still run after it. The database job keeps its 15-minute cap (F4 criterion 15).
-  it("the check job runs every gate, in order, and stops after 25 minutes", () => {
-    expect(check).toMatch(/timeout-minutes: 25/);
+  // 45, not 25 or 15: the browser suite alone now takes 20 to 25 minutes (it hit the old 25-minute cap on
+  // PR 15), and the production build and its checks still run after it. The database job keeps its
+  // 15-minute cap (F4 criterion 15).
+  it("the check job runs every gate, in order, and stops after 45 minutes", () => {
+    expect(check).toMatch(/timeout-minutes: 45/);
     const steps = [
       "pnpm install --frozen-lockfile",
       "pnpm lint",

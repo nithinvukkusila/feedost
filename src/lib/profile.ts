@@ -14,11 +14,12 @@ export type PresetKey = (typeof presetKeys)[number];
 /** The page language's name for each preset, from the `subjects` messages. */
 export type SubjectNames = Record<PresetKey, string>;
 
-const characters = (text: string): number => Array.from(text).length;
+/** The length of a text in characters, as the database counts them (not UTF-16 units). */
+export const characters = (text: string): number => Array.from(text).length;
 const bytes = (text: string): number => new TextEncoder().encode(text).length;
 
 /** Spaces at the ends removed, every run of white space made one space. */
-function tidy(text: string): string {
+export function tidy(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
@@ -99,7 +100,18 @@ const wait: Decision = { action: "wait" };
 const stay: Decision = { action: "stay" };
 const go = (to: Place): Decision => ({ action: "go", to });
 
-const appPlaces: readonly Place[] = ["home", "more", "setup-profile", "setup-upi"];
+const appPlaces: readonly Place[] = [
+  "home",
+  "more",
+  "students",
+  "student-new",
+  "student-edit",
+  "batches",
+  "batch-edit",
+  "attendance",
+  "setup-profile",
+  "setup-upi",
+];
 
 /**
  * Where a tutor goes (spec R1-1, criterion 17). This is a convenience for the person; it protects

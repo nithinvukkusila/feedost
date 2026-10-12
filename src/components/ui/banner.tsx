@@ -6,14 +6,14 @@
 //
 // For the screen: keep one live-region wrapper mounted at all times and put the banner inside it
 // when it appears. A banner that mounts together with its own role is often not announced.
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import type { DataAttributes } from "@/lib/data-attributes";
 import { FlatButton, type FlatLook } from "./button";
 
 export type BannerAction = {
   label: ReactNode;
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
   /** Makes the action a link with the same look. */
   href?: string;
   /** Decorative icon before the label. */
@@ -35,8 +35,8 @@ export type BannerProps =
   | {
       kind: "undo";
       message: ReactNode;
-      /** The first is outlined ("Undo"); the second is filled and takes the spare width. */
-      actions: readonly [BannerAction, BannerAction];
+      /** The first is outlined ("Undo"); the second is filled and takes the spare width. None for a plain note ("Payment undone"). */
+      actions: readonly [] | readonly [BannerAction, BannerAction];
     };
 
 // The wifi-with-a-stroke mark of the offline strip. A picture, not a word.

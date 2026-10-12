@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 import { useTutor } from "@/components/app/app-gate";
+import { ClothGround } from "@/components/app/cloth-ground";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { brand } from "@/config/brand";
@@ -68,38 +69,40 @@ export function UpiForm() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page pt-1.5 pr-5.5 pb-5.5 pl-5">
-      <StepHeader step={2} backHref={localeHref(locale, setupProfilePath)} />
-      <h1 className="type-headline mt-3.5 text-5xl wrap-break-word">{t("upi.title")}</h1>
-      <p className="type-body mt-2.5 text-ink-soft">{t("upi.body", { brand: brand.name })}</p>
-
-      <form noValidate onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-6">
-        <Field
-          ref={field}
-          label={t("upi.label")}
-          placeholder={t("upi.placeholder")}
-          value={value}
-          latinValue
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          inputMode="email"
-          onChange={(event) => setValue(event.currentTarget.value)}
-          onBlur={() => setTouched(true)}
-          {...guarded}
-          {...shown}
-        />
-
-        <div className="mt-auto flex flex-col gap-4 pt-4">
-          <SaveNotice problem={problem} offline={offline} action={t("upi.save")} onSignOut={leave} />
-          <div className="pr-1.5 pb-1.5">
-            <Button type="submit" variant="record" size="xl" full busy={saving} busyLabel={t("upi.save")}>
-              {t("upi.save")}
-            </Button>
+    <ClothGround width="form">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col pt-1.5 pr-5.5 pb-5.5 pl-5 md:min-h-0 md:max-w-none md:px-8 md:pt-4">
+        <StepHeader step={2} backHref={localeHref(locale, setupProfilePath)} />
+        <h1 className="type-headline mt-3.5 text-5xl wrap-break-word">{t("upi.title")}</h1>
+        <p className="type-body mt-2.5 text-ink-soft">{t("upi.body", { brand: brand.name })}</p>
+  
+        <form noValidate onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-6">
+          <Field
+            ref={field}
+            label={t("upi.label")}
+            placeholder={t("upi.placeholder")}
+            value={value}
+            latinValue
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            inputMode="email"
+            onChange={(event) => setValue(event.currentTarget.value)}
+            onBlur={() => setTouched(true)}
+            {...guarded}
+            {...shown}
+          />
+  
+          <div className="mt-auto flex flex-col gap-4 pt-4">
+            <SaveNotice problem={problem} offline={offline} action={t("upi.save")} onSignOut={leave} />
+            <div className="pr-1.5 pb-1.5">
+              <Button type="submit" variant="record" size="xl" full busy={saving} busyLabel={t("upi.save")}>
+                {t("upi.save")}
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-    </main>
+        </form>
+      </main>
+    </ClothGround>
   );
 }

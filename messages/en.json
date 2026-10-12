@@ -87,10 +87,7 @@
     },
     "waitlist": {
       "title": "Put your name in the book.",
-      "body": "The waitlist opens soon. You will be able to put your name here.",
-      "soon": "The waitlist opens soon. Come back to this page to join.",
-      "button": "Join the waitlist",
-      "reason": "Opens soon"
+      "body": "Put your name here and we will message you on WhatsApp the day the app opens."
     },
     "footer": {
       "line": "Free fee collection for home tutors in India.",
@@ -211,7 +208,7 @@
     "copyFailed": "Could not copy. Press and hold the message to select it.",
     "fillFirst": "Fill in the fields above first."
   },
-  "receipt": {
+  "receiptTool": {
     "meta": {
       "title": "Free fee receipt maker for tutors: PDF in 4 languages",
       "description": "Make a fee receipt PDF in English, Hindi, Kannada or Telugu. Free, no sign-up, made on your phone and not saved anywhere."
@@ -408,9 +405,9 @@
     "more": "More",
     "empty": {
       "title": "Your book is empty.",
-      "body": "Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "Adding students arrives in the next update."
-    }
+      "body": "Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "Add a student"
   },
   "subjects": {
     "maths": "Maths",
@@ -420,5 +417,520 @@
     "physics": "Physics",
     "chemistry": "Chemistry",
     "accounts": "Accounts"
+  },
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "students": "Students",
+    "attendance": "Attendance",
+    "more": "More"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "soon": "Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "Students",
+    "count": "{n, plural, one {# student} other {# students}}",
+    "batchCount": "{n, plural, =0 {No batches} one {# batch} other {# batches}}",
+    "add": "Add",
+    "addFirst": "Add a student",
+    "searchLabel": "Search student or parent",
+    "searchPlaceholder": "Search student or parent",
+    "noMatch": "No student matches “{text}”.",
+    "clearSearch": "Clear search",
+    "filterAll": "All {n}",
+    "filterNone": "No batch {n}",
+    "filterLabel": "Show",
+    "meta": "{amount} on the {day}",
+    "manageBatches": "Batches",
+    "archivedLink": "Archived students ({n})",
+    "archivedTag": "Archived",
+    "empty": {
+      "title": "No students yet.",
+      "body": "Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "Couldn't load your students",
+      "body": "The network dropped. Nothing is lost.",
+      "retry": "Try again"
+    },
+    "stale": "Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+    },
+    "form": {
+      "offline": "You are offline. Connect to the internet to save.",
+      "addTitle": "Add a student",
+      "back": "Back to students",
+      "name": "Student's name",
+      "parentName": "Parent's name",
+      "phone": "Parent's WhatsApp number",
+      "language": "Send messages in",
+      "batch": "Batch",
+      "dueDay": "Fee due on",
+      "fee": "Monthly fee ₹",
+      "owes": "Already owes ₹",
+      "noBatch": "No batch",
+      "permission": "I have this parent's permission to save their number.",
+      "save": "Save student",
+      "saveChanges": "Save changes",
+      "saveAnother": "Save and add another",
+      "saved": "Saved {name}.",
+      "feeFromNextMonth": "A new fee applies from the next month.",
+      "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "That batch no longer exists. Pick another batch or No batch.",
+      "owesLocked": "A payment has been recorded against this, so it can't be changed"
+    },
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "tooShort": "Too short",
+      "checkNumber": "Check number",
+      "checkAmount": "Check amount",
+      "wholeRupees": "Whole rupees only",
+      "tooBig": "Too big"
+    },
+    "err": {
+      "nameMissing": "Type the student's name.",
+      "nameLong": "Use 80 characters or fewer.",
+      "parentLong": "Use 80 characters or fewer.",
+      "phoneShort": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "Use digits only.",
+      "feeMissing": "Type the monthly fee in rupees.",
+      "feeZero": "The fee must be at least ₹1.",
+      "feeDecimal": "Type whole rupees, like 1200.",
+      "feeBig": "The most is ₹10,00,000.",
+      "feeChars": "Use digits only.",
+      "owesDecimal": "Type whole rupees, like 1200.",
+      "owesBig": "The most is ₹10,00,000.",
+      "owesChars": "Use digits only.",
+      "permissionNeeded": "Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "Couldn't find this student",
+      "notFoundBody": "It may have been removed on another phone.",
+      "backLink": "Back to students",
+      "archive": "Archive student",
+      "archiveNote": "Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "Restore student"
+    }
+  },
+  "batches": {
+    "noStudents": "No students in this batch yet.",
+    "title": "Batches",
+    "back": "Back to students",
+    "backToList": "Back to batches",
+    "empty": {
+      "title": "No batches yet.",
+      "body": "A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "{n, plural, one {# student} other {# students}}",
+    "monthly": "{amount} each month",
+    "name": "Batch name",
+    "timings": "Timings (optional)",
+    "add": "Add batch",
+    "state": {
+      "missing": "Missing",
+      "tooLong": "Too long",
+      "nameTaken": "Name taken"
+    },
+    "err": {
+      "nameMissing": "Type the batch name.",
+      "nameLong": "Use 60 characters or fewer.",
+      "nameTaken": "You already have a batch called {name}. Pick another name.",
+      "timingsLong": "Use 100 characters or fewer."
+    },
+    "rename": "Rename",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveTimings": "Save timings",
+    "timingsSaved": "Timings saved.",
+    "addStudent": "Add a student",
+    "notFound": {
+      "title": "Couldn't find this batch",
+      "body": "It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "Delete batch",
+      "note": "Deleting keeps the students.",
+      "title": "Delete {name}?",
+      "body": "{n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "Delete batch",
+      "cancel": "Cancel"
+    },
+    "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "Move students",
+      "title": "Move students to {name}",
+      "none": "No other students to move.",
+      "hint": "Tick the students to move here.",
+      "inBatch": "In {name}",
+      "noBatch": "No batch",
+      "confirm": "Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "Cancel",
+      "failed": "Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "Move here",
+      "gone": "That batch no longer exists. Nothing was moved.",
+      "goneBack": "Back to batches"
+    }
+  },
+  "board": {
+    "prev": "Previous month",
+    "next": "Next month",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "monthYear": "{month} {year}",
+    "hero": {
+      "label": "Still to come in",
+      "from": "{m, plural, one {from {n} of {m} student} other {from {n} of {m} students}}",
+      "collected": "{amount} collected"
+    },
+    "tab": {
+      "overdue": "Overdue",
+      "due": "Due",
+      "paid": "Paid"
+    },
+    "tabsLabel": "Fees by status",
+    "legend": {
+      "paid": "{n} paid",
+      "due": "{n} due, hollow",
+      "overdue": "{n} overdue, tall"
+    },
+    "strip": {
+      "label": "{total} students: {paid} paid, {due} due, {overdue} overdue"
+    },
+    "tag": {
+      "overdue": "Overdue {n, plural, one {{n} day} other {{n} days}}",
+      "overdueOpening": "Overdue",
+      "due": "Due",
+      "dueToday": "Due today",
+      "partPaid": "Part paid",
+      "paid": "Paid"
+    },
+    "row": {
+      "dueOn": "Due {date}",
+      "partPaid": "Part paid {amount}",
+      "monthFee": "{month} fee",
+      "earlier": "Earlier balance"
+    },
+    "empty": {
+      "tab": {
+        "overdue": "Nobody is overdue.",
+        "due": "Nothing else is due this month.",
+        "paid": "Nobody has paid yet this month.",
+        "dueOld": "Nothing else was due that month.",
+        "paidOld": "Nobody paid that month."
+      },
+      "none": {
+        "title": "Nothing is due yet.",
+        "body": "A student's fee appears here on their due day.",
+        "link": "See your students"
+      },
+      "monthOld": "No fees were due in {month}.",
+      "filter": "Nothing in {batch} for {month}.",
+      "showAll": "Show all batches"
+    },
+    "end": {
+      "overdue": "That is everyone who is overdue.",
+      "due": "That is everyone who is due.",
+      "paid": "That is everyone who has paid."
+    },
+    "allPaid": {
+      "stamp": "ALL PAID",
+      "title": "Nothing left to collect.",
+      "collected": "Collected",
+      "students": "Students",
+      "of": "{n} of {m}",
+      "next": "{month} fees will appear here on each student's due day. You do not need to do anything."
+    },
+    "loadError": {
+      "title": "Couldn't load your fees",
+      "body": "The network dropped. Nothing is lost.",
+      "retry": "Try again"
+    },
+    "stale": "Showing what was saved on this phone.",
+    "offlineMonth": "Can't open {month} without a network."
+  },
+  "waitlistForm": {
+    "name": {
+      "label": "Your name",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your name."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use 60 characters or fewer. Leave out angle brackets."
+      }
+    },
+    "phone": {
+      "label": "WhatsApp number",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your WhatsApp number."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use a 10-digit mobile number."
+      },
+      "placeholder": "+91"
+    },
+    "city": {
+      "label": "City",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your city."
+      },
+      "check": {
+        "word": "Check this",
+        "fix": "Use 40 characters or fewer. Leave out angle brackets."
+      }
+    },
+    "students": {
+      "label": "How many students?",
+      "choose": "Choose how many",
+      "under10": "Under 10",
+      "from10": "10 to 30",
+      "from30": "30 to 60",
+      "over60": "More than 60",
+      "missing": {
+        "word": "Missing",
+        "fix": "Choose a number."
+      }
+    },
+    "consent": "We will use your number only to message you on WhatsApp when the app opens. Nothing is sold or shared.",
+    "submit": "Join the waitlist",
+    "working": "Saving…",
+    "done": {
+      "stamp": "Listed",
+      "title": "You are on the list.",
+      "body": "We will message you on WhatsApp the day the app opens."
+    },
+    "failed": {
+      "title": "Could not save.",
+      "detail": "Check your connection and try again."
+    },
+    "rateLimited": {
+      "title": "Too many tries.",
+      "detail": "Please try again in an hour."
+    },
+    "noScript": "This form needs JavaScript turned on."
+  },
+  "pay": {
+    "markPaid": "Mark paid",
+    "receiptButton": "Receipt",
+    "markPaidFor": "Mark paid, {name}",
+    "receiptFor": "Receipt, {name}",
+    "cancel": "Cancel",
+    "amount": "Amount received ₹",
+    "chipsLabel": "Quick amounts",
+    "full": "Full {amount}",
+    "half": "Half {amount}",
+    "other": "Other",
+    "method": "Paid by",
+    "upi": "UPI",
+    "cash": "Cash",
+    "paidOn": "Paid on",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "pick": "Pick date",
+    "pickLabel": "Date paid",
+    "submit": "Mark as paid",
+    "saving": "Saving…",
+    "note": "A numbered receipt is made for you. You can view it right after.",
+    "slow": "Still trying. Please wait. It will not be saved twice.",
+    "fix": "Needs fixing",
+    "error": {
+      "amountMissing": "Enter an amount of ₹1 or more",
+      "amountWhole": "Use digits only, in whole rupees",
+      "over": "Only {amount} is left on this fee",
+      "dateMissing": "Pick the date it was paid",
+      "dateFuture": "Pick a date that is not in the future",
+      "dateOld": "Pick a date within the last 90 days",
+      "dateRefused": "That date was refused. Check the date on your phone, or pick another date.",
+      "failed": "Couldn't save. Nothing was recorded. Try again.",
+      "offline": "You are offline. Payments need a connection for now. Nothing was saved.",
+      "alreadyPaid": "This fee is already paid in full. Nothing was recorded.",
+      "archived": "This student is archived. Restore the student to record a payment.",
+      "reused": "This may already be saved. Close this and check the fee on the board before trying again.",
+      "signedOut": "You were signed out. Sign in again. Nothing was recorded.",
+      "undoFailed": "Couldn't undo. Nothing was changed. Try again.",
+      "undoLate": "This payment can no longer be undone."
+    },
+    "banner": {
+      "paid": "{name} marked paid, {amount}",
+      "undo": "Undo",
+      "send": "View receipt",
+      "undone": "Payment undone"
+    },
+    "receipt": {
+      "title": "Receipt",
+      "back": "Back to fees",
+      "feeReceipt": "Fee receipt",
+      "no": "Receipt no.",
+      "date": "Date {date}",
+      "student": "Student",
+      "parent": "Parent",
+      "forMonth": "Fee for",
+      "earlier": "Earlier balance",
+      "paidBy": "Paid by",
+      "balance": "Balance",
+      "nil": "Nil",
+      "balanceNow": "Balance on this fee now",
+      "paid": "PAID",
+      "partPaid": "PART PAID",
+      "cancelled": "CANCELLED",
+      "recorded": "Recorded <v>{date} {time}</v>",
+      "undo": "Undo this payment",
+      "undoAsk": "Undo this payment? The receipt will be cancelled.",
+      "undoYes": "Yes, undo it",
+      "undoKeep": "Keep it",
+      "undoing": "Undoing…",
+      "notFound": "Couldn't find this fee",
+      "notFoundBody": "It may have been removed. Go back to your fees.",
+      "none": "No payment has been recorded on this fee yet.",
+      "loadError": "Couldn't load the receipt. Nothing is lost.",
+      "retry": "Try again"
+    }
+  },
+  "remind": {
+    "button": "Remind",
+    "buttonFor": "Remind {name}",
+    "addNumber": "Add number",
+    "addNumberFor": "Add number for {name}",
+    "addUpi": "Add your UPI ID",
+    "noUpi": "Reminders carry your UPI ID so parents can pay. Add it first.",
+    "all": "Remind all overdue ({n})",
+    "last": {
+      "today": "Reminded today",
+      "yesterday": "Reminded yesterday",
+      "days": "Reminded {n} days ago",
+      "old": "Reminded over 30 days ago"
+    }
+  },
+  "remindScreen": {
+    "progress": "Reminder {n} of {m}",
+    "stop": "Stop",
+    "to": "To {parent} · {language}",
+    "toStudent": "To the parent of {student}",
+    "late": "{month} · {n, plural, one {# day} other {# days}} late",
+    "earlier": "Earlier balance",
+    "tone": {
+      "label": "Tone",
+      "polite": "Polite",
+      "firm": "Firm"
+    },
+    "message": "The message",
+    "open": "Open WhatsApp",
+    "hint": "Press send there, then come back.",
+    "opened": "Opened for {student}'s parent",
+    "openedNote": "WhatsApp only opens the message. You press send there.",
+    "next": "Next",
+    "skip": "Skip",
+    "upNext": "Up next",
+    "done": "{n, plural, one {# parent opened} other {# parents opened}}, {k} skipped.",
+    "home": "Back to home",
+    "logFailed": "Couldn't save that you reminded them. We'll try again.",
+    "pick": {
+      "title": "Who to remind",
+      "more": "+{n} more overdue",
+      "late": "{n, plural, one {# day late} other {# days late}}",
+      "today": "Reminded today",
+      "cannot": "Cannot remind ({n})",
+      "noPhone": "No phone number",
+      "noUpi": "Add your UPI ID first",
+      "selected": "Selected",
+      "notSelected": "Not selected",
+      "start": "Remind {n, plural, one {# parent} other {# parents}}",
+      "none": "Select at least one parent to start.",
+      "many": "That is a lot at once. WhatsApp can limit numbers that message many people. Do 20 now and the rest later if you like."
+    },
+    "again": {
+      "title": "You reminded {parent} today at {time}. Remind again?",
+      "titleStudent": "You reminded the parent of {student} today at {time}. Remind again?",
+      "time": {
+        "am": "{hour}:{minute} am",
+        "pm": "{hour}:{minute} pm"
+      },
+      "yes": "Remind again",
+      "no": "Not now"
+    }
+  },
+  "receipt": {
+    "subjects": {
+      "maths": "Maths",
+      "science": "Science",
+      "english": "English",
+      "hindi": "Hindi",
+      "physics": "Physics",
+      "chemistry": "Chemistry",
+      "accounts": "Accounts"
+    },
+    "tuition": "{subjects} tuition",
+    "loading": "Opening your receipt…",
+    "feeReceipt": "Fee receipt",
+    "no": "Receipt no.",
+    "date": "Date {date}",
+    "sentence": "Received with thanks from {parent} by {method} towards the tuition fee of {student} for {month}.",
+    "sentenceNoParent": "Received with thanks by {method} towards the tuition fee of {student} for {month}.",
+    "monthYear": "{month} {year}",
+    "earlier": "the earlier balance",
+    "months": {
+      "m01": "January",
+      "m02": "February",
+      "m03": "March",
+      "m04": "April",
+      "m05": "May",
+      "m06": "June",
+      "m07": "July",
+      "m08": "August",
+      "m09": "September",
+      "m10": "October",
+      "m11": "November",
+      "m12": "December"
+    },
+    "upi": "UPI",
+    "cash": "cash",
+    "balance": "Balance",
+    "nil": "Nil",
+    "student": "Student",
+    "paid": "Paid",
+    "partPaid": "Part paid",
+    "stampPaid": "PAID",
+    "stampPartPaid": "PART PAID",
+    "stampCancelled": "CANCELLED",
+    "footer": "Free for tutors",
+    "cancelled": {
+      "title": "This receipt was cancelled by your tutor."
+    },
+    "notFound": {
+      "title": "This receipt link doesn't work.",
+      "detail": "Ask your tutor to send it again."
+    },
+    "rateLimited": {
+      "title": "Too many tries.",
+      "detail": "Please try again later."
+    },
+    "failed": {
+      "title": "Couldn't open the receipt.",
+      "detail": "Check your internet connection and try again.",
+      "retry": "Try again"
+    }
   }
 }

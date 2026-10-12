@@ -17,7 +17,7 @@ import { alternateUrls, canonicalUrl, ogLocale } from "@/lib/seo";
 export async function generateMetadata({ params }: Readonly<{ params: Promise<{ locale: string }> }>): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) return {};
-  const t = await getTranslations({ locale, namespace: "receipt.meta" });
+  const t = await getTranslations({ locale, namespace: "receiptTool.meta" });
   const title = t("title");
   const description = t("description");
   const url = canonicalUrl(locale, feeReceiptPath);
@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: Readonly<{ params: Promise<{ 
 }
 
 export default async function FeeReceiptPage() {
-  const [locale, t, words] = await Promise.all([getLocale(), getTranslations("receipt"), getWords("receiptForm")]);
+  const [locale, t, words] = await Promise.all([getLocale(), getTranslations("receiptTool"), getWords("receiptForm")]);
   return (
     <div className="bg-page-ruled">
       <ToolHeader current="receipt" />

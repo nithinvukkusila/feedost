@@ -122,6 +122,20 @@ describe("Button element and content (criteria 18 and 19)", () => {
     expect(large).not.toContain("min-h-control");
   });
 
+  it("is 44px high with smaller type when compact, for a button inside a list row", () => {
+    render(
+      <Button variant="record" size="compact">
+        Mark paid
+      </Button>,
+    );
+    const compact = classes(screen.getByRole("button", { name: "Mark paid" }));
+    expect(compact).toContain("min-h-tap");
+    expect(compact).toContain("type-control-sm");
+    expect(compact).not.toContain("min-h-control");
+    expect(compact).not.toContain("type-control");
+    expect(compact).toContain("shadow-record");
+  });
+
   it("is 60px high when xl, for the one primary action at the foot of an app screen", () => {
     render(
       <Button variant="record" size="xl">

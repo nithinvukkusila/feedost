@@ -87,10 +87,7 @@
     },
     "waitlist": {
       "title": "बही में अपना नाम लिखवाइए।",
-      "body": "वेटलिस्ट जल्द खुलेगी। यहाँ आप अपना नाम लिखवा सकेंगे।",
-      "soon": "वेटलिस्ट जल्द खुलेगी। जुड़ने के लिए इस पेज पर फिर आइए।",
-      "button": "वेटलिस्ट में जुड़ें",
-      "reason": "जल्द खुलेगी"
+      "body": "यहाँ अपना नाम लिखवाइए। ऐप खुलने के दिन हम आपको व्हाट्सऐप पर संदेश भेजेंगे।"
     },
     "footer": {
       "line": "भारत के होम ट्यूटर्स के लिए मुफ़्त फ़ीस वसूली।",
@@ -211,7 +208,7 @@
     "copyFailed": "कॉपी नहीं हो सका। संदेश को दबाकर रखें और चुन लें।",
     "fillFirst": "पहले ऊपर के खाने भरें।"
   },
-  "receipt": {
+  "receiptTool": {
     "meta": {
       "title": "ट्यूटर्स के लिए मुफ़्त फ़ीस रसीद मेकर: 4 भाषाओं में PDF",
       "description": "अंग्रेज़ी, हिन्दी, कन्नड़ या तेलुगु में फ़ीस रसीद PDF बनाएँ। मुफ़्त, बिना साइन-अप, आपके फ़ोन पर बनती है और कहीं सेव नहीं होती।"
@@ -408,9 +405,9 @@
     "more": "और",
     "empty": {
       "title": "TODO-translate: Your book is empty.",
-      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent.",
-      "soon": "TODO-translate: Adding students arrives in the next update."
-    }
+      "body": "TODO-translate: Add your students and you will see who owes what, with one tap to remind each parent."
+    },
+    "addStudent": "TODO-translate: Add a student"
   },
   "subjects": {
     "maths": "TODO-translate: Maths",
@@ -420,5 +417,520 @@
     "physics": "TODO-translate: Physics",
     "chemistry": "TODO-translate: Chemistry",
     "accounts": "TODO-translate: Accounts"
+  },
+  "nav": {
+    "label": "TODO-translate: Main",
+    "home": "होम",
+    "students": "छात्र",
+    "attendance": "हाज़िरी",
+    "more": "और"
+  },
+  "attendance": {
+    "title": "हाज़िरी",
+    "soon": "TODO-translate: Attendance arrives in a later update."
+  },
+  "students": {
+    "title": "छात्र",
+    "count": "{n, plural, one {# छात्र} other {# छात्र}}",
+    "batchCount": "{n, plural, =0 {कोई बैच नहीं} one {# बैच} other {# बैच}}",
+    "add": "TODO-translate: Add",
+    "addFirst": "TODO-translate: Add a student",
+    "searchLabel": "TODO-translate: Search student or parent",
+    "searchPlaceholder": "TODO-translate: Search student or parent",
+    "noMatch": "TODO-translate: No student matches “{text}”.",
+    "clearSearch": "TODO-translate: Clear search",
+    "filterAll": "सभी {n}",
+    "filterNone": "TODO-translate: No batch {n}",
+    "filterLabel": "TODO-translate: Show",
+    "meta": "TODO-translate: {amount} on the {day}",
+    "manageBatches": "बैच",
+    "archivedLink": "TODO-translate: Archived students ({n})",
+    "archivedTag": "TODO-translate: Archived",
+    "empty": {
+      "title": "TODO-translate: No students yet.",
+      "body": "TODO-translate: Add your first student. It takes a minute."
+    },
+    "loadError": {
+      "title": "TODO-translate: Couldn't load your students",
+      "body": "TODO-translate: The network dropped. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    },
+    "stale": "TODO-translate: Showing what was saved on this phone.",
+    "days": {
+      "ordinal": "{day}"
+    },
+    "form": {
+      "offline": "TODO-translate: You are offline. Connect to the internet to save.",
+      "addTitle": "TODO-translate: Add a student",
+      "back": "TODO-translate: Back to students",
+      "name": "TODO-translate: Student's name",
+      "parentName": "TODO-translate: Parent's name",
+      "phone": "TODO-translate: Parent's WhatsApp number",
+      "language": "TODO-translate: Send messages in",
+      "batch": "TODO-translate: Batch",
+      "dueDay": "TODO-translate: Fee due on",
+      "fee": "TODO-translate: Monthly fee ₹",
+      "owes": "TODO-translate: Already owes ₹",
+      "noBatch": "TODO-translate: No batch",
+      "permission": "TODO-translate: I have this parent's permission to save their number.",
+      "save": "TODO-translate: Save student",
+      "saveChanges": "TODO-translate: Save changes",
+      "saveAnother": "TODO-translate: Save and add another",
+      "saved": "TODO-translate: Saved {name}.",
+      "feeFromNextMonth": "TODO-translate: A new fee applies from the next month.",
+      "sameNumber": "TODO-translate: This number is already saved for {name}. Siblings can share a number.",
+      "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+      "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch.",
+      "owesLocked": "TODO-translate: A payment has been recorded against this, so it can't be changed"
+    },
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "tooShort": "TODO-translate: Too short",
+      "checkNumber": "TODO-translate: Check number",
+      "checkAmount": "TODO-translate: Check amount",
+      "wholeRupees": "TODO-translate: Whole rupees only",
+      "tooBig": "TODO-translate: Too big"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the student's name.",
+      "nameLong": "TODO-translate: Use 80 characters or fewer.",
+      "parentLong": "TODO-translate: Use 80 characters or fewer.",
+      "phoneShort": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneLong": "TODO-translate: An Indian mobile number has 10 digits. You typed {n}.",
+      "phoneStart": "TODO-translate: Indian mobile numbers start with 6, 7, 8 or 9.",
+      "phoneChars": "TODO-translate: Use digits only.",
+      "feeMissing": "TODO-translate: Type the monthly fee in rupees.",
+      "feeZero": "TODO-translate: The fee must be at least ₹1.",
+      "feeDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "feeBig": "TODO-translate: The most is ₹10,00,000.",
+      "feeChars": "TODO-translate: Use digits only.",
+      "owesDecimal": "TODO-translate: Type whole rupees, like 1200.",
+      "owesBig": "TODO-translate: The most is ₹10,00,000.",
+      "owesChars": "TODO-translate: Use digits only.",
+      "permissionNeeded": "TODO-translate: Tick this to save the number."
+    },
+    "edit": {
+      "notFound": "TODO-translate: Couldn't find this student",
+      "notFoundBody": "TODO-translate: It may have been removed on another phone.",
+      "backLink": "TODO-translate: Back to students",
+      "archive": "TODO-translate: Archive student",
+      "archiveNote": "TODO-translate: Hidden from your list and from reminders. Their history stays. You can restore them.",
+      "restore": "TODO-translate: Restore student"
+    }
+  },
+  "batches": {
+    "noStudents": "TODO-translate: No students in this batch yet.",
+    "title": "बैच",
+    "back": "TODO-translate: Back to students",
+    "backToList": "TODO-translate: Back to batches",
+    "empty": {
+      "title": "TODO-translate: No batches yet.",
+      "body": "TODO-translate: A batch is a class or group, like Class 10 Maths."
+    },
+    "studentsCount": "{n, plural, one {# छात्र} other {# छात्र}}",
+    "monthly": "TODO-translate: {amount} each month",
+    "name": "TODO-translate: Batch name",
+    "timings": "TODO-translate: Timings (optional)",
+    "add": "TODO-translate: Add batch",
+    "state": {
+      "missing": "TODO-translate: Missing",
+      "tooLong": "TODO-translate: Too long",
+      "nameTaken": "TODO-translate: Name taken"
+    },
+    "err": {
+      "nameMissing": "TODO-translate: Type the batch name.",
+      "nameLong": "TODO-translate: Use 60 characters or fewer.",
+      "nameTaken": "TODO-translate: You already have a batch called {name}. Pick another name.",
+      "timingsLong": "TODO-translate: Use 100 characters or fewer."
+    },
+    "rename": "TODO-translate: Rename",
+    "save": "TODO-translate: Save",
+    "cancel": "TODO-translate: Cancel",
+    "saveTimings": "TODO-translate: Save timings",
+    "timingsSaved": "TODO-translate: Timings saved.",
+    "addStudent": "TODO-translate: Add a student",
+    "notFound": {
+      "title": "TODO-translate: Couldn't find this batch",
+      "body": "TODO-translate: It may have been removed on another phone."
+    },
+    "delete": {
+      "link": "TODO-translate: Delete batch",
+      "note": "TODO-translate: Deleting keeps the students.",
+      "title": "TODO-translate: Delete {name}?",
+      "body": "TODO-translate: {n, plural, one {# student stays} other {# students stay}} in your book with no batch.",
+      "confirm": "TODO-translate: Delete batch",
+      "cancel": "TODO-translate: Cancel"
+    },
+    "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
+    "move": {
+      "link": "TODO-translate: Move students",
+      "title": "TODO-translate: Move students to {name}",
+      "none": "TODO-translate: No other students to move.",
+      "hint": "TODO-translate: Tick the students to move here.",
+      "inBatch": "TODO-translate: In {name}",
+      "noBatch": "TODO-translate: No batch",
+      "confirm": "TODO-translate: Move {n, plural, one {# student} other {# students}} here",
+      "cancel": "TODO-translate: Cancel",
+      "failed": "TODO-translate: Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
+      "confirmNone": "TODO-translate: Move here",
+      "gone": "यह बैच अब मौजूद नहीं है। कोई छात्र नहीं हटाया गया।",
+      "goneBack": "बैचों पर वापस जाएँ"
+    }
+  },
+  "board": {
+    "prev": "पिछला महीना",
+    "next": "अगला महीना",
+    "months": {
+      "january": "TODO-translate: January",
+      "february": "TODO-translate: February",
+      "march": "TODO-translate: March",
+      "april": "TODO-translate: April",
+      "may": "TODO-translate: May",
+      "june": "TODO-translate: June",
+      "july": "TODO-translate: July",
+      "august": "TODO-translate: August",
+      "september": "TODO-translate: September",
+      "october": "अक्टूबर",
+      "november": "TODO-translate: November",
+      "december": "TODO-translate: December"
+    },
+    "monthYear": "TODO-translate: {month} {year}",
+    "hero": {
+      "label": "अभी आना बाकी",
+      "from": "{m, plural, one {{m} में से {n} छात्रों से} other {{m} में से {n} छात्रों से}}",
+      "collected": "TODO-translate: {amount} collected"
+    },
+    "tab": {
+      "overdue": "देर से",
+      "due": "बाकी",
+      "paid": "जमा"
+    },
+    "tabsLabel": "TODO-translate: Fees by status",
+    "legend": {
+      "paid": "{n} जमा",
+      "due": "{n} बाकी",
+      "overdue": "{n} देर से"
+    },
+    "strip": {
+      "label": "{total} छात्र: {paid} जमा, {due} बाकी, {overdue} देर से"
+    },
+    "tag": {
+      "overdue": "TODO-translate: Overdue {n, plural, one {{n} day} other {{n} days}}",
+      "overdueOpening": "TODO-translate: Overdue",
+      "due": "TODO-translate: Due",
+      "dueToday": "TODO-translate: Due today",
+      "partPaid": "TODO-translate: Part paid",
+      "paid": "TODO-translate: Paid"
+    },
+    "row": {
+      "dueOn": "TODO-translate: Due {date}",
+      "partPaid": "{amount} जमा",
+      "monthFee": "TODO-translate: {month} fee",
+      "earlier": "TODO-translate: Earlier balance"
+    },
+    "empty": {
+      "tab": {
+        "overdue": "TODO-translate: Nobody is overdue.",
+        "due": "TODO-translate: Nothing else is due this month.",
+        "paid": "TODO-translate: Nobody has paid yet this month.",
+        "dueOld": "TODO-translate: Nothing else was due that month.",
+        "paidOld": "TODO-translate: Nobody paid that month."
+      },
+      "none": {
+        "title": "TODO-translate: Nothing is due yet.",
+        "body": "TODO-translate: A student's fee appears here on their due day.",
+        "link": "TODO-translate: See your students"
+      },
+      "monthOld": "TODO-translate: No fees were due in {month}.",
+      "filter": "TODO-translate: Nothing in {batch} for {month}.",
+      "showAll": "TODO-translate: Show all batches"
+    },
+    "end": {
+      "overdue": "TODO-translate: That is everyone who is overdue.",
+      "due": "TODO-translate: That is everyone who is due.",
+      "paid": "TODO-translate: That is everyone who has paid."
+    },
+    "allPaid": {
+      "stamp": "TODO-translate: ALL PAID",
+      "title": "TODO-translate: Nothing left to collect.",
+      "collected": "TODO-translate: Collected",
+      "students": "TODO-translate: Students",
+      "of": "TODO-translate: {n} of {m}",
+      "next": "TODO-translate: {month} fees will appear here on each student's due day. You do not need to do anything."
+    },
+    "loadError": {
+      "title": "TODO-translate: Couldn't load your fees",
+      "body": "TODO-translate: The network dropped. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    },
+    "stale": "TODO-translate: Showing what was saved on this phone.",
+    "offlineMonth": "TODO-translate: Can't open {month} without a network."
+  },
+  "waitlistForm": {
+    "name": {
+      "label": "आपका नाम",
+      "missing": {
+        "word": "छूटा है",
+        "fix": "अपना नाम लिखिए।"
+      },
+      "check": {
+        "word": "जाँचिए",
+        "fix": "60 अक्षर या उससे कम लिखिए। कोण वाले ब्रैकेट मत लगाइए।"
+      }
+    },
+    "phone": {
+      "label": "व्हाट्सऐप नंबर",
+      "missing": {
+        "word": "छूटा है",
+        "fix": "अपना व्हाट्सऐप नंबर लिखिए।"
+      },
+      "check": {
+        "word": "जाँचिए",
+        "fix": "10 अंकों का मोबाइल नंबर लिखिए।"
+      },
+      "placeholder": "+91"
+    },
+    "city": {
+      "label": "शहर",
+      "missing": {
+        "word": "छूटा है",
+        "fix": "अपना शहर लिखिए।"
+      },
+      "check": {
+        "word": "जाँचिए",
+        "fix": "40 अक्षर या उससे कम लिखिए। कोण वाले ब्रैकेट मत लगाइए।"
+      }
+    },
+    "students": {
+      "label": "कितने विद्यार्थी हैं?",
+      "choose": "कितने हैं, यह चुनिए",
+      "under10": "10 से कम",
+      "from10": "10 से 30",
+      "from30": "30 से 60",
+      "over60": "60 से ज़्यादा",
+      "missing": {
+        "word": "छूटा है",
+        "fix": "एक संख्या चुनिए।"
+      }
+    },
+    "consent": "हम आपका नंबर सिर्फ़ इसलिए इस्तेमाल करेंगे कि ऐप खुलने पर आपको व्हाट्सऐप पर संदेश भेज सकें। कुछ भी बेचा या साझा नहीं किया जाएगा।",
+    "submit": "वेटलिस्ट में जुड़ें",
+    "working": "सहेजा जा रहा है…",
+    "done": {
+      "stamp": "दर्ज",
+      "title": "आप सूची में हैं।",
+      "body": "ऐप खुलने के दिन हम आपको व्हाट्सऐप पर संदेश भेजेंगे।"
+    },
+    "failed": {
+      "title": "सहेजा नहीं जा सका।",
+      "detail": "अपना कनेक्शन जाँचिए और फिर कोशिश कीजिए।"
+    },
+    "rateLimited": {
+      "title": "बहुत ज़्यादा कोशिशें।",
+      "detail": "कृपया एक घंटे बाद फिर कोशिश कीजिए।"
+    },
+    "noScript": "इस फ़ॉर्म के लिए JavaScript चालू होना चाहिए।"
+  },
+  "pay": {
+    "markPaid": "TODO-translate: Mark paid",
+    "receiptButton": "TODO-translate: Receipt",
+    "markPaidFor": "TODO-translate: Mark paid, {name}",
+    "receiptFor": "TODO-translate: Receipt, {name}",
+    "cancel": "TODO-translate: Cancel",
+    "amount": "TODO-translate: Amount received ₹",
+    "chipsLabel": "TODO-translate: Quick amounts",
+    "full": "TODO-translate: Full {amount}",
+    "half": "TODO-translate: Half {amount}",
+    "other": "TODO-translate: Other",
+    "method": "TODO-translate: Paid by",
+    "upi": "TODO-translate: UPI",
+    "cash": "TODO-translate: Cash",
+    "paidOn": "TODO-translate: Paid on",
+    "today": "TODO-translate: Today",
+    "yesterday": "TODO-translate: Yesterday",
+    "pick": "TODO-translate: Pick date",
+    "pickLabel": "TODO-translate: Date paid",
+    "submit": "TODO-translate: Mark as paid",
+    "saving": "TODO-translate: Saving…",
+    "note": "TODO-translate: A numbered receipt is made for you. You can view it right after.",
+    "slow": "TODO-translate: Still trying. Please wait. It will not be saved twice.",
+    "fix": "TODO-translate: Needs fixing",
+    "error": {
+      "amountMissing": "TODO-translate: Enter an amount of ₹1 or more",
+      "amountWhole": "TODO-translate: Use digits only, in whole rupees",
+      "over": "TODO-translate: Only {amount} is left on this fee",
+      "dateMissing": "TODO-translate: Pick the date it was paid",
+      "dateFuture": "TODO-translate: Pick a date that is not in the future",
+      "dateOld": "TODO-translate: Pick a date within the last 90 days",
+      "dateRefused": "TODO-translate: That date was refused. Check the date on your phone, or pick another date.",
+      "failed": "TODO-translate: Couldn't save. Nothing was recorded. Try again.",
+      "offline": "TODO-translate: You are offline. Payments need a connection for now. Nothing was saved.",
+      "alreadyPaid": "TODO-translate: This fee is already paid in full. Nothing was recorded.",
+      "archived": "TODO-translate: This student is archived. Restore the student to record a payment.",
+      "reused": "TODO-translate: This may already be saved. Close this and check the fee on the board before trying again.",
+      "signedOut": "TODO-translate: You were signed out. Sign in again. Nothing was recorded.",
+      "undoFailed": "TODO-translate: Couldn't undo. Nothing was changed. Try again.",
+      "undoLate": "TODO-translate: This payment can no longer be undone."
+    },
+    "banner": {
+      "paid": "TODO-translate: {name} marked paid, {amount}",
+      "undo": "TODO-translate: Undo",
+      "send": "TODO-translate: View receipt",
+      "undone": "TODO-translate: Payment undone"
+    },
+    "receipt": {
+      "title": "TODO-translate: Receipt",
+      "back": "TODO-translate: Back to fees",
+      "feeReceipt": "TODO-translate: Fee receipt",
+      "no": "TODO-translate: Receipt no.",
+      "date": "TODO-translate: Date {date}",
+      "student": "TODO-translate: Student",
+      "parent": "TODO-translate: Parent",
+      "forMonth": "TODO-translate: Fee for",
+      "earlier": "TODO-translate: Earlier balance",
+      "paidBy": "TODO-translate: Paid by",
+      "balance": "TODO-translate: Balance",
+      "nil": "TODO-translate: Nil",
+      "balanceNow": "TODO-translate: Balance on this fee now",
+      "paid": "TODO-translate: PAID",
+      "partPaid": "TODO-translate: PART PAID",
+      "cancelled": "TODO-translate: CANCELLED",
+      "recorded": "TODO-translate: Recorded <v>{date} {time}</v>",
+      "undo": "TODO-translate: Undo this payment",
+      "undoAsk": "TODO-translate: Undo this payment? The receipt will be cancelled.",
+      "undoYes": "TODO-translate: Yes, undo it",
+      "undoKeep": "TODO-translate: Keep it",
+      "undoing": "TODO-translate: Undoing…",
+      "notFound": "TODO-translate: Couldn't find this fee",
+      "notFoundBody": "TODO-translate: It may have been removed. Go back to your fees.",
+      "none": "TODO-translate: No payment has been recorded on this fee yet.",
+      "loadError": "TODO-translate: Couldn't load the receipt. Nothing is lost.",
+      "retry": "TODO-translate: Try again"
+    }
+  },
+  "remind": {
+    "button": "याद दिलाएँ",
+    "buttonFor": "{name} को याद दिलाएँ",
+    "addNumber": "नंबर जोड़ें",
+    "addNumberFor": "{name} का नंबर जोड़ें",
+    "addUpi": "अपनी UPI ID जोड़ें",
+    "noUpi": "रिमाइंडर में आपकी UPI ID जाती है ताकि अभिभावक भुगतान कर सकें। पहले इसे जोड़ें।",
+    "all": "सभी देर वालों को याद दिलाएँ ({n})",
+    "last": {
+      "today": "आज याद दिलाया",
+      "yesterday": "कल याद दिलाया",
+      "days": "{n} दिन पहले याद दिलाया",
+      "old": "30 दिन से पहले याद दिलाया"
+    }
+  },
+  "remindScreen": {
+    "progress": "रिमाइंडर {n} / {m}",
+    "stop": "रुकें",
+    "to": "{parent} को · {language}",
+    "toStudent": "{student} के अभिभावक को",
+    "late": "{month} · {n} दिन देर",
+    "earlier": "पिछला बकाया",
+    "tone": {
+      "label": "लहजा",
+      "polite": "विनम्र",
+      "firm": "सख़्त"
+    },
+    "message": "संदेश",
+    "open": "WhatsApp खोलें",
+    "hint": "वहाँ भेजें दबाएँ, फिर वापस आएँ।",
+    "opened": "{student} के अभिभावक के लिए खुला",
+    "openedNote": "WhatsApp सिर्फ़ संदेश खोलता है। भेजना आपको वहीं दबाना है।",
+    "next": "आगे",
+    "skip": "छोड़ें",
+    "upNext": "आगे",
+    "done": "{n} अभिभावक खोले, {k} छोड़े।",
+    "home": "होम पर वापस",
+    "logFailed": "TODO-translate: Couldn't save that you reminded them. We'll try again.",
+    "pick": {
+      "title": "किसे याद दिलाना है",
+      "more": "+{n} और देर से",
+      "late": "{n} दिन देर",
+      "today": "आज याद दिलाया",
+      "cannot": "याद नहीं दिला सकते ({n})",
+      "noPhone": "फ़ोन नंबर नहीं है",
+      "noUpi": "पहले अपनी UPI ID जोड़ें",
+      "selected": "चुना",
+      "notSelected": "नहीं चुना",
+      "start": "{n} अभिभावकों को याद दिलाएँ",
+      "none": "शुरू करने के लिए कम से कम एक अभिभावक चुनें।",
+      "many": "TODO-translate: That is a lot at once. WhatsApp can limit numbers that message many people. Do 20 now and the rest later if you like."
+    },
+    "again": {
+      "title": "आपने {parent} को आज {time} याद दिलाया था। फिर से?",
+      "titleStudent": "आपने {student} के अभिभावक को आज {time} याद दिलाया था। फिर से?",
+      "time": {
+        "am": "TODO-translate: {hour}:{minute} पूर्वाह्न",
+        "pm": "TODO-translate: {hour}:{minute} अपराह्न"
+      },
+      "yes": "फिर से याद दिलाएँ",
+      "no": "अभी नहीं"
+    }
+  },
+  "receipt": {
+    "subjects": {
+      "maths": "गणित",
+      "science": "विज्ञान",
+      "english": "अंग्रेज़ी",
+      "hindi": "हिंदी",
+      "physics": "भौतिकी",
+      "chemistry": "रसायन विज्ञान",
+      "accounts": "लेखाशास्त्र"
+    },
+    "tuition": "{subjects} ट्यूशन",
+    "loading": "आपकी रसीद खुल रही है…",
+    "feeReceipt": "फ़ीस की रसीद",
+    "no": "रसीद संख्या",
+    "date": "तारीख़ {date}",
+    "sentence": "{parent} द्वारा {method} {student} की ट्यूशन फ़ीस ({month}) धन्यवाद सहित प्राप्त हुई।",
+    "sentenceNoParent": "{method} {student} की ट्यूशन फ़ीस ({month}) धन्यवाद सहित प्राप्त हुई।",
+    "monthYear": "{month} {year}",
+    "earlier": "पिछला बकाया",
+    "months": {
+      "m01": "जनवरी",
+      "m02": "फ़रवरी",
+      "m03": "मार्च",
+      "m04": "अप्रैल",
+      "m05": "मई",
+      "m06": "जून",
+      "m07": "जुलाई",
+      "m08": "अगस्त",
+      "m09": "सितंबर",
+      "m10": "अक्तूबर",
+      "m11": "नवंबर",
+      "m12": "दिसंबर"
+    },
+    "upi": "UPI से",
+    "cash": "नकद में",
+    "balance": "शेष",
+    "nil": "शून्य",
+    "student": "विद्यार्थी",
+    "paid": "चुकाया गया",
+    "partPaid": "आंशिक भुगतान",
+    "stampPaid": "चुकता",
+    "stampPartPaid": "आंशिक भुगतान",
+    "stampCancelled": "रद्द",
+    "footer": "ट्यूटरों के लिए मुफ़्त",
+    "cancelled": {
+      "title": "यह रसीद आपके ट्यूटर ने रद्द कर दी है।"
+    },
+    "notFound": {
+      "title": "यह रसीद लिंक काम नहीं कर रहा।",
+      "detail": "अपने ट्यूटर से इसे दोबारा भेजने के लिए कहें।"
+    },
+    "rateLimited": {
+      "title": "बहुत ज़्यादा बार कोशिश हो चुकी है।",
+      "detail": "कृपया थोड़ी देर बाद फिर कोशिश करें।"
+    },
+    "failed": {
+      "title": "रसीद नहीं खुल सकी।",
+      "detail": "इंटरनेट जाँचें और फिर कोशिश करें।",
+      "retry": "फिर कोशिश करें"
+    }
   }
 }

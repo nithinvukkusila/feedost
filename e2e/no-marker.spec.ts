@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { completeTutor, fakeSession, newTutor, seedSession, seedVerifier, stubSupabase } from "./auth-helpers";
 import { langs, type Lang } from "./helpers";
+import { stubRoster } from "./roster-helpers";
 
 const MARKER = "TODO-translate";
 
@@ -126,6 +127,85 @@ for (const lang of langs) {
       await page.locator("main button:not([aria-pressed])").last().click();
       await expect(error(page).first()).toBeVisible();
       await expectNoMarker(page, lang, "setup step 2, save failed");
+    });
+
+    test("the student screens: empty, with students (home, list with batch tabs and a select, archived, search with no match), attendance, loading and failing (R1-3)", async ({ page }) => {
+      test.setTimeout(90_000);
+      await stubSupabase(page, { tutor: completeTutor({ language: lang }) });
+      const roster = await stubRoster(page);
+      await seedSession(page);
+      for (const [path, name] of [
+        ["home", "home, no students"],
+        ["students", "students, none yet"],
+        ["attendance", "attendance"],
+      ] as const) {
+        await page.goto(`/${lang}/${path}/`);
+        await expect(page.locator("h1, h2").first()).toBeVisible();
+        await expectNoMarker(page, lang, name);
+      }
+
+      const batches = ["One", "Two", "Three"].map((name, i) => roster.addBatch({ name, id: `00000000-0000-4000-8000-00000000d00${i}` }));
+      roster.addStudent({ name: "Ravi Kumar", parent_name: "Suresh", parent_phone: "+919886044321", batch_id: batches[0].id, due_day: 2 });
+      roster.addStudent({ name: "ಕಿರಣ್ ಪಾಟೀಲ್", due_day: 22 });
+      roster.addStudent({ name: "Old", active: false });
+      await page.goto(`/${lang}/home/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "home, with students");
+
+      await page.goto(`/${lang}/students/`);
+      await expect(page.getByRole("tab").first()).toBeVisible();
+      await expectNoMarker(page, lang, "students, tabs");
+      await page.getByRole("button", { name: /\(1\)/ }).click();
+      await expectNoMarker(page, lang, "students, archived shown");
+      await page.getByRole("searchbox").or(page.locator('input[type="text"]')).first().fill("zzzz");
+      await expectNoMarker(page, lang, "students, search found nothing");
+      roster.addBatch({ name: "Four" });
+      await page.goto(`/${lang}/students/`);
+      await expect(page.locator("select")).toBeVisible();
+      await expectNoMarker(page, lang, "students, batch select");
+
+      await page.goto(`/${lang}/batches/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batches");
+      await page.locator("textarea").first().fill("one");
+      await page.locator("main form button").first().click();
+      await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible();
+      await expectNoMarker(page, lang, "batches, name taken");
+      await page.goto(`/${lang}/batches/edit/?id=${batches[0].id}`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batch screen");
+      await page.locator("main button").last().click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await expectNoMarker(page, lang, "batch, delete sheet");
+      await page.keyboard.press("Escape");
+      await page.goto(`/${lang}/batches/edit/?id=nope`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "batch not found");
+
+      await page.goto(`/${lang}/students/new/`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "add student");
+      await page.locator("textarea").nth(2).fill("123");
+      await page.locator("main form button").last().click();
+      await expect(page.locator('[aria-invalid="true"]').first()).toBeVisible();
+      await expectNoMarker(page, lang, "add student, errors");
+      await page.goto(`/${lang}/students/edit/?id=${roster.students[0].id}`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "edit student");
+      await page.goto(`/${lang}/students/edit/?id=nope`);
+      await expect(page.locator("h1")).toBeVisible();
+      await expectNoMarker(page, lang, "student not found");
+
+      roster.listDelayMs = 2500;
+      await page.goto(`/${lang}/students/`);
+      await expect(page.getByRole("status")).toBeVisible();
+      await expectNoMarker(page, lang, "students, loading");
+      await expect(page.getByRole("status")).toHaveCount(0, { timeout: 15_000 });
+      roster.listDelayMs = 0;
+      roster.networkDown = true;
+      await page.goto(`/${lang}/students/`);
+      await expect(error(page)).toBeVisible({ timeout: 25_000 });
+      await expectNoMarker(page, lang, "students, failed");
     });
 
     test("setup step 1 with nothing filled in, and a new tutor's step 1", async ({ page }) => {
