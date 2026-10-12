@@ -68,11 +68,11 @@ describe("feeMonths (criterion 11)", () => {
 });
 
 describe("issueDate (criterion 15)", () => {
-  it("is DD MMM YYYY with the short month of the receipt language", () => {
+  it("is DD MMM YYYY in English and DD, the full month name, YYYY in Hindi, Kannada and Telugu", () => {
     expect(issueDate(NOW, "en")).toBe("08 Oct 2026");
-    expect(issueDate(NOW, "hi")).toBe("08 अक्टू 2026");
-    expect(issueDate(NOW, "kn")).toBe("08 ಅಕ್ಟೋ 2026");
-    expect(issueDate(NOW, "te")).toBe("08 అక్టో 2026");
+    expect(issueDate(NOW, "hi")).toBe("08 अक्टूबर 2026");
+    expect(issueDate(NOW, "kn")).toBe("08 ಅಕ್ಟೋಬರ್ 2026");
+    expect(issueDate(NOW, "te")).toBe("08 అక్టోబర్ 2026");
   });
 
   it("pads the day and uses the clock's own day, not tomorrow's", () => {

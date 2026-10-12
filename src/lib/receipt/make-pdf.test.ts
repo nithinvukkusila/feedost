@@ -210,6 +210,34 @@ describe("the layout of what is drawn (criterion 21)", () => {
   });
 });
 
+describe("the date line (criterion 15, founder decision 2026-10-13: full month names in hi, kn, te)", () => {
+  // The widest case: every month of every language, drawn for real. The date is one line at the right of the
+  // heading; it must stay inside the margin, leave the heading its own line, and not push the heading into a wrap.
+  it.each(["en", "hi", "kn", "te"] as const)("%s: in every month the date sits inside the margin and clear of the heading", async (lang) => {
+    for (let month = 0; month < 12; month++) {
+      const texts: { text: string; x: number; y: number; size: number; right: number }[] = [];
+      const drawText = PDFPage.prototype.drawText;
+      vi.spyOn(PDFPage.prototype, "drawText").mockImplementation(function (this: PDFPage, text, options) {
+        const font = options?.font as { widthOfTextAtSize(text: string, size: number): number };
+        const size = options?.size ?? 12;
+        const x = options?.x ?? 0;
+        texts.push({ text, x, y: options?.y ?? 0, size, right: x + font.widthOfTextAtSize(text, size) });
+        return drawText.call(this, text, options);
+      });
+      await make({ lang, now: new Date(2026, month, 28, 10, 0) });
+      vi.restoreAllMocks();
+      const line = texts.filter((t) => t.size === 13);
+      const dateRight = Math.max(...line.map((t) => t.right));
+      const dateLeft = Math.min(...line.filter((t) => t.right > 595.28 / 2).map((t) => t.x));
+      const heading = line.filter((t) => t.right <= dateLeft && t.x < 100);
+      expect(dateRight, `${lang} month ${month}`).toBeLessThanOrEqual(595.28 - 48 + 0.5);
+      expect(595.28 - 48 - dateLeft, `${lang} month ${month} date width`).toBeLessThan(220);
+      expect(heading.length, `${lang} month ${month} heading on one line`).toBeGreaterThan(0);
+      expect(Math.max(...heading.map((t) => t.right)), `${lang} month ${month}`).toBeLessThan(dateLeft - 8);
+    }
+  }, 120_000);
+});
+
 describe("a name no font can draw (review, criterion 20)", () => {
   it.each([
     ["a Tamil student", { student: "அர்ஜுன்" }, "student"],

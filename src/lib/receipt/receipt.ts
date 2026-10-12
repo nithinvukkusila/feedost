@@ -44,10 +44,15 @@ export function feeMonthLabel(m: FeeMonth, lang: Locale): string {
   return `${templates[lang].months[m.month]} ${m.year}`;
 }
 
-/** `08 Oct 2026`, with the short month in the receipt's language and 0-9 digits. Today, on the phone's clock (spec D4). */
+/**
+ * `08 Oct 2026` in English, `08 अक्टूबर 2026` in Hindi, Kannada and Telugu: the short month in English, the full month name
+ * in the other three (founder decision, 2026-10-13; a short form of those names is not a word a parent knows). 0-9 digits.
+ * Today, on the phone's clock (spec D4).
+ */
 export function issueDate(now: Date, lang: Locale): string {
   const day = String(now.getDate()).padStart(2, "0");
-  return `${day} ${templates[lang].shortMonths[now.getMonth()]} ${now.getFullYear()}`;
+  const month = lang === "en" ? templates.en.shortMonths[now.getMonth()] : templates[lang].months[now.getMonth()];
+  return `${day} ${month} ${now.getFullYear()}`;
 }
 
 /** `fee-receipt-Oct-2026.pdf`: English short month, ASCII only, and never a name (criterion 23). */
