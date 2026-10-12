@@ -708,5 +708,66 @@
       "loadError": "Couldn't load the receipt. Nothing is lost.",
       "retry": "Try again"
     }
+  },
+  "receipt": {
+    "subjects": {
+      "maths": "Maths",
+      "science": "Science",
+      "english": "English",
+      "hindi": "Hindi",
+      "physics": "Physics",
+      "chemistry": "Chemistry",
+      "accounts": "Accounts"
+    },
+    "tuition": "{subjects} tuition",
+    "loading": "Opening your receipt…",
+    "feeReceipt": "Fee receipt",
+    "no": "Receipt no.",
+    "date": "Date {date}",
+    "sentence": "Received with thanks from {parent} by {method} towards the tuition fee of {student} for {month}.",
+    "sentenceNoParent": "Received with thanks by {method} towards the tuition fee of {student} for {month}.",
+    "monthYear": "{month} {year}",
+    "earlier": "an earlier balance",
+    "months": {
+      "m01": "January",
+      "m02": "February",
+      "m03": "March",
+      "m04": "April",
+      "m05": "May",
+      "m06": "June",
+      "m07": "July",
+      "m08": "August",
+      "m09": "September",
+      "m10": "October",
+      "m11": "November",
+      "m12": "December"
+    },
+    "upi": "UPI",
+    "cash": "cash",
+    "balance": "Balance",
+    "nil": "Nil",
+    "student": "Student",
+    "paid": "Paid",
+    "partPaid": "Part paid",
+    "stampPaid": "PAID",
+    "stampPartPaid": "PART PAID",
+    "stampCancelled": "CANCELLED",
+    "footer": "Free for tutors",
+    "cancelled": {
+      "title": "This receipt was cancelled by your tutor."
+    },
+    "notFound": {
+      "title": "This receipt link doesn't work.",
+      "detail": "Ask your tutor to send it again."
+    },
+    "rateLimited": {
+      "title": "Too many tries.",
+      "detail": "Please try again later."
+    },
+    "failed": {
+      "title": "Couldn't open the receipt.",
+      "detail": "Check your internet connection and try again.",
+      "retry": "Try again"
+    }
   }
 }

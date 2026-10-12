@@ -708,5 +708,66 @@
       "loadError": "TODO-translate: Couldn't load the receipt. Nothing is lost.",
       "retry": "TODO-translate: Try again"
     }
+  },
+  "receipt": {
+    "subjects": {
+      "maths": "गणित",
+      "science": "विज्ञान",
+      "english": "अंग्रेज़ी",
+      "hindi": "हिंदी",
+      "physics": "भौतिकी",
+      "chemistry": "रसायन विज्ञान",
+      "accounts": "लेखाशास्त्र"
+    },
+    "tuition": "{subjects} ट्यूशन",
+    "loading": "आपकी रसीद खुल रही है…",
+    "feeReceipt": "फ़ीस की रसीद",
+    "no": "रसीद संख्या",
+    "date": "तारीख़ {date}",
+    "sentence": "{parent} द्वारा {method} {student} की ट्यूशन फ़ीस ({month}) धन्यवाद सहित प्राप्त हुई।",
+    "sentenceNoParent": "{method} {student} की ट्यूशन फ़ीस ({month}) धन्यवाद सहित प्राप्त हुई।",
+    "monthYear": "{month} {year}",
+    "earlier": "पिछला बकाया",
+    "months": {
+      "m01": "जनवरी",
+      "m02": "फ़रवरी",
+      "m03": "मार्च",
+      "m04": "अप्रैल",
+      "m05": "मई",
+      "m06": "जून",
+      "m07": "जुलाई",
+      "m08": "अगस्त",
+      "m09": "सितंबर",
+      "m10": "अक्तूबर",
+      "m11": "नवंबर",
+      "m12": "दिसंबर"
+    },
+    "upi": "UPI से",
+    "cash": "नकद में",
+    "balance": "शेष",
+    "nil": "शून्य",
+    "student": "विद्यार्थी",
+    "paid": "चुकाया गया",
+    "partPaid": "आंशिक भुगतान",
+    "stampPaid": "चुकता",
+    "stampPartPaid": "आंशिक भुगतान",
+    "stampCancelled": "रद्द",
+    "footer": "ट्यूटरों के लिए मुफ़्त",
+    "cancelled": {
+      "title": "यह रसीद आपके ट्यूटर ने रद्द कर दी है।"
+    },
+    "notFound": {
+      "title": "यह रसीद लिंक काम नहीं कर रहा।",
+      "detail": "अपने ट्यूटर से इसे दोबारा भेजने के लिए कहें।"
+    },
+    "rateLimited": {
+      "title": "बहुत ज़्यादा बार कोशिश हो चुकी है।",
+      "detail": "कृपया थोड़ी देर बाद फिर कोशिश करें।"
+    },
+    "failed": {
+      "title": "रसीद नहीं खुल सकी।",
+      "detail": "इंटरनेट जाँचें और फिर कोशिश करें।",
+      "retry": "फिर कोशिश करें"
+    }
   }
 }
