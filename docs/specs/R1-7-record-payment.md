@@ -248,7 +248,7 @@ All money logic lives in two database functions, `record_payment` and `void_paym
 - Privileges, in the same migration: `revoke execute ... from public, anon, authenticated` on both functions, then `grant execute ... to authenticated`. Update `supabase/tests/080_grants_after_migration.sql` if it enumerates functions (check it).
 - Nothing in `students` changes. The R1-5 trigger already freezes an opening due once `amount_paid > 0`; the "Already owes" lock (criterion 20) is screen-only and reads the due.
 
-**Migration B: `supabase/migrations/20261012140000_r1_receipt_public.sql`** (re-stamp to be later than A and than `main` at the time).
+**Migration B: `supabase/migrations/20261012160000_r1_receipt_public.sql`** (re-stamp to be later than A and than `main` at the time).
 
 - `receipt_hits (key_hash text, hour_bucket timestamptz, n integer check (n >= 0), primary key (key_hash, hour_bucket))`, RLS on, `revoke all` from `public, anon, authenticated`. One row per hashed IP or hashed token per hour. A table of its own (not `waitlist_hits`), so one feature's limit cannot be read off the other's rows. No `tutor_id`: the rows belong to no tutor; say so in the header like `waitlist_hits`.
 - `receipt_hit(p_hash text, p_limit integer) returns boolean`: the same body as `waitlist_hit` (purge older than 24 h, atomic upsert-increment, `n <= limit`), `security invoker`, `revoke all ... from public, anon, authenticated` (only the service role, which the Edge Function uses, can call it).
@@ -285,7 +285,7 @@ Frontend (`frontend-dev`):
 #### 3.2 Part B (function, rewrite, public page)
 
 Backend (`backend-dev`):
-- `supabase/migrations/20261012140000_r1_receipt_public.sql`.
+- `supabase/migrations/20261012160000_r1_receipt_public.sql`.
 - `supabase/functions/receipt/handler.ts`, `index.ts`, `handler.test.ts`: same split as `waitlist-join` (`handle(req, deps)` pure and tested in Node with fakes, `index.ts` is Deno wiring). Deps: `hashIp`, `hashToken`, `hitIp`, `hitToken`, `getReceipt`, `now`, `log`.
 - `supabase/config.toml`: `[functions.receipt] verify_jwt = false`.
 - `supabase/tests/190_receipt_public.sql`: pgTAP for `get_receipt` and `receipt_hit`.
@@ -405,7 +405,7 @@ Agents do the staging steps through `release-manager`; the founder alone approve
 **Production, each a separate human approval:**
 1. Migration A (`20261012130000_r1_payments.sql`): adds a table, a counter table, two money functions, one additive unique constraint on `dues`. A forward-fix only; there is no down migration.
 2. The release of Part A's front end (the Mark paid button appears for every tutor).
-3. Migration B (`20261012140000_r1_receipt_public.sql`).
+3. Migration B (`20261012160000_r1_receipt_public.sql`).
 4. Setting the production secret `RECEIPT_HASH_SALT` and `RECEIPT_ALLOWED_HOSTS` (if used), and deploying the `receipt` function.
 5. The release of Part B, which includes the `vercel.json` rewrite and headers (changes routing for `/r/*` on the production domain).
 6. The release of Part C (the PDF code reaches production; depends on R0-3's native-reader sign-off if R0-3 is still provisional).
