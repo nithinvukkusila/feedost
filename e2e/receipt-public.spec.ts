@@ -53,7 +53,7 @@ test.describe("the receipt", () => {
     const main = page.locator("main");
     await expect(main).toContainText("₹700/-");
     await expect(main).toContainText("₹500");
-    await expect(main).toContainText("an earlier balance");
+    await expect(main).toContainText("the earlier balance");
     await expect(page.locator("[data-status=part-paid]")).toHaveText("Part paid");
     await expect(main.getByRole("img", { name: "PART PAID" })).toBeVisible();
     await expect(main).not.toContainText("Suresh Kumar");

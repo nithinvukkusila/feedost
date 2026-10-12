@@ -789,7 +789,7 @@
     "sentence": "Received with thanks from {parent} by {method} towards the tuition fee of {student} for {month}.",
     "sentenceNoParent": "Received with thanks by {method} towards the tuition fee of {student} for {month}.",
     "monthYear": "{month} {year}",
-    "earlier": "an earlier balance",
+    "earlier": "the earlier balance",
     "months": {
       "m01": "January",
       "m02": "February",

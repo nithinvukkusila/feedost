@@ -79,7 +79,7 @@ describe("the parent's receipt page", () => {
     const text = container.textContent ?? "";
     expect(text).toContain("₹700/-");
     expect(text).toContain("₹500");
-    expect(text).toContain("Received with thanks by UPI towards the tuition fee of Ravi Kumar for an earlier balance.");
+    expect(text).toContain("Received with thanks by UPI towards the tuition fee of Ravi Kumar for the earlier balance.");
     expect(container.querySelector("[data-status=part-paid]")?.textContent).toBe("Part paid");
     expect(screen.getByRole("img", { name: "PART PAID" })).toBeTruthy();
   });

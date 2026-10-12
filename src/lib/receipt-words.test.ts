@@ -36,13 +36,13 @@ describe("monthLabel", () => {
     expect(label).not.toMatch(/\{|\}/);
   });
 
-  it("says 'an earlier balance' for no month, in every language", () => {
+  it("says 'the earlier balance' for no month, in every language", () => {
     for (const locale of locales) expect(monthLabel(all[locale], null)).toBe(all[locale].earlier);
   });
 
   it("says it too when the month cannot be read, rather than writing a wrong one", () => {
-    expect(monthLabel(en.receipt, "2026-13-01")).toBe("an earlier balance");
-    expect(monthLabel(en.receipt, "garbage")).toBe("an earlier balance");
+    expect(monthLabel(en.receipt, "2026-13-01")).toBe("the earlier balance");
+    expect(monthLabel(en.receipt, "garbage")).toBe("the earlier balance");
   });
 });
 
