@@ -22,5 +22,7 @@ describe("no component calls the database directly", () => {
     const text = readFileSync(path, "utf8");
     expect(text).not.toMatch(/\.from\(\s*["'`]/);
     expect(text).not.toMatch(/supabase\.from\(/);
+    // The one call that is not a read, ensure_my_dues, is made from src/lib/dues.ts and nowhere else.
+    expect(text).not.toMatch(/\.rpc\(/);
   });
 });

@@ -306,12 +306,7 @@
       "title": "Your book is empty.",
       "body": "Add your students and you will see who owes what, with one tap to remind each parent."
     },
-    "addStudent": "Add a student",
-    "seeAll": "See all students",
-    "filled": {
-      "total": "{amount} each month",
-      "soon": "Who owes what appears here in a later update."
-    }
+    "addStudent": "Add a student"
   },
   "subjects": {
     "maths": "Maths",
@@ -480,6 +475,96 @@
       "gone": "That batch no longer exists. Nothing was moved.",
       "goneBack": "Back to batches"
     }
+  },
+  "board": {
+    "prev": "Previous month",
+    "next": "Next month",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "monthYear": "{month} {year}",
+    "hero": {
+      "label": "Still to come in",
+      "from": "{m, plural, one {from {n} of {m} student} other {from {n} of {m} students}}",
+      "collected": "{amount} collected"
+    },
+    "tab": {
+      "overdue": "Overdue",
+      "due": "Due",
+      "paid": "Paid"
+    },
+    "tabsLabel": "Fees by status",
+    "legend": {
+      "paid": "{n} paid",
+      "due": "{n} due, hollow",
+      "overdue": "{n} overdue, tall"
+    },
+    "strip": {
+      "label": "{total} students: {paid} paid, {due} due, {overdue} overdue"
+    },
+    "tag": {
+      "overdue": "Overdue {n, plural, one {{n} day} other {{n} days}}",
+      "overdueOpening": "Overdue",
+      "due": "Due",
+      "dueToday": "Due today",
+      "partPaid": "Part paid",
+      "paid": "Paid"
+    },
+    "row": {
+      "dueOn": "Due {date}",
+      "partPaid": "Part paid {amount}",
+      "monthFee": "{month} fee",
+      "earlier": "Earlier balance"
+    },
+    "empty": {
+      "tab": {
+        "overdue": "Nobody is overdue.",
+        "due": "Nothing else is due this month.",
+        "paid": "Nobody has paid yet this month.",
+        "dueOld": "Nothing else was due that month.",
+        "paidOld": "Nobody paid that month."
+      },
+      "none": {
+        "title": "Nothing is due yet.",
+        "body": "A student's fee appears here on their due day.",
+        "link": "See your students"
+      },
+      "monthOld": "No fees were due in {month}.",
+      "filter": "Nothing in {batch} for {month}.",
+      "showAll": "Show all batches"
+    },
+    "end": {
+      "overdue": "That is everyone who is overdue.",
+      "due": "That is everyone who is due.",
+      "paid": "That is everyone who has paid."
+    },
+    "allPaid": {
+      "stamp": "ALL PAID",
+      "title": "Nothing left to collect.",
+      "collected": "Collected",
+      "students": "Students",
+      "of": "{n} of {m}",
+      "next": "{month} fees will appear here on each student's due day. You do not need to do anything."
+    },
+    "soon": "Reminders and Mark paid arrive in a later update.",
+    "loadError": {
+      "title": "Couldn't load your fees",
+      "body": "The network dropped. Nothing is lost.",
+      "retry": "Try again"
+    },
+    "stale": "Showing what was saved on this phone.",
+    "offlineMonth": "Can't open {month} without a network."
   },
   "waitlistForm": {
     "name": {

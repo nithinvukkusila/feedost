@@ -29,17 +29,19 @@ export type BatchFilterProps = {
   counts: BatchCounts;
   value: BatchFilterValue;
   onChange: (value: BatchFilterValue) => void;
-  /** The id of the panel the tabs control (the screen gives its slip this id). Used by the tab variant. */
-  panelId: string;
+  /** The id of the panel the tabs control (the screen gives its slip this id). Used when the filter is drawn as tabs. */
+  panelId?: string;
+  /** `auto` (the default): tabs for up to three batches, a select for more. `select`: always the select, for a screen with tabs of its own (the dues board). */
+  variant?: "auto" | "select";
 };
 
-export function BatchFilter({ batches, counts, value, onChange, panelId }: Readonly<BatchFilterProps>) {
+export function BatchFilter({ batches, counts, value, onChange, panelId = "batch-filter-panel", variant = "auto" }: Readonly<BatchFilterProps>) {
   const t = useTranslations("students");
   const current = effectiveFilter(value, batches, counts);
 
   if (batches.length === 0) return null;
 
-  if (batchFilterUsesTabs(batches)) {
+  if (variant === "auto" && batchFilterUsesTabs(batches)) {
     const tabs: TabItem[] = [
       { id: "all", label: t("filterAll", { n: counts.all }) },
       ...batches.map((batch) => ({

@@ -236,20 +236,17 @@ test.describe("13 to 15: the home", () => {
     await expect(page.getByRole("link", { name: "Add a student" })).toHaveAttribute("href", "/en/students/new/");
   });
 
-  test("with students: the count, the monthly total, two black links and the later line; no rows", async ({ page }) => {
+  test("with students and no fee reached yet: the board says nothing is due yet and the R1-3 filled home is gone", async ({ page }) => {
     await signedIn(page, { students: PEOPLE, batches: THREE_BATCHES });
     await page.goto("/en/home/");
-    await expect(page.locator("h1")).toHaveText("3 students");
-    // 1,200 + 1,500 + 1,000, the archived student left out.
-    await expect(page.getByText("₹3,700", { exact: true })).toBeVisible();
-    await expect(page.getByText("each month")).toBeVisible();
-    const all = page.getByRole("link", { name: "See all students" });
-    await expect(all).toHaveAttribute("href", "/en/students/");
-    expect((await box(all)).height).toBeGreaterThanOrEqual(48);
-    await expect(page.getByRole("link", { name: "Add a student" })).toHaveAttribute("href", "/en/students/new/");
-    await expect(page.getByText("Who owes what appears here in a later update.")).toBeVisible();
+    // R1-6 replaced the R1-3 filled home (the count, the monthly total, "See all students", the later line).
+    await expect(page.locator("h1")).toHaveText("Nothing is due yet.");
+    await expect(page.getByRole("link", { name: "See your students" })).toHaveAttribute("href", "/en/students/");
+    await expect(page.getByText("each month")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "See all students" })).toHaveCount(0);
+    await expect(page.getByText("Who owes what appears here in a later update.")).toHaveCount(0);
     await expect(page.locator("main li")).toHaveCount(0);
-    await all.click();
+    await page.getByRole("link", { name: "See your students" }).click();
     await expect(page).toHaveURL(/\/en\/students\/$/);
     await expect(rows(page)).toHaveCount(3);
   });
@@ -260,7 +257,7 @@ test.describe("13 to 15: the home", () => {
     roster.listDelayMs = 2000;
     await page.goto("/en/home/");
     await expect(page.getByRole("status")).toHaveText("Opening your book…");
-    await expect(page.locator("h1")).toHaveText("3 students");
+    await expect(page.locator("h1")).toHaveText("Nothing is due yet.");
     roster.listDelayMs = 0;
     roster.networkDown = true;
     await page.goto("/en/home/");

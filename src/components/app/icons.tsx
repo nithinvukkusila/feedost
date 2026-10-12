@@ -26,6 +26,14 @@ export function BackIcon() {
   );
 }
 
+export function NextIcon() {
+  return (
+    <svg {...base} strokeWidth={2.4} className="size-6">
+      <path d="M9 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export function SearchIcon() {
   return (
     <svg {...base} strokeWidth={2.2} className="size-5 shrink-0">
