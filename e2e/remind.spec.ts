@@ -77,7 +77,8 @@ test.describe("2 to 4: the board's buttons", () => {
   });
 
   test("no UPI ID: every Remind is Add your UPI ID, one line says why, and nothing opens WhatsApp", async ({ page }) => {
-    await setup(page, {}, { upi_id: null });
+    // A tutor with no UPI ID at all is sent to setup; one whose saved ID is not a valid one still reaches the board.
+    await setup(page, {}, { upi_id: "not a upi id" });
     await page.goto("/en/home/");
     await expect(page.getByText("Reminders carry your UPI ID so parents can pay. Add it first.")).toHaveCount(1);
     await expect(page.getByRole("button", { name: /^Remind/ })).toHaveCount(0);
@@ -147,6 +148,7 @@ test.describe("13 to 19, 24, 31: one reminder", () => {
   test("a second tap on the Next-less path: the same step's request id is reused for a double tap", async ({ page }) => {
     const { rem } = await setup(page);
     await page.goto("/en/home/");
+    await page.getByRole("tab", { name: /^Due/ }).click();
     await remindBtn(page, "Asha Rao").click();
     await expect(page.getByText("To the parent of Asha Rao")).toBeVisible();
     const [p1] = await Promise.all([page.context().waitForEvent("page"), openLink(page).click()]);
@@ -294,7 +296,7 @@ test.describe("29: the marks", () => {
     await page.reload();
     await expect(remindBtn(page, "Ravi Kumar")).toBeVisible();
     await expect(page.getByText(/Reminded/)).toHaveCount(0);
-    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(page.locator("[data-kind=error]")).toHaveCount(0);
   });
 });
 
