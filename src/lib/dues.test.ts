@@ -127,3 +127,44 @@ describe("ensureMyDues", () => {
     expect(await ensureMyDues()).toBe(0);
   });
 });
+
+describe("readDue", () => {
+  it("reads one fee by id with the named columns, and null when there is none", async () => {
+    fake.answer(page([raw(1)]));
+    const { readDue, DUE_COLUMNS } = await import("./dues");
+    expect((await readDue("id-00001"))?.id).toBe("id-00001");
+    expect(fake.arg("select")).toBe(DUE_COLUMNS);
+    expect(fake.calls.find((c) => c.op === "eq")?.args).toEqual(["id", "id-00001"]);
+    fake.answer(page([]));
+    expect(await readDue("nope")).toBeNull();
+  });
+
+  it("a failed read throws, and a row it cannot read throws", async () => {
+    const { readDue } = await import("./dues");
+    fake.answer({ data: null, error: { code: "500" } });
+    await expect(readDue("x")).rejects.toMatchObject({ name: "DuesLoadError" });
+    fake.answer(page([{ ...raw(1), amount: 12.5 }]));
+    await expect(readDue("x")).rejects.toMatchObject({ name: "DuesLoadError" });
+  });
+});
+
+describe("readOpeningPaid", () => {
+  it("is true only when the earlier balance has something paid", async () => {
+    const { readOpeningPaid } = await import("./dues");
+    fake.answer(page([{ amount_paid: 50000 }]));
+    expect(await readOpeningPaid("S1")).toBe(true);
+    expect(fake.arg("select")).toBe("amount_paid");
+    fake.answer(page([{ amount_paid: 0 }]));
+    expect(await readOpeningPaid("S1")).toBe(false);
+    fake.answer(page([]));
+    expect(await readOpeningPaid("S1")).toBe(false);
+  });
+
+  it("never throws: an error or a dead network leaves the field editable", async () => {
+    const { readOpeningPaid } = await import("./dues");
+    fake.answer({ data: null, error: { code: "500" } });
+    expect(await readOpeningPaid("S1")).toBe(false);
+    fake.state.throwOnQuery = true;
+    expect(await readOpeningPaid("S1")).toBe(false);
+  });
+});

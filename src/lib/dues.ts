@@ -129,3 +129,34 @@ export async function ensureMyDues(): Promise<number> {
     return 0;
   }
 }
+
+/** One fee by its id, or null when there is none (or it is not this tutor's: row-level security shows nothing). */
+export async function readDue(id: string): Promise<Due | null> {
+  let result;
+  try {
+    const client = await getClient();
+    result = await client.from("dues").select(DUE_COLUMNS).eq("id", id).limit(1);
+  } catch {
+    throw new DuesLoadError();
+  }
+  if (result.error) throw new DuesLoadError(classifyLoadFailure({ status: result.status, code: result.error.code }));
+  const first = ((result.data as unknown[] | null) ?? [])[0];
+  return first === undefined ? null : dueFromRow(first);
+}
+
+/**
+ * Whether anything has been paid against this student's earlier balance (R1-7, criterion 20: "Already owes"
+ * is then locked on the student's edit screen). Never throws: if it cannot be read the field stays editable,
+ * and the database still refuses a change to a fee that has a payment.
+ */
+export async function readOpeningPaid(studentId: string): Promise<boolean> {
+  try {
+    const client = await getClient();
+    const { data, error } = await client.from("dues").select("amount_paid").eq("student_id", studentId).eq("kind", "opening").limit(1);
+    if (error) return false;
+    const first = ((data as { amount_paid?: unknown }[] | null) ?? [])[0]?.amount_paid;
+    return typeof first === "number" && first > 0;
+  } catch {
+    return false;
+  }
+}

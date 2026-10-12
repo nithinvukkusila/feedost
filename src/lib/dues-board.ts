@@ -57,6 +57,12 @@ export function daysBetween(a: string, b: string): number {
   return numberOf(b) - numberOf(a);
 }
 
+/** The day `delta` days from `day`, as `YYYY-MM-DD`. */
+export function shiftDay(day: string, delta: number): string {
+  const { year, month, day: d } = civil(numberOf(day) + delta);
+  return `${pad(year, 4)}-${pad(month, 2)}-${pad(d, 2)}`;
+}
+
 /** The first day of the month that `day` is in. */
 export function currentMonth(day: string): string {
   return `${day.slice(0, 7)}-01`;
