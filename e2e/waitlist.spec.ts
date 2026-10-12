@@ -446,7 +446,9 @@ test.describe("failure (criteria 15, 17)", () => {
     await context.setOffline(true);
     await fillAll(page, "en");
     await submitButton(page).click();
-    await expect(section(page).getByText(word("en", "failed.title"), { exact: true })).toBeVisible();
+    // Real offline, no stub: how fast Chromium fails the fetch depends on machine load (measured from 0.1 s alone to
+    // 6.7 s with 12 workers), so the default 5 s was a race. The app's own bound is the 15 s timeout, so wait past it.
+    await expect(section(page).getByText(word("en", "failed.title"), { exact: true })).toBeVisible({ timeout: 20_000 });
     await expect(control(page, "en", "name")).toHaveValue(typed.en.name);
     await expect(submitButton(page)).toBeEnabled();
     await context.setOffline(false);
