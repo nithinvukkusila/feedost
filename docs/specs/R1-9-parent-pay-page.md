@@ -287,3 +287,178 @@ To `tech-lead`: append the technical plan to this file, planning Parts A, B and 
 10. Confirm nothing in R1-7's `receipt` function, `get_receipt` or `/r/` page needs to change (the pay page only links to `/r/{receipt_token}`).
 
 Flag any new dependency before adding it.
+
+---
+
+# Technical plan, R1-9 Part A (database and Edge Functions only)
+
+Written 2026-10-13 by tech-lead on branch `r1-9a-pay-page-db`. Covers criteria 1 to 15 only. Parts B and C get their own plan sections when they start. Nothing on screen changes in Part A. Modelled on the merged `receipt` slice (PR #18): `20261012160000_r1_receipt_public.sql`, `supabase/tests/200_receipt_public.sql`, `supabase/functions/receipt/{handler.ts,index.ts,handler.test.ts}`.
+
+## A1. Approach
+
+One new migration adds `consents` (select-only for the tutor, written only by a function), `get_pay_page(token)` and `record_consent(token, version)` (both `service_role` only, with fixed key lists), and a separate counter table `paypage_hits` with `paypage_hit()`, copied from `receipt_hits`. Two Edge Functions, `pay-page` and `record-consent`, follow the `receipt` pattern exactly: a pure `handle(req, deps)` that Node tests with fakes, plus a thin Deno `index.ts`. The functions' shared plumbing (CORS, safe headers, size-limited body read, IP read, host matching) moves into one new shared file rather than being copied a third and fourth time. `receipt` is not touched.
+
+## A2. Files
+
+New:
+
+- `supabase/migrations/<stamp>_r1_pay_page.sql`. Create it with `pnpm exec supabase migration new r1_pay_page` today (2026-10-13) so the stamp is later than `20261012160000`; confirm with `pnpm check:db --base origin/main`. Contents in A3.
+- `supabase/tests/220_consents_rls.sql`. Isolation test for the new table (A5).
+- `supabase/tests/230_pay_page.sql`. `get_pay_page`, `record_consent`, `paypage_hit` (A5). Next free numbers after `210_reminders.sql`; if another branch has taken them by merge time, renumber, do not edit others.
+- `supabase/functions/_shared/public-http.ts`. Pure helpers used by both new handlers: `SAFE_HEADERS`, `respond`, `codeOnly`, `allowedOrigin(origin, env, allowedHostsValue)`, `hostMatches`, `clientIp`, `readLimited(req, max)`, `DEFAULT_ALLOWED_HOSTS` (same value as receipt's), and the `TOKEN_RE` and `DUMMY_TOKEN` constants. Behaviour is a straight lift of `receipt/handler.ts`. Plus `public-http.test.ts` (host matching, header set, size limit, IP header rule: `x-forwarded-for` is never read).
+- `supabase/functions/pay-page/handler.ts`, `index.ts`, `handler.test.ts`.
+- `supabase/functions/record-consent/handler.ts`, `index.ts`, `handler.test.ts`.
+
+Changed:
+
+- `supabase/config.toml`: add `PAYPAGE_HASH_SALT = "local-dummy-paypage-salt-not-a-secret"` under `[edge_runtime.secrets]`, with the same comment style as the receipt line (dummy locally, real value per environment, different from the waitlist and receipt salts). Add `[functions.pay-page]` and `[functions.record-consent]`, each `verify_jwt = false`, with a one-line comment like `receipt`'s.
+- `.env.example`: after the `RECEIPT_HASH_SALT` lines add a comment and `# PAYPAGE_HASH_SALT=` (name only, no value).
+- `docs/ENVIRONMENTS.md`: one bullet after the R1-7 one (R1-9 Part A adds `PAYPAGE_HASH_SALT` for `pay-page` and `record-consent`; not set or deployed yet; optional `PAYPAGE_ALLOWED_HOSTS`, same format as `RECEIPT_ALLOWED_HOSTS`).
+- `supabase/CLAUDE.md`: extend the secrets sentence with `PAYPAGE_HASH_SALT` (HMAC key for the IP and token hashes of `pay-page` and `record-consent`; a different value from the other two; both functions are `verify_jwt` off and read and write only through `get_pay_page` and `record_consent`, which only `service_role` can execute). Also drop the stale words "`consents` ... written only by Edge Functions": it is written by a database function that only an Edge Function can call; keep the sentence true.
+- `docs/specs/R1-9-parent-pay-page.md`: the contract block (A4) is already below; backend-dev fills the "Part A built" notes at the end, and does not edit criteria.
+- `docs/BUILD_PLAN.md` / `supabase/tests/020`, `030`, `080`: inspect only. `020` is generic (every public table has RLS), `030` and `080` pin privileges on `tutors`, `batches`, `students` and do not name `receipt_hits` or `payments`. Criterion 11's "added to the lists they hold" therefore likely means nothing to add; backend-dev confirms by running them, and adds a line only if a list exists. Never loosen one.
+- Not changed: `receipt` function, `get_receipt`, `payments`, `dues`, `record_payment`, any app code, `vercel.json`.
+
+## A3. Data (migration intent, not SQL)
+
+**Notice version, one place.** A tiny function `public.current_notice_version() returns text`, `language sql`, `immutable`, `set search_path = ''`, returning the literal `'v1'`. Both `get_pay_page` and `record_consent` call it. Changing the notice is a new migration that replaces the function body (`create or replace`); nothing else holds the string. Revoked from `public`, `anon`, `authenticated`; executable by `service_role`. (Chosen over a settings table: no table, no RLS, no write path, one line to change, and a migration is the review trail the founder wants for a legal text change.)
+
+**`public.consents`.**
+- `id uuid pk default gen_random_uuid()`; `tutor_id uuid not null references tutors(id) on delete cascade` (no default: no client inserts); `student_id uuid not null`; `notice_version text not null check (notice_version ~ '^[a-z0-9._-]{1,16}$')`; `accepted_at timestamptz not null default now()`.
+- `unique (student_id, notice_version)` (criterion 1). Composite `foreign key (tutor_id, student_id) references students (tutor_id, id) on delete cascade` (students already has `students_tutor_id_id_key`). Cascade, not the deferred "no action" the dues and payments use: nothing references `consents`, so a student delete or a tutor delete cascades cleanly in either order. A pgTAP test proves both.
+- Index on `(tutor_id, student_id)` for the tutor's own read and the cascade.
+- No parent phone, name or any other personal column.
+- RLS on; one policy `consents_select` for `authenticated` using `tutor_id = (select auth.uid())` (the same documented departure from the four-policy rule as `payments`, `dues` and `reminders`; say so in the migration comment). `revoke all ... from anon, authenticated; grant select ... to authenticated`. Nothing for `anon`.
+
+**`public.paypage_hits` and `public.paypage_hit(p_hash text, p_limit integer) returns boolean`.** A copy of `receipt_hits` and `receipt_hit`: `key_hash`, `hour_bucket`, `n`, primary key `(key_hash, hour_bucket)`, the extra `hour_bucket` index for the purge (R1-7's review found it was needed; include it from the start), RLS on, no policy, `revoke all` from `public, anon, authenticated`; the function is `security invoker`, `set search_path = ''`, purges hours older than 24, atomic upsert-increment, returns `n <= p_limit`; execute revoked from `public, anon, authenticated` and explicitly granted to `service_role`. One table serves both functions: the HMAC messages differ by prefix (A6), so the hashes never collide. No `tutor_id` on purpose (its rows belong to no tutor); the comment says so.
+
+**`public.get_pay_page(p_token text) returns jsonb`**: `security definer`, `stable`, `set search_path = ''`, `revoke all ... from public, anon, authenticated`, `grant execute ... to service_role`.
+1. Token shape guard first: null or not `^[A-Za-z0-9_-]{22,}$` returns null.
+2. One select joining `students s` and `tutors t` (inner join, so a tutor-less row gives null) where `s.pay_token = p_token and s.active`. Not found returns null (unknown, archived, bad: one answer).
+3. `language` = `coalesce(s.parent_language, t.language, 'en')`. `consent_needed` = `not exists (select 1 from consents where student_id = s.id and tutor_id = s.tutor_id and notice_version = current_notice_version())`.
+4. If `consent_needed`: return exactly `consent_needed` (true), `notice_version`, `tutor_name`, `tutor_subjects` (`to_jsonb`), `student_name`, `language`. The function returns before running any query for dues, payments or UPI, so there is nothing for a bug to leak.
+5. Else return exactly the 13 keys of criterion 5. `upi_id` is `t.upi_id` (key present, null when unset). `today` is `public.india_day(now())` as `YYYY-MM-DD` (reuse the existing function). `open_dues`: dues of this student with `status in ('due','partial')`, ordered `(kind <> 'opening'), due_date, month`, limited to 24, each built with exactly `kind, month, due_date, amount, amount_paid, remaining` (`remaining = amount - amount_paid`). `total_remaining` = `coalesce(sum(amount - amount_paid), 0)` over all open dues (integer; cast the sum back to integer, because `sum(integer)` is `bigint`). `open_dues_more` = `greatest(count - 24, 0)`. `receipts`: payments joined to this student's dues (`p.tutor_id = d.tutor_id and p.id`... via `due_id`), `voided_at is null`, ordered `created_at desc, receipt_no desc`, limit 12, each exactly `receipt_no, receipt_token, month` (the due's month, null for an earlier balance), `amount, paid_on, balance_after`; `receipts_more` = `count(*) > 12`. Empty lists are `'[]'::jsonb`, never null.
+6. No row id, `tutor_id`, phone, email, parent name, `pay_token` or other student's data is selected into a variable at all (the select list names only the columns used). Every list is built with `jsonb_build_object` and a fixed key list.
+
+**`public.record_consent(p_token text, p_notice_version text) returns text`**: `security definer`, `set search_path = ''`, same grants (service_role only).
+1. Bad token shape, unknown token, archived student, tutor-less: `not_found` (checked before the version, so an unknown token cannot learn the current version).
+2. `p_notice_version` null or not equal to `current_notice_version()`: `stale_notice`, nothing written.
+3. Else `insert ... on conflict (student_id, notice_version) do nothing`, with `tutor_id` read from the student row (never an argument), `accepted_at` the database default. Returns `ok` whether it inserted or the row already existed. The unique constraint, not a prior select, makes two simultaneous calls safe.
+
+No other function, view or trigger. No change to `students`.
+
+## A4. The contract the Edge Functions and Part B read
+
+`pay-page`: `POST` `{ "token": "<24 chars>" }`.
+- 200 `{ "code": "ok", "page": { ...allow-listed keys } }`. Pre-consent keys: `consent_needed, notice_version, tutor_name, tutor_subjects, student_name, language`. Post-consent keys: those plus `upi_id, today, total_remaining, open_dues, open_dues_more, receipts, receipts_more`. Nested objects are re-allow-listed by the handler too (see A6).
+- 404 `{code:"not_found"}`; 400/405/413 `{code:"invalid"}`; 429 `{code:"rate_limited"}` with `Retry-After: 3600`; 500 `{code:"error"}`.
+
+`record-consent`: `POST` `{ "token": "<24 chars>", "notice_version": "v1" }`, exactly those two keys.
+- 200 `{code:"ok"}`; 409 `{code:"stale_notice", notice_version:"<current>"}`; 404, 400/405/413, 429, 500 as above.
+
+## A5. Tests required
+
+pgTAP `220_consents_rls.sql` (criteria 1, 2, 11; two tutors plus anon, as `150_payments_rls.sql`):
+- Tutor A reads its own consent rows; tutor B reads zero by any filter (by student id, by version, by `tutor_id = A`); `anon` is refused with `42501` on select, insert, update and delete.
+- `authenticated` has `select` only: insert, update, delete and truncate are each refused (`42501`), and `has_table_privilege` pins that.
+- RLS on, exactly one policy (`consents_select`), the policy's name and command pinned.
+- A consent naming tutor A with tutor B's student violates the composite foreign key (run as the owner role). `unique (student_id, notice_version)` rejects a duplicate. The `notice_version` check rejects `''`, 17 characters and uppercase.
+- Column list is exactly `id, tutor_id, student_id, notice_version, accepted_at` (no phone, name or personal column).
+- Deleting the student removes its consents; deleting the tutor (`auth.users` delete) removes all of them.
+
+pgTAP `230_pay_page.sql` (criteria 3 to 10, 11):
+- Privileges: `service_role` can execute `get_pay_page`, `record_consent`, `paypage_hit`, `current_notice_version`; `anon` and `authenticated` cannot, and a call as anon, as tutor A and as tutor B each fails `42501` (criterion 3). `paypage_hits` has RLS on, no policy, no privilege for `anon` or `authenticated`. `has_index` for `paypage_hits_hour_bucket_idx`. `get_pay_page` and `record_consent` are `security definer`; `paypage_hit` is not.
+- Unknown, empty, null, short, wrong-case, trailing-space, wildcard, injection-string tokens: `get_pay_page` null and `record_consent` `not_found`, nothing written. Archived student (`active = false`): null and `not_found`. Tutor deleted: null.
+- Pre-consent keys equal the literal 6-key list by `jsonb_object_keys`; `consent_needed` true; values for tutor name, subjects, student name, language. No amount or UPI ID appears in the serialised answer (search for the seeded UPI ID and amounts).
+- Post-consent keys equal the literal 13-key list; each `open_dues` element has exactly 6 keys, each `receipts` element exactly 6 keys. Values: `today` for a fixed `now()` (use the transaction-local clock trick the earlier pgTAP files use, or compare with `public.india_day(now())::text`); `total_remaining` is the sum of remaining over partial and unpaid fees; a part paid fee shows `remaining` = amount minus paid; an earlier balance sorts first; a fully paid fee is absent; a student with no dues and a fully paid student both give `[]` and 0.
+- More than 24 open dues: list length 24, `open_dues_more` correct, `total_remaining` counts all (seed 26 monthly dues with distinct months, or 25 plus an opening one).
+- Receipts: newest first; a voided payment is absent; a payment of a sibling with the same parent phone is absent; another tutor's payment is absent; more than 12: 12 listed and `receipts_more` true; exactly 12: false; the earlier-balance receipt has month null.
+- Privacy: serialised pre- and post-consent answers contain none of the seeded parent phone, parent name, parent email-like strings, tutor email, `pay_token`, any seeded row id, nor the words `tutor_id`, `student_id`, `due_id`, `claim`, `reminder`, `plan`; the other student's name never appears; no UUID-shaped string appears at all (regex), which catches an id of any kind.
+- `record_consent`: current version gives `ok` and one row; again gives `ok` and still one row; with `stale` and `''` and null version gives `stale_notice` and no row; version check happens after the token check (unknown token with a stale version returns `not_found`); the row's `tutor_id` is the student's tutor; after `ok`, `get_pay_page` flips to the 13-key answer; a consent for an old version (insert one as owner with `v0`) does not count (page still asks).
+- Two sessions at once is not provable in one transaction; the plan relies on `on conflict`. Optional, low priority: a shell test like `supabase/tests/concurrency/record_payment_concurrent.sh` running two `record_consent` calls in parallel. Only add it if the CI `database` job pattern makes it cheap; do not block the PR on it.
+- `paypage_hit`: five within limit then false; separate hashes count apart; a row more than 24 hours old is purged by the next call; counts are separate from `receipt_hits` and `waitlist_hits`.
+- `current_notice_version()` returns a string that satisfies the `consents` check (so the two cannot drift).
+
+Edge Function tests (Vitest, Node, fakes), `handler.test.ts` in each function, mirroring `receipt/handler.test.ts` case by case (criteria 12 to 15):
+- Both: 405 with `Allow`; OPTIONS allowed and denied hosts; 413 over 512 bytes (declared and streamed); 400 bad JSON, non-object and array; malformed, short, empty, null and non-string tokens give the byte-identical 404 body as an unknown token, and a malformed token still calls the lookup exactly once with `DUMMY_TOKEN`; 61st request per hashed IP gives 429 with `Retry-After`; the unknown-IP bucket uses the higher limit; per-token limits (121st for `pay-page`, 21st for `record-consent`); counters and logs are spied: the raw IP and raw token never reach `hashed*` outputs, hit keys, logs or the lookup of any other dependency; logs only the fixed words; thrown dependency gives 500 `{code:"error"}` with no detail; headers `Cache-Control: no-store`, `X-Robots-Tag`, `Referrer-Policy`, `X-Content-Type-Options` on every status.
+- `pay-page` only: the allow-list is chosen by `consent_needed`. A fake returning a pre-consent row polluted with every post-consent key plus `tutor_id`, `phone`, `upi_id`, `amount` must yield exactly the 6 keys. A post-consent polluted row yields exactly the 13 keys, with nested `open_dues` and `receipts` elements re-copied to their 6 keys each (so an added SQL column in a nested object cannot leak). If `consent_needed` is not a boolean, the answer is 500 (never guess the stricter or looser state). A missing list becomes `[]`, a missing count 0. This is how we answer hand-off 9: a handler test proves a pre-consent response has none of the post-consent keys.
+- `record-consent` only: body with a missing, extra or non-string key gives 400; a `notice_version` that fails the pattern gives 400 (before any counting beyond the IP limit, see A6); `ok` gives 200 `{code:"ok"}` and logs `consent_recorded`; `stale_notice` gives 409 with the current version and logs `stale_notice`; `not_found` gives 404 byte-identical to the malformed-token 404; a body containing `student_id`, `tutor_id` or a time is rejected by the exact-keys rule (400), so nothing client supplied is trusted.
+
+The Playwright criterion list for Part A is empty (nothing on screen). Manual: none on a phone; backend-dev's staging smoke is a `curl` POST against the deployed functions by release-manager after the human sets the secret (A7).
+
+## A6. Handler behaviour and decisions
+
+- Order of checks, `pay-page`, same as `receipt`: CORS preflight, method, size, JSON and object shape, IP limit, token shape (bad shape: one lookup with `DUMMY_TOKEN`, same 404), token limit, lookup, allow-list, answer.
+- `record-consent`: same, with the exact-key and `notice_version` pattern check (`^[a-z0-9._-]{1,16}$`, mirror of the table check) placed with the JSON checks, before the IP limit, so a malformed body costs no database call. The token-shape 404 path still makes one `record_consent(DUMMY_TOKEN, <the given version>)` call so the work is similar.
+- Hash messages (HMAC-SHA256 with `PAYPAGE_HASH_SALT`, same shape as `receipt`): `pay-page` IP `pp-ip|<ip>|<hour>`, token `pp-token|<token>|<hour>`; `record-consent` IP `pc-ip|<ip>|<hour>`, token `pc-token|<token>|<hour>`. The prefixes keep the four counters apart in the one table, so reading the page never uses up a parent's consent allowance and a different function cannot reuse a hash.
+- Limits as constants at the top of each handler: 60 per IP, 2000 for the unknown-IP bucket (same H7 open check as `receipt`; preprod-qa confirms the header on staging), 120 per token for `pay-page`, 20 per token for `record-consent`. Allowed browser hosts: `PAYPAGE_ALLOWED_HOSTS` (optional), default the same as `receipt`'s; `APP_ENV=local` also allows `http://localhost:3000`.
+- Logs: `ok`, `not_found`, `rate_limited`, `error`, `too_large`, `invalid` for both; `consent_recorded` and `stale_notice` for `record-consent`. No value is ever logged.
+- `record-consent` 409 needs the current version: `record_consent` returns only `stale_notice`, so on that word the Deno wiring calls `get_pay_page(token)` once and takes `notice_version` from it (that key is in the pre-consent answer, so nothing extra is exposed), exposed to the handler as `deps.currentNoticeVersion(token)`. If that returns null the handler answers the same 404. No second place holds the version.
+- Supabase client: `npm:@supabase/supabase-js@2.117.3`, the version `receipt` already imports and the service role key from the platform. No new dependency.
+
+Decisions beyond the spec's defaults (flag for the founder; none blocks):
+1. The notice version lives in a SQL function `current_notice_version()` (value `v1`), not a table.
+2. One shared `paypage_hits` table for both functions, kept apart by HMAC prefixes, with separate IP buckets per function (so 60 page reads and 60 consent saves per IP per hour, not 60 together).
+3. Consent and rate-limit shared plumbing moves to `_shared/public-http.ts` for the two new functions; `receipt` keeps its own copy for now (a later cleanup slice may move it; not here, to keep this PR from touching a merged, working function).
+4. `record-consent` rejects any extra key with 400, and a bad `notice_version` shape with 400 (not 404).
+5. `open_dues` ordering: earlier balance first, then `due_date`, then `month`; receipts: `created_at desc, receipt_no desc` (a back-dated payment still counts as newest by when it was recorded).
+6. `tutor_subjects` and `upi_id` keys are always present (null when unset) so the page never has to guess missing from absent.
+7. The 409 current version comes from one extra `get_pay_page` call in the wiring (above).
+
+## A7. Secrets and environments (who does what)
+
+- Placeholder name only in `.env.example` (`PAYPAGE_HASH_SALT`, no value) and a dummy value in `supabase/config.toml` for the local runtime (a dummy is already the pattern for the other two and is not a secret).
+- **The human must set the real `PAYPAGE_HASH_SALT` on staging and on production** (and optionally `PAYPAGE_ALLOWED_HOSTS`): a long random value, different from `WAITLIST_HASH_SALT` and `RECEIPT_HASH_SALT`, set with `supabase secrets set` in the human's own terminal, never pasted in a chat, commit, log or test. Until it is set, the functions return 500 on every call (the wiring throws "salt missing", as `receipt` does) and nothing leaks.
+- **backend-dev will not** generate, set, print or read a real value, run `supabase secrets set`, `db push` or `functions deploy`, or touch production in any way. `release-manager` deploys the migration and the two functions to staging only after the human has set the staging secret; production migration and function deploy are the human's, after a database dump, each approved separately.
+- The migration is safe to apply before Part B exists: it only adds objects; nothing existing calls them. Rollback is a forward fix.
+
+## A8. Risks and traps
+
+- **Consent gate leak.** The pre-consent branch must return before querying dues, payments or the UPI ID. Enforced three ways: the SQL returns early, the pgTAP key-list test, and the handler allow-list chosen by `consent_needed` (with a polluted-row test). A non-boolean `consent_needed` is a 500, not a guess.
+- **Id leakage in nested lists.** Easy to build `to_jsonb(row)` by habit. Forbidden: every object uses `jsonb_build_object` with named keys. The UUID-regex pgTAP test catches any id.
+- **`sum()` returns bigint.** Cast to integer, and keep money integer paise end to end. No `numeric` or float in the answer.
+- **Unknown versus archived versus bad token must be indistinguishable**, in SQL (null / `not_found`) and in the handler (byte-identical 404 with a dummy lookup). Do not add a distinct message or status for archived.
+- **Version check order in `record_consent`.** Token first, so an unknown token cannot be used to read the current version. The version is only revealed on a known token, and it is already in the pre-consent page.
+- **Same-hash collisions between the four counters** (two functions times IP and token): the HMAC prefixes are the guard; a unit test asserts the four messages differ for the same input.
+- **Unknown-IP bucket** (H7 still open): the bucket with a 2000 limit may let one noisy caller fill the page-wide allowance; the per-token limits are the real guard. Same accepted risk as `receipt`; preprod-qa confirms the header.
+- **Rate-limit table purge cost**: the `hour_bucket` index is in the first migration so the lesson from R1-7's review is not repeated.
+- **Definer function search path.** `set search_path = ''` and every object schema-qualified (`public.`), as the existing functions do; `extensions.` is not needed.
+- **Grants after migration.** New functions are executable by `anon`/`authenticated` by default on Supabase; the migration must `revoke` explicitly and the pgTAP file pins it. Never `grant ... to anon`.
+- **Stamp ordering.** The new migration must sort after every migration on `main` when written; `pnpm check:db --base origin/main` verifies. If another PR merges first with a later stamp, re-stamp the new file (it is unapplied, so this is allowed), never an applied one.
+- **Docker is not available on the founder's machine**: `pnpm db:reset` / `pnpm db:test` run in CI's `database` job. Push the branch and read that job's result; do not claim the pgTAP files pass unless CI ran them. Run `pnpm test` (Vitest, includes the handlers) and `pnpm typecheck` locally; check that the Vitest config picks up `supabase/functions/**/*.test.ts` (it does for `receipt`) and that Deno-only imports stay in `index.ts`.
+- **CORS from the page's host**: the pay page will POST from the Vercel host; defaults match `receipt`'s, and the preview pattern is carried over. Part B's e2e uses a stubbed host, so a wrong host list would only show on staging: preprod-qa must call both functions from a real browser origin.
+
+## A9. Not doing in Part A
+
+- Any screen, route, `vercel.json` rewrite, message key, or change to `src/`, `messages/`, `e2e/`, `scripts/`.
+- `parent_phone` or any other column on `consents`; a consent language column; a way for a parent to withdraw consent; a tutor-side consent view (RLS lets her read it; no screen).
+- `payment_claims`, `submit-claim`, the screenshots bucket (R1-10); attendance count (R1-11); referral code (R1-13); tutor photo.
+- Page analytics events (`paypage_viewed`, `upi_button_tapped`; R1-14).
+- Rotating or revoking a `pay_token`.
+- Moving `receipt` onto the new shared file; changing `get_receipt`, `receipt_hits` or any R1-7 object.
+- A zod or any validation library; any new dependency. A settings table for the notice version. A generic "public function" framework beyond `_shared/public-http.ts`.
+- Running anything against production, setting any secret, or editing an applied migration.
+
+## A10. Work split
+
+1. `backend-dev`: create the migration with `pnpm exec supabase migration new r1_pay_page`, write A3 (notice-version function, `consents` with RLS and grants, `paypage_hits` and `paypage_hit`, `get_pay_page`, `record_consent`, explicit revokes and the service_role grants), with a header comment holding the contract of A4. Write `220_consents_rls.sql` and `230_pay_page.sql` (A5). Confirm `020`, `030`, `080` still pass (CI `database` job) and `pnpm check:db --base origin/main` passes.
+2. `backend-dev`: write `_shared/public-http.ts` and its test (lift from `receipt/handler.ts`; do not edit `receipt`).
+3. `backend-dev`: write `pay-page/handler.ts`, `index.ts`, `handler.test.ts` (A5, A6).
+4. `backend-dev`: write `record-consent/handler.ts`, `index.ts`, `handler.test.ts`.
+5. `backend-dev`: `config.toml` (secret dummy and two `verify_jwt = false` entries), `.env.example` (name only), `docs/ENVIRONMENTS.md` and `supabase/CLAUDE.md` text (A2, A7). Append "Part A built" notes under this plan: migration file name, any deviation, the final handler constants.
+6. `test-engineer` after 1 to 5: review the pgTAP and handler tests for gaps against criteria 1 to 15 (nothing in Playwright for Part A), including the spy tests on raw IP and token.
+
+`frontend-dev` has no task in Part A. Part B starts only after Part A merges (it needs the contract in A4 to stub the function host), and gets its own technical plan.
+
+**Starts first: `backend-dev`, task 1 (the migration and its two pgTAP files).**
+
+---
+
+## Part A built (backend-dev, 2026-10-13)
+
+- Migration: `supabase/migrations/20261012230218_r1_pay_page.sql` (`current_notice_version()` returning `v1`, `consents`, `paypage_hits`, `paypage_hit`, `get_pay_page`, `record_consent`). pgTAP: `supabase/tests/220_consents_rls.sql` (40 tests) and `230_pay_page.sql` (108 tests). `020`, `030` and `080` are generic and name none of the new objects, so no list needed a line.
+- Functions: `supabase/functions/_shared/public-http.ts` (+ test), `pay-page/{handler,index,handler.test}.ts`, `record-consent/{handler,index,handler.test}.ts`. `receipt` untouched.
+- Handler constants: 60 per hashed IP per hour, 2000 for the unknown-IP bucket, 120 per hashed token per hour for `pay-page`, 20 for `record-consent`, body limit 512 bytes, `Retry-After: 3600`. Hash messages `pp-ip|`, `pp-token|`, `pc-ip|`, `pc-token|` (exported from each handler, and a test asserts the four differ).
+- Config: `PAYPAGE_HASH_SALT` dummy in `config.toml`, `verify_jwt = false` for both functions, name only in `.env.example`.
+- Deviations: (1) `allowedOrigin` in the shared file takes `(origin, appEnv, allowedHosts)` instead of the whole `env` object, so each function keeps its own optional host variable name. (2) `record-consent` answers 400 (not 404) for a non-string `token`, because the exact-keys rule says a non-string key is 400; a string token of the wrong shape is the 404. (3) `get_pay_page` returns `upi_id`, `today` and the lists only after consent, as planned; the handler turns a missing `total_remaining`, `open_dues_more` into 0 and a missing list into `[]`. (4) The pgTAP tests read answers as the test runner (owner of the security definer functions) and use `service_role`, `anon` and the tutors only for the privilege checks. The optional concurrent shell test was not added.
+- Not verified locally (Docker does not work here): the migration and both pgTAP files have not been run. CI's `database` job is the first real run.
