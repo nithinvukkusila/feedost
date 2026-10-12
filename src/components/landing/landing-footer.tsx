@@ -13,7 +13,7 @@ export function LandingFooter({ path = "" }: Readonly<{ path?: string }>) {
   const current = useLocale();
   return (
     <footer className="on-dark-ground mt-16 overflow-hidden bg-ink text-on-cloth">
-      <div className="mx-auto w-full max-w-2xl px-5 pt-5">
+      <div className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-5">
         <p className="type-body">{t("line")}</p>
         <nav aria-label={t("languages")}>
           <ul className="flex flex-wrap gap-x-6">

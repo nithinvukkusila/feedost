@@ -105,7 +105,10 @@ describe("shadow tokens (criterion 6)", () => {
 
 describe("size tokens (criterion 7)", () => {
   it("names the three minimums in rem: 44, 48 and 64px", () => {
-    expect(group(tokens, "--spacing-")).toEqual({ tap: "2.75rem", control: "3rem", row: "4rem" });
+    const { sidenav, modal, ...minimums } = group(tokens, "--spacing-");
+    expect(minimums).toEqual({ tap: "2.75rem", control: "3rem", row: "4rem" });
+    // The two wide-screen sizes (D1): the side navigation column, and the tallest a centred dialog may be.
+    expect({ sidenav, modal }).toEqual({ sidenav: "15rem", modal: "calc(100dvh - 4rem)" });
   });
 });
 

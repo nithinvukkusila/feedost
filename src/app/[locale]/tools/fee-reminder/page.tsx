@@ -34,7 +34,7 @@ export default async function FeeReminderPage() {
   return (
     <div className="bg-page-ruled">
       <ToolHeader />
-      <main className="mx-auto w-full max-w-2xl px-5 pt-6">
+      <main className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-6">
         <p className="type-label text-cloth">{t("kicker")}</p>
         <h1 className="type-headline mt-2 text-5xl wrap-break-word">{t("title")}</h1>
 

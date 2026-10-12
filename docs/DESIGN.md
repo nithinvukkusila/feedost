@@ -89,3 +89,17 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 - Button press: 80ms translate, no easing curve needed.
 - Stamp appearing after a payment: one 200ms scale from 1.15 to 1 with a slight rotation settle. This is the only celebratory motion in the app.
 - Respect `prefers-reduced-motion`: no marquee, no stamp animation.
+
+## Wide screens (slice D1)
+
+The phone is the primary screen and does not change. Wider windows get the same screens with more room; nothing is added to a screen that the phone does not show. All of it is CSS on one page: no script reads the window width, and a window resized across a breakpoint changes layout live without losing what was typed.
+
+- **Breakpoints** are Tailwind's own, in rem: `md:` 48rem (768px) and `lg:` 64rem (1024px). They follow the browser's text size and zoom, so a browser at 200% shows the phone layout on a wide window. Never write a pixel media query.
+- **Below 768:** the phone column, at most 28rem (448px), bottom navigation, bottom sheets.
+- **768 to 1023 (tablet):** the same single column, 42rem wide and centred, with the bottom navigation. Sheets are centred dialogs.
+- **1024 and up (laptop):** the cloth is the page ground, with its dashed `stitch` outline inset 8px. On it sits the "book": the page colour, a 2px `ink` border and the `slip` offset shadow in `cloth-deep`, at most 80rem wide and centred. The navigation stands down its left side, 15rem wide (`--spacing-sidenav`), with the product name from `brand.ts` above it. The same four links, the same labels, at least 44px high; the current one has its 5px red bar on the left edge (the mark moves from the top to the left). The screen's content is a column of at most 42rem beside it until a screen has two things to show (D1b: the board, D1c: the lists).
+- **One shell owns the width.** `AppScreen` (`src/components/app/app-screen.tsx`) is the only place that sets a signed-in page's width; a screen never writes its own `max-w-*` (`layout-rules.test.ts` fails if it does). Screens before the book (sign-in, the way back from Google, setup) use `ClothGround`: the page colour on a phone, the cloth with one centred slip from 768 up (28rem; 36rem for the setup forms).
+- **One navigation.** There is a single `<nav>`: first in the page (so the keyboard reaches it first on a laptop), drawn last and pinned to the foot of the window below 1024. Its wrapper has `lg:contents`, so the Undo banner (`above`) leaves it and sits at the foot of the content column, as wide as the content.
+- **Sheets** are a native `<dialog>`: a bottom sheet below 768; from 768 a centred modal at most 32rem wide and never taller than the window minus 4rem (`--spacing-modal`), scrolling inside itself. The dark sheet ground is the backdrop. Focus, Escape, focus return and the inert page are the browser's.
+- **Targets** stay 44px and text stays 14px at every width. A desktop is not a licence to shrink them: a touch laptop and a tablet in landscape are both 1024 and up.
+- **Public pages** (landing, free tools) cap at 80rem from 1024 and use two columns where the canvas does (hero, the tool's form and message); 42rem from 768 to 1023; as today below 768. `/p/` and `/r/` pages (parents) stay a single centred column at most 28rem at every width and never use `AppScreen`.
