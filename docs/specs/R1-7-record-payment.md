@@ -460,3 +460,41 @@ void_payment(p_payment uuid)                                                    
 | `undo_window_over` | (void) more than 24 hours since it was recorded | null |
 
 Notes: an anonymous caller gets `42501` (permission denied) from the function privilege itself. `payments` and `receipt_counters` are not readable through `anon`. The client reads `payments` with select only (named columns, never `*`). `india_day()` is not executable by clients; compute "today" on the phone with `todayIndia`.
+
+## Part B public contract (written by `backend-dev`, 2026-10-12; for the `/r/{token}` page)
+
+**Request.** `POST {SUPABASE_URL}/functions/v1/receipt`, header `Content-Type: application/json`, body `{"token": "<the token from the path>"}`. No auth header needed (`verify_jwt` is off), but the platform's `apikey` header may be sent as for the waitlist form. POST only; GET and others give 405. Body is at most 512 bytes. Send no cookies (`credentials: "omit"`) and `referrerPolicy: "no-referrer"`. Allowed browser origins: `feedost.vercel.app` and this project's preview pattern (override `RECEIPT_ALLOWED_HOSTS`); on a local run `http://localhost:3000`.
+
+**Every response** is JSON with `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`, `Referrer-Policy: no-referrer`.
+
+| HTTP | body | meaning | page state |
+| --- | --- | --- | --- |
+| 200 | `{"code":"ok","receipt":{...}}` | found | show the receipt (or cancelled, by `receipt.status`) |
+| 404 | `{"code":"not_found"}` | unknown, malformed, short, empty or missing token, or the tutor's account was deleted. One identical body for all | not found |
+| 429 | `{"code":"rate_limited"}` plus `Retry-After: 3600` | over 60 requests an hour from this caller, or 120 an hour for this token | rate-limited, "try again later" |
+| 400 | `{"code":"invalid"}` | body not a JSON object | treat as a failure with Try again |
+| 405 / 413 | `{"code":"invalid"}` | wrong method / body too large | failure |
+| 500 | `{"code":"error"}` | server fault | failure with Try again |
+
+A network error (no response) is the page's "network failure with Try again" state.
+
+**`receipt` when `status` is `paid` or `part_paid`**: exactly these 12 keys, always present (null where noted):
+
+| key | type | notes |
+| --- | --- | --- |
+| `receipt_no` | integer | the tutor's own running number |
+| `status` | `"paid"` or `"part_paid"` | `paid` when `balance_after` is 0 |
+| `tutor_name` | string or null | |
+| `tutor_subjects` | string[] | may be empty |
+| `student_name` | string | |
+| `parent_name` | string or null | null: write the line without "from {parent}" |
+| `month` | `"YYYY-MM-DD"` (first of the month) or null | null means "earlier balance" |
+| `amount` | integer paise | what this payment was |
+| `method` | `"upi"` or `"cash"` | |
+| `paid_on` | `"YYYY-MM-DD"` | |
+| `balance_after` | integer paise | left on that fee right after this payment; fixed forever |
+| `language` | `"en"`, `"hi"`, `"kn"` or `"te"` | the student's parent language; use it for the page, not the address |
+
+**`receipt` when `status` is `cancelled`**: exactly 5 keys, `receipt_no`, `status` (`"cancelled"`), `tutor_name`, `student_name`, `language`. No amount, method, date or balance.
+
+Not returned: referral code (no column yet, R1-13), phone, email, UPI id, any id, other receipts. Secret to set before deploy (release-manager): `RECEIPT_HASH_SALT`. Nothing is deployed or set by this change.

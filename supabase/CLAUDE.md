@@ -27,7 +27,7 @@ supabase/environments.json  public identifiers per environment (staging and prod
 - Payment screenshots go to a private bucket. Storage policy: only the owning tutor can read. The pay page gets a short-lived signed upload URL from the Edge Function.
 - Every table migration says `grant ... to authenticated` itself. Never grant to `anon`. The baseline migration revokes the default `anon` access on new `public` tables, and `supabase/tests/030_default_privileges.sql` pins that.
 - Never run `supabase config push`, `supabase db push --include-seed`, or `supabase link` to production. Never change structure in the Supabase SQL editor.
-- No secrets in SQL or function source. Use `supabase secrets`. Function secrets so far: `APP_ENV`, and `WAITLIST_HASH_SALT` (the HMAC key for the waitlist rate-limit hash; `waitlist-join` is deployed with `verify_jwt` off, which `config.toml` carries).
+- No secrets in SQL or function source. Use `supabase secrets`. Function secrets so far: `APP_ENV`, and `WAITLIST_HASH_SALT` (the HMAC key for the waitlist rate-limit hash; `waitlist-join` is deployed with `verify_jwt` off, which `config.toml` carries), and `RECEIPT_HASH_SALT` (the HMAC key for the `receipt` function's IP and token hashes; a different value from the waitlist's; `receipt` is also `verify_jwt` off and reads only through `get_receipt`, which only `service_role` can execute).
 
 ## Test helper
 
