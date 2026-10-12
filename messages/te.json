@@ -558,7 +558,7 @@
       "of": "TODO-translate: {n} of {m}",
       "next": "TODO-translate: {month} fees will appear here on each student's due day. You do not need to do anything."
     },
-    "soon": "TODO-translate: Reminders and Mark paid arrive in a later update.",
+    "soon": "TODO-translate: Reminders arrive in a later update.",
     "loadError": {
       "title": "TODO-translate: Couldn't load your fees",
       "body": "TODO-translate: The network dropped. Nothing is lost.",

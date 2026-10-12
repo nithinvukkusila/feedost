@@ -35,7 +35,8 @@ import { newId } from "@/lib/uuid";
 
 export type StudentFormProps =
   | { mode: "add"; initialBatchId?: string }
-  | { mode: "edit"; student: Student };
+  /** `owesLocked`: a payment has been recorded against the earlier balance, so "Already owes" cannot change (R1-7, criterion 20). */
+  | { mode: "edit"; student: Student; owesLocked?: boolean };
 
 const NO_BATCH = "";
 
@@ -63,6 +64,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const router = useRouter();
   const roster = useRoster();
   const editing = props.mode === "edit";
+  const owesLocked = props.mode === "edit" && props.owesLocked === true;
   const saved = props.mode === "edit" ? props.student : null;
 
   const [draft, setDraft] = useState<StudentDraft>(() => startDraft(props, locale));
@@ -202,9 +204,11 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
         autoComplete="off"
         latinValue
         placeholder="0"
+        readOnly={owesLocked}
         onChange={(e) => set("owes", e.currentTarget.value)}
         onBlur={() => set("owes", tidyRupees(draft.owes, OWES_LIMITS))}
         error={problemOf("owes", "")}
+        helper={owesLocked ? t("form.owesLocked") : undefined}
       />
 
       <div className="flex flex-col gap-1">

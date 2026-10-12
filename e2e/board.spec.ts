@@ -48,7 +48,7 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
     await expect(page.getByText("₹7,800", { exact: true })).toBeVisible();
     await expect(page.getByText("from 4 of 5 students")).toBeVisible();
     await expect(page.getByText("₹1,500 collected")).toBeVisible();
-    await expect(page.getByText("Reminders and Mark paid arrive in a later update.")).toBeVisible();
+    await expect(page.getByText("Reminders arrive in a later update.")).toBeVisible();
 
     // The order on the screen.
     const y = async (locator: ReturnType<Page["locator"]>) => (await box(locator.first())).y;

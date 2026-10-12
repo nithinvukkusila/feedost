@@ -558,7 +558,7 @@
       "of": "{n} of {m}",
       "next": "{month} fees will appear here on each student's due day. You do not need to do anything."
     },
-    "soon": "Reminders and Mark paid arrive in a later update.",
+    "soon": "Reminders arrive in a later update.",
     "loadError": {
       "title": "Couldn't load your fees",
       "body": "The network dropped. Nothing is lost.",
