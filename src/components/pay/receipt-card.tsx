@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
+import { amountFit } from "@/lib/amount-fit";
 import { cx } from "@/lib/cx";
 import { indiaToday } from "@/lib/dues-board";
 import { formatDate, formatRupees } from "@/lib/format";
@@ -32,6 +33,7 @@ export function ReceiptCard({ payment, tutorName, studentName, parentName, feeLa
   const cancelled = payment.voidedAt !== null;
   const word = cancelled ? t("cancelled") : payment.balanceAfter === 0 ? t("paid") : t("partPaid");
   const date = formatDate(payment.paidOn);
+  const figures = `${formatRupees(payment.amount)}/-`;
   const recorded = formatDate(indiaToday(payment.createdAt));
   const rows: [string, ReactNode][] = [
     [t("student"), <span key="s" translate="no">{studentName}</span>],
@@ -41,8 +43,8 @@ export function ReceiptCard({ payment, tutorName, studentName, parentName, feeLa
   ];
   return (
     <Slip as="article" className="relative flex flex-col gap-3 p-4.5">
-      <div className="flex items-start justify-between gap-3">
-        <p translate="no" className="type-headline min-w-0 text-2xl wrap-anywhere">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <p translate="no" className="type-headline min-w-0 grow basis-32 text-2xl wrap-anywhere">
           {tutorName}
         </p>
         <div className="shrink-0 text-right">
@@ -70,10 +72,12 @@ export function ReceiptCard({ payment, tutorName, studentName, parentName, feeLa
       </dl>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <p translate="no" className={cx("type-amount inline-block max-w-full border-2 border-ink px-3.5 pt-1.5 pb-1 text-4xl text-blue", cancelled && "line-through")}>
-          {formatRupees(payment.amount)}
-          <span className="text-2xl">/-</span>
-        </p>
+        {/* The amount shrinks to fit its box, as the headline amounts do, so ₹10,00,000/- is never cut at the largest text. */}
+        <div className="amount-box min-w-0 grow basis-40 border-2 border-ink px-3.5 pt-1.5 pb-1">
+          <p translate="no" style={amountFit(figures)} className={cx("type-amount amount-size-6xl block text-blue", cancelled && "line-through")}>
+            {figures}
+          </p>
+        </div>
         {cancelled ? null : (
           <div className="text-right">
             <p className="type-label text-ink-label">{t("balance")}</p>
