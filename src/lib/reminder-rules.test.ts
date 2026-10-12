@@ -304,7 +304,9 @@ describe("the board never loads the builder or the templates (plan section 3, ri
   });
 
   it("reminder-rules and the board hold none of the banned number and date helpers", () => {
-    const source = readFileSync(join(root, "src/lib/reminder-rules.ts"), "utf8");
-    expect(source).not.toMatch(/parseFloat|toFixed|Math\.round|Intl\.|getHours|getDate|getMonth|toLocale/);
+    const banned = /parseFloat|toFixed|Math\.round|Intl\.|getHours|getDate|getMonth|toLocale/;
+    const mine = [join(root, "src/lib/reminder-rules.ts"), join(root, "src/lib/reminders.ts"), join(root, "src/lib/reminder-log.ts"), ...files(join(root, "src/components/remind"))];
+    expect(mine.length).toBeGreaterThan(6);
+    for (const file of mine) expect(readFileSync(file, "utf8"), file).not.toMatch(banned);
   });
 });

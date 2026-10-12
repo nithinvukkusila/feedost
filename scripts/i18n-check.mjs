@@ -66,6 +66,6 @@ if (existsSync(COPY_REVIEW)) {
 for (const problem of problems) console.error(problem);
 if (problems.length) {
   console.error(`i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
-  process.exit(1);
-}
-console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${appSummary}${copySummary}`);
+  // Not process.exit(1): a long list written to a pipe would be cut off by the exit.
+  process.exitCode = 1;
+} else console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${appSummary}${copySummary}`);

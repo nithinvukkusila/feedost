@@ -15,7 +15,7 @@ const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", 
 // message templates of all four languages: the leak check's one named exception.
 const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
-const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
+const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
 const templatesPath = join("src", "lib", "reminder", "templates.json");
 type Templates = Record<"en" | "hi" | "kn" | "te", { polite: string[]; firm: string[]; months: string[] }>;

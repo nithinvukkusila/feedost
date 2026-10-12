@@ -121,7 +121,7 @@ describe("a fee for a student the phone has not seen (30)", () => {
     );
     const { rerender } = render(screenWithWords());
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.includes("/students/edit/"))).toHaveLength(1);
+    expect(screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.includes("/students/edit/") && link.textContent !== "Add number")).toHaveLength(1);
     rerender(screenWithWords());
     expect(reload).toHaveBeenCalledTimes(1);
     // A new read of the dues is allowed one more.
