@@ -7,7 +7,9 @@
 -- * public.paypage_hits + paypage_hit(): the per-hash, per-hour counter for the rate limits of the `pay-page` and `record-consent`
 --   Edge Functions. Same pattern as receipt_hits. It holds only HMAC hashes, never a raw IP or token. It has no tutor_id on
 --   purpose: its rows belong to no tutor. RLS is on, no policy, no client grant.
--- * public.get_pay_page(p_token) and public.record_consent(p_token, p_notice_version): executable by service_role only.
+-- * public.get_pay_page(p_token) and public.record_consent(p_token, p_notice_version): executable by the Edge Functions' admin role only.
+--   The migration revokes execute from public, anon and authenticated; the admin role keeps the platform's default execute right
+--   (the same way receipt_hit and get_receipt work), and 230_pay_page.sql pins both sides.
 --
 -- get_pay_page answer (jsonb), or null for a token that is malformed, unknown, archived or without a tutor:
 --   before consent: consent_needed (true), notice_version, tutor_name, tutor_subjects, student_name, language
@@ -24,7 +26,6 @@ set search_path = ''
 as $$ select 'v1'::text $$;
 
 revoke all on function public.current_notice_version() from public, anon, authenticated;
-grant execute on function public.current_notice_version() to service_role;
 
 create table public.consents (
   id uuid primary key default gen_random_uuid(),
@@ -95,7 +96,6 @@ end;
 $$;
 
 revoke all on function public.paypage_hit(text, integer) from public, anon, authenticated;
-grant execute on function public.paypage_hit(text, integer) to service_role;
 
 create function public.get_pay_page(p_token text)
 returns jsonb
@@ -215,7 +215,6 @@ end;
 $$;
 
 revoke all on function public.get_pay_page(text) from public, anon, authenticated;
-grant execute on function public.get_pay_page(text) to service_role;
 
 create function public.record_consent(p_token text, p_notice_version text)
 returns text
@@ -256,4 +255,3 @@ end;
 $$;
 
 revoke all on function public.record_consent(text, text) from public, anon, authenticated;
-grant execute on function public.record_consent(text, text) to service_role;
