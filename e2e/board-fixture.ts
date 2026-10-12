@@ -3,6 +3,7 @@
 import type { Page } from "@playwright/test";
 import { completeTutor, fakeSession, seedSession, stubSupabase, type Stub } from "./auth-helpers";
 import { stubDues, type DueRow, type Dues } from "./dues-helpers";
+import { stubReminders, type Reminders } from "./remind-helpers";
 import { stubRoster, type BatchRow, type Roster, type StudentRow } from "./roster-helpers";
 
 /** 05:00 UTC is 10:30 on 12 Oct in India, and 22:00 on 11 Oct in Los Angeles. */
@@ -48,15 +49,17 @@ export const DUES: Due[] = [
 ];
 
 export type Seed = { students?: Partial<StudentRow>[]; batches?: Partial<BatchRow>[]; dues?: Due[]; lang?: string; clock?: Date | null };
-export type Signed = { stub: Stub; roster: Roster; dues: Dues };
+export type Signed = { stub: Stub; roster: Roster; dues: Dues; rem: Reminders };
 
 /** A signed-in tutor with a finished profile, a fixed clock and these rows in the tables. */
 export async function signedIn(page: Page, seed: Seed = {}): Promise<Signed> {
   const stub = await stubSupabase(page, { tutor: completeTutor({ language: seed.lang ?? "en" }) });
   const roster = await stubRoster(page, { students: seed.students ?? STUDENTS, batches: seed.batches ?? BATCHES });
   const dues = await stubDues(page, seed.dues ?? DUES);
+  // The board reads when each fee was last reminded (R1-8); with none logged it answers an empty list.
+  const rem = await stubReminders(page, dues, roster);
   // A made-up token lasts an hour from the real clock; the fixed clock must not outlive it.
   await seedSession(page, fakeSession("meena@example.com", 30 * 86400));
   if (seed.clock !== null) await page.clock.setFixedTime(seed.clock ?? NOW);
-  return { stub, roster, dues };
+  return { stub, roster, dues, rem };
 }

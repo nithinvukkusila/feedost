@@ -14,6 +14,8 @@ const lib = vi.hoisted(() => ({
   ensureMyDues: vi.fn(),
 }));
 vi.mock("@/lib/dues", () => lib);
+const rem = vi.hoisted(() => ({ readLastReminders: vi.fn() }));
+vi.mock("@/lib/reminders", () => rem);
 
 import { BoardProvider } from "./board-holder";
 import { useBoard, type Board } from "./board-state";
@@ -58,6 +60,7 @@ beforeEach(() => {
   lib.readUnpaid.mockReset().mockResolvedValue([due("old", "2026-09-01")]);
   lib.readEarliestMonth.mockReset().mockResolvedValue("2026-09-01");
   lib.ensureMyDues.mockReset().mockResolvedValue(0);
+  rem.readLastReminders.mockReset().mockResolvedValue({ a: { dueId: "a", lastAt: 5, times: 1 } });
 });
 afterEach(() => {
   cleanup();
@@ -313,5 +316,36 @@ describe("a payment the database confirmed (R1-7, criteria 14 and 15)", () => {
     expect(held.board.notice).toMatchObject({ kind: "undone", until: now + 5_000 });
     act(() => held.board.clearNotice());
     expect(held.board.notice).toBeNull();
+  });
+});
+
+describe("the reminders read (R1-8, criterion 29)", () => {
+  it("is made with the dues on open, and gives the marks by fee", async () => {
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(rem.readLastReminders).toHaveBeenCalledTimes(1);
+    expect(held.board.reminders?.byDue.a.lastAt).toBe(5);
+  });
+
+  it("a failed read leaves the board working, with no marks and no failure", async () => {
+    rem.readLastReminders.mockReset().mockRejectedValue(new Error("down"));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(held.board.failed).toBe(false);
+    expect(held.board.reminders).toBeNull();
+    expect(held.board.months["2026-10-01"].rows.map((d) => d.id)).toEqual(["a"]);
+  });
+
+  it("a later failed read keeps the marks it had", async () => {
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    rem.readLastReminders.mockReset().mockRejectedValue(new Error("down"));
+    act(() => held.board.refresh(TODAY));
+    await flush();
+    expect(held.board.reminders?.byDue.a.times).toBe(1);
+    expect(held.board.failed).toBe(false);
   });
 });

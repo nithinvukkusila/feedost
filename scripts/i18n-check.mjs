@@ -3,10 +3,12 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync } from "node:fs";
-import { check, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkAppTemplates, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
+const APP_TEMPLATES = "src/lib/reminder/templates.app.json";
+const APP_REVIEW = "src/lib/reminder/templates.app.review.json";
 
 // The waitlist's promise sentences (spec R0-4): the consent line and what the form says after it sends.
 const COPY_REVIEW = "src/lib/waitlist/copy.review.json";
@@ -37,6 +39,18 @@ if (existsSync(TEMPLATES)) {
       : `; ${templates.templateCount} templates, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
 }
 
+let appSummary = "";
+if (existsSync(APP_TEMPLATES)) {
+  const app = checkAppTemplates(APP_TEMPLATES, APP_REVIEW, { strict });
+  problems.push(...app.problems);
+  for (const note of app.notes) console.log(note);
+  const waiting = app.notReviewed;
+  appSummary =
+    waiting.length === 0
+      ? `; ${app.templateCount} app templates and ${app.wordCount} parent words, all ${locales.length - 1} languages reviewed`
+      : `; ${app.templateCount} app templates and ${app.wordCount} parent words, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
+}
+
 let copySummary = "";
 if (existsSync(COPY_REVIEW)) {
   const copy = checkReviewRecord(COPY_REVIEW, COPY_KEYS, { strict });
@@ -52,6 +66,6 @@ if (existsSync(COPY_REVIEW)) {
 for (const problem of problems) console.error(problem);
 if (problems.length) {
   console.error(`i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
-  process.exit(1);
-}
-console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${copySummary}`);
+  // Not process.exit(1): a long list written to a pipe would be cut off by the exit.
+  process.exitCode = 1;
+} else console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${appSummary}${copySummary}`);

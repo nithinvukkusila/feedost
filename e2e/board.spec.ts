@@ -7,7 +7,7 @@ import { BATCHES, DUES, MATHS, NOW, S, STUDENTS, signedIn } from "./board-fixtur
 import { box } from "./helpers";
 
 const ORIGIN = process.env.E2E_BASE_URL ?? "http://localhost:4173";
-const rows = (page: Page) => page.locator('main li a[href*="/students/edit/"]').filter({ visible: true });
+const rows = (page: Page) => page.locator('main li > a[href*="/students/edit/"]').filter({ visible: true });
 const tab = (page: Page, name: string) => page.getByRole("tab", { name: new RegExp(`^${name}`) });
 const month = (page: Page) => page.getByRole("button", { name: "Previous month" }).locator("xpath=following-sibling::p[1]");
 const prev = (page: Page) => page.getByRole("button", { name: "Previous month" });
@@ -48,7 +48,6 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
     await expect(page.getByText("₹7,800", { exact: true })).toBeVisible();
     await expect(page.getByText("from 4 of 5 students")).toBeVisible();
     await expect(page.getByText("₹1,500 collected")).toBeVisible();
-    await expect(page.getByText("Reminders arrive in a later update.")).toBeVisible();
 
     // The order on the screen.
     const y = async (locator: ReturnType<Page["locator"]>) => (await box(locator.first())).y;

@@ -14,7 +14,10 @@ import { renderWithWords } from "@/test-utils/render-with-words";
 import type { Board } from "./board-state";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), usePathname: () => "/en/home/" }));
-vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u" }, setTutor: vi.fn() }) }));
+vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u", upiId: "meena@okhdfc", name: "Meena Iyer" }, setTutor: vi.fn() }) }));
+vi.mock("@/components/remind/remind-provider", () => ({
+  useRemind: () => ({ tone: "polite", setTone: vi.fn(), session: null, begin: vi.fn(), clear: vi.fn(), log: { subscribe: () => () => {}, saved: () => 0 } }),
+}));
 
 const held: { roster: Roster; board: Board } = { roster: undefined as unknown as Roster, board: undefined as unknown as Board };
 vi.mock("@/components/app/roster", () => ({ useRoster: () => held.roster }));
@@ -45,6 +48,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     months: { "2026-10-01": { rows: [due("d1", "s1", "2026-10-12")], at: 1 } },
     unpaid: { rows: [], at: 1 },
     earliest: { month: "2026-10-01", at: 1 },
+    reminders: null,
     failed: false,
     blocked: null,
     reads: 1,
@@ -117,7 +121,7 @@ describe("a fee for a student the phone has not seen (30)", () => {
     );
     const { rerender } = render(screenWithWords());
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.includes("/students/edit/"))).toHaveLength(1);
+    expect(screen.getAllByRole("link").filter((link) => link.getAttribute("href")?.includes("/students/edit/") && link.textContent !== "Add number")).toHaveLength(1);
     rerender(screenWithWords());
     expect(reload).toHaveBeenCalledTimes(1);
     // A new read of the dues is allowed one more.

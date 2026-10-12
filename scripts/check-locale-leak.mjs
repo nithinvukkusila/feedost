@@ -23,7 +23,13 @@ const REQUIRED_PAGES = ["", "tools/fee-reminder/"];
 // the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
 // under `pages`, and only in its script files, never its HTML, every line of that file is taken out
 // of the text before the search for another language's interface words.
-const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" }];
+// R1-8 adds the Remind screen: it writes the parent's message in the parent's language, whatever the tutor's
+// screen language is, so its page holds the same month templates and the app's earlier-balance templates and
+// generic parent words (src/lib/reminder/templates.app.json) of all four languages. Only that page.
+const EXCEPTIONS = [
+  { pages: ["tools/fee-reminder/", "remind/"], file: "src/lib/reminder/templates.json", name: "fee reminder" },
+  { pages: ["remind/"], file: "src/lib/reminder/templates.app.json", name: "remind (balance templates)" },
+];
 
 /** The ways a value can be written inside HTML or an inline JSON payload. */
 const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
@@ -99,7 +105,12 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
   // sentences, and cutting it out of a script would hide those sentences from this check. A value the
   // check looks for is at least MIN_LENGTH long, so it can never sit inside a shorter month name.
   const removable = [...new Set(all.flatMap(spellings))].filter((text) => text.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
-  return { ...exception, lines, removable };
+  return { ...exception, pages: [exception.pages].flat(), lines, removable };
+}).map((exception, index, all) => {
+  // A line two files share (the earlier-balance templates end with the R0-2 lines) is searched for under the first file only.
+  const earlier = all.slice(0, index);
+  const lines = Object.fromEntries(locales.map((l) => [l, exception.lines[l].filter((line) => !earlier.some((e) => e.lines[l].includes(line)))]));
+  return { ...exception, lines };
 });
 
 /** Every page of a language: the folders under out/{locale}/ that hold an index.html. "" is the landing. */
@@ -166,7 +177,7 @@ for (const locale of locales) {
     pageCount += 1;
     const page = pageFiles(locale, pagePath);
     const address = `/${locale}/${pagePath}`;
-    const excepted = exceptions.filter((exception) => pagePath.startsWith(exception.pages));
+    const excepted = exceptions.filter((exception) => exception.pages.some((prefix) => pagePath.startsWith(prefix)));
 
     for (const file of page.files) {
       // The text searched for interface words: a script of an excepted page, with the templates taken out.

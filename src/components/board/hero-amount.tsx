@@ -31,7 +31,6 @@ export function HeroAmount({ view }: Readonly<{ view: BoardView }>) {
           )}
         </p>
       ) : null}
-      <p className="type-caption mt-3 text-ink-soft">{t("soon")}</p>
     </section>
   );
 }

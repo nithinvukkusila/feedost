@@ -12,7 +12,7 @@ import { DueRow } from "./due-row";
 
 afterEach(cleanup);
 
-const student: Student = {
+const baseStudent: Student = {
   id: "s1",
   batchId: "b1",
   name: "Ravi Kumar",
@@ -31,11 +31,19 @@ const onMarkPaid = vi.fn();
 // The link to the student: the row's first link (a Receipt link, when there is one, comes after it).
 const rowLink = () => document.querySelector("li > a") as HTMLElement;
 
-function show(due: Partial<Due>, opts: { month?: string; batch?: string | null; lang?: "en" | "hi" } = {}) {
+const onRemind = vi.fn();
+const READY = { upiId: "meena@okhdfc", name: "Meena Iyer" };
+const PHONE = "+919876543210";
+
+function show(
+  due: Partial<Due>,
+  opts: { month?: string; batch?: string | null; lang?: "en" | "hi"; phone?: string | null; tutor?: { upiId: string | null; name: string | null }; lastAt?: number | null } = {},
+) {
   const d = { ...base, ...due };
+  const student = { ...baseStudent, parentPhone: opts.phone === undefined ? null : opts.phone };
   return renderWithWords(
     <ul>
-      <DueRow row={{ due: d, student, state: dueState(d, TODAY) }} month={opts.month ?? "2026-10-01"} batchName={opts.batch === undefined ? "Class 10 Maths" : opts.batch} onMarkPaid={onMarkPaid} />
+      <DueRow row={{ due: d, student, state: dueState(d, TODAY) }} month={opts.month ?? "2026-10-01"} batchName={opts.batch === undefined ? "Class 10 Maths" : opts.batch} onMarkPaid={onMarkPaid} remind={{ tutor: opts.tutor ?? READY, lastAt: opts.lastAt ?? null, today: TODAY, onRemind }} />
     </ul>,
     opts.lang ?? "en",
   );
@@ -158,5 +166,89 @@ describe("the buttons beside the row (R1-7, criterion 12)", () => {
   it("the buttons say their words in Hindi (TODO-translate shows English until reviewed)", () => {
     show({}, { lang: "hi" });
     expect(screen.getByRole("button", { name: /Mark paid/ })).toBeTruthy();
+  });
+});
+
+// 05:00 UTC on 12 Oct 2026 is 10:30 that day in India.
+const NOW = Date.parse("2026-10-12T05:00:00Z");
+const DAY = 86_400_000;
+
+describe("Remind beside the row (R1-8, criteria 2 to 4 and 27)", () => {
+  it("an overdue or due fee with a phone and a UPI ID has Remind, beside the link, 44px, named for the student", () => {
+    show({}, { phone: PHONE });
+    const button = screen.getByRole("button", { name: "Remind Ravi Kumar" });
+    expect(button.textContent).toBe("Remind");
+    expect(rowLink().contains(button)).toBe(false);
+    expect(button.className).toContain("min-h-tap");
+    button.click();
+    expect(onRemind).toHaveBeenCalledWith("d1");
+    cleanup();
+    show({ dueDate: "2026-10-20" }, { phone: PHONE });
+    expect(screen.getByRole("button", { name: /Remind/ })).toBeTruthy();
+  });
+
+  it("a part paid fee and an earlier balance have Remind too", () => {
+    show({ amountPaid: 50000, status: "partial" }, { phone: PHONE });
+    expect(screen.getByRole("button", { name: /Remind/ })).toBeTruthy();
+    cleanup();
+    show({ kind: "opening", month: null, dueDate: "2026-09-30" }, { phone: PHONE });
+    expect(screen.getByRole("button", { name: /Remind/ })).toBeTruthy();
+  });
+
+  it("a paid fee has no Remind, no Add number and no Add your UPI ID", () => {
+    show({ amountPaid: 120000, status: "paid" }, { phone: null });
+    expect(screen.queryByRole("button", { name: /Remind/ })).toBeNull();
+    expect(screen.queryByText("Add number")).toBeNull();
+    expect(screen.queryByText("Add your UPI ID")).toBeNull();
+  });
+
+  it("a student with no phone has an Add number link to the edit screen, and no Remind", () => {
+    show({}, { phone: null });
+    const link = screen.getByRole("link", { name: "Add number for Ravi Kumar" });
+    expect(link.textContent).toBe("Add number");
+    expect(link.getAttribute("href")).toBe("/en/students/edit/?id=s1");
+    expect(link.className).toContain("min-h-tap");
+    expect(screen.queryByRole("button", { name: /Remind/ })).toBeNull();
+  });
+
+  it("with no UPI ID, or no name, Remind is Add your UPI ID, a link to the UPI screen", () => {
+    for (const tutor of [{ upiId: null, name: "Meena" }, { upiId: "meena@okhdfc", name: null }, { upiId: "not an id", name: "Meena" }]) {
+      show({}, { phone: PHONE, tutor });
+      const link = screen.getByRole("link", { name: "Add your UPI ID" });
+      expect(link.getAttribute("href")).toBe("/en/setup/upi/");
+      expect(screen.queryByRole("button", { name: /Remind/ })).toBeNull();
+      cleanup();
+    }
+  });
+
+  it("no phone wins over no UPI ID (the reasons come in order)", () => {
+    show({}, { phone: null, tutor: { upiId: null, name: null } });
+    expect(screen.getByRole("link", { name: /Add number/ })).toBeTruthy();
+    expect(screen.queryByText("Add your UPI ID")).toBeNull();
+  });
+
+  it("says when the parent was last reminded in words, with a mark that is hidden from screen readers", () => {
+    const cases: [number, string][] = [
+      [NOW - 3_600_000, "Reminded today"],
+      [NOW - DAY, "Reminded yesterday"],
+      [NOW - 3 * DAY, "Reminded 3 days ago"],
+      [NOW - 30 * DAY, "Reminded 30 days ago"],
+      [NOW - 31 * DAY, "Reminded over 30 days ago"],
+    ];
+    for (const [lastAt, words] of cases) {
+      show({}, { phone: PHONE, lastAt });
+      const line = screen.getByText(words);
+      expect(rowLink().contains(line)).toBe(true);
+      expect(line.parentElement?.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+      cleanup();
+    }
+  });
+
+  it("shows nothing for a fee never reminded, and nothing on a paid fee", () => {
+    show({}, { phone: PHONE });
+    expect(document.body.textContent).not.toContain("Reminded");
+    cleanup();
+    show({ amountPaid: 120000, status: "paid" }, { phone: PHONE, lastAt: NOW });
+    expect(document.body.textContent).not.toContain("Reminded");
   });
 });
