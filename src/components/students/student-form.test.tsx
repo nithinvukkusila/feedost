@@ -182,3 +182,22 @@ describe("edit (33 to 35)", () => {
     expect(await screen.findByText("Couldn't find this student")).toBeTruthy();
   });
 });
+
+describe("Already owes once a payment has been recorded (R1-7, criterion 20)", () => {
+  it("is read-only with the line, and Save sends nothing for it", async () => {
+    updateStudent.mockResolvedValue({ ok: true, student: saved });
+    renderWithWords(<StudentForm mode="edit" student={{ ...saved, openingBalance: 100000 }} owesLocked />);
+    const owes = screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement;
+    expect(owes.readOnly).toBe(true);
+    expect(owes.value).toBe("1,000");
+    expect(screen.getByText("A payment has been recorded against this, so it can't be changed")).toBeTruthy();
+    await userEvent.type(owes, "55");
+    expect(owes.value).toBe("1,000");
+  });
+
+  it("is editable, with no line, when nothing has been paid against it", () => {
+    renderWithWords(<StudentForm mode="edit" student={{ ...saved, openingBalance: 100000 }} />);
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false);
+    expect(screen.queryByText(/A payment has been recorded/)).toBeNull();
+  });
+});

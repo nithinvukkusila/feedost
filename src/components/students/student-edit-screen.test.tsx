@@ -14,6 +14,9 @@ vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u
 const setActive = vi.fn();
 vi.mock("@/lib/students", () => ({ setActive: (...a: unknown[]) => setActive(...a), createStudent: vi.fn(), updateStudent: vi.fn() }));
 
+const readOpeningPaid = vi.fn();
+vi.mock("@/lib/dues", () => ({ readOpeningPaid: (...a: unknown[]) => readOpeningPaid(...a) }));
+
 import { StudentEditScreen } from "./student-edit-screen";
 
 const student = (active: boolean): Student => ({
@@ -30,6 +33,7 @@ beforeEach(() => {
   push.mockReset();
   put.mockReset();
   setActive.mockReset();
+  readOpeningPaid.mockReset().mockResolvedValue(false);
 });
 afterEach(cleanup);
 
@@ -79,5 +83,24 @@ describe("archive and restore", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Archive student" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Couldn't find this student");
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("Already owes (R1-7, criterion 20)", () => {
+  it("asks about this student's earlier balance and locks the field once something was paid against it", async () => {
+    show(true);
+    readOpeningPaid.mockResolvedValue(true);
+    renderWithWords(<StudentEditScreen />);
+    expect(await screen.findByText("A payment has been recorded against this, so it can't be changed")).toBeTruthy();
+    expect(readOpeningPaid).toHaveBeenCalledWith("s1");
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(true);
+  });
+
+  it("leaves it editable when nothing was paid", async () => {
+    show(true);
+    renderWithWords(<StudentEditScreen />);
+    await screen.findByRole("button", { name: "Archive student" });
+    expect(readOpeningPaid).toHaveBeenCalled();
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false);
   });
 });
