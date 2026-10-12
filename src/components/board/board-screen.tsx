@@ -35,6 +35,9 @@ import { useBoardView } from "./use-board-view";
 // Not part of the first load: the sheet, its amount checks and its date choices come down on the first tap of Mark paid.
 const PaySheet = dynamic(() => import("@/components/pay/pay-sheet"), { ssr: false });
 
+// The phone's clock, read at a tap (never while drawing).
+const clockNow = () => Date.now();
+
 const NONE: readonly Due[] = [];
 
 const TABS: readonly Tab[] = ["overdue", "due", "paid"];
@@ -150,11 +153,12 @@ export function BoardScreen() {
     if (!row || row.student.parentPhone === null) return;
     goRemind({ kind: "run", queue: [queueItem(row, row.student.batchId ? (batchNames.get(row.student.batchId) ?? null) : null)], last: lastAt });
   }
-  const overduePick = tab === "overdue" ? pickList(view.tabs.overdue, tutorFacts, board.reminders?.byDue ?? {}, Date.now()) : null;
-  const remindAll =
-    overduePick !== null && overduePick.items.length > 0
-      ? { count: overduePick.items.length, onClick: () => goRemind({ kind: "pick", pick: overduePick, batchNames: Object.fromEntries(batchNames), last: lastAt }) }
-      : null;
+  // The button needs only how many parents there are; who starts ticked depends on the time, which is read at the tap.
+  const overdueCount = tab === "overdue" ? pickList(view.tabs.overdue, tutorFacts, {}, 0).items.length : 0;
+  function onRemindAll() {
+    goRemind({ kind: "pick", pick: pickList(view.tabs.overdue, tutorFacts, board.reminders?.byDue ?? {}, clockNow()), batchNames: Object.fromEntries(batchNames), last: lastAt });
+  }
+  const remindAll = overdueCount > 0 ? { count: overdueCount, onClick: onRemindAll } : null;
   const tabs = TABS.map((id) => ({ id, label: t(`tab.${id}`), count: <span translate="no">{view.counts[id]}</span> }));
 
   return (

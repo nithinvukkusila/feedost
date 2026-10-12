@@ -46,14 +46,17 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
   const [confirmed, setConfirmed] = useState<ReadonlySet<number>>(new Set());
   // The day and time are the phone's, read once when the screen opens: the question is about "today" at that moment.
   const [now] = useState(() => Date.now());
-  const requestIds = useRef<Record<number, string>>({});
+  // One request id per step, made on its first tap and kept for its life. The ref is what the tap reads (two taps in one
+  // moment must agree); the state is what the screen draws from.
+  const idsInHand = useRef<Record<number, string>>({});
+  const [requestIds, setRequestIds] = useState<Readonly<Record<number, string>>>({});
 
   const total = queue.length;
   const finished = index >= total;
   const item = finished ? undefined : queue[index];
   const message = useMessage(item ?? queue[0], tone, tutor);
 
-  const requestId = requestIds.current[index];
+  const requestId = requestIds[index];
   const pending = useSyncExternalStore(log.subscribe, log.get, log.get);
   const logFailed = pending >= 0 && requestId !== undefined && log.isPending(requestId);
 
@@ -81,7 +84,8 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
     if (item === undefined || message === null) return;
     // Synchronous, and never awaited: the browser follows the link in this same tap.
     opened();
-    const id = (requestIds.current[index] ??= newId());
+    const id = (idsInHand.current[index] ??= newId());
+    setRequestIds((all) => (all[index] === id ? all : { ...all, [index]: id }));
     log.log({ dueId: item.dueId, template: templateTag(tone, item.parentLanguage, item.kind === "opening" ? "balance" : "month"), requestId: id });
     setResults((r) => (r[index] === "opened" ? r : { ...r, [index]: "opened" }));
   }

@@ -23,7 +23,14 @@ const REQUIRED_PAGES = ["", "tools/fee-reminder/"];
 // the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
 // under `pages`, and only in its script files, never its HTML, every line of that file is taken out
 // of the text before the search for another language's interface words.
-const EXCEPTIONS = [{ pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" }];
+// R1-8 adds the Remind screen: it writes the parent's message in the parent's language, whatever the tutor's
+// screen language is, so its page holds the same month templates and the app's earlier-balance templates and
+// generic parent words (src/lib/reminder/templates.app.json) of all four languages. Only that page.
+const EXCEPTIONS = [
+  { pages: "tools/fee-reminder/", file: "src/lib/reminder/templates.json", name: "fee reminder" },
+  { pages: "remind/", file: "src/lib/reminder/templates.json", name: "remind (month templates)" },
+  { pages: "remind/", file: "src/lib/reminder/templates.app.json", name: "remind (balance templates)" },
+];
 
 /** The ways a value can be written inside HTML or an inline JSON payload. */
 const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];

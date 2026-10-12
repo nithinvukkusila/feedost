@@ -195,7 +195,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("64 pages");
+    expect(result.out).toContain("68 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {

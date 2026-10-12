@@ -60,7 +60,7 @@ test.describe("34: 60 students in each language, at 360px and with larger text",
         for (const el of await page.locator("a:visible, button:visible, select:visible").all()) {
           expect((await box(el)).height, `a link, button or select at ${size}`).toBeGreaterThanOrEqual(44);
         }
-        for (const row of await page.locator('main li a[href*="/students/edit/"]').filter({ visible: true }).all()) {
+        for (const row of await page.locator('main li > a[href*="/students/edit/"]').filter({ visible: true }).all()) {
           expect((await box(row)).height, `a row at ${size}`).toBeGreaterThanOrEqual(66);
         }
       }
@@ -79,7 +79,7 @@ test.describe("34: 60 students in each language, at 360px and with larger text",
       for (const el of await page.locator("a:visible, button:visible, select:visible").all()) {
         expect((await box(el)).height, "a link, button or select at 200%").toBeGreaterThanOrEqual(44);
       }
-      for (const row of await page.locator('main li a[href*="/students/edit/"]').filter({ visible: true }).all()) {
+      for (const row of await page.locator('main li > a[href*="/students/edit/"]').filter({ visible: true }).all()) {
         expect((await box(row)).height, "a row at 200%").toBeGreaterThanOrEqual(66);
       }
       const fits = await amount.evaluate((el) => el.scrollWidth <= (el.parentElement as HTMLElement).clientWidth + 1);

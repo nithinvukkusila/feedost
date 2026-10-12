@@ -6,7 +6,7 @@
 // blocker cannot stop it and it never waits for the network. The message is made here, on the phone, by
 // the same builder as the free tool; the parent's phone is in the link and nowhere else on the screen.
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, type MouseEvent } from "react";
+import { useMemo } from "react";
 import { withNode } from "@/components/app/with-node";
 import { ChatIcon, TickIcon } from "@/components/app/icons";
 import { useMonthWords } from "@/components/board/month-switcher";
@@ -177,7 +177,7 @@ export function RemindStep({ item, tone, onTone, message, onOpen, opened, logFai
               target="_blank"
               rel="noopener noreferrer"
               iconStart={<ChatIcon />}
-              onClick={(_event: MouseEvent<HTMLAnchorElement>) => onOpen()}
+              onClick={() => onOpen()}
             >
               {t("open")}
             </Button>
