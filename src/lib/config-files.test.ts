@@ -27,7 +27,7 @@ describe("a static export (criterion 8)", () => {
     }
   });
 
-  it("has no src/app/layout.tsx: the three root layouts are (jump), [locale] and dev", () => {
+  it("has no src/app/layout.tsx: the four root layouts are (jump), [locale], dev and r", () => {
     for (const ext of ["tsx", "ts", "jsx", "js"]) expect(existsSync(join(root, "src", "app", `layout.${ext}`))).toBe(false);
   });
 

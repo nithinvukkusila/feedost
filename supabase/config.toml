@@ -390,6 +390,8 @@ deno_version = 2
 [edge_runtime.secrets]
 APP_ENV = "local"
 WAITLIST_HASH_SALT = "local-dummy-salt-not-a-secret"
+# A different salt from the waitlist's, so one leak does not cover both. Dummy locally; real values are set per environment.
+RECEIPT_HASH_SALT = "local-dummy-receipt-salt-not-a-secret"
 
 # The health function is public by design and answers one word.
 [functions.health]
@@ -397,6 +399,10 @@ verify_jwt = false
 
 # The waitlist form posts from a browser with no token. The function defends itself: size, honeypot, rate limit, validation.
 [functions.waitlist-join]
+verify_jwt = false
+
+# R1-7 B: the public receipt page posts a token with no login. The function defends itself: method, size, token shape, two rate limits, allow-listed keys.
+[functions.receipt]
 verify_jwt = false
 
 [analytics]

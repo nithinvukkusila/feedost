@@ -516,16 +516,15 @@ export function copyHash(messages, keys) {
  * language with no valid sign-off, or whose text changed after its sign-off, is a problem.
  * A promise sentence still marked TODO-translate is always a problem: it cannot be reviewed.
  */
-export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", strict = false } = {}) {
+export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence" } = {}) {
   const problems = [];
   const notes = [];
   const notReviewed = [];
-  const label = "copy.review.json";
   const reviewed = locales.filter((l) => l !== "en");
 
   let record = null;
   if (!existsSync(reviewFile)) {
-    problems.push(`${label} does not exist; it records who has read the ${reviewed.join(", ")} promise sentences`);
+    problems.push(`${label} does not exist; it records who has read the ${reviewed.join(", ")} ${noun}s`);
   } else {
     try {
       record = JSON.parse(readFileSync(reviewFile, "utf8"));
@@ -554,7 +553,7 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     if (messages) {
       const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
       const marked = keys.filter((key) => typeof read(key) === "string" && read(key).startsWith(TODO));
-      for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a promise sentence and cannot be marked ${TODO}; write it and have it read`);
+      for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
       if (marked.length === 0) current = copyHash(messages, keys);
     }
 
@@ -590,7 +589,7 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
       if (complete && current !== null && entry.sha256 === current) continue; // signed off, and the text has not changed since
       notReviewed.push(locale);
       if (complete && current !== null) {
-        const changed = `messages/${locale}.json promise sentences changed after the review of ${entry.date} by ${entry.reviewer}`;
+        const changed = `messages/${locale}.json ${noun}s changed after the review of ${entry.date} by ${entry.reviewer}`;
         if (strict) problems.push(changed);
         else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
       }
@@ -598,9 +597,9 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     }
     notReviewed.push(locale);
     if (strict) {
-      problems.push(`messages/${locale}.json promise sentences are not reviewed (${keys.length} keys): get a native reader's sign-off and record it in ${label}`);
+      problems.push(`messages/${locale}.json ${noun}s are not reviewed (${keys.length} keys): get a native reader's sign-off and record it in ${label}`);
     } else if (current !== null) {
-      notes.push(`${locale}: promise sentences not reviewed; current text ${current}`);
+      notes.push(`${locale}: ${noun}s not reviewed; current text ${current}`);
     }
   }
   return { problems, notReviewed, notes };

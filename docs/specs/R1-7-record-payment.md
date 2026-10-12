@@ -248,7 +248,7 @@ All money logic lives in two database functions, `record_payment` and `void_paym
 - Privileges, in the same migration: `revoke execute ... from public, anon, authenticated` on both functions, then `grant execute ... to authenticated`. Update `supabase/tests/080_grants_after_migration.sql` if it enumerates functions (check it).
 - Nothing in `students` changes. The R1-5 trigger already freezes an opening due once `amount_paid > 0`; the "Already owes" lock (criterion 20) is screen-only and reads the due.
 
-**Migration B: `supabase/migrations/20261012140000_r1_receipt_public.sql`** (re-stamp to be later than A and than `main` at the time).
+**Migration B: `supabase/migrations/20261012160000_r1_receipt_public.sql`** (re-stamp to be later than A and than `main` at the time).
 
 - `receipt_hits (key_hash text, hour_bucket timestamptz, n integer check (n >= 0), primary key (key_hash, hour_bucket))`, RLS on, `revoke all` from `public, anon, authenticated`. One row per hashed IP or hashed token per hour. A table of its own (not `waitlist_hits`), so one feature's limit cannot be read off the other's rows. No `tutor_id`: the rows belong to no tutor; say so in the header like `waitlist_hits`.
 - `receipt_hit(p_hash text, p_limit integer) returns boolean`: the same body as `waitlist_hit` (purge older than 24 h, atomic upsert-increment, `n <= limit`), `security invoker`, `revoke all ... from public, anon, authenticated` (only the service role, which the Edge Function uses, can call it).
@@ -285,7 +285,7 @@ Frontend (`frontend-dev`):
 #### 3.2 Part B (function, rewrite, public page)
 
 Backend (`backend-dev`):
-- `supabase/migrations/20261012140000_r1_receipt_public.sql`.
+- `supabase/migrations/20261012160000_r1_receipt_public.sql`.
 - `supabase/functions/receipt/handler.ts`, `index.ts`, `handler.test.ts`: same split as `waitlist-join` (`handle(req, deps)` pure and tested in Node with fakes, `index.ts` is Deno wiring). Deps: `hashIp`, `hashToken`, `hitIp`, `hitToken`, `getReceipt`, `now`, `log`.
 - `supabase/config.toml`: `[functions.receipt] verify_jwt = false`.
 - `supabase/tests/190_receipt_public.sql`: pgTAP for `get_receipt` and `receipt_hit`.
@@ -405,7 +405,7 @@ Agents do the staging steps through `release-manager`; the founder alone approve
 **Production, each a separate human approval:**
 1. Migration A (`20261012130000_r1_payments.sql`): adds a table, a counter table, two money functions, one additive unique constraint on `dues`. A forward-fix only; there is no down migration.
 2. The release of Part A's front end (the Mark paid button appears for every tutor).
-3. Migration B (`20261012140000_r1_receipt_public.sql`).
+3. Migration B (`20261012160000_r1_receipt_public.sql`).
 4. Setting the production secret `RECEIPT_HASH_SALT` and `RECEIPT_ALLOWED_HOSTS` (if used), and deploying the `receipt` function.
 5. The release of Part B, which includes the `vercel.json` rewrite and headers (changes routing for `/r/*` on the production domain).
 6. The release of Part C (the PDF code reaches production; depends on R0-3's native-reader sign-off if R0-3 is still provisional).
@@ -460,3 +460,48 @@ void_payment(p_payment uuid)                                                    
 | `undo_window_over` | (void) more than 24 hours since it was recorded | null |
 
 Notes: an anonymous caller gets `42501` (permission denied) from the function privilege itself. `payments` and `receipt_counters` are not readable through `anon`. The client reads `payments` with select only (named columns, never `*`). `india_day()` is not executable by clients; compute "today" on the phone with `todayIndia`.
+
+## Part B public contract (written by `backend-dev`, 2026-10-12; for the `/r/{token}` page)
+
+**Request.** `POST {SUPABASE_URL}/functions/v1/receipt`, header `Content-Type: application/json`, body `{"token": "<the token from the path>"}`. No auth header needed (`verify_jwt` is off), but the platform's `apikey` header may be sent as for the waitlist form. POST only; GET and others give 405. Body is at most 512 bytes. Send no cookies (`credentials: "omit"`) and `referrerPolicy: "no-referrer"`. Allowed browser origins: `feedost.vercel.app` and this project's preview pattern (override `RECEIPT_ALLOWED_HOSTS`); on a local run `http://localhost:3000`.
+
+**Every response** is JSON with `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`, `Referrer-Policy: no-referrer`.
+
+| HTTP | body | meaning | page state |
+| --- | --- | --- | --- |
+| 200 | `{"code":"ok","receipt":{...}}` | found | show the receipt (or cancelled, by `receipt.status`) |
+| 404 | `{"code":"not_found"}` | unknown, malformed, short, empty or missing token, or the tutor's account was deleted. One identical body for all | not found |
+| 429 | `{"code":"rate_limited"}` plus `Retry-After: 3600` | over 60 requests an hour from this caller, or 120 an hour for this token | rate-limited, "try again later" |
+| 400 | `{"code":"invalid"}` | body not a JSON object | treat as a failure with Try again |
+| 405 / 413 | `{"code":"invalid"}` | wrong method / body too large | failure |
+| 500 | `{"code":"error"}` | server fault | failure with Try again |
+
+A network error (no response) is the page's "network failure with Try again" state.
+
+**`receipt` when `status` is `paid` or `part_paid`**: exactly these 12 keys, always present (null where noted):
+
+| key | type | notes |
+| --- | --- | --- |
+| `receipt_no` | integer | the tutor's own running number |
+| `status` | `"paid"` or `"part_paid"` | `paid` when `balance_after` is 0 |
+| `tutor_name` | string or null | |
+| `tutor_subjects` | string[] | may be empty |
+| `student_name` | string | |
+| `parent_name` | string or null | null: write the line without "from {parent}" |
+| `month` | `"YYYY-MM-DD"` (first of the month) or null | null means "earlier balance" |
+| `amount` | integer paise | what this payment was |
+| `method` | `"upi"` or `"cash"` | |
+| `paid_on` | `"YYYY-MM-DD"` | |
+| `balance_after` | integer paise | left on that fee right after this payment; fixed forever |
+| `language` | `"en"`, `"hi"`, `"kn"` or `"te"` | the student's parent language; use it for the page, not the address |
+
+**`receipt` when `status` is `cancelled`**: exactly 5 keys, `receipt_no`, `status` (`"cancelled"`), `tutor_name`, `student_name`, `language`. No amount, method, date or balance.
+
+Not returned: referral code (no column yet, R1-13), phone, email, UPI id, any id, other receipts. Secret to set before deploy (release-manager): `RECEIPT_HASH_SALT`. Nothing is deployed or set by this change.
+
+## Part B pending items (written by `frontend-dev`, 2026-10-12)
+
+- **Deferred to R1-13 (referral code, join link, footer link):** criterion 23's referral code, criterion 28's footer join link and criterion 31's 44px footer link are not built. The `receipt` function returns no referral code (no column exists yet). The page's footer is the plain words "Free for tutors" under the product name. Add the code to `get_receipt`, the link to the footer and the 44px check together in R1-13.
+- **Hindi, Kannada and Telugu parent words are unreviewed drafts** (`src/lib/receipt-words.review.json`); `pnpm i18n:check --strict` fails until each is signed off. Needed before production (question 5).
+- **H7:** `preprod-qa` must confirm on staging which client-IP header the platform sets. Until then callers with no known IP share one bucket limited to 2000 an hour (real IPs: 60), and the per-token limit of 120 an hour is the real guard.
+- **Vercel rewrite** (`vercel.json`) is checked locally only; confirm on a preview with a real token, with and without the trailing slash.
