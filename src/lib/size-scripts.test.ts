@@ -76,7 +76,9 @@ function project(options: Options = {}): string {
     const locale = page.split("/")[0] as keyof typeof messages;
     mkdirSync(join(root, "out", page, ".."), { recursive: true });
     const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
-    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, script));
+    // The Remind screen (R1-8) carries the templates of all four languages, as the tool page does, so it loads the script that holds them.
+    const scripts = page.includes("/remind/") ? [script, "/_next/tool.js"] : [script];
+    writeFileSync(join(root, "out", page), html(options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`, ...scripts));
   }
   for (const [locale, tree] of Object.entries(options.messages ?? messages)) {
     writeFileSync(join(root, "messages", `${locale}.json`), JSON.stringify(tree));

@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { completeTutor, HOST, watchOtherHosts } from "./auth-helpers";
 import { NOW, signedIn } from "./board-fixture";
 import { box, langs, sidewaysScroll, textProblems } from "./helpers";
-import { stubReminders, type Reminders } from "./remind-helpers";
+import type { Reminders } from "./remind-helpers";
 import type { Dues } from "./dues-helpers";
 import type { Roster } from "./roster-helpers";
 
@@ -34,9 +34,8 @@ const DUES = [
 
 type Ctx = { dues: Dues; roster: Roster; rem: Reminders };
 async function setup(page: Page, seed: Parameters<typeof signedIn>[1] = {}, tutor?: Parameters<typeof completeTutor>[0]): Promise<Ctx> {
-  const { dues, roster, stub } = await signedIn(page, { students: STUDENTS, batches: [{ id: MATHS, name: "Class 10 Maths" }], dues: DUES, ...seed });
+  const { dues, roster, stub, rem } = await signedIn(page, { students: STUDENTS, batches: [{ id: MATHS, name: "Class 10 Maths" }], dues: DUES, ...seed });
   if (tutor) stub.tutor = completeTutor(tutor);
-  const rem = await stubReminders(page, dues, roster);
   // WhatsApp itself is not reached from a test: its address answers with an empty page.
   await page.context().route("https://wa.me/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<title>x</title>" }));
   return { dues, roster, rem };

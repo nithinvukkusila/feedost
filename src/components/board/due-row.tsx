@@ -112,7 +112,7 @@ export function DueRow({
         </span>
       </a>
       {canPay || hasReceipt ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 py-2 pr-1.5 pb-3.5">
+        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2 py-2 pr-1.5 pb-3.5">
           {hasReceipt ? (
             <Button variant="outline" size="compact" href={receiptHref} onClick={soft(receiptHref)} aria-label={pay("receiptFor", { name: student.name })}>
               {pay("receiptButton")}

@@ -4,7 +4,6 @@
 // same request id answer the same time, and logs every call so a spec can see exactly what was sent.
 import type { Page, Route } from "@playwright/test";
 import { HOST, USER_ID } from "./auth-helpers";
-import { NOW } from "./board-fixture";
 import type { Dues } from "./dues-helpers";
 import type { Roster } from "./roster-helpers";
 
@@ -27,6 +26,9 @@ export type Reminders = {
   /** Calls to last_reminders. */
   reads(): RemindRequest[];
 };
+
+// 05:00 UTC on 12 Oct 2026, the fixed clock of the board specs (board-fixture.ts).
+const NOW = new Date("2026-10-12T05:00:00Z");
 
 let counter = 0;
 const uuid = () => {
