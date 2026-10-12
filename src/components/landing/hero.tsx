@@ -21,21 +21,26 @@ export function Hero() {
     // positioning frame, the card's row is laid over the cloth and lets clicks through to the text.
     <section className="lg:relative">
       <div className="on-cloth-ground bg-cloth px-5 pt-8 pb-28 text-on-cloth outline-2 -outline-offset-8 outline-stitch outline-dashed lg:py-20">
-        <div className="mx-auto w-full max-w-2xl lg:max-w-7xl lg:pr-[50%]">
-          <p className="type-label">{t("kicker")}</p>
-          <h1 className="type-headline mt-3 text-5xl wrap-break-word">{t("title")}</h1>
-          <p className="type-body-lg mt-4 text-on-cloth-soft">{t("body")}</p>
-          <div className="mt-6 pr-1.5">
-            <Button variant="outline" size="large" full href="#waitlist" iconEnd={<Arrow />}>
-              {t("join")}
-            </Button>
+        {/* The width cap sits on this wrapper and the half-width gap on the child: a percentage padding is
+            measured against the parent, so on one element it would be half of the whole window, not half
+            of the capped column, and the text would shrink to a sliver on a wide screen. */}
+        <div className="mx-auto w-full max-w-2xl lg:max-w-7xl">
+          <div className="lg:pr-[50%]">
+            <p className="type-label">{t("kicker")}</p>
+            <h1 className="type-headline mt-3 text-5xl wrap-break-word">{t("title")}</h1>
+            <p className="type-body-lg mt-4 text-on-cloth-soft">{t("body")}</p>
+            <div className="mt-6 pr-1.5">
+              <Button variant="outline" size="large" full href="#waitlist" iconEnd={<Arrow />}>
+                {t("join")}
+              </Button>
+            </div>
+            <a
+              href={localeHref(locale, feeReminderPath)}
+              className="type-body mt-3 flex min-h-tap items-center justify-center text-center font-bold text-on-cloth underline ring:ground-ring"
+            >
+              {t("tool")}
+            </a>
           </div>
-          <a
-            href={localeHref(locale, feeReminderPath)}
-            className="type-body mt-3 flex min-h-tap items-center justify-center text-center font-bold text-on-cloth underline ring:ground-ring"
-          >
-            {t("tool")}
-          </a>
         </div>
       </div>
       <div className="relative mx-auto -mt-24 w-full max-w-2xl pr-7 pl-5 lg:pointer-events-none lg:absolute lg:inset-0 lg:mt-0 lg:flex lg:max-w-7xl lg:items-center lg:justify-end lg:px-5">
