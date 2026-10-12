@@ -129,3 +129,28 @@ export async function ensureMyDues(): Promise<number> {
     return 0;
   }
 }
+
+/** One fee by its id, or null when there is none (or it is not this tutor's: row-level security shows nothing). */
+export async function readDue(id: string): Promise<Due | null> {
+  let result;
+  try {
+    const client = await getClient();
+    result = await client.from("dues").select(DUE_COLUMNS).eq("id", id).limit(1);
+  } catch {
+    throw new DuesLoadError();
+  }
+  if (result.error) throw new DuesLoadError(classifyLoadFailure({ status: result.status, code: result.error.code }));
+  const first = ((result.data as unknown[] | null) ?? [])[0];
+  return first === undefined ? null : dueFromRow(first);
+}
+
+/** The id of this student's earlier-balance due, or null when there is none. Throws when it cannot be read. */
+export async function readOpeningDueId(studentId: string): Promise<string | null> {
+  const client = await getClient();
+  const { data, error } = await client.from("dues").select("id").eq("student_id", studentId).eq("kind", "opening").limit(1);
+  if (error) throw new DuesLoadError();
+  const id = ((data as { id?: unknown }[] | null) ?? [])[0]?.id;
+  if (id === undefined) return null;
+  if (typeof id !== "string") throw new DuesLoadError();
+  return id;
+}

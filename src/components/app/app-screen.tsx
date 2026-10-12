@@ -4,12 +4,14 @@ import type { ReactNode } from "react";
 import type { BottomNavKey } from "@/components/ui/bottom-nav";
 import { AppNav } from "./app-nav";
 
-export function AppScreen({ nav, children }: Readonly<{ nav?: BottomNavKey; children: ReactNode }>) {
+/** `above` sits on top of the navigation, in the same pinned block (the undo banner after a payment). */
+export function AppScreen({ nav, above, children }: Readonly<{ nav?: BottomNavKey; above?: ReactNode; children: ReactNode }>) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page">
       <main className="flex flex-1 flex-col">{children}</main>
       {nav ? (
         <div data-sticky-nav="" className="sticky bottom-0 z-10">
+          {above}
           <AppNav current={nav} />
         </div>
       ) : null}

@@ -151,6 +151,10 @@ export async function stubDues(page: Page, initial: (Partial<DueRow> & { student
       if (month?.startsWith("eq.")) rows = rows.filter((row) => row.month === month.slice(3));
       else if (month === "not.is.null") rows = rows.filter((row) => row.month !== null);
       if (q.get("status") === "neq.paid") rows = rows.filter((row) => row.status !== "paid");
+      for (const column of ["id", "student_id", "kind"] as const) {
+        const wanted = q.get(column);
+        if (wanted?.startsWith("eq.")) rows = rows.filter((row) => row[column] === wanted.slice(3));
+      }
       const order = (q.get("order") ?? "").split(",").filter(Boolean).map((part) => part.split(".")[0]);
       rows.sort((a, b) => {
         for (const column of order) {

@@ -48,7 +48,7 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
     await expect(page.getByText("₹7,800", { exact: true })).toBeVisible();
     await expect(page.getByText("from 4 of 5 students")).toBeVisible();
     await expect(page.getByText("₹1,500 collected")).toBeVisible();
-    await expect(page.getByText("Reminders and Mark paid arrive in a later update.")).toBeVisible();
+    await expect(page.getByText("Reminders arrive in a later update.")).toBeVisible();
 
     // The order on the screen.
     const y = async (locator: ReturnType<Page["locator"]>) => (await box(locator.first())).y;
@@ -99,8 +99,9 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
       await expect(row).toHaveAttribute("href", /^\/en\/students\/edit\/\?id=00000000-0000-4000-8000-/);
       expect(await row.locator("button, a, input").count()).toBe(0);
     }
-    await expect(page.getByText(/Remind|Mark paid/).filter({ hasNotText: "Reminders and Mark paid arrive" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /remind|mark paid/i })).toHaveCount(0);
+    // Remind is R1-8's; Mark paid (R1-7) is a button beside the link of each fee that has something owed, and never inside it.
+    await expect(page.getByRole("button", { name: /remind/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /^Mark paid/ })).toHaveCount(4);
 
     // Home is the current item of the bottom navigation.
     await expect(nav(page).locator('[data-item="home"]')).toHaveAttribute("aria-current", "page");

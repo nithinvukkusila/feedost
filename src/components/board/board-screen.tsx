@@ -4,11 +4,14 @@
 // switcher, the amount still to come in, the batch select (only with batches), the strip with its words,
 // the three tabs and the rows. It reads the cached roster and the board's cached dues and works out the view
 // on the phone; the only thing it asks the network for is through the board store, on opening and on a day
-// change. It writes nothing. Until Mark paid and Remind land (R1-7, R1-8) it is read-only.
+// change. Its one write is Mark paid (R1-7): the sheet is a lazy chunk, loaded on the first tap, and what it
+// records goes through src/lib/payments.ts. Remind lands in R1-8.
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { useEffect, useId, useRef, useState } from "react";
 import { AppScreen } from "@/components/app/app-screen";
 import { useRoster } from "@/components/app/roster";
+import { UndoBanner } from "@/components/pay/undo-banner";
 import { BatchFilter, effectiveFilter } from "@/components/students/batch-filter";
 import { Slip } from "@/components/ui/slip";
 import { StudentStrip } from "@/components/ui/student-strip";
@@ -23,6 +26,9 @@ import { HeroAmount } from "./hero-amount";
 import { MonthSwitcher, useMonthWords } from "./month-switcher";
 import { useBoardView } from "./use-board-view";
 
+// Not part of the first load: the sheet, its amount checks and its date choices come down on the first tap of Mark paid.
+const PaySheet = dynamic(() => import("@/components/pay/pay-sheet"), { ssr: false });
+
 const NONE: readonly Due[] = [];
 
 const TABS: readonly Tab[] = ["overdue", "due", "paid"];
@@ -36,6 +42,8 @@ export function BoardScreen() {
   const { open, retry, selectMonth, setTab, setFilter } = board;
   const { reload } = roster;
   const panelId = useId();
+  // The fee whose Mark paid sheet is open, by id; the row itself is looked up live, so the sheet follows the board.
+  const [paying, setPaying] = useState<string | null>(null);
 
   // Today in India, from the phone's clock as an instant. It changes only when the page is shown again
   // after midnight there (no timer); then the board asks for its dues again.
@@ -77,6 +85,8 @@ export function BoardScreen() {
     reload();
   }, [missing, board.reads, reload]);
 
+  const payingRow = paying === null ? undefined : view.rows.find((row) => row.due.id === paying && row.due.status !== "paid");
+
   const moves = monthMoves(month, board.earliest?.month ?? null, today);
   const go = (to: string) => selectMonth(to, today);
 
@@ -107,7 +117,7 @@ export function BoardScreen() {
   const tabs = TABS.map((id) => ({ id, label: t(`tab.${id}`), count: <span translate="no">{view.counts[id]}</span> }));
 
   return (
-    <AppScreen nav="home">
+    <AppScreen nav="home" above={<UndoBanner today={today} />}>
       <MonthSwitcher label={months.label(month)} canPrev={moves.prev} canNext={moves.next} onPrev={() => go(shiftMonth(month, -1))} onNext={() => go(shiftMonth(month, 1))} />
 
       {board.blocked ? (
@@ -163,12 +173,26 @@ export function BoardScreen() {
           <div className="pt-5 pr-5.5 pl-4">
             <Tabs tabs={tabs} value={tab} onChange={(id) => setTab(id as Tab)} label={t("tabsLabel")} panelId={panelId} />
             <Slip joined role="tabpanel" id={panelId} aria-labelledby={tabId(panelId, tab)} className="px-3">
-              <BoardList tab={tab} rows={view.tabs[tab]} month={month} isCurrent={isCurrent} batchNames={batchNames} />
+              <BoardList tab={tab} rows={view.tabs[tab]} month={month} isCurrent={isCurrent} batchNames={batchNames} onMarkPaid={setPaying} />
             </Slip>
           </div>
         </>
       )}
       <div className="pb-5" />
+      {payingRow ? (
+        <PaySheet
+          row={payingRow}
+          batchName={payingRow.student.batchId ? (batchNames.get(payingRow.student.batchId) ?? null) : null}
+          today={today}
+          onClose={() => setPaying(null)}
+          onPaid={(payment) => {
+            board.applyPayment(payment);
+            board.showNotice({ kind: "paid", payment, name: payingRow.student.name });
+            board.refresh(today);
+          }}
+          onStale={() => board.refresh(today)}
+        />
+      ) : null}
     </AppScreen>
   );
 }

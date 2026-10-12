@@ -5,7 +5,7 @@
 // There is no way to delete a student here.
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppScreen } from "@/components/app/app-screen";
 import { BackLink } from "@/components/app/back-link";
 import { LoadingBook } from "@/components/app/loading-book";
@@ -16,6 +16,7 @@ import { WriteNotice, type WriteProblem } from "@/components/app/write-notice";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/config/locales";
 import { localeHref, studentsPath } from "@/config/routes";
+import { readOpeningPaid } from "@/lib/payments";
 import { setActive, type Student } from "@/lib/students";
 import { ArchivedTag } from "./archived-tag";
 import { StudentForm } from "./student-form";
@@ -39,6 +40,21 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
   const roster = useRoster();
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<WriteProblem | "missing">(null);
+  // Once any payment has been recorded against the earlier balance, "Already owes" is read-only (R1-7, criterion 20).
+  // Until the read has answered the field is held too (owesChecking); a failed read counts as locked.
+  const [owesLocked, setOwesLocked] = useState(false);
+  const [owesChecking, setOwesChecking] = useState(true);
+  useEffect(() => {
+    let current = true;
+    void readOpeningPaid(student.id).then((paid) => {
+      if (!current) return;
+      setOwesLocked(paid);
+      setOwesChecking(false);
+    });
+    return () => {
+      current = false;
+    };
+  }, [student.id]);
 
   async function toggle() {
     if (working) return;
@@ -66,7 +82,7 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
         </div>
       )}
       <div className="mt-3">
-        <StudentForm key={student.id} mode="edit" student={student} />
+        <StudentForm key={student.id} mode="edit" student={student} owesLocked={owesLocked} owesChecking={owesChecking} />
       </div>
 
       <section className="mt-6 border-t-2 border-ink pt-4">

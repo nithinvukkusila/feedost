@@ -242,3 +242,76 @@ describe("the remembered view (12, 19)", () => {
     expect(set).not.toHaveBeenCalled();
   });
 });
+
+describe("a payment the database confirmed (R1-7, criteria 14 and 15)", () => {
+  const payment = (over: Partial<import("@/lib/payments").Payment> = {}): import("@/lib/payments").Payment => ({
+    id: "p1",
+    dueId: "a",
+    amount: 40,
+    method: "upi",
+    paidOn: TODAY,
+    receiptNo: 3,
+    balanceAfter: 60,
+    createdAt: Date.now(),
+    voidedAt: null,
+    ...over,
+  });
+  const openBoard = async () => {
+    lib.readUnpaid.mockResolvedValue([due("a"), due("old", "2026-09-01")]);
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+  };
+
+  it("applyPayment sets what is paid from what is left, in every slice that holds the fee, and marks them old", async () => {
+    await openBoard();
+    act(() => held.board.applyPayment(payment()));
+    expect(held.board.months["2026-10-01"].rows[0]).toMatchObject({ amountPaid: 40, status: "partial" });
+    expect(held.board.unpaid?.rows[0]).toMatchObject({ amountPaid: 40, status: "partial" });
+    expect(held.board.months["2026-10-01"].at).toBe(0);
+    // Another fee is untouched.
+    expect(held.board.unpaid?.rows[1]).toMatchObject({ id: "old", amountPaid: 0, status: "due" });
+    act(() => held.board.applyPayment(payment({ amount: 60, balanceAfter: 0 })));
+    expect(held.board.months["2026-10-01"].rows[0]).toMatchObject({ amountPaid: 100, status: "paid" });
+  });
+
+  it("applying the same payment twice changes nothing more", async () => {
+    await openBoard();
+    act(() => held.board.applyPayment(payment()));
+    act(() => held.board.applyPayment(payment()));
+    expect(held.board.months["2026-10-01"].rows[0].amountPaid).toBe(40);
+  });
+
+  it("applyVoid takes the payment's amount back and returns the fee to due or part paid", async () => {
+    await openBoard();
+    act(() => held.board.applyPayment(payment({ amount: 100, balanceAfter: 0 })));
+    expect(held.board.months["2026-10-01"].rows[0].status).toBe("paid");
+    act(() => held.board.applyVoid(payment({ amount: 30, balanceAfter: 0, voidedAt: Date.now() })));
+    expect(held.board.months["2026-10-01"].rows[0]).toMatchObject({ amountPaid: 70, status: "partial" });
+    act(() => held.board.applyVoid(payment({ amount: 70, balanceAfter: 0, voidedAt: Date.now() })));
+    expect(held.board.months["2026-10-01"].rows[0]).toMatchObject({ amountPaid: 0, status: "due" });
+  });
+
+  it("refresh reads the view again, and sends nothing offline", async () => {
+    await openBoard();
+    lib.readMonth.mockClear();
+    act(() => held.board.refresh(TODAY));
+    await flush();
+    expect(lib.readMonth).toHaveBeenCalledTimes(1);
+    onLine(false);
+    act(() => held.board.refresh(TODAY));
+    await flush();
+    expect(lib.readMonth).toHaveBeenCalledTimes(1);
+  });
+
+  it("a notice says until when it is shown (10 seconds, 5 for undone), a newer one replaces it, and clearing takes it down", async () => {
+    await openBoard();
+    const now = Date.now();
+    act(() => held.board.showNotice({ kind: "paid", payment: payment(), name: "Ravi" }));
+    expect(held.board.notice).toMatchObject({ kind: "paid", until: now + 10_000 });
+    act(() => held.board.showNotice({ kind: "undone" }));
+    expect(held.board.notice).toMatchObject({ kind: "undone", until: now + 5_000 });
+    act(() => held.board.clearNotice());
+    expect(held.board.notice).toBeNull();
+  });
+});

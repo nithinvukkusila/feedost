@@ -16,6 +16,8 @@ export const studentEditPath = "students/edit/";
 export const batchesPath = "batches/";
 export const batchEditPath = "batches/edit/";
 export const attendancePath = "attendance/";
+/** The in-app receipt (R1-7). Not a `Place`: the gate treats it as home, which is right for a signed-in tutor. */
+export const receiptPath = "receipt/";
 export const setupProfilePath = "setup/profile/";
 export const setupUpiPath = "setup/upi/";
 

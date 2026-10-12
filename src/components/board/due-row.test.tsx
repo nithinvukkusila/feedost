@@ -27,11 +27,15 @@ const student: Student = {
 const base: Due = { id: "d1", studentId: "s1", kind: "monthly", month: "2026-10-01", amount: 120000, amountPaid: 0, status: "due", dueDate: "2026-10-05" };
 const TODAY = "2026-10-12";
 
+const onMarkPaid = vi.fn();
+// The link to the student: the row's first link (a Receipt link, when there is one, comes after it).
+const rowLink = () => document.querySelector("li > a") as HTMLElement;
+
 function show(due: Partial<Due>, opts: { month?: string; batch?: string | null; lang?: "en" | "hi" } = {}) {
   const d = { ...base, ...due };
   return renderWithWords(
     <ul>
-      <DueRow row={{ due: d, student, state: dueState(d, TODAY) }} month={opts.month ?? "2026-10-01"} batchName={opts.batch === undefined ? "Class 10 Maths" : opts.batch} />
+      <DueRow row={{ due: d, student, state: dueState(d, TODAY) }} month={opts.month ?? "2026-10-01"} batchName={opts.batch === undefined ? "Class 10 Maths" : opts.batch} onMarkPaid={onMarkPaid} />
     </ul>,
     opts.lang ?? "en",
   );
@@ -40,7 +44,7 @@ function show(due: Partial<Due>, opts: { month?: string; batch?: string | null; 
 describe("DueRow", () => {
   it("an overdue fee: the tag with days, the name, the due date, the batch and the amount, in one link to the edit screen", () => {
     show({});
-    const link = screen.getByRole("link");
+    const link = rowLink();
     expect(link.getAttribute("href")).toBe("/en/students/edit/?id=s1");
     expect(link.textContent).toContain("Overdue 7 days");
     expect(link.textContent).toContain("Ravi Kumar");
@@ -64,7 +68,7 @@ describe("DueRow", () => {
 
   it("an earlier balance has no day count and says what it is", () => {
     show({ kind: "opening", month: null, amount: 240000, dueDate: "2026-09-30" });
-    const link = screen.getByRole("link");
+    const link = rowLink();
     expect(link.textContent).toContain("Overdue");
     expect(link.textContent).not.toMatch(/days?\b.*Earlier/);
     expect(link.textContent).toContain("Earlier balance");
@@ -73,12 +77,12 @@ describe("DueRow", () => {
 
   it("a fee from an earlier month names the month", () => {
     show({ month: "2026-09-01", dueDate: "2026-09-05" });
-    expect(screen.getByRole("link").textContent).toContain("September fee");
+    expect(rowLink().textContent).toContain("September fee");
   });
 
   it("a part paid fee shows what was paid and the amount still owed, and keeps Overdue when late", () => {
     show({ amountPaid: 50000, status: "partial", amount: 100000 });
-    const link = screen.getByRole("link");
+    const link = rowLink();
     expect(link.textContent).toContain("Overdue 7 days");
     expect(link.textContent).toContain("Part paid ₹500");
     expect(link.textContent?.endsWith("₹500")).toBe(true);
@@ -89,22 +93,22 @@ describe("DueRow", () => {
 
   it("a paid fee shows the whole amount and the word Paid", () => {
     show({ amountPaid: 120000, status: "paid" });
-    const link = screen.getByRole("link");
+    const link = rowLink();
     expect(link.textContent).toContain("Paid");
     expect(link.textContent).toContain("₹1,200");
   });
 
   it("has no batch name when the student has none", () => {
     show({}, { batch: null });
-    expect(screen.getByRole("link").textContent).not.toContain("Class 10");
+    expect(rowLink().textContent).not.toContain("Class 10");
   });
 
   it("the amount is in the mono face with 0 to 9 digits whatever the language", () => {
     show({ amount: 123456700 }, { lang: "hi" });
     const amount = screen.getByText("₹12,34,567");
     expect(amount.className).toContain("type-amount-row");
-    expect(/[०-९౦-౯೦-೯]/.test(screen.getByRole("link").textContent ?? "")).toBe(false);
-    expect(screen.getByRole("link").getAttribute("href")).toBe("/hi/students/edit/?id=s1");
+    expect(/[०-९౦-౯೦-೯]/.test(rowLink().textContent ?? "")).toBe(false);
+    expect(rowLink().getAttribute("href")).toBe("/hi/students/edit/?id=s1");
   });
 
   it("does not cut a long name", () => {
@@ -112,5 +116,47 @@ describe("DueRow", () => {
     const html = document.body.innerHTML;
     expect(html).not.toMatch(/truncate|ellipsis|line-clamp/);
     expect(html).toContain("wrap-anywhere");
+  });
+});
+
+describe("the buttons beside the row (R1-7, criterion 12)", () => {
+  it("an overdue or due fee has Mark paid, beside the link and not inside it, 44px or more, named for the student", () => {
+    show({});
+    const button = screen.getByRole("button", { name: "Mark paid, Ravi Kumar" });
+    expect(button.textContent).toBe("Mark paid");
+    expect(rowLink().contains(button)).toBe(false);
+    expect(button.className).toContain("min-h-tap");
+    expect(screen.queryByRole("link", { name: /Receipt/ })).toBeNull();
+    button.click();
+    expect(onMarkPaid).toHaveBeenCalledWith("d1");
+    cleanup();
+    show({ dueDate: "2026-10-20" });
+    expect(screen.getByRole("button", { name: /Mark paid/ })).toBeTruthy();
+  });
+
+  it("an earlier balance can be marked paid too", () => {
+    show({ kind: "opening", month: null, dueDate: "2026-09-30" });
+    expect(screen.getByRole("button", { name: /Mark paid/ })).toBeTruthy();
+  });
+
+  it("a part paid fee has both: Receipt, a link to its receipts, and Mark paid", () => {
+    show({ amountPaid: 50000, status: "partial" });
+    expect(screen.getByRole("button", { name: /Mark paid/ })).toBeTruthy();
+    const receipt = screen.getByRole("link", { name: "Receipt, Ravi Kumar" });
+    expect(receipt.getAttribute("href")).toBe("/en/receipt/?due=d1");
+  });
+
+  it("a paid fee has Receipt and no Mark paid; a fee with nothing paid has no Receipt", () => {
+    show({ amountPaid: 120000, status: "paid" });
+    expect(screen.queryByRole("button", { name: /Mark paid/ })).toBeNull();
+    expect(screen.getByRole("link", { name: /Receipt/ }).getAttribute("href")).toBe("/en/receipt/?due=d1");
+    cleanup();
+    show({});
+    expect(screen.queryByRole("link", { name: /Receipt/ })).toBeNull();
+  });
+
+  it("the buttons say their words in Hindi (TODO-translate shows English until reviewed)", () => {
+    show({}, { lang: "hi" });
+    expect(screen.getByRole("button", { name: /Mark paid/ })).toBeTruthy();
   });
 });

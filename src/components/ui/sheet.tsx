@@ -29,7 +29,8 @@ export function SheetFrame({ title, titleId, closeLabel, onClose, context, child
     // Rings inside the dark area are yellow; the panel below resets to paper.
     <div className="on-dark-ground flex h-full min-h-0 flex-col justify-end bg-sheet-ground">
       {context ? (
-        <div className="shrink-0 px-6 pt-6 pb-4 text-on-cloth">
+        // At most 60% of the sheet and scrolls inside itself: a very long name at the largest text would otherwise take the whole screen and leave the panel, and its buttons, no room.
+        <div className="max-h-3/5 shrink-0 overflow-y-auto px-6 pt-6 pb-4 text-on-cloth">
           <p className="type-label wrap-anywhere">{context.label}</p>
           <p className="type-headline mt-1 text-3xl wrap-anywhere">{context.title}</p>
         </div>

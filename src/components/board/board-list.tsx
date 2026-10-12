@@ -12,7 +12,8 @@ export function BoardList({
   month,
   isCurrent,
   batchNames,
-}: Readonly<{ tab: Tab; rows: readonly Row[]; month: string; isCurrent: boolean; batchNames: ReadonlyMap<string, string> }>) {
+  onMarkPaid,
+}: Readonly<{ tab: Tab; rows: readonly Row[]; month: string; isCurrent: boolean; batchNames: ReadonlyMap<string, string>; onMarkPaid: (dueId: string) => void }>) {
   const t = useTranslations("board");
   if (rows.length === 0) {
     const none = tab === "overdue" ? t("empty.tab.overdue") : tab === "due" ? t(isCurrent ? "empty.tab.due" : "empty.tab.dueOld") : t(isCurrent ? "empty.tab.paid" : "empty.tab.paidOld");
@@ -22,7 +23,7 @@ export function BoardList({
     <>
       <ul>
         {rows.map((row) => (
-          <DueRow key={row.due.id} row={row} month={month} batchName={row.student.batchId ? (batchNames.get(row.student.batchId) ?? null) : null} />
+          <DueRow key={row.due.id} row={row} month={month} batchName={row.student.batchId ? (batchNames.get(row.student.batchId) ?? null) : null} onMarkPaid={onMarkPaid} />
         ))}
       </ul>
       <p className="type-caption py-4 text-ink-soft wrap-anywhere">{t(`end.${tab}`)}</p>

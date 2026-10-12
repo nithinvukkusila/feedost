@@ -379,7 +379,8 @@
       "feeFromNextMonth": "A new fee applies from the next month.",
       "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
       "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
-      "batchGone": "That batch no longer exists. Pick another batch or No batch."
+      "batchGone": "That batch no longer exists. Pick another batch or No batch.",
+      "owesLocked": "A payment has been recorded against this, so it can't be changed"
     },
     "state": {
       "missing": "Missing",
@@ -557,7 +558,7 @@
       "of": "{n} of {m}",
       "next": "{month} fees will appear here on each student's due day. You do not need to do anything."
     },
-    "soon": "Reminders and Mark paid arrive in a later update.",
+    "soon": "Reminders arrive in a later update.",
     "loadError": {
       "title": "Couldn't load your fees",
       "body": "The network dropped. Nothing is lost.",
@@ -630,5 +631,82 @@
       "detail": "Please try again in an hour."
     },
     "noScript": "This form needs JavaScript turned on."
+  },
+  "pay": {
+    "markPaid": "Mark paid",
+    "receiptButton": "Receipt",
+    "markPaidFor": "Mark paid, {name}",
+    "receiptFor": "Receipt, {name}",
+    "cancel": "Cancel",
+    "amount": "Amount received ₹",
+    "chipsLabel": "Quick amounts",
+    "full": "Full {amount}",
+    "half": "Half {amount}",
+    "other": "Other",
+    "method": "Paid by",
+    "upi": "UPI",
+    "cash": "Cash",
+    "paidOn": "Paid on",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "pick": "Pick date",
+    "pickLabel": "Date paid",
+    "submit": "Mark as paid",
+    "saving": "Saving…",
+    "note": "A numbered receipt is made for you. You can view it right after.",
+    "slow": "Still trying. Please wait. It will not be saved twice.",
+    "fix": "Needs fixing",
+    "error": {
+      "amountMissing": "Enter an amount of ₹1 or more",
+      "amountWhole": "Use digits only, in whole rupees",
+      "over": "Only {amount} is left on this fee",
+      "dateMissing": "Pick the date it was paid",
+      "dateFuture": "Pick a date that is not in the future",
+      "dateOld": "Pick a date within the last 90 days",
+      "dateRefused": "That date was refused. Check the date on your phone, or pick another date.",
+      "failed": "Couldn't save. Nothing was recorded. Try again.",
+      "offline": "You are offline. Payments need a connection for now. Nothing was saved.",
+      "alreadyPaid": "This fee is already paid in full. Nothing was recorded.",
+      "archived": "This student is archived. Restore the student to record a payment.",
+      "reused": "This may already be saved. Close this and check the fee on the board before trying again.",
+      "signedOut": "You were signed out. Sign in again. Nothing was recorded.",
+      "undoFailed": "Couldn't undo. Nothing was changed. Try again.",
+      "undoLate": "This payment can no longer be undone."
+    },
+    "banner": {
+      "paid": "{name} marked paid, {amount}",
+      "undo": "Undo",
+      "send": "View receipt",
+      "undone": "Payment undone"
+    },
+    "receipt": {
+      "title": "Receipt",
+      "back": "Back to fees",
+      "feeReceipt": "Fee receipt",
+      "no": "Receipt no.",
+      "date": "Date {date}",
+      "student": "Student",
+      "parent": "Parent",
+      "forMonth": "Fee for",
+      "earlier": "Earlier balance",
+      "paidBy": "Paid by",
+      "balance": "Balance",
+      "nil": "Nil",
+      "balanceNow": "Balance on this fee now",
+      "paid": "PAID",
+      "partPaid": "PART PAID",
+      "cancelled": "CANCELLED",
+      "recorded": "Recorded <v>{date} {time}</v>",
+      "undo": "Undo this payment",
+      "undoAsk": "Undo this payment? The receipt will be cancelled.",
+      "undoYes": "Yes, undo it",
+      "undoKeep": "Keep it",
+      "undoing": "Undoing…",
+      "notFound": "Couldn't find this fee",
+      "notFoundBody": "It may have been removed. Go back to your fees.",
+      "none": "No payment has been recorded on this fee yet.",
+      "loadError": "Couldn't load the receipt. Nothing is lost.",
+      "retry": "Try again"
+    }
   }
 }

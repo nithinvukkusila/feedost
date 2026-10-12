@@ -1,5 +1,5 @@
 // Spec R1-3, criteria 36 to 38: Archive and Restore on the edit screen, and what it says when they do not go through.
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Roster } from "@/components/app/roster";
@@ -13,6 +13,9 @@ vi.mock("@/components/app/roster", () => ({ useRoster: () => held.roster }));
 vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u" }, setTutor: vi.fn() }) }));
 const setActive = vi.fn();
 vi.mock("@/lib/students", () => ({ setActive: (...a: unknown[]) => setActive(...a), createStudent: vi.fn(), updateStudent: vi.fn() }));
+
+const readOpeningPaid = vi.fn();
+vi.mock("@/lib/payments", () => ({ readOpeningPaid: (...a: unknown[]) => readOpeningPaid(...a) }));
 
 import { StudentEditScreen } from "./student-edit-screen";
 
@@ -30,6 +33,7 @@ beforeEach(() => {
   push.mockReset();
   put.mockReset();
   setActive.mockReset();
+  readOpeningPaid.mockReset().mockResolvedValue(false);
 });
 afterEach(cleanup);
 
@@ -79,5 +83,35 @@ describe("archive and restore", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Archive student" }));
     expect((await screen.findByRole("alert")).textContent).toBe("Couldn't find this student");
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("Already owes (R1-7, criterion 20)", () => {
+  it("asks about this student's earlier balance and locks the field once something was paid against it", async () => {
+    show(true);
+    readOpeningPaid.mockResolvedValue(true);
+    renderWithWords(<StudentEditScreen />);
+    expect(await screen.findByText("A payment has been recorded against this, so it can't be changed")).toBeTruthy();
+    expect(readOpeningPaid).toHaveBeenCalledWith("s1");
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(true);
+  });
+
+  it("holds the field until the read has answered", async () => {
+    show(true);
+    let answer: (paid: boolean) => void = () => {};
+    readOpeningPaid.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)));
+    renderWithWords(<StudentEditScreen />);
+    const field = await screen.findByLabelText("Already owes ₹");
+    expect((field as HTMLTextAreaElement).readOnly).toBe(true);
+    answer(false);
+    await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
+  });
+
+  it("leaves it editable when nothing was paid", async () => {
+    show(true);
+    renderWithWords(<StudentEditScreen />);
+    await screen.findByRole("button", { name: "Archive student" });
+    expect(readOpeningPaid).toHaveBeenCalled();
+    await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
   });
 });
