@@ -68,7 +68,7 @@ function PaidSlip({ words, receipt }: Readonly<{ words: ReceiptWords; receipt: P
         </p>
       </div>
 
-      <p className="type-body-lg text-ink-soft">
+      <p className="type-body-lg text-ink-soft wrap-anywhere">
         {parts(template, values).map((part, index) =>
           part.slot !== undefined && blank.has(part.slot) ? (
             <span key={index} translate="no" className="font-bold text-blue underline decoration-dotted decoration-2 underline-offset-4">
