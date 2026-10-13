@@ -8,6 +8,12 @@ const URL_NAME = "NEXT_PUBLIC_SUPABASE_URL";
 const KEY_NAME = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
 /** Vercel's environment name -> the entry in supabase/environments.json that it must talk to. */
 const TARGETS = { preview: "staging", production: "production" };
+/**
+ * Temporary exception (2026-10-14, founder-approved). While no production project exists, a Production-scope
+ * build may point at the STAGING project, but only if this variable is exactly "1". It stops applying by itself
+ * the moment a production ref is recorded. Remove it at real launch (docs/ENVIRONMENTS.md).
+ */
+export const STAGING_AS_PRODUCTION = "FEEDOST_STAGING_AS_PRODUCTION";
 
 /** True only on a Vercel preview or production build. CI sets VERCEL_ENV but not VERCEL, so it is skipped. */
 export function guardApplies(env) {
@@ -33,12 +39,18 @@ function refOfUrl(raw) {
 /**
  * @param {Record<string, string | undefined>} env the build's environment
  * @param {{ staging?: { ref?: string | null }, production?: { ref?: string | null } }} environments supabase/environments.json
- * @returns {{ skipped: true, message: string } | { skipped: false, problems: string[] }}
+ * @returns {{ skipped: true, message: string } | { skipped: false, problems: string[], warnings: string[] }}
  */
 export function checkBuildEnv(env, environments) {
   if (!guardApplies(env)) return { skipped: true, message: "build guard skipped: not a Vercel build" };
   const problems = [];
-  const target = TARGETS[env.VERCEL_ENV];
+  const warnings = [];
+  let target = TARGETS[env.VERCEL_ENV];
+  // The exception: production build, no production ref recorded, variable is exactly "1".
+  const prodRef = environments?.production?.ref;
+  const stagingAsProduction =
+    target === "production" && env[STAGING_AS_PRODUCTION] === "1" && (prodRef === null || prodRef === undefined || prodRef === "");
+  if (stagingAsProduction) target = "staging";
 
   const { ref, problem } = refOfUrl(env[URL_NAME]);
   if (problem) problems.push(problem);
@@ -59,7 +71,7 @@ export function checkBuildEnv(env, environments) {
   } else if (!REF.test(recorded)) {
     problems.push(`the ${target} ref in supabase/environments.json is not a 20-character project ref`);
   } else if (ref && ref !== recorded) {
-    problems.push(`${URL_NAME} is not the ${target} project recorded in supabase/environments.json (a ${env.VERCEL_ENV} build must use ${target})`);
+    problems.push(`${URL_NAME} is not the ${target} project recorded in supabase/environments.json (a ${env.VERCEL_ENV} build must use ${stagingAsProduction ? "staging, as the exception allows" : target})`);
   }
   if (recorded && other && recorded === other) {
     problems.push("staging and production have the same ref in supabase/environments.json: they must differ");
@@ -70,5 +82,11 @@ export function checkBuildEnv(env, environments) {
       problems.push(`${name} must not exist: a NEXT_PUBLIC_ variable is shipped to every browser`);
     }
   }
-  return { skipped: false, problems };
+  if (stagingAsProduction && problems.length === 0) {
+    warnings.push(
+      `WARNING: ${STAGING_AS_PRODUCTION}=1: this PRODUCTION build uses the STAGING Supabase project. ` +
+        "It is for made-up data only and must not be given to real tutors. Remove the variable when the production project exists.",
+    );
+  }
+  return { skipped: false, problems, warnings };
 }
