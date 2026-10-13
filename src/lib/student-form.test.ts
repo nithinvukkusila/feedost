@@ -174,6 +174,8 @@ describe("checkStudent: all errors at once, first one focused (25)", () => {
     expect(firstError(errorsOf({ fee: "", name: "" }))).toBe("name");
     expect(firstError(errorsOf({ fee: "", phone: "1" }))).toBe("phone");
     expect(firstError(errorsOf({ permission: false }))).toBe("permission");
+    expect(firstError(errorsOf({ fee: "", permission: false }))).toBe("permission");
+    expect(firstError(errorsOf({ owes: "x", fee: "" }))).toBe("fee");
     expect(firstError({})).toBeNull();
   });
 });
