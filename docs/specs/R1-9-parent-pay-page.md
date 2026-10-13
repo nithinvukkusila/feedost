@@ -645,3 +645,20 @@ Manual (the spec's section 11 steps 1 to 15 and 17; 16 needs Part C). Staging fu
 No new founder question. The two existing blockers stay: questions 3 and 5 block the production release of Part B (B6). Question 11 (the QR dependency) stays open for Part C. No new dependency is proposed.
 
 **Starts first: `frontend-dev`, task 1 (split `src/lib/upi-link.ts` out of `reminder.ts` and `src/lib/public-words.ts` out of `receipt-words.ts`, proving R0-2, R1-8 and `/r/` unchanged), then tasks 2 to 6 in order.**
+
+---
+
+## Part B built (frontend-dev, 2026-10-13)
+
+- **Route and page:** `src/app/p/{layout,page}.tsx` (a copy of `/r/`'s shell), `src/components/pay-page/{public-pay-page,frame,consent-screen,fee-screen,pay-actions,earlier-receipts,language-menu,filled}.tsx`, `vercel.json` (rewrites and the `/p/(.*)` header rule, pinned in `supabase-files.test.ts`), `src/CLAUDE.md` (five root layouts). Logic: `src/lib/{upi-link,public-words,pay-page-public,pay-page-view,pay-page-words}.ts`. Words: `payPage` in all four message files, `argumentNamespaces`, `pay-page-words.review.json` (`consentWording` draft block), `i18n-check` (`checkConsentWording`, and `checkReviewRecord` gained `ignoreKeys` and `todoAllowed`), `check-locale-leak.mjs` (a `/p/` shell that may also carry exactly the receipt's `months`, `monthYear`, `earlier`, `subjects`, `tuition`), `size.mjs`.
+- **Task 1 proof:** `pnpm test` unchanged and green; `pnpm size` before and after: `home` 172.2 KB and `remind` 169.1 KB identical, `/r/` 138.4 to 138.5 KB, free tool 142.6 to 142.7 KB (the extra module boundary; no template moved).
+- **Bundle:** `/p/` is 143.0 KB gzipped JS (budget set to 151 KB in `SHELL_BUDGETS`); gzipped HTML 5.4 KB with all four languages' words. The 100 KB target of criterion 41 is not reachable: the Next runtime alone is about 132 KB and `/r/` is 138 KB. The 200 KB limit holds.
+- **Deviations from the plan:**
+  1. `Button` gained a `pay` size (72px, `min-h-18`) with a test; the consent agree button is `xl` (60px), the nearest token to the canvas's 62px.
+  2. `payPage.consent.never` stays one string as the spec has it, so "Never:" is not bold as on the canvas.
+  3. In `hi`, the non-consent words are written (unreviewed); `kn` and `te` are `TODO-translate`. All `consent.*` keys are `TODO-translate` in `hi`, `kn` and `te`, so the whole consent screen reads English (one language on one screen) until the founder answers questions 3 and 5. `checkReviewRecord` treated a marked word as an always-on problem, so `todoAllowed` makes it a problem only under `--strict`.
+  4. The Pay area: a fee that is not late yet shows no tag (its own words already say "due {date}"); an earlier balance that is not late shows the Due tag with the date. The fallback line "UPI app did not open? Use one of these." is hidden when there is no Copy button (it would point at nothing). The too-big variant also gets Copy.
+  5. Dates and counts inside body text use the mono role `type-amount-row` (the only role with a Latin face that is not forced uppercase); the receipt caption's date is upper-cased in code because capitals are allowed only inside type roles.
+  6. Error states draw no cloth header (no tutor data exists); loading draws the header with a plain block in place of the name.
+  7. `src/lib/pay-page.test-util.ts` holds the shared fixtures for unit and e2e tests.
+- **Not verified here:** a real phone, a real UPI app, the real functions and CORS on Vercel, and any native-language review (hi, kn and te are not reviewed; the consent wording is a draft).

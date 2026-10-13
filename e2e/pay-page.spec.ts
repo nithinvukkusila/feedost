@@ -3,7 +3,7 @@
 // Vercel are checked by hand (see the PR). The local server follows vercel.json, so the rewrite and headers run.
 import { expect, test, type Page } from "@playwright/test";
 import { brand } from "../src/config/brand";
-import { box, fontsSettled, langs, messageText as text, type Lang } from "./helpers";
+import { box, langs, messageText as text, type Lang } from "./helpers";
 import { FUNCTION_HOST, TOKEN, UPI_ID, consentOk, fee, link, notice, stubPayPage } from "./pay-page-helpers";
 
 const word = (lang: Lang, key: string) => text(lang, `payPage.${key}`);

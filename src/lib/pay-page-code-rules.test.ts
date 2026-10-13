@@ -5,6 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { brand } from "@/config/brand";
 import { walk } from "@/test-utils/find-own-words";
 
 const root = process.cwd();
@@ -76,6 +77,6 @@ describe("the pay page's code", () => {
   });
 
   it("holds the product name only through brand.ts", () => {
-    for (const path of files) expect(stripComments(source(path)).includes("FeeDost"), path).toBe(false);
+    for (const path of files) expect(stripComments(source(path)).includes(brand.name), path).toBe(false);
   });
 });
