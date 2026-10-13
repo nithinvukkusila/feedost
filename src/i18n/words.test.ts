@@ -108,8 +108,8 @@ describe("notPlain with arguments allowed", () => {
 });
 
 describe("the argument namespaces", () => {
-  it("are the parent's receipt only, and a namespace of en.json", () => {
-    expect([...argumentNamespaces]).toEqual(["receipt"]);
+  it("are the parent's receipt and pay page only, and namespaces of en.json", () => {
+    expect([...argumentNamespaces]).toEqual(["receipt", "payPage"]);
     for (const name of argumentNamespaces) expect(Object.keys(en)).toContain(name);
   });
 
@@ -127,6 +127,7 @@ describe("the argument namespaces", () => {
         typeof value === "string" ? [`${path}${key}: ${(value.match(/\{\w+\}/g) ?? []).sort().join(" ")}`] : args(value, `${path}${key}.`),
       );
     expect(args(files[locale].receipt as Tree)).toEqual(args(en.receipt as Tree));
+    expect(args(files[locale].payPage as Tree)).toEqual(args(en.payPage as Tree));
   });
 });
 
@@ -135,6 +136,16 @@ describe("getAllWords", () => {
     const landing = "landing" as unknown as "receipt";
     await expect(getAllWords(landing)).rejects.toThrow(RangeError);
     await expect(getAllWords(landing)).rejects.toThrow(/argumentNamespaces/);
+  });
+
+  it("hands over the pay page in all four languages, with TODO-translate turned into English", async () => {
+    const all = await getAllWords("payPage");
+    expect(Object.keys(all)).toEqual([...locales]);
+    for (const locale of locales) expect(all[locale]).toEqual((await loadMessages(locale)).payPage);
+    expect(all.hi.copy).not.toBe(all.en.copy);
+    expect(JSON.stringify(all)).not.toContain("TODO-translate");
+    // A consent line not yet written in Hindi shows its English text, never the marker.
+    expect(all.hi.consent.agree).toBe(all.en.consent.agree);
   });
 
   it("returns the namespace in all four languages, read from each file", async () => {

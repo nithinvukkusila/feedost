@@ -1,0 +1,6 @@
+{
+  "consentWording": { "status": "draft, not approved", "approvedBy": "", "date": "", "sha256": "" },
+  "hi": { "status": "not reviewed", "reviewer": "", "date": "", "sha256": "" },
+  "kn": { "status": "not reviewed", "reviewer": "", "date": "", "sha256": "" },
+  "te": { "status": "not reviewed", "reviewer": "", "date": "", "sha256": "" }
+}

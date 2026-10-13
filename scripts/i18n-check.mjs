@@ -3,7 +3,7 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync, readFileSync } from "node:fs";
-import { check, checkAppTemplates, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkAppTemplates, checkConsentWording, checkReviewRecord, checkTemplates, leafPaths, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
@@ -27,11 +27,11 @@ const COPY_KEYS = [
 // reads these on a page a tutor sent them, so none may be a TODO-translate and each of hi, kn and te needs a
 // native reader's sign-off before release. The keys are read from en.json, so a new word is covered at once.
 const RECEIPT_REVIEW = "src/lib/receipt-words.review.json";
-function leafPaths(node, path) {
-  return Object.entries(node).flatMap(([key, value]) =>
-    value !== null && typeof value === "object" ? leafPaths(value, `${path}.${key}`) : [`${path}.${key}`],
-  );
-}
+// The parent's pay page (spec R1-9 Part B, criterion 40): every word of the `payPage` namespace, with the same rules as
+// the receipt words, plus a "consentWording" block for the privacy notice that only the founder can approve (questions
+// 3 and 5). A word still marked TODO-translate shows English to the parent, so it is allowed until release; `--strict`
+// (the release gate) fails on it, on any language not reviewed, and on wording not approved.
+const PAYPAGE_REVIEW = "src/lib/pay-page-words.review.json";
 
 const strict = process.argv.includes("--strict");
 const { problems, keyCount, todoCount } = check("messages", { strict });
@@ -86,9 +86,30 @@ if (existsSync(RECEIPT_REVIEW)) {
       : `; ${keys.length} parent receipt words, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
 }
 
+let payPageSummary = "";
+if (existsSync(PAYPAGE_REVIEW)) {
+  const keys = leafPaths(JSON.parse(readFileSync("messages/en.json", "utf8")).payPage ?? {}, "payPage");
+  const payPage = checkReviewRecord(PAYPAGE_REVIEW, keys, {
+    strict,
+    label: "pay-page-words.review.json",
+    noun: "pay page word",
+    ignoreKeys: ["consentWording"],
+    todoAllowed: true,
+  });
+  const wording = checkConsentWording(JSON.parse(readFileSync(PAYPAGE_REVIEW, "utf8")), { strict, label: "pay-page-words.review.json" });
+  problems.push(...payPage.problems, ...wording.problems);
+  for (const note of [...payPage.notes, ...wording.notes]) console.log(note);
+  const waiting = payPage.notReviewed;
+  payPageSummary =
+    (waiting.length === 0
+      ? `; ${keys.length} pay page words, all ${locales.length - 1} languages reviewed`
+      : `; ${keys.length} pay page words, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`) +
+    (wording.approved ? ", consent wording approved" : ", consent wording a draft");
+}
+
 for (const problem of problems) console.error(problem);
 if (problems.length) {
   console.error(`i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}`);
   // Not process.exit(1): a long list written to a pipe would be cut off by the exit.
   process.exitCode = 1;
-} else console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${appSummary}${copySummary}${receiptSummary}`);
+} else console.log(`i18n: ${keyCount} keys present in all ${locales.length} languages; ${todoCount} values marked TODO-translate${templateSummary}${appSummary}${copySummary}${receiptSummary}${payPageSummary}`);

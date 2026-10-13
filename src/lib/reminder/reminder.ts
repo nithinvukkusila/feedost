@@ -6,6 +6,7 @@
 // Written for old Android WebViews and Safari: no lookbehind, no `toWellFormed`, no `Intl.Segmenter`.
 import type { Locale } from "@/config/locales";
 import { formatRupees } from "@/lib/format";
+import { buildUpiLink, UPI_ID } from "@/lib/upi-link";
 import templates from "./templates.json";
 
 export type Tone = "polite" | "firm";
@@ -16,8 +17,8 @@ export const MAX_PAISE = 10_000_000; // ₹1,00,000, the free tool's ceiling
 export const APP_MAX_PAISE = 100_000_000;
 /** A saved parent phone: `+91` and ten digits. Kept equal to the copy in `reminder-rules.ts` by a test. */
 export const PHONE_E164 = /^\+91[0-9]{10}$/;
-/** The PRD pattern, exactly, with no flags. */
-export const UPI_ID = /^[\w.\-]{2,256}@[a-zA-Z]{2,64}$/;
+// The PRD pattern lives with the link builder (src/lib/upi-link.ts); re-exported so every import stays.
+export { UPI_ID };
 
 export type Checked<V, E extends string> = { ok: true; value: V } | { ok: false; error: E };
 export type NameError = "missing" | "tooLong";
@@ -116,11 +117,6 @@ export function currentMonth(now: Date = new Date()): number {
 
 export type Kind = "month" | "balance";
 
-/** Integer paise as `whole.cc`, by integer arithmetic only. */
-function rupeesText(paise: number): string {
-  return `${Math.trunc(paise / 100)}.${String(paise % 100).padStart(2, "0")}`;
-}
-
 /**
  * The payment link: exactly `pa`, `pn`, `am`, `cu`, `tn`, in that order, and nothing else. It pays
  * the given UPI ID directly. Throws on anything that has not been through the checks above, so a
@@ -132,22 +128,16 @@ function rupeesText(paise: number): string {
  */
 export function upiLink(input: { upiId: string; payeeName: string; paise: number; month: number | null; maxPaise?: number; kind?: Kind }): string {
   const { upiId, payeeName, paise, month, maxPaise, kind = "month" } = input;
-  if (!UPI_ID.test(upiId)) throw new RangeError("upiLink needs a UPI ID that matches the pattern");
-  if (payeeName === "") throw new RangeError("upiLink needs the payee's name");
-  if (maxPaise === undefined) {
-    if (!Number.isInteger(paise) || paise % 100 !== 0 || paise < MIN_PAISE || paise > MAX_PAISE) {
-      throw new RangeError(`upiLink needs whole rupees from ₹1 to ₹1,00,000 in paise; got ${String(paise)}`);
-    }
-  } else if (!Number.isSafeInteger(paise) || paise < 1 || paise > maxPaise) {
-    throw new RangeError(`upiLink needs paise from 1 to ${String(maxPaise)}; got ${String(paise)}`);
+  // The tool's whole-rupee rule; the builder checks the UPI ID, the name and the range (the app's too).
+  if (maxPaise === undefined && (!Number.isInteger(paise) || paise % 100 !== 0 || paise < MIN_PAISE || paise > MAX_PAISE)) {
+    throw new RangeError(`upiLink needs whole rupees from ₹1 to ₹1,00,000 in paise; got ${String(paise)}`);
   }
   let note = "Fee balance";
   if (kind === "month") {
     if (month === null || !isMonth(month)) throw new RangeError(`upiLink needs a month from 0 to 11; got ${String(month)}`);
     note = `${templates.en.months[month]} fee`;
   }
-  // `pa` is written as it is: the pattern admits nothing that needs encoding.
-  return `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${rupeesText(paise)}&cu=INR&tn=${encodeURIComponent(note)}`;
+  return buildUpiLink({ upiId, payeeName, paise, note, maxPaise: maxPaise ?? MAX_PAISE });
 }
 
 export type Slot = "parent" | "amount" | "month" | "link" | "upiId";

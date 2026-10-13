@@ -11,10 +11,12 @@ src/app/[locale]/(public)/     landing, tools (later slices)
 src/app/[locale]/(app)/        signed-in tutor app, client-rendered (later slices)
 src/app/dev/                   /dev/components, outside production builds (its own root layout)
 src/app/r/                     /r/{token}: the parent's receipt, one static shell (its own root layout)
-src/app/p/, src/app/join/      static shells for token routes (later slices)
+src/app/p/                     /p/{token}: the parent's pay page, one static shell (its own root layout)
+src/app/join/                  static shell for the referral route (later slice)
 src/components/ui/             design-system components from docs/DESIGN.md
 src/components/shell/          the shared <html> and <body>
 src/components/<feature>/      feature components
+src/components/pay-page/       the parent's pay page (no roster, no Supabase client, no reminder templates)
 src/components/tools/          parts shared by the free tools' pages (the tool header)
 src/i18n/                      next-intl request config, message loading
 src/styles/                    design tokens, fonts and type roles (the only place hex values live)
@@ -24,7 +26,7 @@ src/config/brand.ts            product name and domain, the only place they appe
 src/config/locales.ts          the four languages and their own names, the only place they are listed
 ```
 
-There is no `src/app/layout.tsx`: there are four root layouts, `(jump)`, `[locale]`, `dev` and `r`, each writing its own `<html lang>`. Do not add one, and do not add a `proxy.ts` (a static export cannot run it). The locale is read only through `next/root-params` in `src/i18n/request.ts`; do not call `setRequestLocale` or use the `requestLocale` argument.
+There is no `src/app/layout.tsx`: there are five root layouts, `(jump)`, `[locale]`, `dev`, `r` and `p`, each writing its own `<html lang>`. Do not add one, and do not add a `proxy.ts` (a static export cannot run it). The locale is read only through `next/root-params` in `src/i18n/request.ts`; do not call `setRequestLocale` or use the `requestLocale` argument.
 
 ## Rules
 

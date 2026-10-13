@@ -1,9 +1,7 @@
--- R1-9 Part A criterion 6, found by test-engineer: "total_remaining is the sum over all open dues ... Amounts are integer
--- paise." dues.amount is an integer capped at 100000000 paise (Rs 10,00,000) and get_pay_page casts the SUM to integer
--- (v_total::integer). 22 open fees at the cap add up to 2,200,000,000 paise, which does not fit an integer (limit
--- 2,147,483,647), so the cast raises "integer out of range" and the whole page fails (the Edge Function answers 500)
--- instead of showing the total. EXPECTED TO FAIL until get_pay_page keeps the sum as bigint (a JSON number holds it).
--- Rs 21 lakh outstanding is unlikely for a home tutor, which is why this is low severity; it is still a page that cannot open.
+-- R1-9 Part A criterion 6: regression test for the range of total_remaining. dues.amount is an integer capped at
+-- 100000000 paise (Rs 10,00,000), so 22 open fees at the cap add up to 2,200,000,000 paise, more than an integer
+-- holds (2,147,483,647). get_pay_page keeps the sum as bigint (a JSON number holds it), so the page reads and sums
+-- them without "integer out of range". Found by test-engineer; the bug is fixed and this keeps it fixed.
 begin;
 select tests.assert_ready();
 select plan(2);

@@ -232,7 +232,17 @@ for (const locale of locales) {
 // narrow: only the values of the named namespace, taken out of the page's HTML and scripts before the search.
 // Everything else a language owns must still be absent, no language may be missing from the page, and no
 // TODO-translate marker may be on it (a parent never sees one).
-const SHELLS = [{ path: "r/index.html", name: "parent receipt", namespace: "receipt" }];
+// The parent's pay page (spec R1-9 Part B) is the same kind of page. It also borrows the receipt's month and subject
+// names, so `extra` lists exactly those keys of another namespace; no other `receipt` word may be on the page.
+const SHELLS = [
+  { path: "r/index.html", name: "parent receipt", namespace: "receipt" },
+  {
+    path: "p/index.html",
+    name: "parent pay",
+    namespace: "payPage",
+    extra: [{ namespace: "receipt", keys: ["months", "monthYear", "earlier", "subjects", "tuition"] }],
+  },
+];
 for (const shell of SHELLS) {
   const file = join(OUT, shell.path);
   if (!existsSync(file)) {
@@ -245,8 +255,10 @@ for (const shell of SHELLS) {
   const own = {};
   const removable = new Set();
   for (const locale of locales) {
-    const tree = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"))[shell.namespace] ?? {};
-    own[locale] = leaves(tree).filter((value) => value.length >= MIN_LENGTH);
+    const all = JSON.parse(readFileSync(join("messages", `${locale}.json`), "utf8"));
+    const tree = all[shell.namespace] ?? {};
+    const borrowed = (shell.extra ?? []).map((extra) => Object.fromEntries(extra.keys.map((key) => [key, (all[extra.namespace] ?? {})[key] ?? {}])));
+    own[locale] = [tree, ...borrowed].flatMap((node) => leaves(node)).filter((value) => value.length >= MIN_LENGTH);
     for (const value of own[locale]) for (const spelling of spellings(value)) removable.add(spelling);
   }
   const cut = [...removable].sort((a, b) => b.length - a.length);

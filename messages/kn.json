@@ -831,5 +831,63 @@
       "detail": "ಇಂಟರ್ನೆಟ್ ಪರಿಶೀಲಿಸಿ, ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
       "retry": "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ"
     }
+  },
+  "payPage": {
+    "from": "TODO-translate: Fee request from",
+    "yourTutor": "TODO-translate: Your tutor",
+    "for": "TODO-translate: for {student}",
+    "loading": "TODO-translate: Opening your fee request…",
+    "consent": {
+      "title": "TODO-translate: Before you see the fee, a word on privacy.",
+      "intro": "TODO-translate: {tutor} uses this service to share fee details with you. This is what is kept:",
+      "phone": "TODO-translate: Your phone number",
+      "child": "TODO-translate: Your child's name, fee and attendance",
+      "never": "TODO-translate: Never: ads, or tracking of children",
+      "agree": "TODO-translate: I agree, show the fee",
+      "once": "TODO-translate: Asked only once",
+      "notAgree": "TODO-translate: Not agreeing? Just close this page. Nothing is saved.",
+      "saving": "TODO-translate: Saving…",
+      "failed": "TODO-translate: Couldn't save. Check your connection and try again.",
+      "notice": "TODO-translate: Privacy notice",
+      "close": "TODO-translate: Close"
+    },
+    "total": "TODO-translate: Total to pay",
+    "line": {
+      "fee": "TODO-translate: {month} fee, due {date}",
+      "earlier": "TODO-translate: Earlier balance",
+      "alreadyPaid": "TODO-translate: {amount} already paid",
+      "overdue": "TODO-translate: Overdue",
+      "dueToday": "TODO-translate: Due today",
+      "due": "TODO-translate: Due {date}",
+      "more": "TODO-translate: and {n} more"
+    },
+    "pay": "TODO-translate: Pay {amount} with UPI",
+    "payNote": "TODO-translate: Your UPI app opens with the amount filled in. It goes straight to {upiId}.",
+    "paidAlready": "TODO-translate: Paid already? Your tutor marks it paid and sends you a receipt.",
+    "noUpi": "TODO-translate: Your tutor has not added a UPI ID yet. Ask them for payment details.",
+    "tooBig": "TODO-translate: Pay {amount} to this UPI ID in your UPI app.",
+    "fallback": "TODO-translate: UPI app did not open? Use one of these.",
+    "copy": "TODO-translate: Copy UPI ID",
+    "copied": "TODO-translate: Copied",
+    "allPaid": "TODO-translate: ALL PAID",
+    "allPaidNote": "TODO-translate: Nothing to pay right now. Thank you.",
+    "receipts": "TODO-translate: Earlier receipts",
+    "receipt": {
+      "paid": "TODO-translate: PAID {date} · NO. {n}",
+      "part": "TODO-translate: PART PAID {date} · NO. {n}",
+      "view": "TODO-translate: View",
+      "more": "TODO-translate: Showing the latest 12."
+    },
+    "language": "TODO-translate: Language",
+    "footer": {
+      "title": "TODO-translate: Are you a tutor too?",
+      "body": "TODO-translate: Free for tutors. Start in 60 seconds."
+    },
+    "state": {
+      "notFound": "TODO-translate: This link doesn't work. Ask your tutor to send it again.",
+      "rateLimited": "TODO-translate: Too many tries. Please try again in a while.",
+      "error": "TODO-translate: Couldn't open this page.",
+      "retry": "TODO-translate: Try again"
+    }
   }
 }

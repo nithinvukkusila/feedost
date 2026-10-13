@@ -831,5 +831,63 @@
       "detail": "Check your internet connection and try again.",
       "retry": "Try again"
     }
+  },
+  "payPage": {
+    "from": "Fee request from",
+    "yourTutor": "Your tutor",
+    "for": "for {student}",
+    "loading": "Opening your fee request…",
+    "consent": {
+      "title": "Before you see the fee, a word on privacy.",
+      "intro": "{tutor} uses this service to share fee details with you. This is what is kept:",
+      "phone": "Your phone number",
+      "child": "Your child's name, fee and attendance",
+      "never": "Never: ads, or tracking of children",
+      "agree": "I agree, show the fee",
+      "once": "Asked only once",
+      "notAgree": "Not agreeing? Just close this page. Nothing is saved.",
+      "saving": "Saving…",
+      "failed": "Couldn't save. Check your connection and try again.",
+      "notice": "Privacy notice",
+      "close": "Close"
+    },
+    "total": "Total to pay",
+    "line": {
+      "fee": "{month} fee, due {date}",
+      "earlier": "Earlier balance",
+      "alreadyPaid": "{amount} already paid",
+      "overdue": "Overdue",
+      "dueToday": "Due today",
+      "due": "Due {date}",
+      "more": "and {n} more"
+    },
+    "pay": "Pay {amount} with UPI",
+    "payNote": "Your UPI app opens with the amount filled in. It goes straight to {upiId}.",
+    "paidAlready": "Paid already? Your tutor marks it paid and sends you a receipt.",
+    "noUpi": "Your tutor has not added a UPI ID yet. Ask them for payment details.",
+    "tooBig": "Pay {amount} to this UPI ID in your UPI app.",
+    "fallback": "UPI app did not open? Use one of these.",
+    "copy": "Copy UPI ID",
+    "copied": "Copied",
+    "allPaid": "ALL PAID",
+    "allPaidNote": "Nothing to pay right now. Thank you.",
+    "receipts": "Earlier receipts",
+    "receipt": {
+      "paid": "PAID {date} · NO. {n}",
+      "part": "PART PAID {date} · NO. {n}",
+      "view": "View",
+      "more": "Showing the latest 12."
+    },
+    "language": "Language",
+    "footer": {
+      "title": "Are you a tutor too?",
+      "body": "Free for tutors. Start in 60 seconds."
+    },
+    "state": {
+      "notFound": "This link doesn't work. Ask your tutor to send it again.",
+      "rateLimited": "Too many tries. Please try again in a while.",
+      "error": "Couldn't open this page.",
+      "retry": "Try again"
+    }
   }
 }

@@ -147,6 +147,18 @@ describe("Button element and content (criteria 18 and 19)", () => {
     expect(xl).not.toContain("min-h-control");
     expect(xl).not.toContain("min-h-14");
   });
+
+  it("is 72px high when pay, as a link, for the parent's Pay button (R1-9)", () => {
+    render(
+      <Button variant="send" size="pay" href="upi://pay?pa=a@b" full>
+        Pay
+      </Button>,
+    );
+    const pay = classes(screen.getByRole("link", { name: "Pay" }));
+    expect(pay).toContain("min-h-18");
+    expect(pay).toContain("bg-blue");
+    expect(pay).not.toContain("min-h-control");
+  });
 });
 
 describe("Button busy (criterion 22)", () => {
