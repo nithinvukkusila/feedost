@@ -17,10 +17,10 @@ const config = read("../../config.toml");
 const envExample = read("../../../.env.example");
 const indexes = { "pay-page": read("../pay-page/index.ts"), "record-consent": read("../record-consent/index.ts") };
 
-/** name -> argument names, from `create function public.name(args)` in the migration. */
+/** name -> argument names, from the function declarations in the migration. */
 function signatures(sql: string): Record<string, string[]> {
   const out: Record<string, string[]> = {};
-  for (const m of sql.matchAll(/create function public\.(\w+)\(([^)]*)\)/g)) {
+  for (const m of sql.matchAll(/create\s+function\s+public\.(\w+)\(([^)]*)\)/g)) {
     out[m[1]] = m[2].split(",").map((a) => a.trim().split(/\s+/)[0]).filter(Boolean);
   }
   return out;
