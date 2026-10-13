@@ -13,7 +13,7 @@ export const CONSENT_URL = `**/functions/v1/record-consent`;
 export const UPI_ID = "meena.tuitions@okhdfc";
 
 export type Answer =
-  | { status: number; body: unknown; delayMs?: number }
+  | { status: number; body: unknown; delayMs?: number; headers?: Record<string, string> }
   | "abort"
   | "never"
   | ((call: number) => Exclude<Answer, (call: number) => unknown>);
@@ -44,7 +44,7 @@ async function serve(page: Page, url: string, answer: Answer, log: Request[]) {
     if (chosen === "abort") return route.abort("connectionfailed");
     if (chosen === "never") return;
     if (chosen.delayMs) await new Promise((r) => setTimeout(r, chosen.delayMs));
-    await route.fulfill({ status: chosen.status, contentType: "application/json", headers: { ...cors, "cache-control": "no-store" }, body: JSON.stringify(chosen.body) });
+    await route.fulfill({ status: chosen.status, contentType: "application/json", headers: { ...cors, "cache-control": "no-store", ...chosen.headers }, body: JSON.stringify(chosen.body) });
   });
 }
 
