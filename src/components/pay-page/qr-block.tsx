@@ -50,8 +50,8 @@ export function QrBlock({ text, upiId, words, onClose }: Readonly<{ text: string
   }
   const box = state.kind === "drawn" ? state.matrix.size + QUIET * 2 : 1;
   return (
-    <div className="mt-4 flex flex-col items-center gap-3 border-2 border-ink bg-slip p-4" data-qr={state.kind}>
-      <div className="aspect-square w-[min(100%,16rem)] min-w-55 bg-slip">
+    <div className="mt-4 flex flex-col items-center gap-3" data-qr={state.kind}>
+      <div className="aspect-square w-full max-w-64 border-2 border-ink bg-slip">
         {state.kind === "drawn" ? (
           <svg viewBox={`0 0 ${String(box)} ${String(box)}`} role="img" aria-label={words.qrHelp} shapeRendering="crispEdges" className="size-full text-ink">
             <rect width={box} height={box} className="fill-slip" />

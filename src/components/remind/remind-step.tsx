@@ -37,8 +37,8 @@ function Piece({ part }: Readonly<{ part: Part }>) {
   return part.text;
 }
 
-/** The message for one queued fee, or null when it cannot be built (the screen then says "Add your UPI ID"). */
-export function useMessage(item: QueueItem, tone: Tone, tutor: { upiId: string | null; name: string | null }): AppMessage | null {
+/** The message for one queued fee (with the pay page's link, or the raw UPI link when `payLink` is null), or null when it cannot be built (the screen then says "Add your UPI ID"). */
+export function useMessage(item: QueueItem, tone: Tone, tutor: { upiId: string | null; name: string | null }, payLink: string | null = null): AppMessage | null {
   const { upiId, name } = tutor;
   return useMemo(() => {
     if (upiId === null || name === null) return null;
@@ -48,11 +48,12 @@ export function useMessage(item: QueueItem, tone: Tone, tutor: { upiId: string |
         due: { kind: item.kind, month: item.month, amount: item.remaining, amountPaid: 0 },
         tutor: { upiId, name },
         tone,
+        link: payLink,
       });
     } catch {
       return null;
     }
-  }, [item, tone, upiId, name]);
+  }, [item, tone, upiId, name, payLink]);
 }
 
 export type RemindStepProps = {

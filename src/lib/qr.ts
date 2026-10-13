@@ -4,8 +4,11 @@
 //
 // Integer arithmetic only: the path is built from whole module coordinates.
 
-/** A UPI link is about 100 characters; anything longer is not one of ours. */
-export const QR_TEXT_MAX = 200;
+/**
+ * A UPI link is about 100 characters, but a tutor name in Hindi, Kannada or Telugu is percent-encoded at 9 characters a
+ * letter, so a real link can reach 500. The plan said 200 (C3); 800 keeps every real link and still refuses nonsense.
+ */
+export const QR_TEXT_MAX = 800;
 
 export type QrMatrix = { size: number; path: string };
 

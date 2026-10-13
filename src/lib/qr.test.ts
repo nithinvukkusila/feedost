@@ -48,10 +48,16 @@ describe("qrMatrix", () => {
     expect(size).toBeGreaterThan(20);
   });
 
-  it("rejects empty text and text over 200 characters", async () => {
+  it("draws a real link with a long Hindi tutor name", async () => {
+    const link = `upi://pay?pa=a@okhdfc&pn=${encodeURIComponent("मीना अय्यर ट्यूशन्स गणित विज्ञान")}&am=3400.00&cu=INR&tn=Fees%20due%20Ravi`;
+    expect(link.length).toBeGreaterThan(200);
+    await expect(qrMatrix(link)).resolves.toBeDefined();
+  });
+
+  it("rejects empty text and text over 800 characters", async () => {
     await expect(qrMatrix("")).rejects.toThrow();
-    await expect(qrMatrix("x".repeat(201))).rejects.toThrow();
-    await expect(qrMatrix("x".repeat(200))).resolves.toBeDefined();
+    await expect(qrMatrix("x".repeat(801))).rejects.toThrow();
+    await expect(qrMatrix("x".repeat(800))).resolves.toBeDefined();
   });
 });
 

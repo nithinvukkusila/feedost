@@ -786,3 +786,18 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 3. **No other new question.** `uqr` is approved under question 11. The three release blocks stay: question 3 and 5 (consent wording, translation review) and Part B live on production (criterion 48).
 
 **Starts first: `frontend-dev`, task 1 (add `uqr` 0.1.3 exactly, `pnpm audit --prod`, and `src/lib/qr.ts` with its fixture test), then tasks 2 to 4.**
+
+---
+
+## Part C built (frontend-dev, 2026-10-13)
+
+- **Dependency:** `uqr` 0.1.3, exact. `pnpm audit --prod`: "No known vulnerabilities found" (run after adding it).
+- **Files:** `src/lib/{qr,pay-link,pay-tokens}.ts` (+ `qr.fixture.json`), `src/components/pay-page/{qr-block,pay-actions}.tsx`, `src/components/remind/{remind-run,remind-step}.tsx`, `payPage.{qr,qrHelp,qrFailed,qrClose}` in all four message files (hi, kn, te `TODO-translate`), `src/CLAUDE.md`, `students.ts` comment. Tests: unit beside each file, `e2e/pay-page-qr.spec.ts`, `e2e/qr-chunk.spec.ts`, `e2e/remind.spec.ts` (two new tests, one assertion updated), `pay-page.spec.ts` (the "no QR" line now asserts the button is there).
+- **Bundle:** `/p/` 143.1 to 144.1 KB gzipped JS (budget 151 KB); `remind` 169.1 to 169.6 KB; `home` 172.2 KB unchanged. The encoder is its own chunk, 10.2 KB raw and 3.8 KB gzipped, listed by no page (checked in `e2e/qr-chunk.spec.ts` and by a request recorder on the first tap).
+- **Deviations:**
+  1. `QR_TEXT_MAX` is 800, not 200 (plan C3). A tutor name in Hindi, Kannada or Telugu is percent-encoded at about 9 characters per letter, so a real link can pass 500 characters.
+  2. At 200% text size the QR is 204px, not 220px: the page's side margins double and the code takes the width that is left. At normal size it is 256px.
+  3. The QR block has no card around it (a card's padding doubled with the text size and shrank the code to 140px).
+  4. Remind waits for the token read (at most 5 seconds, then the raw UPI link) and shows "Loading…" (`common.loading`) meanwhile, so the preview never changes after it is shown. Offline, the read is skipped at once.
+  5. The QR button sits between Copy and the "UPI app did not open?" line; it shows even when the browser cannot copy.
+- **Not verified here:** decoding the code with a real UPI app (manual step 2 of C10), the real production pay page (criterion 48).

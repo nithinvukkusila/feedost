@@ -11,6 +11,9 @@ vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u
 const remind = vi.hoisted(() => ({ value: null as unknown }));
 vi.mock("./remind-provider", () => ({ useRemind: () => remind.value }));
 
+const tokens = vi.hoisted(() => ({ map: new Map<string, string>() }));
+vi.mock("@/lib/pay-tokens", () => ({ readPayTokens: () => Promise.resolve(tokens.map) }));
+
 import { RemindRun } from "./remind-run";
 
 beforeAll(() => {
@@ -21,7 +24,11 @@ beforeAll(() => {
     this.removeAttribute("open");
   };
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  tokens.map = new Map([["s1", "abcdefghijklmnopqrstuv"]]);
+});
+tokens.map = new Map([["s1", "abcdefghijklmnopqrstuv"]]);
 
 const item = (n: number): QueueItem => ({
   dueId: `d${n}`,
@@ -55,5 +62,27 @@ describe("the Remind screen's privacy marks", () => {
     check();
     await userEvent.click(screen.getAllByRole("button", { name: "Remind again" })[0]);
     check();
+  });
+});
+
+describe("the link in the message (R1-9 criteria 45 to 47)", () => {
+  const setup = () => {
+    remind.value = { tone: "polite", setTone: vi.fn(), clear: vi.fn(), log: { subscribe: () => () => {}, get: () => 0, isPending: () => false, log: vi.fn(), flush: vi.fn() } };
+    renderWithWords(<RemindRun queue={[item(1)]} last={{}} />);
+  };
+  it("shows the pay-page link, and the WhatsApp link carries the same text", async () => {
+    setup();
+    const link = await screen.findByText("https://feedost.vercel.app/p/abcdefghijklmnopqrstuv");
+    expect(link.getAttribute("data-slot")).toBe("link");
+    const wa = screen.getByRole("link", { name: /WhatsApp/ }).getAttribute("href")!;
+    expect(decodeURIComponent(wa)).toContain("https://feedost.vercel.app/p/abcdefghijklmnopqrstuv");
+    expect(decodeURIComponent(wa)).toContain("meena@okhdfc");
+  });
+  it("falls back to the raw UPI link for a student with no token", async () => {
+    tokens.map = new Map();
+    setup();
+    const link = await screen.findByText(/^upi:\/\/pay\?/);
+    expect(link.getAttribute("data-slot")).toBe("link");
+    expect(screen.queryByText(/feedost\.vercel\.app/)).toBeNull();
   });
 });

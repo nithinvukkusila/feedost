@@ -9,13 +9,15 @@
 // "Open WhatsApp", with the request id this step made on its first tap and keeps for its life.
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTutor } from "@/components/app/app-gate";
 import { AppScreen } from "@/components/app/app-screen";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/config/locales";
 import { homePath, localeHref } from "@/config/routes";
 import { formatRupees } from "@/lib/format";
+import { payPageLink } from "@/lib/pay-link";
+import { readPayTokens } from "@/lib/pay-tokens";
 import { alreadyRemindedToday, templateTag, type QueueItem } from "@/lib/reminder-rules";
 import { newId } from "@/lib/uuid";
 import { AgainSheet } from "./again-sheet";
@@ -37,6 +39,7 @@ const STRIP_MAX = 20;
 
 export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[]; last: LastAt }>) {
   const t = useTranslations("remindScreen");
+  const common = useTranslations("common");
   const locale = useLocale() as Locale;
   const router = useRouter();
   const { tutor } = useTutor();
@@ -54,7 +57,20 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
   const total = queue.length;
   const finished = index >= total;
   const item = finished ? undefined : queue[index];
-  const message = useMessage(item ?? queue[0], tone, tutor);
+  // The tutor's pay tokens, read once when the run opens and kept only here (never in the provider, a module variable,
+  // storage, the address or a log). Until the read settles the message is not shown, so its link never changes under her.
+  const [tokens, setTokens] = useState<ReadonlyMap<string, string> | null>(null);
+  useEffect(() => {
+    let live = true;
+    void readPayTokens().then((map) => {
+      if (live) setTokens(map);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  const current = item ?? queue[0];
+  const message = useMessage(current, tone, tutor, tokens === null ? null : payPageLink(tokens.get(current.studentId)));
 
   const requestId = requestIds[index];
   const pending = useSyncExternalStore(log.subscribe, log.get, log.get);
@@ -135,7 +151,11 @@ export function RemindRun({ queue, last }: Readonly<{ queue: readonly QueueItem[
     <AppScreen>
       <div data-ph-no-capture="" data-sentry-mask="" className="flex flex-col pb-6">
         {header}
-        {asking && item ? null : (
+        {tokens === null && !finished ? (
+          <p role="status" className="type-body mx-5 mt-6 text-ink-soft">
+            {common("loading")}
+          </p>
+        ) : asking && item ? null : (
           <RemindStep
             key={index}
             item={item!}
