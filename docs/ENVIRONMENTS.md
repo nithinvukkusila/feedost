@@ -93,7 +93,7 @@ The free plan has no automatic backups. Before each production migration the fou
 
 ## Vercel previews and protection
 
-- Every branch except `main` builds as a Preview. `vercel.json` turns off auto-deploy for `main` only.
+- Every branch builds as a Preview, and since 2026-10-13 `main` auto-deploys too (see the temporary arrangement below). Before that, `vercel.json` turned off auto-deploy for `main` only.
 - Previews sit behind Vercel's login by default. That blocks `preprod-qa` and Playwright. The chosen answer is: keep Vercel Authentication on, and the founder creates a "Protection Bypass for Automation" secret. It is given to `preprod-qa` and `release-manager` for a test session as the shell variable `VERCEL_AUTOMATION_BYPASS_SECRET`.
 - Production is never behind that login.
 - The `/dev/components` and `/dev/supabase` pages exist in Preview and local builds only. A production build has neither.
@@ -133,6 +133,25 @@ On the free plan a project with no activity for about a week is paused. If `pnpm
 - **Vercel Preview variables:** added by the founder on 2026-10-11 (URL and the anon JWT key, type Config, Preview only).
 - **Build guard:** wired into `build` (`node scripts/check-build-env.mjs && next build`). It skips builds that are not on Vercel, stops a Preview build whose URL or key is missing or belongs to another project, and stops every Production build until a production ref is recorded. The key in use is an anon JWT, which the guard ties to the project; the gap for `sb_publishable_` keys (below) still stands and must be closed before one is used.
 - **Not done yet:** production (no project yet; `production.ref` stays null and `smoke:env production` fails on purpose).
+
+## Temporary: feedost.vercel.app runs `main` against STAGING (2026-10-13)
+
+The founder approved this on 2026-10-13. It is not a production release. No production Supabase project exists.
+
+- `https://feedost.vercel.app` serves every push to `main`. `vercel.json` no longer has `git.deploymentEnabled.main: false`. Rewrites and headers for `/p/*` and `/r/*` are unchanged.
+- That site is built in Vercel's Production scope, whose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` the founder sets to the **staging** project's public values (ref `cujjgadbdqbxcsseogfx`). So it reads and writes staging data: made-up data only. Do not give it to real tutors.
+- **Build guard conflict (must be settled before the first build).** `check:build-env` stops every Production build while `production.ref` is null, and would also stop one that points at the staging ref. This change does not alter the guard, so the first `main` build will fail until the founder and `lead-reviewer` decide how to relax it (for example a narrow, explicit, temporary exception) in a separate reviewed change. Do not work around it by putting the staging ref in the `production` entry: the guard also rejects equal refs.
+- `pnpm smoke:env production` still fails on purpose (no production ref). Use `pnpm smoke:env staging` for this site.
+- Approvals do not change. The human alone approves running a migration on production and releasing to production. Deploying `main` to this site is not that approval and never runs a migration.
+
+### What must change at real launch
+
+1. Create the production Supabase project (Mumbai, `ap-south-1`) and record its ref in `supabase/environments.json` under `production`.
+2. Replace the Vercel Production-scope variables with the production URL and anon key. Staging values stay in Preview only.
+3. Remove the temporary guard exception, if one was added.
+4. Re-add gating so `main` does not go live without the founder's yes: either restore `git.deploymentEnabled.main: false` and use the deploy hook, or the staged-production fallback (see "How a production build is made").
+5. Set the function secrets, `APP_ENV=production`, and the production Auth URL settings; follow the release steps above, with the founder's yes.
+6. Update this page and the Vercel variable rows to remove this section.
 
 ## Verified and unverified today
 
