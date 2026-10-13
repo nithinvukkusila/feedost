@@ -13,5 +13,6 @@ if (result.skipped) {
   console.error("check-build-env: the build was stopped before it could ship the wrong Supabase settings.");
   process.exit(1);
 } else {
+  for (const warning of result.warnings) console.warn(`check-build-env: !!! ${warning} !!!`);
   console.log("check-build-env: the Supabase settings match this environment");
 }

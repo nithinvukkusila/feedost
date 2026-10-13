@@ -188,10 +188,9 @@ describe(".env.example and .gitignore (criteria 28 and 29)", () => {
 });
 
 describe("vercel.json (criterion 36)", () => {
-  it("routes /r/{token} and /p/{token} to their shells, with no referrer and noindex, and turns off auto-deploy for main", () => {
+  it("routes /r/{token} and /p/{token} to their shells, with no referrer and noindex, and no longer turns off auto-deploy for main (temporary, 2026-10-13)", () => {
     expect(JSON.parse(read("vercel.json"))).toEqual({
       $schema: "https://openapi.vercel.sh/vercel.json",
-      git: { deploymentEnabled: { main: false } },
       // The only production routing the app has: the receipt (R1-7 Part B) and the pay page (R1-9 Part B). /join/* arrives with R1-13.
       rewrites: [
         { source: "/r/:token", destination: "/r/index.html" },
