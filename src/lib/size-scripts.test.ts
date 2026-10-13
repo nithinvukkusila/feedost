@@ -150,10 +150,11 @@ describe("pnpm size, the parent's pay page shell (R1-9 Part B)", () => {
     expect(result.out).toContain(`out/${payPageShell} is missing`);
   });
 
-  it("shares the receipt's small budget: 150 KB fails for it", () => {
-    const result = run(sizeScript, project({ shellScriptBytes: 150 * 1024 }));
+  it("has a smaller budget than the app's pages: 160 KB passes for them and fails for it", () => {
+    const result = run(sizeScript, project({ shellScriptBytes: 160 * 1024 }));
     expect(result.status).toBe(1);
     expect(result.out).toMatch(/OVER .*out\/p\/index\.html/);
+    expect(result.out).not.toMatch(/OVER .*out\/en\//);
   });
 });
 

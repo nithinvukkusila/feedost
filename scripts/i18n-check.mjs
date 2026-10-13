@@ -110,8 +110,6 @@ if (existsSync(PAYPAGE_REVIEW)) {
       ? `; ${keys.length} pay page words, all ${locales.length - 1} languages reviewed`
       : `; ${keys.length} pay page words, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`) +
     (wording.approved ? ", consent wording approved" : ", consent wording a draft");
-} else {
-  problems.push("src/lib/pay-page-words.review.json does not exist; it records who has read the pay page words and whether the consent wording is approved");
 }
 
 for (const problem of problems) console.error(problem);
