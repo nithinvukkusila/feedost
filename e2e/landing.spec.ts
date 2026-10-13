@@ -639,3 +639,20 @@ test.describe("page metadata in the raw HTML (criteria 26 and 27)", () => {
     expect(ogTitles.size).toBe(4);
   });
 });
+
+// Found 2026-10-13 on a wide window: the hero's half-width gap was a percentage padding on the same element
+// that caps the width, so it was half of the window, not half of the column, and the headline shrank to a
+// sliver (one letter per line at about 2000px). The text column must stay readable at every width.
+test.describe("hero text column on wide windows", () => {
+  for (const width of [1024, 1280, 1440, 1920, 2560]) {
+    test(`the headline column is at least 450px wide and the headline is one block at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path("en"));
+      const box = await page.locator("h1").boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.width).toBeGreaterThanOrEqual(450);
+      // "Fees collected. Not chased." is about 1.2 lines of 5xl type; a collapsed column makes it dozens of lines.
+      expect(box!.height).toBeLessThan(200);
+    });
+  }
+});
