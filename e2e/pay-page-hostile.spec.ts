@@ -565,7 +565,7 @@ for (const lang of ["hi", "kn", "te"] as const) {
         expect(await sidewaysScroll(page), `${kind} sideways scroll at ${size}`).toBe(0);
         for (const el of await main.locator("a:visible, button:visible").all()) expect((await box(el)).height, `${kind} control at ${size}`).toBeGreaterThanOrEqual(44);
         expect(await textProblems(page, "main"), `${kind} text problems at ${size}`).toEqual([]);
-        else expect(await textOverControls(page), `${kind} text over a control at ${size}`).toEqual([]);
+        expect(await textOverControls(page), `${kind} text over a control at ${size}`).toEqual([]);
       }
       await expect(main).toContainText(long[lang].tutor);
       await expect(main).toContainText(long[lang].student);
