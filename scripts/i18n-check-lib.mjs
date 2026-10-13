@@ -516,7 +516,11 @@ export function copyHash(messages, keys) {
  * language with no valid sign-off, or whose text changed after its sign-off, is a problem.
  * A promise sentence still marked TODO-translate is always a problem: it cannot be reviewed.
  */
-export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence" } = {}) {
+export function checkReviewRecord(
+  reviewFile,
+  keys,
+  { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence", ignoreKeys = /** @type {string[]} */ ([]), todoAllowed = false } = {},
+) {
   const problems = [];
   const notes = [];
   const notReviewed = [];
@@ -538,7 +542,7 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
   }
   if (record) {
     for (const key of Object.keys(record)) {
-      if (!reviewed.includes(key)) problems.push(`${label} has "${key}", which is not one of ${reviewed.join(", ")}`);
+      if (!reviewed.includes(key) && !ignoreKeys.includes(key)) problems.push(`${label} has "${key}", which is not one of ${reviewed.join(", ")}`);
     }
   }
 
@@ -553,8 +557,15 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     if (messages) {
       const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
       const marked = keys.filter((key) => typeof read(key) === "string" && read(key).startsWith(TODO));
-      for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
-      if (marked.length === 0) current = copyHash(messages, keys);
+      // `todoAllowed` (the pay page): a word still marked TODO-translate shows its English text to the parent, which is
+      // allowed until release; it is a problem only under `strict`, and the language cannot count as reviewed meanwhile.
+      if (todoAllowed) {
+        if (marked.length > 0 && strict) problems.push(`messages/${locale}.json has ${marked.length} ${noun}${marked.length === 1 ? "" : "s"} still marked ${TODO}; write them and have them read`);
+        current = marked.length === 0 ? copyHash(messages, keys) : null;
+      } else {
+        for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
+        if (marked.length === 0) current = copyHash(messages, keys);
+      }
     }
 
     const entry = record?.[locale];
@@ -603,4 +614,35 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     }
   }
   return { problems, notReviewed, notes };
+}
+
+/**
+ * The consent and privacy-notice wording of the parent's pay page (spec R1-9 questions 3 and 5). The wording is the
+ * founder's to approve, so the review record carries a top-level `consentWording` block that no parent can see.
+ * Returns { problems, notes, approved }. Not approved is a note on every run and a problem under `strict`.
+ */
+export function checkConsentWording(record, { strict = false, label = "pay-page-words.review.json" } = {}) {
+  const problems = [];
+  const notes = [];
+  const block = isObject(record) ? record.consentWording : undefined;
+  if (!isObject(block)) {
+    problems.push(`${label} has no "consentWording" block; it records whether the founder approved the privacy notice wording`);
+    return { problems, notes, approved: false };
+  }
+  if (block.status === "approved") {
+    let complete = true;
+    if (!isText(block.approvedBy)) {
+      problems.push(`${label} "consentWording" is marked approved with no name in approvedBy`);
+      complete = false;
+    }
+    if (typeof block.date !== "string" || !DATE.test(block.date)) {
+      problems.push(`${label} "consentWording" is marked approved with no date written YYYY-MM-DD`);
+      complete = false;
+    }
+    return { problems, notes, approved: complete };
+  }
+  const message = "payPage consent wording is a draft: release blocked on founder answers to R1-9 questions 3 and 5";
+  if (strict) problems.push(message);
+  else notes.push(message);
+  return { problems, notes, approved: false };
 }

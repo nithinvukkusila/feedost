@@ -17,7 +17,9 @@ const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "stu
 // Measured 2026-10-12: Next's own runtime alone makes the plain "/" jump page 132.5 KB, and the receipt is 138.4 KB.
 // 145 KB leaves room for Part C's buttons (the PDF library is loaded on tap and is never in this number) and
 // fails on anything that brings the roster or the Supabase library in.
-const SHELL_BUDGETS = { "r/index.html": 145 * 1024 };
+// The parent's pay page (R1-9 Part B) is the same kind of shell: plain fetch, no roster, no Supabase library, no
+// reminder templates. The budget is set after measuring (see the comment where it is changed).
+const SHELL_BUDGETS = { "r/index.html": 145 * 1024, "p/index.html": 145 * 1024 };
 const REQUIRED = [
   "index.html",
   ...Object.keys(SHELL_BUDGETS),
@@ -83,6 +85,6 @@ for (const page of walk(OUT).filter((f) => f.endsWith(".html")).sort()) {
   console.log(`${over ? "OVER " : warn ? "WARN " : "ok   "} ${kb.padStart(7)} KB  ${page}`);
 }
 if (failed) {
-  console.error(`Budget check failed: limit is ${LIMIT / 1024} KB (${SHELL_BUDGETS["r/index.html"] / 1024} KB for r/index.html) of gzipped JavaScript per page, and every script must be measurable.`);
+  console.error(`Budget check failed: limit is ${LIMIT / 1024} KB (${SHELL_BUDGETS["r/index.html"] / 1024} KB for r/index.html and p/index.html) of gzipped JavaScript per page, and every script must be measurable.`);
   process.exit(1);
 }

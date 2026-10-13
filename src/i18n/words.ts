@@ -10,9 +10,10 @@
 // Nothing parses these strings in the browser. So a namespace handed over this way must hold plain
 // text only: no `{argument}`, no `<tag>`. `words.test.ts` fails if one does, in any language.
 //
-// One exception, for a page whose language is not known until it has run (the parent's receipt, `/r/{token}`):
+// One exception, for a page whose language is not known until it has run (the parent's receipt, `/r/{token}`,
+// and the parent's pay page, `/p/{token}`):
 // `getAllWords()` hands over one namespace in all four languages at once, and the page chooses at run time. Those
-// words may hold `{name}` arguments, which `fill()` in src/lib/receipt-words.ts replaces by hand. Still no
+// words may hold `{name}` arguments, which `fill()` in src/lib/public-words.ts replaces by hand. Still no
 // plural, no `select`, no `<tag>`: `notPlain(tree, "", { arguments: true })` is the test for it.
 import { getMessages } from "next-intl/server";
 import { locales, type Locale } from "@/config/locales";
@@ -26,7 +27,7 @@ export const plainNamespaces = ["reminderForm", "waitlistForm"] as const satisfi
 export type PlainNamespace = (typeof plainNamespaces)[number];
 
 /** The namespaces handed over in all four languages at once. Plain text plus `{name}` arguments only. */
-export const argumentNamespaces = ["receipt"] as const satisfies readonly (keyof Messages)[];
+export const argumentNamespaces = ["receipt", "payPage"] as const satisfies readonly (keyof Messages)[];
 export type ArgumentNamespace = (typeof argumentNamespaces)[number];
 
 type Tree = { [key: string]: string | Tree };

@@ -831,5 +831,63 @@
       "detail": "इंटरनेट जाँचें और फिर कोशिश करें।",
       "retry": "फिर कोशिश करें"
     }
+  },
+  "payPage": {
+    "from": "फ़ीस का अनुरोध भेजने वाले",
+    "yourTutor": "आपके ट्यूटर",
+    "for": "{student} के लिए",
+    "loading": "आपका फ़ीस अनुरोध खुल रहा है…",
+    "consent": {
+      "title": "TODO-translate: Before you see the fee, a word on privacy.",
+      "intro": "TODO-translate: {tutor} uses this service to share fee details with you. This is what is kept:",
+      "phone": "TODO-translate: Your phone number",
+      "child": "TODO-translate: Your child's name, fee and attendance",
+      "never": "TODO-translate: Never: ads, or tracking of children",
+      "agree": "TODO-translate: I agree, show the fee",
+      "once": "TODO-translate: Asked only once",
+      "notAgree": "TODO-translate: Not agreeing? Just close this page. Nothing is saved.",
+      "saving": "TODO-translate: Saving…",
+      "failed": "TODO-translate: Couldn't save. Check your connection and try again.",
+      "notice": "TODO-translate: Privacy notice",
+      "close": "TODO-translate: Close"
+    },
+    "total": "कुल देय राशि",
+    "line": {
+      "fee": "{month} की फ़ीस, देय तिथि {date}",
+      "earlier": "पिछला बकाया",
+      "alreadyPaid": "{amount} पहले ही दिए जा चुके हैं",
+      "overdue": "देर से",
+      "dueToday": "आज देय",
+      "due": "देय {date}",
+      "more": "और {n} अन्य"
+    },
+    "pay": "UPI से {amount} चुकाएँ",
+    "payNote": "आपका UPI ऐप रकम भरकर खुलेगा। पैसे सीधे {upiId} को जाएँगे।",
+    "paidAlready": "पहले ही चुका दिया? आपके ट्यूटर इसे चुकाया दर्ज करेंगे और आपको रसीद भेजेंगे।",
+    "noUpi": "आपके ट्यूटर ने अभी UPI ID नहीं जोड़ी है। उनसे भुगतान का विवरण पूछें।",
+    "tooBig": "अपने UPI ऐप में इस UPI ID पर {amount} चुकाएँ।",
+    "fallback": "UPI ऐप नहीं खुला? इनमें से कोई एक चुनें।",
+    "copy": "UPI ID कॉपी करें",
+    "copied": "कॉपी हो गया",
+    "allPaid": "सब चुकता",
+    "allPaidNote": "अभी कुछ चुकाना बाकी नहीं है। धन्यवाद।",
+    "receipts": "पिछली रसीदें",
+    "receipt": {
+      "paid": "चुकाया {date} · नं. {n}",
+      "part": "आंशिक भुगतान {date} · नं. {n}",
+      "view": "देखें",
+      "more": "सबसे नई 12 रसीदें दिखाई गई हैं।"
+    },
+    "language": "भाषा",
+    "footer": {
+      "title": "क्या आप भी ट्यूटर हैं?",
+      "body": "ट्यूटरों के लिए मुफ़्त। 60 सेकंड में शुरू करें।"
+    },
+    "state": {
+      "notFound": "यह लिंक काम नहीं कर रहा। अपने ट्यूटर से इसे दोबारा भेजने को कहें।",
+      "rateLimited": "बहुत ज़्यादा कोशिशें हो गईं। कृपया कुछ देर बाद फिर कोशिश करें।",
+      "error": "यह पेज नहीं खुल सका।",
+      "retry": "फिर कोशिश करें"
+    }
   }
 }
