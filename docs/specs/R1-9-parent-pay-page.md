@@ -105,13 +105,13 @@ Tests use fake Supabase and function hosts and a fixed clock of 2026-10-12 05:00
 38. [unit] The `tn` rule (default 10): "Fee Oct 2026 Ravi"; a student name in Devanagari gives "Fee Oct 2026"; a 60-character Latin name is cut so the whole note is at most 40 characters; several open fees give "Fees due" plus the first name; never a phone, never an amount.
 39. [unit] Day and late logic from `today` and `due_date` as strings with integer arithmetic only: yesterday is "Overdue", today is "Due today", tomorrow is "Due {date}", an earlier balance is always "Earlier balance". Run under `TZ` UTC, America/Los_Angeles, Asia/Kolkata and Pacific/Kiritimati: same answers (the phone's clock is not read).
 40. [unit] Every new string is in `messages/{en,hi,kn,te}.json` (namespace `payPage`, shipped to the page in all four languages at once through `getAllWords`, as `receipt` is), `pnpm i18n:check` passes, no English in components, the product name only from `brand.ts` (the consent screen and footer use the constant). A grep test finds no `parseFloat`, `toFixed`, `Math.round`, `Intl.`, local-time `Date` getters or `new Date(` with no argument in pay-page code. Money is integer paise until `formatRupees`.
-41. [e2e] `pnpm size`: initial JS for the `p` route at most 200 KB gzipped, target 100 KB or less. The page uses plain `fetch` (no Supabase client), and the QR code and any large words are loaded on demand.
+41. [e2e] `pnpm size`: initial JS for the `p` route at most 200 KB gzipped. The page uses plain `fetch` (no Supabase client), and the QR code and any large words are loaded on demand. *Amended in Part C (tech-lead, 2026-10-13): the 100 KB target is dropped, because the Next 16 runtime alone is about 132 KB (measured in Part B). The enforced number is the `SHELL_BUDGETS` entry for `p/index.html` (151 KB, measured 143.1 KB), and the QR encoder must not appear in any script that `p/index.html` lists.*
 42. [e2e] Read-only: the page sends no request that changes data except `record-consent`. No `pay_token`, UPI ID or amount appears in the page address, `document.title`, history or any request to our hosts other than the token in the body of the two calls.
 
 ### Part C: QR code and the reminder link
 
 43. [unit] "Show QR code" draws a QR code of exactly the same `upi://pay` string as the Pay button's `href` (same amount, same note). It is drawn on the parent's phone: no request is made, no online QR service is ever used (the tutor's UPI ID and the amount must not go to a third party). Black on white with a quiet border, at least 220px square, with the words "Scan with a UPI app on another phone" and the UPI ID under it as text.
-44. [e2e] Tapping "Show QR code" opens it on the page (a sheet or a block that pushes the page down, 44px "Close" button); it works with the network off once the page is open. If drawing fails the page says "Couldn't make the QR code. Use Copy UPI ID instead." and the page stays intact.
+44. [e2e] Tapping "Show QR code" opens it on the page (a sheet or a block that pushes the page down, 44px "Close" button); it works with the network off once it has been opened one time (the encoder is fetched on the first tap and kept in memory; *amended in Part C*: with the network off before the first tap, the failure line below shows). If drawing fails the page says "Couldn't make the QR code. Use Copy UPI ID instead." and the page stays intact.
 45. [unit] The R1-8 builder takes the pay-page link as its `{link}` (the input R1-8 reserved): `https://{host}/p/{pay_token}` from one site-address setting, in the tutor app only. The message still carries the "Or pay to UPI ID: {id}" line (R0-2/R1-8 wording, unchanged). The free tool `/tools/fee-reminder/` is unchanged and still makes its `upi://` link. The message has no student name, no product name and no phone (R1-8 criteria 11 and 12 hold).
 46. [e2e] The Remind screen shows the message with the pay-page link, the "Open WhatsApp" link's decoded text equals the preview, the log call (`record_reminder`) is unchanged and carries no token, and the `pay_token` is read only on the tutor's own phone from her own roster, never sent to our servers except as part of what she chose to send to WhatsApp.
 47. [unit] A student whose `pay_token` is missing from the roster read (should not happen) falls back to the R1-8 message with the raw UPI link; nothing throws. R1-8's existing tests for the raw-link message are updated, not deleted.
@@ -267,7 +267,7 @@ Each has a default; nothing blocks Part A. Questions 3 and 5 block releasing Par
 8. **How to count `paypage_viewed` and `upi_button_tapped` without putting an analytics script on a parent's page.** Default: no script; R1-14 counts them in the Edge Function (a view is a `pay-page` call after consent; a tap is a tiny `POST` with the token's hash only). The PRD names PostHog for all events. Is a server-side count enough, or do you want PostHog on the page (it needs consent wording and a cookie decision)?
 9. **Tutor photo.** The PRD lists it on this page; `tutors` has no photo column and no slice builds the upload. Default: no photo; the tutor's name leads the page. Which slice should own the column and upload, and is the pay page worth waiting for?
 10. **"I've paid" and the double-payment gap.** The PRD puts the button on this page and R1-10 builds it. Default: R1-9 ships without it. Until R1-10, a parent who has paid but whose payment is not yet marked sees the same amount and could pay twice. Do you want R1-9 and R1-10 released together, or the pay page held back for real tutors until claims exist?
-11. **QR code library.** A QR code needs an encoder, and none is in the dependency table. Options for `tech-lead`: a small maintained library (checked against the dependency policy), or a small encoder we write and test ourselves (a few hundred lines, lower risk than a dependency that might go stale), or drop the QR and rely on Copy UPI ID. Default: Part C proposes the smallest of these and you approve it. Never an online QR service.
+11. **ANSWERED 2026-10-13: option 1, a small maintained library, loaded only with `await import()` when the QR is shown. Part C picks `uqr` 0.1.3 (see C2).** A QR code needs an encoder, and none is in the dependency table. Options for `tech-lead`: a small maintained library (checked against the dependency policy), or a small encoder we write and test ourselves (a few hundred lines, lower risk than a dependency that might go stale), or drop the QR and rely on Copy UPI ID. Default: Part C proposes the smallest of these and you approve it. Never an online QR service.
 12. **A way to stop or replace a pay link, and a way to copy it.** Default: neither. A link sent to the wrong person stays valid while the student is active; the tutor can archive the student to stop it. A "Copy pay link" and a "New link" button on a Student detail screen are a later slice. If a parent forwards the link, the recipient sees the fee and receipts after agreeing. Is that acceptable for the first 5 tutors?
 13. **Amount cap and UPI app limits.** Default: the same ₹10,00,000 as the app, and the open phone checks of R0-2 (H2, H3) and R1-8 (question 10) decide whether a lower cap is needed. Will you run those phone checks before release? They also settle whether UPI apps accept amounts from a link to a personal UPI ID.
 
@@ -662,3 +662,127 @@ No new founder question. The two existing blockers stay: questions 3 and 5 block
   6. Error states draw no cloth header (no tutor data exists); loading draws the header with a plain block in place of the name.
   7. `src/lib/pay-page.test-util.ts` holds the shared fixtures for unit and e2e tests.
 - **Not verified here:** a real phone, a real UPI app, the real functions and CORS on Vercel, and any native-language review (hi, kn and te are not reviewed; the consent wording is a draft).
+
+---
+
+# Technical plan, R1-9 Part C (QR code and the reminder link)
+
+Written by `tech-lead`, 2026-10-13, on `main` at 08dc629 (Parts A and B merged). Founder decision on question 11: a small maintained library, loaded only with `await import()` when the QR is shown. Amended above: criteria 41 and 44; criterion 46 is refined in C3. Not in this plan: the receipt PDF and Share (blocked, see C9).
+
+## C1. Approach
+
+Two independent changes. (a) `src/lib/qr.ts` is the only file that imports `uqr`; it turns the same `upi://pay` string the Pay button uses into a square matrix with `await import("uqr")`, and a small client component draws that matrix as one SVG `<path>` inside the pay page, opened by "Show QR code". (b) The Remind screen reads the tutor's `pay_token`s with one small call of its own, builds `https://{brand.domain}/p/{token}` and passes it to `buildAppMessage` as `link` (the input R1-8 already reserved, and `reminderParts` already honours); with no token it falls back to today's raw UPI link.
+
+## C2. Dependency check (recorded here and in `docs/BUILD_PLAN.md`)
+
+Chosen: **`uqr` 0.1.3**, exact. Checked 2026-10-13 against the policy.
+
+| Point | `uqr` 0.1.3 | `qrcode-generator` 2.0.4 | `qrcode` 1.5.4 |
+| --- | --- | --- | --- |
+| Licence | MIT | MIT | MIT |
+| Release in last 12 months | 2026-04-03 yes | 2025-08-07 no | 2025-11 (modified) yes |
+| More than one maintainer or a company | 2 npm maintainers (pi0, antfu), UnJS org | 1 | 2 |
+| Dependencies | none | none | `yargs`, `pngjs`, `dijkstrajs` |
+| Size | 7.8 KB gzipped whole file (27 KB raw), `sideEffects: false`; `encode` alone is smaller | 555 KB unpacked, older style | Node-first, canvas/PNG code |
+| Network | none (the only URL is the SVG namespace text) | none | none |
+| UPI string | any text, byte mode, versions 1 to 40, ECC L/M/Q/H | same | same |
+| Static export | pure ESM, works from a dynamic import | | |
+
+Caveats, stated plainly: it is a 0.x version, and there was no release between August 2023 and April 2026. Mitigations: pinned exactly, wrapped behind `src/lib/qr.ts` (swap or replace with our own encoder without touching a screen), and a fixed-matrix test (C5) that fails if an update changes the output for a known string. `pnpm audit --prod` must show nothing new before the dependency lands (frontend-dev records the result in the PR). A decode check of the real output is a manual phone step. Not used: `renderSVG` (it returns an HTML string; we would need `dangerouslySetInnerHTML`). We use `encode(text, { ecc: "M", border: 0 })` and draw the `boolean[][]` ourselves.
+
+## C3. Files
+
+Create:
+- `src/lib/qr.ts` (only importer of `uqr`): `qrMatrix(text): Promise<{ size: number; path: string }>`. `await import("uqr")`, `encode(text, { ecc: "M", border: 0 })`, then one SVG path string (run-length `M x y h w v1 h-w z` per row, integers only) and `size`. Refuses an empty text or one over 200 characters (a UPI link is about 100) by rejecting. No `Math.round`, `toFixed`, `Intl`.
+- `src/components/pay-page/qr-block.tsx` (client): the opened QR block. States: drawing (a plain block of the final size, so the page does not jump), drawn, failed. Draws `<svg viewBox="0 0 {size+8} {size+8}" role="img" aria-label={words.qrHelp} shape-rendering="crispEdges">` with a 4-module quiet border, ink path on the lightest paper token, at least 220px square (`min-w`/`w-[min(100%,16rem)]` with `aspect-square`), centred. Under it `payPage.qrHelp` and the UPI ID as mono text (`translate="no"`, `wrap-anywhere`), then a 44px Close button (existing `Button`, outline). Failure shows `payPage.qrFailed` in the existing `Banner` and a Close button; the page stays intact.
+- `src/lib/pay-link.ts`: `payPageLink(token): string | null` = `https://${brand.domain}/p/${token}` when the token matches `^[A-Za-z0-9_-]{22,128}$` (the same pattern as `pay-page-public.ts`), else null. This is the one site-address setting: `brand.domain` in `src/config/brand.ts` (decision: no new env var; changing the host is a one-line edit, and spec question 6 still applies).
+- `src/lib/pay-tokens.ts`: `readPayTokens(): Promise<ReadonlyMap<string, string>>`, the only tutor-side reader of `pay_token`. One call `getClient()` then `.from("students").select("id,pay_token")` (RLS gives only her students; the column is already granted, pgTAP `080` line 70 proves it). Any failure or offline returns an empty map (never throws). Validates each row's shape.
+- Tests: `src/lib/qr.test.ts`, `src/lib/pay-link.test.ts`, `src/lib/pay-tokens.test.ts`, `src/components/pay-page/qr-block.test.tsx`, `e2e/pay-page-qr.spec.ts`.
+
+Change:
+- `package.json`, `pnpm-lock.yaml`: `"uqr": "0.1.3"` in `dependencies` (exact, no caret). Founder-approved 2026-10-13.
+- `src/components/pay-page/pay-actions.tsx`: add the "Show QR code" button (48px outline, `payPage.qr`) beside Copy, drawn in the same variants as Copy (normal and too-big, with a valid UPI ID; never in no-UPI or all-paid), and the open/closed state. It lazy-loads the block: `const QrBlock = lazy(() => import("./qr-block"))` is NOT used (it would still put the `lazy` boundary in the page chunk but the block is tiny); instead `qr-block.tsx` is a normal component of the page and only `qr.ts` does `await import("uqr")` when the block mounts. This keeps `p/` growth to the button, the block and its words (about 1 KB). The text drawn is exactly the `href` already computed for the Pay button (`payLink(page)` for the normal variant); for the too-big variant (no Pay link) there is no QR either: no button, because a QR of a link the Pay button refuses would break the "same string" rule. Decision: QR only where a Pay button exists. Update the "no QR button" notes of criterion 26 and the Part B e2e that asserts its absence.
+- `messages/{en,hi,kn,te}.json`: `payPage.qr`, `payPage.qrHelp`, `payPage.qrFailed` (the spec section 9 text) and `payPage.qrClose` ("Close"); `src/lib/pay-page-words.ts` type and `pay-page-words.review.json` entries (hi, kn, te `TODO-translate`, not reviewed; same release gate as the rest of the namespace). All four files in the same commit; `pnpm i18n:check`.
+- `src/components/remind/remind-run.tsx`: call `readPayTokens()` once when the run mounts (an effect, in component state only: never the provider, a module variable, storage, the address or a log). Until it settles the step shows the existing loading treatment (frontend-dev reuses what `remind-run` already draws while the log reads, or a plain block); the preview must never change its link after it is shown. Then pass `payLink: payPageLink(tokens.get(item.studentId) ?? "")` down.
+- `src/components/remind/remind-step.tsx`: `useMessage(item, tone, tutor, payLink)` passes `link: payLink` to `buildAppMessage` (it already takes `link?: string | null`; null or undefined builds the UPI link, which is criterion 47's fallback). Add `payLink` to the `useMemo` dependencies.
+- `src/lib/reminder/app-message.ts`: no behaviour change expected; add a test only. `AppMessage.link` already returns the given link.
+- `scripts/size.mjs`: no budget change. Add a printed line (not a failure) for the QR chunk size is NOT needed; the check is a test (C5).
+- `src/CLAUDE.md`: one line under `src/lib/` listing `qr.ts` (only importer of `uqr`), `pay-link.ts`, `pay-tokens.ts` (the only tutor-side `pay_token` reader).
+- `src/lib/students.ts`: comment only. Its "`pay_token` is never read" sentence gains "(the Remind screen reads it with `pay-tokens.ts`; the roster does not)". `STUDENT_COLUMNS` is unchanged on purpose: the board and the students list keep never asking for it, and `board.spec.ts` and `students.spec.ts` stay as they are.
+- `docs/specs/R1-9-parent-pay-page.md`: the "Part C built" note (frontend-dev).
+
+Criterion 46 refined: the token is read "on the tutor's own phone", from her own `students` rows through `pay-tokens.ts`, not from the roster the board holds; it still never reaches our servers except inside the message she chooses to send.
+
+## C4. Data
+
+No migration, no database or Edge Function change. `students.pay_token` is already selectable by `authenticated` under the existing RLS (pgTAP `080`); the new read adds no policy. A test in `pay-tokens.test.ts` asserts the exact query (`id,pay_token`, no `*`, no filter value from user input). No Edge Function is called for the QR (the page already has everything).
+
+## C5. Tests required (mapped to criteria)
+
+Unit (Vitest):
+- `qr.test.ts` (43): for a fixed `upi://pay?...` string the `size` and `path` equal a stored fixture (guards an update of `uqr`); size is 33 to 57 for a 100-character link; the matrix has the three finder patterns; Hindi and `%`-encoded text work; empty and 201-character text reject; the file is the only importer of `uqr` (grep over `src`), and it imports it only as `import("uqr")` (no static `from "uqr"` anywhere: a grep test); no `fetch`, `XMLHttpRequest`, `Image`, `http` in `qr.ts` or `qr-block.tsx`.
+- `qr-block.test.tsx` (43, 44): the drawn path equals `qrMatrix(href)`'s path for the same `href` the Pay button has (render `pay-actions` for a fixture page, open QR, compare to the Pay `href`); `qrHelp` and the UPI ID text are present; Close hides the block; a rejecting `qrMatrix` shows `qrFailed` with the rest of the page intact; the `Show QR code` button is absent for no UPI ID, zero total, over-ceiling total and all paid.
+- `pay-page-code-rules.test.ts` (extend): the forbidden-API grep and the "no QR library" line of B13 become "`uqr` only via `src/lib/qr.ts`"; `qr-block.tsx` has no `dangerouslySetInnerHTML`.
+- `pay-link.test.ts` (45): builds `https://feedost.vercel.app/p/{token}` from `brand.domain`; refuses a short token, a token with `/`, `?`, `#`, a space, and a non-string; never contains a phone or the student's name.
+- `pay-tokens.test.ts` (46, 47): one call, exact columns; maps ids to tokens; a failure, an offline phone and a malformed row each give an empty map or skip that row and never throw; the token is not logged (spy on `console`).
+- `app-reminder.test.ts` (45, 47): with `link` the message text has the pay link in `{link}`, still has "Or pay to UPI ID: {id}", no student name, no product name, no phone (R1-8 criteria 11 and 12), in all four languages and both tones; with no link it equals today's text (the existing raw-link tests are kept and still pass; add, do not delete). `copy-text` and the free-tool tests pass unchanged.
+- A size-script test (41), in `src/lib/size-scripts.test.ts`'s style: after `pnpm build`, the chunk that contains the string `uqr`-unique marker (the encoder's `QrCodeDataType`/error-correction table; frontend-dev picks a stable one) is not in any `<script src>` of `out/p/index.html`, `out/r/index.html` or any other page. Runs in the e2e job (it needs `out/`).
+
+E2E (Playwright, phone viewport 360, function host stubbed):
+- `pay-page-qr.spec.ts` (43, 44): fee page: tap "Show QR code": a square of at least 220px appears, the words "Scan with a UPI app on another phone" and the UPI ID show, Close (44px) hides it; the QR's `aria-label`/data path equals the Pay `href`'s matrix (compare against the same function used in a unit test: decode is a manual step); a request recorder shows no new request to any host other than the page's own chunk file on the first tap, and none on the second open; with `context.setOffline(true)` after the first open, closing and reopening still works; with the `uqr` chunk aborted (`page.route` abort on the chunk) the failure line shows and Copy still works; the encoder chunk is not requested before the tap (recorder). Layout: also in `pay-page-layout.spec.ts` at 360px and 200% font in four languages: no sideways scroll, button 48px, QR not clipped.
+- `remind.spec.ts` (46, 47): extend `remind-helpers.ts` to stub `GET /rest/v1/students?select=id,pay_token`; the preview shows `https://…/p/{token}`; the "Open WhatsApp" decoded text equals the preview; the `record_reminder` call body is exactly the same keys as before and contains no token (existing assertion kept, plus a not-contain-token check); the token read is one call, only after the Remind screen opens; the board and students specs still pass unchanged (no `pay_token` on their reads). Stub the read failing: the preview and the sent text carry the raw `upi://` link and the screen does not break.
+- `fee-reminder.spec.ts` (free tool, 45): unchanged and green.
+
+Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 172.2 KB and `remind` 169.1 KB or less, since only a tiny file and a hook are added; if either grows by more than 1 KB, tell tech-lead), `pnpm check:leak`, `pnpm i18n:check`, `pnpm lint`, `pnpm audit --prod` result recorded.
+
+## C6. Bundle (criterion 41)
+
+`pnpm size` only counts scripts listed in the HTML, so a dynamically imported chunk is not in `p/`'s 143.1 KB. What does count is the "Show QR code" button, the QR block component and four short words in the page chunk: expected 0.8 to 1.5 KB gzipped, so about 144.5 KB against the 151 KB budget (7.9 KB of room). If the result passes 150 KB, move `qr-block.tsx` behind `lazy()` (a client chunk fetched on tap) and re-measure; do not raise the budget. The encoder chunk (about 6 KB gzipped) loads on the first tap only, so a parent who never taps it never downloads it. Frontend-dev reports both numbers in the PR and the size of the encoder chunk.
+
+## C7. Work split
+
+1. `frontend-dev`: add `uqr` 0.1.3 exactly (`pnpm add uqr@0.1.3 --save-exact`), run `pnpm audit --prod`, write `src/lib/qr.ts` and `qr.test.ts` (fixture matrix); check the encoder chunk is a separate file in `out/_next/`.
+2. `frontend-dev`: `qr-block.tsx`, the button and states in `pay-actions.tsx`, the four message keys in all four files, `pay-page-words.ts`, review record, component tests, the "no QR button" Part B assertions updated, `pnpm size`.
+3. `frontend-dev`: `pay-link.ts`, `pay-tokens.ts`, `remind-run.tsx`, `remind-step.tsx`, tests, `students.ts` comment, `src/CLAUDE.md`.
+4. `frontend-dev`: e2e (`pay-page-qr.spec.ts`, `remind.spec.ts`, layout sweep), the size-script test, the "Part C built" note; run lint, typecheck, test, i18n:check, build, check:leak, check:404, size, test:e2e.
+5. `test-engineer`, `code-reviewer`, `lead-reviewer`, as the pipeline says. No `backend-dev` task.
+
+## C8. Risks and traps
+
+- **The encoder leaks into initial JS.** A static `import "uqr"` anywhere (even type-only mistakes that pull values) or a barrel file would put it in every route. Plan: one wrapper, a grep test for any static import, and the out/ chunk test of C5.
+- **Network off before the first tap.** The encoder is fetched on the first tap, so on a dead connection the QR cannot draw; the spec's wording is amended and the failure line says to use Copy. This is the honest cost of "load only when shown". (Alternative if the founder prefers: prefetch the chunk when the fee screen is idle. About 6 KB for every parent, including those who never need it. Not chosen.)
+- **The QR must be the same string as the Pay button.** Both come from `payLink(page)`; the QR has no builder of its own. A test compares them.
+- **Scanning contrast.** Black on the lightest paper token, quiet border of 4 modules, ECC M, `crispEdges`. The DESIGN tokens have no pure white; if the paper tone fails a real scan, frontend-dev says so and tech-lead decides (a white token is a design decision). Manual phone step 5 below.
+- **`pay_token` spreading.** Reading it for the Remind screen only, from `pay-tokens.ts`, held in component state, never in the queue snapshot, the provider, the log call, `console`, storage, the address or an error message. The grep rule: `pay_token` appears in `src/` only in `pay-tokens.ts`, `students.ts` comments, and tests.
+- **A link that changes under the tutor.** The preview waits for the token read to settle, so it does not flip from `upi://` to the pay link after she has read it.
+- **A new link points at a page that is not live.** Criterion 48: Part C must not be merged until Part B is on production (and the consent wording, spec questions 3 and 5, is answered). `lead-reviewer` checks this before merging; the PR body says it.
+- **Host change.** The link carries `brand.domain`; spec question 6 stands (the old host must keep serving `/p/` and `/r/`).
+- **Reminders for amounts above the page's ceiling.** Both caps are the same (₹10,00,000), so a reminder link never leads to a page that refuses to show a Pay button for an amount the reminder allowed. The existing test of `APP_MAX_PAISE` against `PAY_PAGE_MAX_PAISE` is added if missing.
+- **Tutor total versus the reminder's single fee** (spec question 1): the page shows the total of all open fees, the message names one fee. Accepted default, unchanged.
+- **Uncommon 0.x library.** Pinned, fixture-tested, wrapped (C2).
+
+## C9. Not doing in Part C, and what is blocked
+
+- **Blocked, listed separately:** the receipt PDF and Share work depends on PR #12 (human checks still pending). It is not in this plan; it starts only when #12 is merged.
+- A QR on the receipt, on the tutor's own screens, or a downloadable or shareable QR image; a "Copy pay link" button; a new or revoked pay link (question 12); a QR for the too-big or no-UPI variants.
+- Prefetching the encoder; any online QR service; any dependency beyond `uqr`; a new env var for the host; any change to the free tool, `reminder.ts` templates, or the migration.
+- Putting `pay_token` in the roster, the board or the offline outbox (R1-12 decides how the outbox treats it).
+
+## C10. Test by hand on a phone (add to section 11)
+
+1. On the pay page, tap "Show QR code": the code appears, with the words and the UPI ID under it, and Close hides it.
+2. Open the same page on a laptop and scan the code with a UPI app on a real phone: the app opens with the right UPI ID, amount and note. Compare with the Pay button's amount.
+3. Scan it from the phone's own screen using a second phone, at the smallest and largest text size; the code is not cut off and has a clear white border.
+4. Turn on airplane mode after opening the QR once, close and open again: it still shows. Turn airplane mode on before the first tap on a fresh page: the "Couldn't make the QR code" line shows and Copy UPI ID still works.
+5. Check the contrast on a dim screen and a bright one; if the scanner struggles, tell tech-lead.
+6. In the tutor app, tap Remind on a student with a phone and a UPI ID: the message shows `https://feedost.vercel.app/p/...` and still the "Or pay to UPI ID" line; open WhatsApp: the same text arrives; open the link on the parent's phone: the pay page opens (after Part B is on production).
+7. Turn the network off and tap Remind: the message shows the old `upi://` link and nothing breaks (or the screen says it is offline, as before).
+8. Tap the link in the real WhatsApp message on a second phone: it opens the pay page, not an error. Do this against production before merging Part C (criterion 48).
+
+## C11. Open questions for the founder
+
+1. **A QR when there is no Pay button?** Default (chosen): no. QR appears only where the Pay button does (a valid UPI ID and an amount within the ceiling). Say if you want it elsewhere.
+2. **Offline before the first tap.** Default (chosen): the QR needs the network once, on the first tap, and otherwise shows the failure line. The alternative is to prefetch the 6 KB chunk when the page is idle. Say if you want that.
+3. **No other new question.** `uqr` is approved under question 11. The three release blocks stay: question 3 and 5 (consent wording, translation review) and Part B live on production (criterion 48).
+
+**Starts first: `frontend-dev`, task 1 (add `uqr` 0.1.3 exactly, `pnpm audit --prod`, and `src/lib/qr.ts` with its fixture test), then tasks 2 to 4.**

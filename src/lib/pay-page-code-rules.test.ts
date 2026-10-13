@@ -79,4 +79,12 @@ describe("the pay page's code", () => {
   it("holds the product name only through brand.ts", () => {
     for (const path of files) expect(stripComments(source(path)).includes(brand.name), path).toBe(false);
   });
+
+  it("reaches the QR encoder only through src/lib/qr.ts, and never injects HTML", () => {
+    for (const path of files) {
+      const text = stripComments(source(path));
+      expect(/["']uqr["']|qrcode/i.test(text), path).toBe(false);
+      expect(text.includes("dangerouslySetInnerHTML"), path).toBe(false);
+    }
+  });
 });

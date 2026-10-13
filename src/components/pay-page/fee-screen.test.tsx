@@ -64,10 +64,12 @@ describe("FeeScreen", () => {
   it("shows no Pay button for no UPI ID, a zero total or a total over the ceiling, and says why", () => {
     show({ upiId: null });
     expect(screen.queryByRole("link", { name: /Pay/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /QR/ })).toBeNull();
     expect(screen.getByText("Your tutor has not added a UPI ID yet. Ask them for payment details.")).toBeTruthy();
     cleanup();
     show({ totalRemaining: 100_000_001 });
     expect(screen.queryByRole("link", { name: /Pay/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /QR/ })).toBeNull();
     expect(text("Pay ₹10,00,000.01 to this UPI ID in your UPI app.")).toBeTruthy();
     expect(screen.getByText("meena.tuitions@okhdfc")).toBeTruthy();
     cleanup();
@@ -110,9 +112,8 @@ describe("FeeScreen", () => {
     expect(screen.getByRole("button", { name: "Copy UPI ID" })).toBeTruthy();
   });
 
-  it("has no QR button (Part C) and no 'I've paid' button", () => {
+  it("has no 'I've paid' button", () => {
     show();
-    expect(screen.queryByRole("button", { name: /QR/i })).toBeNull();
     expect(screen.queryByText(/I've paid|I've already paid/i)).toBeNull();
   });
 

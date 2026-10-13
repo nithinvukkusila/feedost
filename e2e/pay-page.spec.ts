@@ -282,8 +282,8 @@ test.describe("the fee page (criteria 22 to 25)", () => {
     await expect(main.getByRole("button", { name: "Copied" })).toBeVisible();
     expect(await page.evaluate(() => (window as unknown as { copied: string[] }).copied)).toEqual([UPI_ID]);
     await expect(main.getByRole("button", { name: "Copy UPI ID" })).toBeVisible({ timeout: 4000 });
-    // No QR button before Part C.
-    await expect(main.getByRole("button", { name: /QR/i })).toHaveCount(0);
+    // The QR button sits with Copy (Part C); its own spec is pay-page-qr.spec.ts.
+    await expect(main.getByRole("button", { name: "Show QR code" })).toBeVisible();
   });
 
   test("criterion 26: with no clipboard the Copy button and the line that points to it are not drawn, and the ID is still text", async ({ page }) => {
