@@ -130,6 +130,23 @@ describe("a good token, after consent", () => {
     expect(page.tutor_subjects).toBeNull();
   });
 
+  it("a total or count that is not a whole finite number is a 500, never 0", async () => {
+    for (const field of ["total_remaining", "open_dues_more"]) {
+      for (const value of ["70000", 70000.5, Number.NaN, Number.POSITIVE_INFINITY, true, {}, []]) {
+        const { deps } = fake({ [TOKEN]: { ...POST, [field]: value } });
+        const res = await handle(post({ token: TOKEN }), deps);
+        expect(res.status).toBe(500);
+        expect(await res.text()).toBe('{"code":"error"}');
+      }
+    }
+  });
+
+  it("a total above the 32-bit range passes through unchanged", async () => {
+    const { deps } = fake({ [TOKEN]: { ...POST, total_remaining: 2200000000 } });
+    const page = await pageOf(await handle(post({ token: TOKEN }), deps));
+    expect(page.total_remaining).toBe(2200000000);
+  });
+
   it("a consent_needed that is not a boolean is a 500, never a guess", async () => {
     for (const value of ["true", "false", 1, 0, null, undefined]) {
       const { deps } = fake({ [TOKEN]: { ...POST, consent_needed: value } });

@@ -13,7 +13,7 @@
 --
 -- get_pay_page answer (jsonb), or null for a token that is malformed, unknown, archived or without a tutor:
 --   before consent: consent_needed (true), notice_version, tutor_name, tutor_subjects, student_name, language
---   after consent:  the six above (consent_needed false) plus upi_id, today (YYYY-MM-DD, India day), total_remaining (integer paise),
+--   after consent:  the six above (consent_needed false) plus upi_id, today (YYYY-MM-DD, India day), total_remaining (bigint paise, a JSON number),
 --                   open_dues (<= 24 of kind, month, due_date, amount, amount_paid, remaining), open_dues_more (integer),
 --                   receipts (<= 12 of receipt_no, receipt_token, month, amount, paid_on, balance_after), receipts_more (boolean)
 -- record_consent answer (text): 'ok', 'stale_notice' or 'not_found'.
@@ -115,7 +115,7 @@ declare
   v_receipt_count integer;
 begin
   -- Exact match on the token only. A value that could never be a token is the same as an unknown one.
-  if p_token is null or p_token !~ '^[A-Za-z0-9_-]{22,}$' then
+  if p_token is null or p_token !~ '^[A-Za-z0-9_-]{22,64}$' then
     return null;
   end if;
 
@@ -205,7 +205,7 @@ begin
     'language', s.language,
     'upi_id', s.upi_id,
     'today', to_char(public.india_day(now()), 'YYYY-MM-DD'),
-    'total_remaining', v_total::integer,
+    'total_remaining', v_total,
     'open_dues', v_dues,
     'open_dues_more', greatest(v_due_count - 24, 0),
     'receipts', v_receipts,
@@ -226,7 +226,7 @@ declare
   s record;
 begin
   -- The token is checked first, so an unknown token cannot be used to learn the current version.
-  if p_token is null or p_token !~ '^[A-Za-z0-9_-]{22,}$' then
+  if p_token is null or p_token !~ '^[A-Za-z0-9_-]{22,64}$' then
     return 'not_found';
   end if;
 

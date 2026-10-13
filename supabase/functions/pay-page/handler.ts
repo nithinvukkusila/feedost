@@ -49,7 +49,8 @@ function copy(row: Record<string, unknown>, keys: readonly string[]): Record<str
 
 const list = (value: unknown, keys: readonly string[]) =>
   Array.isArray(value) ? value.map((e) => copy(e && typeof e === "object" ? (e as Record<string, unknown>) : {}, keys)) : [];
-const whole = (value: unknown) => (typeof value === "number" && Number.isInteger(value) ? value : 0);
+/** A missing count is 0. A present value that is not a whole finite number is NaN, which allowListed turns into a 500. */
+const whole = (value: unknown) => (value === undefined || value === null ? 0 : typeof value === "number" && Number.isInteger(value) ? value : Number.NaN);
 
 /**
  * Copies only the allowed keys, chosen by consent_needed. Returns null when consent_needed is not a boolean:
@@ -65,6 +66,8 @@ export function allowListed(row: Record<string, unknown>): Record<string, unknow
   page.total_remaining = whole(row.total_remaining);
   page.open_dues = list(row.open_dues, DUE_KEYS);
   page.open_dues_more = whole(row.open_dues_more);
+  // Never show "nothing owed" because the database sent something odd: refuse the page instead.
+  if (!Number.isInteger(page.total_remaining) || !Number.isInteger(page.open_dues_more)) return null;
   page.receipts = list(row.receipts, RECEIPT_KEYS);
   page.receipts_more = row.receipts_more === true;
   return page;
