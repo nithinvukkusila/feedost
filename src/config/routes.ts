@@ -3,6 +3,8 @@ import type { Locale } from "@/config/locales";
 
 /** The fee reminder writer (slice R0-2), under `/{locale}/`. */
 export const feeReminderPath = "tools/fee-reminder/";
+/** The fee receipt maker (slice R0-3), under `/{locale}/`. */
+export const feeReceiptPath = "tools/fee-receipt/";
 
 // The signed-in app (slice R1-1), under `/{locale}/`.
 export const languagePath = "language/";

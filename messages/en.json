@@ -53,11 +53,11 @@
     },
     "tools": {
       "title": "Two free tools.",
-      "tag": "Coming soon",
       "t1": {
         "no": "Tool no. 01",
         "title": "Fee receipt maker",
-        "body": "A proper PDF receipt in one minute."
+        "body": "A proper PDF receipt in one minute.",
+        "open": "Make a receipt"
       },
       "t2": {
         "no": "Tool no. 02",
@@ -207,6 +207,107 @@
     "copiedStatus": "Message copied.",
     "copyFailed": "Could not copy. Press and hold the message to select it.",
     "fillFirst": "Fill in the fields above first."
+  },
+  "receiptTool": {
+    "meta": {
+      "title": "Free fee receipt maker for tutors: PDF in 4 languages",
+      "description": "Make a fee receipt PDF in English, Hindi, Kannada or Telugu. Free, no sign-up, made on your phone and not saved anywhere."
+    },
+    "kicker": "Free tool · no sign-up",
+    "title": "A proper fee receipt, in one minute.",
+    "noscript": "This tool needs JavaScript turned on.",
+    "promo": {
+      "join": "Join the waitlist",
+      "title": "Writing these every month?",
+      "body": "The {brand} app is coming soon. It will make and send receipts when you mark a fee as paid."
+    }
+  },
+  "receiptForm": {
+    "language": "Receipt language",
+    "tutor": {
+      "label": "Your name",
+      "placeholder": "Meena Iyer",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type your name."
+      },
+      "tooLong": {
+        "word": "Too long",
+        "fix": "Use 40 characters or fewer."
+      },
+      "unprintable": {
+        "word": "Cannot print",
+        "fix": "None of these characters can be printed. Use English, Hindi, Kannada or Telugu letters."
+      }
+    },
+    "student": {
+      "label": "Student's name",
+      "placeholder": "Arjun",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type the student's name."
+      },
+      "tooLong": {
+        "word": "Too long",
+        "fix": "Use 40 characters or fewer."
+      },
+      "unprintable": {
+        "word": "Cannot print",
+        "fix": "None of these characters can be printed. Use English, Hindi, Kannada or Telugu letters."
+      }
+    },
+    "amount": {
+      "label": "Amount in ₹",
+      "placeholder": "1,200",
+      "missing": {
+        "word": "Missing",
+        "fix": "Type the fee in rupees."
+      },
+      "paise": {
+        "word": "Check this",
+        "fix": "Whole rupees only. Leave out the paise."
+      },
+      "notDigits": {
+        "word": "Check this",
+        "fix": "Use digits only, for example 1200."
+      },
+      "tooLow": {
+        "word": "Too low",
+        "fix": "The amount must be at least ₹1."
+      },
+      "tooHigh": {
+        "word": "Too high",
+        "fix": "This tool allows up to ₹1,00,000."
+      }
+    },
+    "month": {
+      "label": "Fee month"
+    },
+    "mode": {
+      "label": "Paid by",
+      "upi": "UPI",
+      "cash": "Cash",
+      "bank": "Bank"
+    },
+    "privacy": "Nothing you type is sent to us or saved on our servers. The PDF is made on your phone.",
+    "preview": {
+      "title": "Your receipt",
+      "blank": "blank",
+      "incomplete": "Fill in the fields above to finish the receipt.",
+      "unprintable": "Some characters cannot be printed and were left out."
+    },
+    "download": "Download PDF",
+    "share": "Share on WhatsApp",
+    "working": "Making your PDF…",
+    "fillFirst": "Fill in the fields above first.",
+    "failed": "Could not make the PDF. Check your connection and try again.",
+    "saved": "The PDF has been saved. Attach it in WhatsApp.",
+    "openWhatsApp": "Open WhatsApp"
+  },
+  "toolNav": {
+    "label": "Free tools",
+    "receipt": "Receipt maker",
+    "reminder": "Reminder writer"
   },
   "notFound": {
     "title": "This page does not exist.",

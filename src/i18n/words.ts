@@ -22,7 +22,7 @@ import { loadMessages } from "./messages";
 type Messages = typeof en;
 
 /** The namespaces that may be handed to an island as words. Each holds plain text only. */
-export const plainNamespaces = ["reminderForm", "waitlistForm"] as const satisfies readonly (keyof Messages)[];
+export const plainNamespaces = ["reminderForm", "receiptForm", "waitlistForm"] as const satisfies readonly (keyof Messages)[];
 export type PlainNamespace = (typeof plainNamespaces)[number];
 
 /** The namespaces handed over in all four languages at once. Plain text plus `{name}` arguments only. */

@@ -1151,11 +1151,14 @@ test.describe("route, landmarks, links and copy", () => {
       await expect(page.locator("main").getByText(shown(lang, "reminder.kicker"), { exact: true })).toBeVisible();
       await expect(page.locator("form")).toHaveCount(0);
 
-      const home = page.locator("header a");
-      await expect(home).toHaveCount(1);
+      // Header (R0-3): the brand name home, then the other tool as a link; this tool is a word, not a link.
+      await expect(page.locator("header a")).toHaveCount(2);
+      const home = page.locator("header a").first();
       await expect(home).toHaveText(brand.name);
       await expect(home).toHaveAttribute("href", `/${lang}/`);
-      await expect(page.locator('a[href*="receipt"]')).toHaveCount(0);
+      await expect(page.locator("header a").nth(1)).toHaveAttribute("href", `/${lang}/tools/fee-receipt/`);
+      await expect(page.locator('header [aria-current="page"]')).toHaveText(shown(lang, "toolNav.reminder"));
+      await expect(page.locator('main a[href*="receipt"]')).toHaveCount(0);
 
       // Footer: three links to the tool in the other languages; the current one is marked and not a link.
       const nav = page.locator("footer nav");
@@ -1170,7 +1173,7 @@ test.describe("route, landmarks, links and copy", () => {
 
       // Every link is an anchor on this page or a built file; the unavailable Send has no address.
       const hrefs = await page.locator("a[href]").evaluateAll((els) => els.map((el) => el.getAttribute("href") ?? ""));
-      expect(hrefs.sort()).toEqual([`/${lang}/`, `/${lang}/#waitlist`, ...others.map(tool)].sort());
+      expect(hrefs.sort()).toEqual([`/${lang}/`, `/${lang}/#waitlist`, `/${lang}/tools/fee-receipt/`, ...others.map(tool)].sort());
       for (const href of hrefs) {
         expect(builtFileFor(href), href).toBe(true);
         const hash = href.split("#")[1];
@@ -1246,7 +1249,8 @@ test.describe("route, landmarks, links and copy", () => {
       await expect(promo.locator("form, input, select, textarea, button")).toHaveCount(0);
       expect((await css(promo, ["background-color"]))["background-color"]).toBe(rgb("highlight"));
       const words = await pageWords(page);
-      expect(words).not.toMatch(/₹\s?149|₹\s?999|\bPro\b|automatic|receipt|tracked|one tap/i);
+      expect(words).not.toMatch(/₹\s?149|₹\s?999|\bPro\b|automatic|tracked|one tap/i);
+      if (lang === "en") expect(await page.locator("main").innerText()).not.toMatch(/receipt/i); // the header names the other tool
       expect(words).not.toContain("TODO-translate");
       expect(words).not.toContain("{brand}");
       if (lang === "en") {
@@ -1273,7 +1277,7 @@ test.describe("route, landmarks, links and copy", () => {
         await expect(page.locator("h1")).toHaveText(shown(lang, "reminder.title"));
         await expect(part(page, "parent")).toBeEnabled();
         // And back: the brand name in the tool's header is the way home.
-        await page.locator("header a").click();
+        await page.locator("header a").first().click();
         await expect(page).toHaveURL(`/${lang}/`);
       }
     });
@@ -1397,7 +1401,7 @@ test.describe("JavaScript off (criterion 46)", () => {
       await expect(part(page, "remember")).toHaveCount(0);
       expect(await sidewaysScroll(page)).toBe(0);
       // The plain links still work.
-      await page.locator("header a").click();
+      await page.locator("header a").first().click();
       await expect(page).toHaveURL(`/${lang}/`);
     });
   }
@@ -1430,6 +1434,10 @@ test.describe("keyboard only", () => {
 
     await page.keyboard.press("Tab");
     expect(await page.evaluate(() => document.activeElement?.closest("header") !== null && document.activeElement?.tagName === "A")).toBe(true);
+    expect((await focusMark()).ring).toBe(true);
+    // The header's second stop is the link to the receipt maker (R0-3).
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.getAttribute("href"))).toBe("/en/tools/fee-receipt/");
     expect((await focusMark()).ring).toBe(true);
 
     // Message language: one stop; arrows move the choice.

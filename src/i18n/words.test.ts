@@ -44,8 +44,8 @@ describe("the plain namespaces", () => {
 });
 
 describe("the fee reminder's words", () => {
-  it("are one of the two plain namespaces, the other being the waitlist form's", () => {
-    expect([...plainNamespaces]).toEqual(["reminderForm", "waitlistForm"]);
+  it("are the plain namespaces", () => {
+    expect([...plainNamespaces]).toEqual(["reminderForm", "receiptForm", "waitlistForm"]);
   });
 
   it.each(locales)("give every error a state word and a sentence that says how to fix it, in %s.json", (locale) => {
@@ -68,6 +68,34 @@ describe("the fee reminder's words", () => {
 
   it("keep the UPI placeholder the same in all four files, and never a real-looking ID (criterion 11)", () => {
     for (const locale of locales) expect((files[locale].reminderForm as { upi: { placeholder: string } }).upi.placeholder).toBe("name@bank");
+  });
+});
+
+describe("the fee receipt's words", () => {
+  it.each(locales)("give every error a state word and a sentence that says how to fix it, in %s.json", (locale) => {
+    const form = files[locale].receiptForm as Record<string, Record<string, unknown>>;
+    const errors: [string, string[]][] = [
+      ["tutor", ["missing", "tooLong", "unprintable"]],
+      ["student", ["missing", "tooLong", "unprintable"]],
+      ["amount", ["missing", "paise", "notDigits", "tooLow", "tooHigh"]],
+    ];
+    for (const [field, codes] of errors) {
+      for (const code of codes) {
+        const words = form[field][code] as { word: string; fix: string };
+        expect(Object.keys(words), `${field}.${code}`).toEqual(["word", "fix"]);
+        expect(words.word.trim()).not.toBe("");
+        expect(words.fix.trim()).not.toBe("");
+      }
+    }
+  });
+
+  it.each(["hi", "kn", "te"] as const)("have no TODO-translate left in %s.json: a parent reads what the tool prints", (locale) => {
+    expect(JSON.stringify(files[locale].receiptForm)).not.toContain("TODO-translate");
+  });
+
+  it("are returned for the receipt form with the same keys as the English file", async () => {
+    const words = await getWords("receiptForm");
+    expect(shape(words as Tree)).toEqual(shape(en.receiptForm as Tree));
   });
 });
 

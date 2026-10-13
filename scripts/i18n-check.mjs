@@ -3,7 +3,7 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync, readFileSync } from "node:fs";
-import { check, checkAppTemplates, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkAppTemplates, checkReceiptTemplates, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
@@ -33,6 +33,10 @@ function leafPaths(node, path) {
   );
 }
 
+// The receipt maker's PDF wording (spec R0-3, criterion 26): its own file and its own review record.
+const RECEIPT_TOOL_TEMPLATES = "src/lib/receipt/templates.json";
+const RECEIPT_TOOL_REVIEW = "src/lib/receipt/templates.review.json";
+
 const strict = process.argv.includes("--strict");
 const { problems, keyCount, todoCount } = check("messages", { strict });
 
@@ -47,6 +51,18 @@ if (existsSync(TEMPLATES)) {
     waiting.length === 0
       ? `; ${templates.templateCount} templates, all ${total} languages reviewed`
       : `; ${templates.templateCount} templates, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
+}
+
+// The fee receipt's wording has its own file and its own review record (spec R0-3, criterion 26).
+if (existsSync(RECEIPT_TOOL_TEMPLATES)) {
+  const receipt = checkReceiptTemplates(RECEIPT_TOOL_TEMPLATES, RECEIPT_TOOL_REVIEW, { strict });
+  problems.push(...receipt.problems);
+  for (const note of receipt.notes) console.log(`receipt ${note}`);
+  const waiting = receipt.notReviewed;
+  templateSummary +=
+    waiting.length === 0
+      ? `; receipt: ${receipt.templateCount} texts, all ${locales.length - 1} languages reviewed`
+      : `; receipt: ${receipt.templateCount} texts, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`;
 }
 
 let appSummary = "";

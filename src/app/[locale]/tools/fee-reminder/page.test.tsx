@@ -53,7 +53,8 @@ describe("the fee reminder page", () => {
   it("header: the brand name is the only link, to the landing in the same language, 44px high (criterion 6)", async () => {
     await renderPage("kn");
     const links = within(screen.getByRole("banner")).getAllByRole("link");
-    expect(links).toHaveLength(1);
+    expect(links).toHaveLength(2); // the brand name, then the receipt maker (R0-3)
+    expect(links[1].getAttribute("href")).toBe("/kn/tools/fee-receipt/");
     expect(links[0].textContent).toBe(brand.name);
     expect(links[0].getAttribute("href")).toBe("/kn/");
     expect(links[0].className).toContain("min-h-tap");
@@ -105,7 +106,7 @@ describe("the fee reminder page", () => {
   });
 
   it("promises nothing the tool does not do (criterion 57)", async () => {
-    const { container } = await renderPage();
-    expect(container.textContent).not.toMatch(/₹149|₹999|\bPro\b|automatic|receipt|tracked|one tap|verified/i);
+    await renderPage();
+    expect(screen.getByRole("main").textContent).not.toMatch(/₹149|₹999|\bPro\b|automatic|receipt|tracked|one tap|verified/i);
   });
 });

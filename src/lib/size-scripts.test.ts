@@ -14,6 +14,13 @@ const pages = ["index.html", "en/index.html", "hi/index.html", "kn/index.html", 
 // The fee reminder page in each language (spec R0-2). It loads one more script, which holds the
 // message templates of all four languages: the leak check's one named exception.
 const toolPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-reminder/index.html`);
+// The fee receipt page in each language (spec R0-3): one more script holds the receipt wording of all four.
+const receiptPages = ["en", "hi", "kn", "te"].map((locale) => `${locale}/tools/fee-receipt/index.html`);
+const receiptTemplatesPath = join("src", "lib", "receipt", "templates.json");
+const receiptTemplates = JSON.parse(readFileSync(join(process.cwd(), receiptTemplatesPath), "utf8")) as Record<
+  "en" | "hi" | "kn" | "te",
+  { heading: string; sentence: string; whatsApp: string; months: string[] }
+>;
 // The signed-in app's pages (R1-1), in each language. Plain pages: no tool script.
 const appRoutes = ["language", "sign-in", "auth/callback", "home", "more", "students", "students/new", "students/edit", "receipt", "remind", "batches", "batches/edit", "attendance", "setup/profile", "setup/upi"];
 const appPages = ["en", "hi", "kn", "te"].flatMap((locale) => appRoutes.map((route) => `${locale}/${route}/index.html`));
@@ -50,6 +57,15 @@ type Options = {
   shellScriptBytes?: number;
   /** The body of a language's tool page and app pages. Default: that language's own line. */
   toolBody?: (locale: string) => string;
+  /** The text of the script only the receipt pages load. Default: all four languages' receipt wording. */
+  receiptScript?: string;
+  /** Text put in the on-demand library chunk. Default: marker strings. `null` writes no chunk. */
+  library?: string | null;
+  /** Bytes of incompressible data in the on-demand library chunk (to cross the 450 KB warning). */
+  libraryBytes?: number;
+  /** Put this in the script every page loads up front. */
+  initialText?: string;
+  noFonts?: boolean;
 };
 
 function project(options: Options = {}): string {
@@ -77,6 +93,27 @@ function project(options: Options = {}): string {
     const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
     const body = options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`;
     writeFileSync(join(root, "out", page), html(body, script, "/_next/tool.js"));
+  }
+  mkdirSync(join(root, receiptTemplatesPath, ".."), { recursive: true });
+  writeFileSync(join(root, receiptTemplatesPath), JSON.stringify(receiptTemplates));
+  writeFileSync(join(root, "out", "_next", "receipt.js"), options.receiptScript ?? toolScript(receiptTemplates));
+  for (const page of receiptPages) {
+    if (options.skip?.includes(page)) continue;
+    const locale = page.split("/")[0] as keyof typeof messages;
+    mkdirSync(join(root, "out", page, ".."), { recursive: true });
+    const script = options.scriptText ? `/_next/${Object.keys(options.scriptText)[0]}` : "/_next/a.js";
+    const body = options.toolBody ? options.toolBody(locale) : `<p>${messages[locale].home.placeholder}</p>`;
+    writeFileSync(join(root, "out", page), html(body, script, "/_next/receipt.js"));
+  }
+  if (options.initialText) writeFileSync(join(root, "out", "_next", "a.js"), options.initialText);
+  if (options.library !== null) {
+    mkdirSync(join(root, "out", "_next", "static", "chunks"), { recursive: true });
+    const bytes = options.libraryBytes ? randomBytes(options.libraryBytes).toString("base64") : "";
+    writeFileSync(join(root, "out", "_next", "static", "chunks", "pdf.js"), `${options.library ?? "PDFDocument.create();var GSUB=1;"}${bytes}`);
+  }
+  if (!options.noFonts) {
+    mkdirSync(join(root, "out", "pdf-fonts"), { recursive: true });
+    writeFileSync(join(root, "out", "pdf-fonts", "NotoSans.ttf"), "font");
   }
   for (const page of appPages) {
     if (options.skip?.includes(page)) continue;
@@ -129,13 +166,13 @@ describe("pnpm size, the parent's receipt shell (R1-7 Part B)", () => {
 });
 
 describe("pnpm size (criterion 30)", () => {
-  it("passes when the five routes, the four tool pages and the app's pages exist and are small", () => {
+  it("passes when the five routes, the four tool pages, the four receipt pages and the app's pages exist and are small", () => {
     const result = run(sizeScript, project());
     expect(result.status).toBe(0);
-    for (const page of [...pages, ...toolPages, ...appPages]) expect(result.out).toContain(`out/${page}`);
+    for (const page of [...pages, ...toolPages, ...receiptPages, ...appPages]) expect(result.out).toContain(`out/${page}`);
   });
 
-  it.each([...pages, ...toolPages, ...appPages])("fails when %s is missing", (page) => {
+  it.each([...pages, ...toolPages, ...receiptPages, ...appPages])("fails when %s is missing", (page) => {
     const result = run(sizeScript, project({ skip: [page] }));
     expect(result.status).toBe(1);
     expect(result.out).toContain(`out/${page} is missing`);
@@ -151,6 +188,40 @@ describe("pnpm size (criterion 30)", () => {
     const result = run(sizeScript, project({ scriptBytes: 210 * 1024 }));
     expect(result.status).toBe(1);
     expect(result.out).toContain("OVER");
+  });
+
+  describe("the PDF library on demand (R0-3)", () => {
+    it("reports the library chunk and the fonts apart from the budget", () => {
+      const result = run(sizeScript, project());
+      expect(result.status).toBe(0);
+      expect(result.out).toContain("PDF library on tap");
+      expect(result.out).toContain("out/_next/static/chunks/pdf.js");
+      expect(result.out).toContain("out/pdf-fonts/NotoSans.ttf");
+    });
+
+    it("warns, and still passes, when the library chunk is over 450 KB gzipped", () => {
+      const result = run(sizeScript, project({ libraryBytes: 620 * 1024 }));
+      expect(result.status).toBe(0);
+      expect(result.out).toMatch(/WARN\s+\d+\.\d KB\s+PDF library on tap/);
+    });
+
+    it("fails when the library is in a page's initial JavaScript", () => {
+      const result = run(sizeScript, project({ initialText: "PDFDocument.create()" }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("the PDF library is in this page's initial JavaScript");
+    });
+
+    it("fails closed when no library chunk is found", () => {
+      const result = run(sizeScript, project({ library: null }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("No on-demand PDF library chunk found");
+    });
+
+    it("fails when there are no fonts", () => {
+      const result = run(sizeScript, project({ noFonts: true }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain("No fonts under out/pdf-fonts");
+    });
   });
 });
 
@@ -241,6 +312,12 @@ describe("pnpm check:leak (criterion 29)", () => {
     expect(result.out).toContain("proves nothing");
   });
 
+  it.each(receiptPages)("fails when the receipt page %s is missing (R0-3)", (page) => {
+    const result = run(leakScript, project({ skip: [page] }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`out/${page} is missing`);
+  });
+
   it("fails when a language page is missing", () => {
     const result = run(leakScript, project({ skip: ["kn/index.html"] }));
     expect(result.status).toBe(1);
@@ -263,7 +340,7 @@ describe("pnpm check:leak on the fee reminder page: the one named exception (R0-
     expect(result.status).toBe(0);
     expect(result.out).toContain("/en/tools/fee-reminder/:");
     expect(result.out).toContain("/te/tools/fee-reminder/:");
-    expect(result.out).toContain("69 pages");
+    expect(result.out).toContain("73 pages");
   });
 
   it("checks a page it has never heard of: any index.html under a language", () => {
@@ -471,5 +548,74 @@ describe("pnpm check:leak, gaps found by mutation (criterion 29)", () => {
     const en = run(leakScript, project({ body: (l) => (l === "te" ? page(l, messages.en.home.placeholder) : page(l, "")) }));
     expect(en.status).toBe(1);
     expect(en.out).toContain("te page loads a en message");
+  });
+});
+
+describe("pnpm check:leak on the fee receipt page: the second named exception (R0-3)", () => {
+  const own = (l: string) => `<p>${(messages as Record<string, typeof messages.en>)[l]?.home.placeholder ?? ""}</p>`;
+  const hiSentence = receiptTemplates.hi.sentence;
+
+  it("passes a receipt page whose script holds the receipt wording of all four languages", () => {
+    const result = run(leakScript, project());
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("/en/tools/fee-receipt/:");
+    expect(result.out).toContain("/te/tools/fee-receipt/:");
+  });
+
+  it("fails when the receipt page does not carry the kn wording", () => {
+    const { kn: _kn, ...rest } = receiptTemplates;
+    void _kn;
+    const result = run(leakScript, project({ receiptScript: toolScript(rest) }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the fee receipt page does not carry the kn templates");
+  });
+
+  it("fails when a receipt sentence rides in a script the landing loads", () => {
+    const result = run(leakScript, project({ scriptText: { "chunk.js": `var t=${JSON.stringify(hiSentence)}` } }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the hi templates leaked onto /en/:");
+  });
+
+  it("fails when a receipt sentence of another language is on the reminder page script", () => {
+    const result = run(leakScript, project({ toolScript: `${toolScript(templates)};var s=${JSON.stringify(hiSentence)}` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the hi templates leaked onto /en/tools/fee-reminder/");
+  });
+
+  it("fails when another language's receipt sentence is in a receipt page's HTML", () => {
+    const result = run(leakScript, project({ toolBody: (l) => (l === "te" ? `${own(l)}<p>${hiSentence}</p>` : own(l)) }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain("the hi templates leaked onto /te/tools/fee-receipt/");
+  });
+
+  it("counts only lines of 20 characters or more as sentences: a short mode word may sit anywhere", () => {
+    const short = "UPI से";
+    expect(short.length).toBeLessThan(20);
+    const result = run(leakScript, project({ body: (l) => `${own(l)}<p>${short}</p>` }));
+    expect(result.status).toBe(0);
+  });
+
+  // Spec R0-3, review: only whole sentences and month names are cut out of the receipt script, so a short
+  // interface phrase is still seen when it rides in the script outside the receipt wording.
+  const phrase = "Fee receipt maker";
+  const withPhrase = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, tool: phrase } } };
+
+  it("passes when the receipt script holds only the receipt wording, even with an interface phrase that is a prefix of nothing in it", () => {
+    const result = run(leakScript, project({ messages: withPhrase }));
+    expect(result.status).toBe(0);
+  });
+
+  it("still reports 'Fee receipt maker' when it is in a hi receipt-page script outside the wording", () => {
+    const result = run(leakScript, project({ messages: withPhrase, receiptScript: `${toolScript(receiptTemplates)};var m="${phrase}"` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`hi page loads a en message: "${phrase}"`);
+    expect(result.out).toContain("out/_next/receipt.js");
+  });
+
+  it("does not cut out a receipt heading: an interface phrase equal to a short template word is still reported", () => {
+    const heading = receiptTemplates.en.heading;
+    const shared = { ...messages, en: { home: { placeholder: messages.en.home.placeholder, tool: heading + " xx" } } };
+    const result = run(leakScript, project({ messages: shared, receiptScript: `${toolScript(receiptTemplates)};var m="${heading} xx"` }));
+    expect(result.status).toBe(1);
   });
 });

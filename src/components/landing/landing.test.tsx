@@ -109,17 +109,21 @@ describe("steps (criterion 3)", () => {
 });
 
 describe("tools (R0-1 criterion 15; R0-2 criteria 3 and 4)", () => {
-  it("has two cards: the receipt maker still coming soon and not a link, the reminder writer with one link to the tool", () => {
+  it("has two cards, each with one link: the receipt maker and the reminder writer (R0-3, criterion 15)", () => {
     const { container } = renderLanding(<Tools />);
     const cards = container.querySelectorAll("article");
     expect(cards).toHaveLength(2);
-    expect(screen.getAllByText("Coming soon")).toHaveLength(1);
-    expect(within(cards[0] as HTMLElement).getByText("Coming soon")).toBeTruthy();
-    expect(cards[0].querySelectorAll("a, button")).toHaveLength(0);
+    expect(screen.queryByText("Coming soon")).toBeNull();
+    const receiptLink = within(cards[0] as HTMLElement).getByRole("link", { name: "Make a receipt" });
+    expect(receiptLink.getAttribute("href")).toBe("/en/tools/fee-receipt/");
+    expect(receiptLink.className).toContain("min-h-control");
+    expect(receiptLink.className).toContain("bg-slip");
+    expect(receiptLink.className).not.toMatch(/bg-blue|bg-cloth/);
+    expect(cards[0].querySelectorAll("a, button")).toHaveLength(1);
     expect(screen.getByText("Tool no. 01")).toBeTruthy();
     expect(screen.getByText("Tool no. 02")).toBeTruthy();
 
-    expect(container.querySelectorAll("a, button")).toHaveLength(1);
+    expect(container.querySelectorAll("a, button")).toHaveLength(2);
     const link = within(cards[1] as HTMLElement).getByRole("link", { name: "Write a reminder" });
     expect(link.getAttribute("href")).toBe("/en/tools/fee-reminder/");
     expect(link.className).toContain("min-h-control");
@@ -132,9 +136,10 @@ describe("tools (R0-1 criterion 15; R0-2 criteria 3 and 4)", () => {
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Two free tools.");
   });
 
-  it("links card 2 to the tool in the page's own language", () => {
+  it("links each card to its tool in the page's own language", () => {
     const { container } = renderLanding(<Tools />, "hi");
-    expect(container.querySelector("article a")?.getAttribute("href")).toBe("/hi/tools/fee-reminder/");
+    const hrefs = [...container.querySelectorAll("article a")].map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(["/hi/tools/fee-receipt/", "/hi/tools/fee-reminder/"]);
   });
 });
 

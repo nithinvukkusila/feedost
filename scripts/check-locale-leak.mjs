@@ -13,26 +13,38 @@ import { gzipSync } from "node:zlib";
 const OUT = "out";
 const locales = ["en", "hi", "kn", "te"];
 const MIN_LENGTH = 6; // a very short value could match by chance inside code
+const RECEIPT_MIN_LINE = 20; // a receipt template line must be this long to count as a sentence
 const MARKER = "TODO-translate: ";
 
 // Pages under a language that must be there, so the check cannot pass by omission. "" is the landing.
-const REQUIRED_PAGES = ["", "tools/fee-reminder/"];
+const REQUIRED_PAGES = ["", "tools/fee-reminder/", "tools/fee-receipt/"];
 
 // The one named exception (spec R0-2, criteria 27 and 69). The fee reminder page must hold the message
 // templates and month names of all four languages, because the tutor picks the message language on
 // the page and nothing may be fetched for it. They live in one file, outside messages/. For a page
 // under `pages`, and only in its script files, never its HTML, every line of that file is taken out
 // of the text before the search for another language's interface words.
+// The fee receipt page (spec R0-3) is another: the receipt is drawn in a language picked on the page,
+// so it carries the receipt wording of all four (src/lib/receipt/templates.json). `minLine` is the
+// shortest line that counts as a sentence of its own; short words (a month, "UPI से") are only cut out.
 // R1-8 adds the Remind screen: it writes the parent's message in the parent's language, whatever the tutor's
 // screen language is, so its page holds the same month templates and the app's earlier-balance templates and
 // generic parent words (src/lib/reminder/templates.app.json) of all four languages. Only that page.
 const EXCEPTIONS = [
-  { pages: ["tools/fee-reminder/", "remind/"], file: "src/lib/reminder/templates.json", name: "fee reminder" },
-  { pages: ["remind/"], file: "src/lib/reminder/templates.app.json", name: "remind (balance templates)" },
+  { pages: ["tools/fee-reminder/", "remind/"], file: "src/lib/reminder/templates.json", name: "fee reminder", minLine: MIN_LENGTH, lineKeys: ["polite", "firm"] },
+  { pages: ["remind/"], file: "src/lib/reminder/templates.app.json", name: "remind (balance templates)", minLine: MIN_LENGTH, lineKeys: ["polite", "firm"] },
+  { pages: ["tools/fee-receipt/"], file: "src/lib/receipt/templates.json", name: "fee receipt", minLine: RECEIPT_MIN_LINE, lineKeys: null },
 ];
 
 /** The ways a value can be written inside HTML or an inline JSON payload. */
 const spellings = (value) => [value, JSON.stringify(value).slice(1, -1)];
+
+/** Every string in a value, however deep (lists and nested objects included). */
+function strings(node, out = []) {
+  if (typeof node === "string") out.push(node);
+  else if (node && typeof node === "object") for (const value of Object.values(node)) strings(value, out);
+  return out;
+}
 
 function leaves(node, out = []) {
   for (const value of Object.values(node)) {
@@ -94,17 +106,30 @@ const exceptions = EXCEPTIONS.filter((exception) => existsSync(exception.file)).
   const tree = JSON.parse(readFileSync(exception.file, "utf8"));
   const lines = {};
   const all = [];
+  const quoted = [];
   for (const locale of locales) {
     const entry = tree[locale] ?? {};
-    const templateLines = [...(entry.polite ?? []), ...(entry.firm ?? [])].filter((line) => typeof line === "string");
-    lines[locale] = [...new Set(templateLines)].filter((line) => line.length >= MIN_LENGTH && !/^\{\w+\}$/.test(line));
-    all.push(...templateLines, ...(entry.months ?? []).filter((name) => typeof name === "string"));
+    // With lineKeys, only those lists are sentences and the rest (month names) is cut out only; without,
+    // every string of the entry is a candidate line, and the length floor keeps out the short words.
+    const templateLines = exception.lineKeys ? exception.lineKeys.flatMap((key) => strings(entry[key] ?? [])) : strings(entry);
+    lines[locale] = [...new Set(templateLines)].filter((line) => line.length >= exception.minLine && !/^\{\w+\}$/.test(line));
+    // Cut out: whole sentences (at least minLine long) and whole month names. Short template words
+    // (a heading, a stamp, a payment phrase) are NOT cut out, so an interface phrase that happens to
+    // be one of them ("Fee receipt maker") is still reported when it rides in the script.
+    all.push(...templateLines.filter((line) => line.length >= exception.minLine), ...strings(entry.months ?? []), ...strings(entry.shortMonths ?? []));
+    // A shorter template word is cut out only as a whole quoted value ("Fee receipt"), never as a piece of a
+    // longer phrase, so "Fee receipt maker" is not hidden by the heading "Fee receipt" inside it.
+    quoted.push(...templateLines.filter((line) => line.length < exception.minLine && line.length >= MIN_LENGTH));
   }
   // Longest first, so a short month name is not cut out of the middle of a line that holds it.
   // Nothing shorter than MIN_LENGTH is cut out: a short month name ("May") sits inside real interface
   // sentences, and cutting it out of a script would hide those sentences from this check. A value the
   // check looks for is at least MIN_LENGTH long, so it can never sit inside a shorter month name.
-  const removable = [...new Set(all.flatMap(spellings))].filter((text) => text.length >= MIN_LENGTH).sort((a, b) => b.length - a.length);
+  const removable = [
+    ...new Set([...all.flatMap(spellings), ...quoted.flatMap((word) => spellings(word).map((spelling) => `"${spelling}"`))]),
+  ]
+    .filter((text) => text.length >= MIN_LENGTH)
+    .sort((a, b) => b.length - a.length);
   return { ...exception, pages: [exception.pages].flat(), lines, removable };
 }).map((exception, index, all) => {
   // A line two files share (the earlier-balance templates end with the R0-2 lines) is searched for under the first file only.

@@ -53,13 +53,13 @@ describe("the landing page", () => {
     expect(container.querySelector("#tools")).not.toBeNull();
   });
 
-  it("links only to #waitlist, a language's landing page, or the reminder writer (twice: hero and card 2)", async () => {
+  it("links only to #waitlist, a language's landing page, the receipt maker (card 1) or the reminder writer (twice: hero and card 2)", async () => {
     const { container } = await renderPage();
     const hrefs = [...container.querySelectorAll("a[href]")].map((a) => a.getAttribute("href"));
     expect(hrefs.length).toBeGreaterThan(0);
-    for (const href of hrefs) expect(href).toMatch(/^(#waitlist|\/(en|hi|kn|te)\/|\/en\/tools\/fee-reminder\/)$/);
+    for (const href of hrefs) expect(href).toMatch(/^(#waitlist|\/(en|hi|kn|te)\/|\/en\/tools\/fee-receipt\/|\/en\/tools\/fee-reminder\/)$/);
     expect(hrefs.filter((href) => href === "/en/tools/fee-reminder/")).toHaveLength(2);
-    expect(hrefs.some((href) => href?.includes("receipt"))).toBe(false);
+    expect(hrefs.filter((href) => href === "/en/tools/fee-receipt/")).toHaveLength(1);
   });
 
   it("has the waitlist form and no other form, no price, no Pro plan and no support link (R0-4)", async () => {
