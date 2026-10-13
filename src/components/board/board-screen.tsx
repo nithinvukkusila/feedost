@@ -22,7 +22,7 @@ import { Tabs, tabId } from "@/components/ui/tabs";
 import type { Locale } from "@/config/locales";
 import { localeHref, remindPath } from "@/config/routes";
 import type { Due } from "@/lib/dues";
-import { currentMonth, defaultTab, indiaToday, monthMoves, shiftMonth, type Tab } from "@/lib/dues-board";
+import { currentMonth, defaultTab, earliestNextDue, indiaToday, monthMoves, shiftMonth, type Tab } from "@/lib/dues-board";
 import { pickList, queueItem, tutorReady } from "@/lib/reminder-rules";
 import { activeStudents, batchCounts, sortBatches } from "@/lib/student-list";
 import { BoardList } from "./board-list";
@@ -175,7 +175,7 @@ export function BoardScreen() {
         filteredOut ? (
           <NothingInBatch batch={batchName} month={months.label(month)} onShowAll={() => setFilter("all")} />
         ) : (
-          <NothingYet isCurrent={isCurrent} month={months.label(month)} />
+          <NothingYet isCurrent={isCurrent} month={months.label(month)} nextDue={earliestNextDue(active, today)} />
         )
       ) : allPaid ? (
         <AllPaid month={months.label(month)} nextMonth={isCurrent ? months.name(shiftMonth(month, 1)) : null} collected={view.collected} students={view.studentsInView} />

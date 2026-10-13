@@ -8,7 +8,8 @@
       "description": "The fee register for home tutors, coming soon: WhatsApp reminders, UPI payments, one book. Join the waitlist."
     },
     "header": {
-      "join": "Join waitlist"
+      "join": "Join waitlist",
+      "signIn": "Sign in"
     },
     "hero": {
       "kicker": "The fee register for home tutors. Free.",
@@ -91,7 +92,8 @@
     },
     "footer": {
       "line": "Free fee collection for home tutors in India.",
-      "languages": "Languages"
+      "languages": "Languages",
+      "signIn": "Sign in"
     }
   },
   "reminder": {
@@ -326,7 +328,8 @@
   },
   "attendance": {
     "title": "Attendance",
-    "soon": "Attendance arrives in a later update."
+    "soon": "Attendance is not ready yet. Your students and fees work without it.",
+    "back": "Back to Home"
   },
   "students": {
     "title": "Students",
@@ -380,7 +383,12 @@
       "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
       "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
       "batchGone": "That batch no longer exists. Pick another batch or No batch.",
-      "owesLocked": "A payment has been recorded against this, so it can't be changed"
+      "owesLocked": "A payment has been recorded against this, so it can't be changed",
+      "groupWho": "Who",
+      "groupFee": "Fee",
+      "groupOwes": "Opening balance",
+      "owesHint": "What they owed before you started, or for this month if it is not paid yet. It shows on Home as an earlier balance.",
+      "permissionHint": "Tick once you have the parent's OK to keep their number here and message it on WhatsApp."
     },
     "state": {
       "missing": "Missing",
@@ -538,8 +546,9 @@
       },
       "none": {
         "title": "Nothing is due yet.",
-        "body": "A student's fee appears here on their due day.",
-        "link": "See your students"
+        "link": "See your students",
+        "next": "Your next fee comes in on {date}.",
+        "owed": "Fees appear on each student's due day. If a parent still owes from before, add it under Already owes."
       },
       "monthOld": "No fees were due in {month}.",
       "filter": "Nothing in {batch} for {month}.",

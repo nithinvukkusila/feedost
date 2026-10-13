@@ -39,6 +39,10 @@ test.describe("25 to 29: saving", () => {
   test("one POST with the ten granted keys and paise, then the list shows the student", async ({ page }) => {
     const roster = await signedIn(page, { batches: BATCHES });
     await page.goto("/en/students/new/");
+    await expect(page.locator("form > fieldset > legend")).toHaveText(["Who", "Fee", "Opening balance"]);
+    await expect(page.getByText("What they owed before you started")).toBeVisible();
+    await expect(page.getByText("Tick once you have the parent's OK")).toBeVisible();
+    await expect(page.getByRole("checkbox")).toHaveAccessibleDescription(/Tick once you have the parent's OK/);
     await page.getByLabel("Student's name").fill("Ravi Kumar");
     await page.getByLabel("Parent's name").fill("Suresh Kumar");
     await page.getByLabel("Parent's WhatsApp number").fill("+91 98450-12345");

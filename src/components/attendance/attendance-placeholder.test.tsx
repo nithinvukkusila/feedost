@@ -13,11 +13,12 @@ describe("AttendancePlaceholder", () => {
   it("shows the title, the one line and the nav with Attendance current", () => {
     renderWithWords(<AttendancePlaceholder />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Attendance");
-    expect(screen.getByText("Attendance arrives in a later update.")).toBeTruthy();
+    expect(screen.getByText("Attendance is not ready yet. Your students and fees work without it.")).toBeTruthy();
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).getByRole("link", { name: "Attendance" }).getAttribute("aria-current")).toBe("page");
-    expect(screen.getAllByRole("link")).toHaveLength(4);
-    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.getAllByRole("link")).toHaveLength(5);
+    const back = screen.getByRole("link", { name: "Back to Home" });
+    expect(back.getAttribute("href")).toBe("/en/home/");
   });
 
   it.each(["hi", "kn", "te"] as const)("is written in %s too, with no marker", (locale) => {

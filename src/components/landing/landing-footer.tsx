@@ -5,8 +5,8 @@
 // `path` is the page the links point at in each language: none for the landing, the tool's path on a tool page.
 import { useLocale, useTranslations } from "next-intl";
 import { brand } from "@/config/brand";
-import { localeNames, locales } from "@/config/locales";
-import { localeHref } from "@/config/routes";
+import { localeNames, locales, type Locale } from "@/config/locales";
+import { localeHref, signInPath } from "@/config/routes";
 
 export function LandingFooter({ path = "" }: Readonly<{ path?: string }>) {
   const t = useTranslations("landing.footer");
@@ -15,6 +15,9 @@ export function LandingFooter({ path = "" }: Readonly<{ path?: string }>) {
     <footer className="on-dark-ground mt-16 overflow-hidden bg-ink text-on-cloth">
       <div className="mx-auto w-full max-w-2xl lg:max-w-7xl px-5 pt-5">
         <p className="type-body">{t("line")}</p>
+        <a href={localeHref(current as Locale, signInPath)} className="type-body flex min-h-tap min-w-tap items-center font-bold underline ring:ground-ring">
+          {t("signIn")}
+        </a>
         <nav aria-label={t("languages")}>
           <ul className="flex flex-wrap gap-x-6">
             {locales.map((code) => (

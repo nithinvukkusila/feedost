@@ -167,12 +167,12 @@ for (const lang of langs) {
       expect(await page.evaluate(() => getComputedStyle(document.body).backgroundImage.includes("url(") || [...document.querySelectorAll("*")].some((e) => getComputedStyle(e).backgroundImage.includes("url(")))).toBe(false);
     });
 
-    test(`criterion 10 [${lang}]: every a[href] is #waitlist, a language page or the reminder writer (R0-2), and resolves`, async ({ page }) => {
+    test(`criterion 10 [${lang}]: every a[href] is #waitlist, a language page, the reminder writer (R0-2) or sign-in, and resolves`, async ({ page }) => {
       await openLanding(page, lang);
       await expect(page.locator("a:not([href])")).toHaveCount(0);
       const hrefs = await page.locator("a").evaluateAll((els) => els.map((a) => a.getAttribute("href") ?? ""));
       expect(hrefs.length).toBeGreaterThanOrEqual(7);
-      expect([...new Set(hrefs)].sort()).toEqual(["#waitlist", "/en/", "/hi/", "/kn/", "/te/", `/${lang}/tools/fee-reminder/`].filter((h) => h !== path(lang)).sort());
+      expect([...new Set(hrefs)].sort()).toEqual(["#waitlist", "/en/", "/hi/", "/kn/", "/te/", `/${lang}/tools/fee-reminder/`, `/${lang}/sign-in/`].filter((h) => h !== path(lang)).sort());
       for (const href of hrefs) {
         if (href.startsWith("#")) {
           expect(href).not.toBe("#");
@@ -183,9 +183,24 @@ for (const lang of langs) {
       }
     });
 
+    test(`sign-in [${lang}]: the header and the footer each carry a Sign in link of 44px or more that goes to this language's sign-in screen`, async ({ page }) => {
+      await openLanding(page, lang);
+      for (const place of ["header", "footer"]) {
+        const link = page.locator(`${place} a[href='/${lang}/sign-in/']`);
+        await expect(link).toHaveCount(1);
+        await expect(link).toHaveText(shown(lang, `landing.${place}.signIn`));
+        const box = await link.boundingBox();
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+        await link.focus();
+        await expect(link).toBeFocused();
+      }
+      const width = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+      expect(width[0]).toBeLessThanOrEqual(width[1]);
+    });
+
     test(`criterion 11 [${lang}]: header and hero buttons go to #waitlist; header 44px or more, hero 56px or more and full width`, async ({ page }) => {
       await openLanding(page, lang);
-      const header = page.locator("header a");
+      const header = page.locator("header a[href='#waitlist']");
       // The hero's first link is the button; R0-2 added a text link to the reminder writer under it.
       const hero = page.locator("main section").first().locator("a").first();
       await expect(header).toHaveCount(1);
@@ -279,7 +294,7 @@ for (const lang of langs) {
       await expect(page.locator('a[href*="receipt"]')).toHaveCount(0);
       await expect(page.locator('a[href="#waitlist"]')).toHaveCount(2);
       await expect(page.locator("main a")).toHaveCount(3);
-      await expect(page.locator("header a")).toHaveCount(1);
+      await expect(page.locator("header a")).toHaveCount(2); // Sign in and Join waitlist
       await expect(page.locator('header a[href*="tools"]')).toHaveCount(0);
       // The hero's second link, at least 44px high.
       const heroTool = page.locator("main section").first().locator("a").nth(1);
@@ -463,7 +478,7 @@ for (const lang of langs) {
       const links = await page.locator("a").evaluateAll((els) => els.map((a) => `${a.getAttribute("href")} ${a.textContent}`));
       expect(links.filter((l) => /privacy|whatsapp|wa\.me|api\.whatsapp|tel:|mailto:|help/i.test(l))).toEqual([]);
       await expect(page.locator('a[href^="http"], a[href^="//"]')).toHaveCount(0);
-      await expect(page.locator("footer a")).toHaveCount(3);
+      await expect(page.locator("footer a")).toHaveCount(4); // Sign in and the three other languages
     });
   });
 }
@@ -535,7 +550,7 @@ test.describe("the key flow on slow 4G, one run per language (criteria 2, 11, 12
       // The header button does the same from the top of the page.
       await page.evaluate(() => window.scrollTo(0, 0));
       await expect(waitlist).not.toBeInViewport();
-      await page.locator("header").getByRole("link").tap();
+      await page.locator("header a[href='#waitlist']").tap();
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
     });
   }
@@ -562,7 +577,7 @@ test.describe("JavaScript off (criterion 2)", () => {
       // Anchor links scroll without JavaScript: the header button first, then the hero button.
       const waitlist = page.locator("section#waitlist");
       await expect(waitlist).not.toBeInViewport();
-      await page.locator("header").getByRole("link").click();
+      await page.locator("header a[href='#waitlist']").click();
       await expect(page).toHaveURL(new RegExp(`#waitlist$`));
       await expect(waitlist).toBeInViewport({ ratio: 0.5 });
       await page.goto(path(lang));

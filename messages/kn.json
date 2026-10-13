@@ -8,7 +8,8 @@
       "description": "TODO-translate: The fee register for home tutors, coming soon: WhatsApp reminders, UPI payments, one book. Get on the waitlist."
     },
     "header": {
-      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ"
+      "join": "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ",
+      "signIn": "TODO-translate: Sign in"
     },
     "hero": {
       "kicker": "ಹೋಮ್ ಟ್ಯೂಟರ್‌ಗಳ ಶುಲ್ಕ ಪುಸ್ತಕ. ಉಚಿತ.",
@@ -91,7 +92,8 @@
     },
     "footer": {
       "line": "TODO-translate: Free fee collection for home tutors in India.",
-      "languages": "ಭಾಷೆಗಳು"
+      "languages": "ಭಾಷೆಗಳು",
+      "signIn": "TODO-translate: Sign in"
     }
   },
   "reminder": {
@@ -326,7 +328,8 @@
   },
   "attendance": {
     "title": "TODO-translate: Attendance",
-    "soon": "TODO-translate: Attendance arrives in a later update."
+    "soon": "TODO-translate: Attendance is not ready yet. Your students and fees work without it.",
+    "back": "TODO-translate: Back to Home"
   },
   "students": {
     "title": "TODO-translate: Students",
@@ -380,7 +383,12 @@
       "sameNumber": "TODO-translate: This number is already saved for {name}. Siblings can share a number.",
       "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
       "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch.",
-      "owesLocked": "TODO-translate: A payment has been recorded against this, so it can't be changed"
+      "owesLocked": "TODO-translate: A payment has been recorded against this, so it can't be changed",
+      "groupWho": "TODO-translate: Who",
+      "groupFee": "TODO-translate: Fee",
+      "groupOwes": "TODO-translate: Opening balance",
+      "owesHint": "TODO-translate: What they owed before you started, or for this month if it is not paid yet. It shows on Home as an earlier balance.",
+      "permissionHint": "TODO-translate: Tick once you have the parent's OK to keep their number here and message it on WhatsApp."
     },
     "state": {
       "missing": "TODO-translate: Missing",
@@ -538,8 +546,9 @@
       },
       "none": {
         "title": "TODO-translate: Nothing is due yet.",
-        "body": "TODO-translate: A student's fee appears here on their due day.",
-        "link": "TODO-translate: See your students"
+        "link": "TODO-translate: See your students",
+        "next": "TODO-translate: Your next fee comes in on {date}.",
+        "owed": "TODO-translate: Fees appear on each student's due day. If a parent still owes from before, add it under Already owes."
       },
       "monthOld": "TODO-translate: No fees were due in {month}.",
       "filter": "TODO-translate: Nothing in {batch} for {month}.",

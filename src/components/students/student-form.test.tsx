@@ -35,10 +35,32 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+describe("groups and hints (UX-review-fixes, item 5)", () => {
+  it("has Who, Fee and Opening balance groups in order, each with a legend", () => {
+    renderWithWords(<StudentForm mode="add" />);
+    const groups = Array.from(document.querySelectorAll("form > fieldset"));
+    expect(groups.map((g) => g.querySelector(":scope > legend")?.textContent)).toEqual(["Who", "Fee", "Opening balance"]);
+    expect(groups[0].contains(field("Student's name"))).toBe(true);
+    expect(groups[0].contains(screen.getByRole("checkbox"))).toBe(true);
+    expect(groups[0].contains(screen.getByLabelText("Batch"))).toBe(true);
+    expect(groups[1].contains(field("Monthly fee ₹"))).toBe(true);
+    expect(groups[1].contains(screen.getByLabelText("Fee due on"))).toBe(true);
+    expect(groups[2].contains(field("Already owes ₹"))).toBe(true);
+  });
+
+  it("describes Already owes and the permission tick with their hints", () => {
+    renderWithWords(<StudentForm mode="add" />);
+    expect(field("Already owes ₹").getAttribute("aria-describedby")).toBeTruthy();
+    expect(field("Already owes ₹").getAttribute("aria-describedby")!.split(" ").map((id) => document.getElementById(id)?.textContent).join(" ")).toContain("What they owed before you started");
+    const tick = screen.getByRole("checkbox");
+    expect(tick.getAttribute("aria-describedby")!.split(" ").map((id) => document.getElementById(id)?.textContent).join(" ")).toContain("Tick once you have the parent's OK");
+  });
+});
+
 describe("add (16, 17, 24 to 28)", () => {
   it("has the fields in order with the defaults", () => {
     renderWithWords(<StudentForm mode="add" />, "hi");
-    const labels = Array.from(document.querySelectorAll("label, legend")).map((l) => l.textContent?.trim());
+    const labels = Array.from(document.querySelectorAll("label, legend")).map((l) => l.textContent?.trim()).filter((l) => l !== "Who");
     expect(labels.slice(0, 4)).toEqual(["Student's name", "Parent's name", "Parent's WhatsApp number", "Send messages in"]);
     expect((screen.getByLabelText("Batch") as HTMLSelectElement).value).toBe("");
     expect((screen.getByLabelText("Fee due on") as HTMLSelectElement).value).toBe("1");
