@@ -57,8 +57,8 @@ type HeaderProps = {
 
 export function PayHeader({ label, name, nameIsSaved, lines, action, overlap }: Readonly<HeaderProps>) {
   return (
-    <header className={cx("flex items-start justify-between gap-2.5", overlap ? `${stitched} px-5 pt-5 pb-17.5` : "px-6 pt-7 pb-5")}>
-      <div className="min-w-0">
+    <header className={cx("flex flex-wrap items-start justify-between gap-x-2.5 gap-y-3", overlap ? `${stitched} px-5 pt-5 pb-17.5` : "px-6 pt-7 pb-5")}>
+      <div className="min-w-0 grow basis-40">
         <p className="type-label">{label}</p>
         {name === null ? (
           // Loading: a plain block where the tutor's name will be (never a bare spinner, never data that has not arrived).

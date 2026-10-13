@@ -219,6 +219,26 @@ test.describe("the fee page (criteria 22 to 25)", () => {
     expect(await pay.getAttribute("target")).toBeNull();
   });
 
+  for (const lang of ["hi", "kn", "te"] as const) {
+    test(`criterion 24 [${lang}]: the amount in the Pay label and on the too-big line is in the mono face, never Anek, with 0-9 digits`, async ({ page }) => {
+      await openFee(page, { language: lang });
+      const family = (el: import("@playwright/test").Locator) => el.evaluate((node) => getComputedStyle(node).fontFamily);
+      const pay = page.locator('main a[href^="upi://"]');
+      const amount = pay.locator('span[translate="no"]');
+      await expect(amount).toHaveText("₹3,400");
+      const mono = await family(page.locator("main").locator('span[translate="no"].type-amount-row', { hasText: UPI_ID }).first());
+      expect(await family(amount)).toBe(mono);
+      expect(await family(pay)).not.toBe(mono);
+      expect(await pay.textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
+      // Too big: the same amount rule on the sentence.
+      await page.goto("/en/");
+      await openFee(page, { language: lang, total_remaining: 100_000_001 });
+      const big = page.locator('main span[translate="no"]', { hasText: "₹10,00,000.01" });
+      await expect(big).toHaveCount(1);
+      expect(await family(big)).toBe(mono);
+    });
+  }
+
   test("criterion 24 and 28: no UPI ID, a total of zero, and a total above the ceiling", async ({ page }) => {
     await openFee(page, { upi_id: null });
     const main = page.locator("main");

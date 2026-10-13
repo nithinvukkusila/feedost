@@ -75,7 +75,7 @@ export function ConsentScreen(props: Readonly<Props>) {
           </div>
           {props.saving === "failed" ? (
             <div role="alert" className="flex flex-col gap-2">
-              <p className="type-body-sm font-bold text-cloth wrap-anywhere">{c.failed}</p>
+              <p className="type-body-sm font-bold text-ink wrap-anywhere">{c.failed}</p>
               <Button variant="outline" full onClick={props.onAgree}>
                 {words.state.retry}
               </Button>

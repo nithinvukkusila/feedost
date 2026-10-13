@@ -564,7 +564,7 @@ for (const lang of ["hi", "kn", "te"] as const) {
         await fontsSettled(page);
         expect(await sidewaysScroll(page), `${kind} sideways scroll at ${size}`).toBe(0);
         for (const el of await main.locator("a:visible, button:visible").all()) expect((await box(el)).height, `${kind} control at ${size}`).toBeGreaterThanOrEqual(44);
-        if (size !== "200%") expect(await textProblems(page, "main"), `${kind} text problems at ${size}`).toEqual([]);
+        expect(await textProblems(page, "main"), `${kind} text problems at ${size}`).toEqual([]);
         else expect(await textOverControls(page), `${kind} text over a control at ${size}`).toEqual([]);
       }
       await expect(main).toContainText(long[lang].tutor);
@@ -573,8 +573,8 @@ for (const lang of ["hi", "kn", "te"] as const) {
   });
 }
 
-// R1-9B-1: at the largest text, a long tutor name in Kannada or Telugu is wider than its column (the language button takes
-// the rest of the row), so criterion 34's "no text problems" fails at 200% for it. Hindi passes. See the report.
+// R1-9B-1 (fixed): at the largest text the header row wraps, so the language button sits on its own line and a long
+// tutor name in Kannada or Telugu has the whole row.
 for (const lang of ["hi", "kn", "te"] as const) {
   test(`[${lang}] a long tutor name leaves no text problem at 200% text (criterion 34)`, async ({ page }) => {
     await stubPayPage(page, { pay: fee({ tutor_name: long[lang].tutor, student_name: long[lang].student, tutor_subjects: long[lang].subjects, language: lang }) });

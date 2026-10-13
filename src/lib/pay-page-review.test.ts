@@ -7,7 +7,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { checkConsentWording, checkReviewRecord } from "../../scripts/i18n-check-lib.mjs";
+import { checkConsentWording, checkReviewRecord, consentHash } from "../../scripts/i18n-check-lib.mjs";
 
 const made: string[] = [];
 afterEach(() => {
@@ -23,6 +23,12 @@ function setup(record: unknown, hi: Record<string, string>) {
   const file = join(dir, "review.json");
   writeFileSync(file, JSON.stringify(record));
   return { dir, file };
+}
+function consentDir(agree: string) {
+  const dir = mkdtempSync(join(tmpdir(), "consent-"));
+  made.push(dir);
+  for (const l of ["en", "hi", "kn", "te"]) writeFileSync(join(dir, `${l}.json`), JSON.stringify({ payPage: { consent: { agree } } }));
+  return { dir };
 }
 const open = { status: "not reviewed", reviewer: "", date: "", sha256: "" };
 const record = { consentWording: { status: "draft, not approved", approvedBy: "", date: "" }, hi: open, kn: open, te: open };
@@ -54,12 +60,45 @@ describe("checkConsentWording", () => {
     expect(strict.approved).toBe(false);
   });
 
-  it("passes once approved with a name and a date", () => {
-    expect(checkConsentWording({ consentWording: { status: "approved", approvedBy: "Founder", date: "2026-10-20" } }, { strict: true })).toEqual({ problems: [], notes: [], approved: true });
+  it("passes once approved with a name, a date and the hash of the wording that was read", () => {
+    const { dir } = consentDir("Agree");
+    const sha256 = consentHash(dir) ?? "";
+    expect(sha256).toMatch(/^[0-9a-f]{64}$/);
+    const approved = { consentWording: { status: "approved", approvedBy: "Founder", date: "2026-10-20", sha256 } };
+    expect(checkConsentWording(approved, { strict: true, messagesDir: dir })).toEqual({ problems: [], notes: [], approved: true });
+  });
+
+  it("treats wording that changed after approval as not approved, and a problem under strict", () => {
+    const { dir } = consentDir("Agree");
+    const sha256 = consentHash(dir) ?? "";
+    const approved = { consentWording: { status: "approved", approvedBy: "Founder", date: "2026-10-20", sha256 } };
+    writeFileSync(join(dir, "kn.json"), JSON.stringify({ payPage: { consent: { agree: "Changed" } } }));
+    const lax = checkConsentWording(approved, { messagesDir: dir });
+    expect(lax).toMatchObject({ problems: [], approved: false });
+    expect(lax.notes[0]).toContain("changed after approval");
+    const strict = checkConsentWording(approved, { strict: true, messagesDir: dir });
+    expect(strict.problems[0]).toContain("changed after approval");
+    expect(strict.approved).toBe(false);
+  });
+
+  it("refuses an approval with no hash", () => {
+    const { dir } = consentDir("Agree");
+    const result = checkConsentWording({ consentWording: { status: "approved", approvedBy: "Founder", date: "2026-10-20" } }, { messagesDir: dir });
+    expect(result.problems.join()).toContain("no sha256");
+    expect(result.approved).toBe(false);
+  });
+
+  it("hashes only payPage.consent, in all four files", () => {
+    const { dir } = consentDir("Agree");
+    const before = consentHash(dir);
+    writeFileSync(join(dir, "te.json"), JSON.stringify({ payPage: { consent: { agree: "Agree" }, other: "changed" } }));
+    expect(consentHash(dir)).toBe(before);
+    writeFileSync(join(dir, "te.json"), JSON.stringify({ payPage: { consent: { agree: "Other" } } }));
+    expect(consentHash(dir)).not.toBe(before);
   });
 
   it("refuses an approval with no name or no date, and a record with no block", () => {
-    expect(checkConsentWording({ consentWording: { status: "approved", approvedBy: "", date: "" } }).problems).toHaveLength(2);
+    expect(checkConsentWording({ consentWording: { status: "approved", approvedBy: "", date: "" } }).problems).toHaveLength(3);
     expect(checkConsentWording({}).problems[0]).toContain("no \"consentWording\" block");
   });
 });

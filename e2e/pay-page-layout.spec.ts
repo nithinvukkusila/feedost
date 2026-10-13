@@ -67,7 +67,7 @@ for (const lang of langs) {
         expect((await box(pay)).height, `the Pay button at ${size}`).toBeGreaterThanOrEqual(72);
         expect(await pay.evaluate((el) => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest("a") === el; }), "nothing covers the Pay button").toBe(true);
         for (const el of await main.locator("a:visible, button:visible").all()) expect((await box(el)).height).toBeGreaterThanOrEqual(44);
-        if (size !== "200%") expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
+        expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
         // Digits stay 0-9 in every language.
         expect(await main.textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
       }
@@ -85,7 +85,7 @@ for (const lang of langs) {
         await fontsSettled(page);
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
         for (const el of await main.locator("a:visible, button:visible").all()) expect((await box(el)).height).toBeGreaterThanOrEqual(44);
-        if (size !== "200%") expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
+        expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
       }
       await expect(main).toContainText("మీనా అయ్యర్ ట్యూషన్స్");
       await expect(main).toContainText("रवि कुमार शर्मा");
@@ -116,7 +116,7 @@ for (const lang of langs) {
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
         const retry = main.getByRole("button");
         expect((await box(retry)).height).toBeGreaterThanOrEqual(44);
-        if (size !== "200%") expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
+        expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
       }
     });
   });

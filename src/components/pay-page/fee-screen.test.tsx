@@ -52,6 +52,11 @@ describe("FeeScreen", () => {
     expect(pay.getAttribute("href")).toBe("upi://pay?pa=meena.tuitions@okhdfc&pn=Meena%20Iyer&am=3400.00&cu=INR&tn=Fees%20due%20Ravi");
     expect(pay.getAttribute("target")).toBeNull();
     expect(pay.className).toContain("min-h-18");
+    expect(pay.getAttribute("rel")).toBe("noopener noreferrer");
+    // The amount in the label is its own span: mono face, never translated, never in the script face.
+    const amount = Array.from(pay.querySelectorAll("span")).find((el) => el.textContent === "₹3,400")!;
+    expect(amount.getAttribute("translate")).toBe("no");
+    expect(amount.className).toContain("type-amount-row");
     expect(text("Your UPI app opens with the amount filled in. It goes straight to meena.tuitions@okhdfc.")).toBeTruthy();
     expect(screen.getByText("Paid already? Your tutor marks it paid and sends you a receipt.")).toBeTruthy();
   });

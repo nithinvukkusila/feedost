@@ -3,7 +3,7 @@
 // `--strict` (the Release 0 gate) also fails on any TODO-translate value and on any language whose
 // templates no native reader has signed off.
 import { existsSync, readFileSync } from "node:fs";
-import { check, checkAppTemplates, checkConsentWording, checkReviewRecord, checkTemplates, locales } from "./i18n-check-lib.mjs";
+import { check, checkAppTemplates, checkConsentWording, checkReviewRecord, checkTemplates, leafPaths, locales } from "./i18n-check-lib.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
@@ -32,11 +32,6 @@ const RECEIPT_REVIEW = "src/lib/receipt-words.review.json";
 // 3 and 5). A word still marked TODO-translate shows English to the parent, so it is allowed until release; `--strict`
 // (the release gate) fails on it, on any language not reviewed, and on wording not approved.
 const PAYPAGE_REVIEW = "src/lib/pay-page-words.review.json";
-function leafPaths(node, path) {
-  return Object.entries(node).flatMap(([key, value]) =>
-    value !== null && typeof value === "object" ? leafPaths(value, `${path}.${key}`) : [`${path}.${key}`],
-  );
-}
 
 const strict = process.argv.includes("--strict");
 const { problems, keyCount, todoCount } = check("messages", { strict });

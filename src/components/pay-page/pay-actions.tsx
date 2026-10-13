@@ -57,6 +57,8 @@ function CopyButton({ upiId, words }: Readonly<{ upiId: string; words: PayPageWo
 
 // The UPI ID in the mono face, blue, selectable, and breakable anywhere so a long one never pushes the page sideways.
 const UPI_ID_CLASS = "type-amount-row break-all text-blue select-all";
+// An amount is always 0-9 digits in the mono face, never Anek, even inside a button label or a sentence in hi, kn or te.
+const AMOUNT_CLASS = "type-amount-row";
 const UpiId = ({ value }: Readonly<{ value: string }>) => (
   <span translate="no" className={UPI_ID_CLASS}>
     {value}
@@ -73,7 +75,7 @@ export function PayActions({ words, area, total }: Readonly<{ words: PayPageWord
     return (
       <div className="mt-4 flex flex-col gap-2.5">
         <p className="type-body text-ink-soft wrap-anywhere">
-          <Filled template={words.tooBig} values={{ amount: formatRupees(total) }} />
+          <Filled template={words.tooBig} values={{ amount: formatRupees(total) }} classes={{ amount: AMOUNT_CLASS }} />
         </p>
         <p>
           <UpiId value={area.upiId} />
@@ -86,8 +88,8 @@ export function PayActions({ words, area, total }: Readonly<{ words: PayPageWord
     <div className="mt-4 flex flex-col">
       <div className="pr-1.5">
         {/* A real link. The UPI app, not this page, takes the payment; nothing is recorded when it is tapped. */}
-        <Button variant="send" size="pay" full href={area.href} rel="noopener" iconEnd={<Arrow />}>
-          {fill(words.pay, { amount: formatRupees(total) })}
+        <Button variant="send" size="pay" full href={area.href} rel="noopener noreferrer" aria-label={fill(words.pay, { amount: formatRupees(total) })} iconEnd={<Arrow />}>
+          <Filled template={words.pay} values={{ amount: formatRupees(total) }} classes={{ amount: AMOUNT_CLASS }} />
         </Button>
       </div>
       <p className="type-body-sm mt-3.5 text-ink-soft wrap-anywhere">
