@@ -9,6 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { completeTutor, fakeSession, newTutor, seedSession, seedVerifier, stubSupabase } from "./auth-helpers";
 import { langs, type Lang } from "./helpers";
 import { stubRoster } from "./roster-helpers";
+import { fee, link as payLink, notice, stubPayPage } from "./pay-page-helpers";
 
 const MARKER = "TODO-translate";
 
@@ -267,5 +268,29 @@ for (const lang of langs) {
       await expect(error(other)).toBeVisible();
       await expectNoMarker(other, lang, "expired, refused renewal");
     });
+  });
+}
+
+// R1-9 Part B, criterion 36: the parent's pay page never shows the marker, in any language, on the consent screen, the
+// fee page, the read-only notice or any state. The consent wording is English in hi, kn and te until it is approved.
+for (const lang of langs) {
+  test(`/p/ in ${lang}: no marker on the consent screen, the fee page, the notice or a state`, async ({ page }) => {
+    await stubPayPage(page, { pay: notice({ language: lang }) });
+    await page.goto(payLink());
+    await expect(page.locator("main")).toHaveAttribute("data-state", "consent");
+    await expectNoMarker(page, lang, "pay page, consent");
+
+    await stubPayPage(page, { pay: fee({ language: lang }) });
+    await page.goto(payLink());
+    await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
+    await expectNoMarker(page, lang, "pay page, fee");
+    await page.locator("main").getByRole("button", { name: /\S/ }).last().click();
+    await expect(page.locator("main")).toHaveAttribute("data-state", "notice");
+    await expectNoMarker(page, lang, "pay page, notice");
+
+    await stubPayPage(page, { pay: { status: 404, body: { code: "not_found" } } });
+    await page.goto(payLink());
+    await expect(page.locator("main")).toHaveAttribute("data-state", "not_found");
+    await expectNoMarker(page, lang, "pay page, not found");
   });
 }

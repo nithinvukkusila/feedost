@@ -13,11 +13,32 @@
     {
       "source": "/r/:token/",
       "destination": "/r/index.html"
+    },
+    {
+      "source": "/p/:token",
+      "destination": "/p/index.html"
+    },
+    {
+      "source": "/p/:token/",
+      "destination": "/p/index.html"
     }
   ],
   "headers": [
     {
       "source": "/r/(.*)",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/p/(.*)",
       "headers": [
         {
           "key": "Referrer-Policy",

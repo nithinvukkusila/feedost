@@ -3,7 +3,8 @@
 // 42rem from 768 to 1023, and as today below 768. CSS only.
 import { expect, test, type Page } from "@playwright/test";
 import { box } from "./helpers";
-import { expectNoSideways, setWidth, sweep } from "./wide-helpers";
+import { expectNoSideways, setWidth, sweep, SWEEP } from "./wide-helpers";
+import { fee, link as payLink, notice, stubPayPage } from "./pay-page-helpers";
 
 const REM = 16;
 const ready = (page: Page) => expect(page.locator("h1").first()).toBeVisible();
@@ -77,4 +78,29 @@ test.describe("27: the free fee reminder tool", () => {
     test.setTimeout(120_000);
     await sweep(page, (lang) => `/${lang}/tools/fee-reminder/`, ready, "tool");
   });
+});
+
+// R1-9 Part B, criterion 35 and DESIGN.md "Public pages": the parent's pay page is one centred column of at most 28rem
+// at every window width, on the fee page and on the consent screen, never the tutor's book or navigation.
+test.describe("35: the parent's pay page /p/{token}", () => {
+  for (const [name, answer, state] of [
+    ["the fee page", fee(), "fee"],
+    ["the consent screen", notice(), "consent"],
+  ] as const) {
+    test(`${name} stays one column of at most 28rem, centred, with no sideways scroll at 320 to 1920`, async ({ page }) => {
+      test.setTimeout(90_000);
+      await stubPayPage(page, { pay: answer });
+      await page.goto(payLink());
+      const main = page.locator("main");
+      await expect(main).toHaveAttribute("data-state", state);
+      for (const width of SWEEP) {
+        await setWidth(page, width, 900);
+        await expectNoSideways(page, width, `pay page ${state}`);
+        const b = await box(main);
+        expect(b.width, `at most 28rem at ${width}`).toBeLessThanOrEqual(28 * REM + 1);
+        expect(Math.abs(b.x + b.width / 2 - width / 2), `centred at ${width}`).toBeLessThanOrEqual(1);
+      }
+      await expect(page.locator("[data-book], nav")).toHaveCount(0);
+    });
+  }
 });

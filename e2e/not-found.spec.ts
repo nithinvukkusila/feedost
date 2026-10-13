@@ -168,3 +168,15 @@ test.describe("criterion 24: the English landing fetches no Anek file", () => {
     expect(urls.filter((u) => anek.has(u))).toEqual([]);
   });
 });
+
+// R1-9 Part B: /p/ has one shell for one segment; anything deeper is the built 404 like every other unknown address.
+test.describe("the pay page shell and the 404", () => {
+  test("/p/a/b and /p/token/extra are 404 pages, while /p/ and /p/{any} are the shell", async ({ request }) => {
+    for (const path of ["/p/a/b", "/p/a/b/", "/p/Zx3k9Qw7LmN2pRtVb8YcAe/extra"]) expect((await request.get(path)).status(), path).toBe(404);
+    for (const path of ["/p/", "/p/anything", "/p/anything/"]) {
+      const response = await request.get(path);
+      expect(response.status(), path).toBe(200);
+      expect(await response.text()).toContain('data-state="loading"');
+    }
+  });
+});

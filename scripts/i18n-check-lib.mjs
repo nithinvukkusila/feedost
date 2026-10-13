@@ -516,7 +516,11 @@ export function copyHash(messages, keys) {
  * language with no valid sign-off, or whose text changed after its sign-off, is a problem.
  * A promise sentence still marked TODO-translate is always a problem: it cannot be reviewed.
  */
-export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence" } = {}) {
+export function checkReviewRecord(
+  reviewFile,
+  keys,
+  { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence", ignoreKeys = /** @type {string[]} */ ([]), todoAllowed = false } = {},
+) {
   const problems = [];
   const notes = [];
   const notReviewed = [];
@@ -538,7 +542,7 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
   }
   if (record) {
     for (const key of Object.keys(record)) {
-      if (!reviewed.includes(key)) problems.push(`${label} has "${key}", which is not one of ${reviewed.join(", ")}`);
+      if (!reviewed.includes(key) && !ignoreKeys.includes(key)) problems.push(`${label} has "${key}", which is not one of ${reviewed.join(", ")}`);
     }
   }
 
@@ -553,8 +557,15 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     if (messages) {
       const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
       const marked = keys.filter((key) => typeof read(key) === "string" && read(key).startsWith(TODO));
-      for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
-      if (marked.length === 0) current = copyHash(messages, keys);
+      // `todoAllowed` (the pay page): a word still marked TODO-translate shows its English text to the parent, which is
+      // allowed until release; it is a problem only under `strict`, and the language cannot count as reviewed meanwhile.
+      if (todoAllowed) {
+        if (marked.length > 0 && strict) problems.push(`messages/${locale}.json has ${marked.length} ${noun}${marked.length === 1 ? "" : "s"} still marked ${TODO}; write them and have them read`);
+        current = marked.length === 0 ? copyHash(messages, keys) : null;
+      } else {
+        for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
+        if (marked.length === 0) current = copyHash(messages, keys);
+      }
     }
 
     const entry = record?.[locale];
@@ -603,4 +614,72 @@ export function checkReviewRecord(reviewFile, keys, { messagesDir = "messages", 
     }
   }
   return { problems, notReviewed, notes };
+}
+
+export function leafPaths(node, path) {
+  return Object.entries(node).flatMap(([key, value]) =>
+    value !== null && typeof value === "object" ? leafPaths(value, `${path}.${key}`) : [`${path}.${key}`],
+  );
+}
+
+/**
+ * What the founder approves: one sha256 over the `payPage.consent.*` values of all four message files, in language
+ * order. Returns null when a file cannot be read (the main check reports that).
+ */
+export function consentHash(messagesDir = "messages") {
+  const sum = createHash("sha256");
+  try {
+    const en = JSON.parse(readFileSync(join(messagesDir, "en.json"), "utf8"));
+    const keys = leafPaths(en?.payPage?.consent ?? {}, "payPage.consent");
+    for (const locale of locales) {
+      const messages = JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), "utf8"));
+      sum.update(`${locale}:${copyHash(messages, keys)}\n`);
+    }
+  } catch {
+    return null;
+  }
+  return sum.digest("hex");
+}
+
+/**
+ * The consent and privacy-notice wording of the parent's pay page (spec R1-9 questions 3 and 5). The wording is the
+ * founder's to approve, so the review record carries a top-level `consentWording` block that no parent can see.
+ * An approval carries the sha256 of the text that was read (see consentHash); wording that changed after it is not
+ * approved. Returns { problems, notes, approved }. Not approved is a note on every run and a problem under `strict`.
+ */
+export function checkConsentWording(record, { strict = false, label = "pay-page-words.review.json", messagesDir = "messages" } = {}) {
+  const problems = [];
+  const notes = [];
+  const block = isObject(record) ? record.consentWording : undefined;
+  if (!isObject(block)) {
+    problems.push(`${label} has no "consentWording" block; it records whether the founder approved the privacy notice wording`);
+    return { problems, notes, approved: false };
+  }
+  const current = consentHash(messagesDir);
+  if (block.status === "approved") {
+    let complete = true;
+    if (!isText(block.approvedBy)) {
+      problems.push(`${label} "consentWording" is marked approved with no name in approvedBy`);
+      complete = false;
+    }
+    if (typeof block.date !== "string" || !DATE.test(block.date)) {
+      problems.push(`${label} "consentWording" is marked approved with no date written YYYY-MM-DD`);
+      complete = false;
+    }
+    if (typeof block.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(block.sha256)) {
+      problems.push(`${label} "consentWording" is marked approved with no sha256 of the wording that was read`);
+      complete = false;
+    }
+    if (complete && current !== null && block.sha256 !== current) {
+      const changed = `payPage consent wording changed after approval by ${block.approvedBy} on ${block.date}; it is not approved. Current text ${current}`;
+      if (strict) problems.push(changed);
+      else notes.push(changed);
+      return { problems, notes, approved: false };
+    }
+    return { problems, notes, approved: complete };
+  }
+  const message = "payPage consent wording is a draft: release blocked on founder answers to R1-9 questions 3 and 5";
+  if (strict) problems.push(message);
+  else notes.push(message);
+  return { problems, notes, approved: false };
 }

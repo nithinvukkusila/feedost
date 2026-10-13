@@ -15,7 +15,7 @@ supabase/environments.json  public identifiers per environment (staging and prod
 ## Rules
 
 - Never edit a migration that has been applied to staging or production. Add a new one.
-- Every new table in the same migration gets: `tutor_id uuid not null`, `enable row level security`, and policies for select, insert, update and delete of the form `tutor_id = auth.uid()`. `waitlist` and `consents` are written only by Edge Functions and have no anonymous policies.
+- Every new table in the same migration gets: `tutor_id uuid not null`, `enable row level security`, and policies for select, insert, update and delete of the form `tutor_id = auth.uid()`. `waitlist` is written only by an Edge Function and has no anonymous policies. `consents` has a select-only policy for the tutor and no client write grant: it is written only by the database function `record_consent`, which only `service_role` (the `record-consent` Edge Function) can execute.
 - Every new table gets a pgTAP test proving a second tutor reads and writes zero rows.
 - Money columns are `integer` paise with a `check (amount >= 0)`.
 - Phone columns hold E.164 and have a check constraint for `+91` followed by 10 digits.
@@ -27,7 +27,7 @@ supabase/environments.json  public identifiers per environment (staging and prod
 - Payment screenshots go to a private bucket. Storage policy: only the owning tutor can read. The pay page gets a short-lived signed upload URL from the Edge Function.
 - Every table migration says `grant ... to authenticated` itself. Never grant to `anon`. The baseline migration revokes the default `anon` access on new `public` tables, and `supabase/tests/030_default_privileges.sql` pins that.
 - Never run `supabase config push`, `supabase db push --include-seed`, or `supabase link` to production. Never change structure in the Supabase SQL editor.
-- No secrets in SQL or function source. Use `supabase secrets`. Function secrets so far: `APP_ENV`, and `WAITLIST_HASH_SALT` (the HMAC key for the waitlist rate-limit hash; `waitlist-join` is deployed with `verify_jwt` off, which `config.toml` carries), and `RECEIPT_HASH_SALT` (the HMAC key for the `receipt` function's IP and token hashes; a different value from the waitlist's; `receipt` is also `verify_jwt` off and reads only through `get_receipt`, which only `service_role` can execute).
+- No secrets in SQL or function source. Use `supabase secrets`. Function secrets so far: `APP_ENV`, and `WAITLIST_HASH_SALT` (the HMAC key for the waitlist rate-limit hash; `waitlist-join` is deployed with `verify_jwt` off, which `config.toml` carries), and `RECEIPT_HASH_SALT` (the HMAC key for the `receipt` function's IP and token hashes; a different value from the waitlist's; `receipt` is also `verify_jwt` off and reads only through `get_receipt`, which only `service_role` can execute), and `PAYPAGE_HASH_SALT` (the HMAC key for the IP and token hashes of `pay-page` and `record-consent`; a different value from the other two; both functions are `verify_jwt` off and read and write only through `get_pay_page` and `record_consent`, which only `service_role` can execute; optional `PAYPAGE_ALLOWED_HOSTS`).
 
 ## Test helper
 

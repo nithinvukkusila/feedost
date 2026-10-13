@@ -135,7 +135,8 @@ async function expectMessage(page: Page, lang: Lang, tone: Tone, v: Values, pn?:
   const want = messageFor(lang, tone, v);
   const preview = part(page, "preview");
   await expect(preview).toHaveAttribute("lang", lang);
-  await expect.poll(() => previewText(page)).toBe(want);
+  // A slow, busy machine can take more than the default 5 s to draw the preview after a radio is checked; the content is still exact.
+  await expect.poll(() => previewText(page), { timeout: 20_000 }).toBe(want);
   await expect(preview.locator("[data-blank]")).toHaveCount(0);
   await expect(part(page, "incomplete")).toHaveCount(0);
 
