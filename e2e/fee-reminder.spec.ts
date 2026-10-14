@@ -1171,7 +1171,7 @@ test.describe("route, landmarks, links and copy", () => {
 
       // Every link is an anchor on this page or a built file; the unavailable Send has no address.
       const hrefs = await page.locator("a[href]").evaluateAll((els) => els.map((el) => el.getAttribute("href") ?? ""));
-      expect(hrefs.sort()).toEqual([`/${lang}/`, `/${lang}/#waitlist`, ...others.map(tool)].sort());
+      expect(hrefs.sort()).toEqual([`/${lang}/`, `/${lang}/#waitlist`, `/${lang}/sign-in/`, ...others.map(tool)].sort());
       for (const href of hrefs) {
         expect(builtFileFor(href), href).toBe(true);
         const hash = href.split("#")[1];

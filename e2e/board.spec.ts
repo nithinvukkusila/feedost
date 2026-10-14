@@ -308,7 +308,7 @@ test.describe("21, 22, 23: nothing, nothing in this batch, and all paid", () => 
     await signedIn(page, { dues: [] });
     await page.goto("/en/home/");
     await expect(page.locator("h1")).toHaveText("Nothing is due yet.");
-    await expect(page.getByText("A student's fee appears here on their due day.")).toBeVisible();
+    await expect(page.getByText("Fees appear on each student's due day.")).toBeVisible();
     await expect(page.getByRole("link", { name: "See your students" })).toHaveAttribute("href", "/en/students/");
     await expect(prev(page)).toBeDisabled();
     await expect(next(page)).toBeDisabled();

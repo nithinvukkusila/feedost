@@ -56,7 +56,9 @@ async function expectNoMarker(page: Page, lang: Lang, where: string) {
   ];
   for (const [name, hay] of haystacks) {
     expect(hay.includes(MARKER), `${where}: "${MARKER}" in the ${name}`).toBe(false);
-    for (const raw of flagged) expect(hay.includes(raw), `${where}: raw value ${JSON.stringify(raw)} in the ${name}`).toBe(false);
+    // One assertion per haystack: a failing run still names every raw value found. (One expect per flagged value
+    // made this test cost thousands of assertions per screen and run past its 90 s limit as keys were added.)
+    expect(flagged.filter((raw) => hay.includes(raw)), `${where}: raw flagged values in the ${name}`).toEqual([]);
   }
 }
 

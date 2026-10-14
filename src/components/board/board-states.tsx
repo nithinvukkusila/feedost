@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Stamp } from "@/components/ui/stamp";
 import type { Locale } from "@/config/locales";
 import { localeHref, studentsPath } from "@/config/routes";
-import { formatRupees } from "@/lib/format";
+import { formatDate, formatRupees } from "@/lib/format";
 
 /** What shows above the grey blocks while loading or failed: the month, then "Still to come in" (canvas "State-loading"). */
 function BlocksHeader({ month }: Readonly<{ month: string }>) {
@@ -51,7 +51,7 @@ export function BoardError({ month, onRetry }: Readonly<{ month: string; onRetry
 }
 
 /** Nothing at all in this month, with the batch filter on All. The current month and a past one say different things. */
-export function NothingYet({ isCurrent, month }: Readonly<{ isCurrent: boolean; month: string }>) {
+export function NothingYet({ isCurrent, month, nextDue = null }: Readonly<{ isCurrent: boolean; month: string; nextDue?: string | null }>) {
   const t = useTranslations("board");
   const locale = useLocale() as Locale;
   const soft = useSoftLink();
@@ -59,7 +59,12 @@ export function NothingYet({ isCurrent, month }: Readonly<{ isCurrent: boolean; 
   return (
     <section className="px-5 pt-6 pr-5.5">
       <h1 className="type-headline text-4xl wrap-break-word">{isCurrent ? t("empty.none.title") : t("empty.monthOld", { month })}</h1>
-      {isCurrent ? <p className="type-body-lg mt-3 text-ink-soft">{t("empty.none.body")}</p> : null}
+      {isCurrent && nextDue !== null ? (
+        <p className="type-body-lg mt-3 text-ink-soft">
+          {t("empty.none.next", { date: formatDate(nextDue) })}
+        </p>
+      ) : null}
+      {isCurrent ? <p className="type-body-lg mt-3 text-ink-soft">{t("empty.none.owed")}</p> : null}
       {isCurrent ? (
         <div className="mt-5 pr-1.5 pb-1.5">
           <Button variant="outline" href={href} onClick={soft(href)}>

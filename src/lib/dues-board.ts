@@ -248,3 +248,25 @@ export function needsRead(slice: { at: number } | null | undefined, nowMs: numbe
   const age = nowMs - slice.at;
   return age < 0 || age > FRESH_MS;
 }
+
+/**
+ * The next day a monthly fee is made for a student with `dueDay` (1 to 28), seen from `today`: this month's
+ * due day if it is still ahead, else next month's. Today is left out because a due on today's date is
+ * already made. Text in, text out, so no phone time zone can change it (spec UX-review-fixes, criterion U1).
+ */
+export function nextDueDate(dueDay: number, today: string): string {
+  const thisMonth = currentMonth(today);
+  const month = dueDay > Number(today.slice(8, 10)) ? thisMonth : shiftMonth(thisMonth, 1);
+  return `${month.slice(0, 8)}${pad(dueDay, 2)}`;
+}
+
+/** The soonest next due date over students who are active with a fee above 0, or null when there is none. */
+export function earliestNextDue(students: readonly Student[], today: string): string | null {
+  let best: string | null = null;
+  for (const student of students) {
+    if (!student.active || student.monthlyFee <= 0) continue;
+    const date = nextDueDate(student.dueDay, today);
+    if (best === null || date < best) best = date;
+  }
+  return best;
+}

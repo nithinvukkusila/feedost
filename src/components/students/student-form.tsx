@@ -6,7 +6,7 @@
 // Whatever was typed is kept on every failure.
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { useRoster } from "@/components/app/roster";
 import { TextField } from "@/components/app/text-field";
 import { WriteNotice, type WriteProblem } from "@/components/app/write-notice";
@@ -75,6 +75,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const [problem, setProblem] = useState<WriteProblem | "gone" | "missing">(null);
   const [status, setStatus] = useState<string | null>(null);
   const [id, setId] = useState(newId);
+  const formId = useId();
   const nameRef = useRef<HTMLTextAreaElement>(null);
   const parentNameRef = useRef<HTMLTextAreaElement>(null);
   const phoneRef = useRef<HTMLTextAreaElement>(null);
@@ -146,87 +147,108 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const dayOptions = DUE_DAYS.map((day) => ({ value: String(day), label: t("days.ordinal", { day }) }));
   const batchOptions = [{ value: NO_BATCH, label: t("form.noBatch") }, ...batches.map((batch) => ({ value: batch.id, label: batch.name }))];
   const permissionError = errors.permission;
+  const permissionHintId = `${formId}-permission-hint`;
+  const permissionErrorId = `${formId}-permission-error`;
 
   return (
-    <form noValidate onSubmit={(event) => submit(event, "save")} className="flex flex-col gap-4">
-      <TextField ref={nameRef} label={t("form.name")} value={draft.name} autoCapitalize="words" autoComplete="off" onChange={(e) => set("name", e.currentTarget.value)} error={problemOf("name", "")} />
-      <TextField ref={parentNameRef} label={t("form.parentName")} value={draft.parentName} autoCapitalize="words" autoComplete="off" onChange={(e) => set("parentName", e.currentTarget.value)} error={problemOf("parentName", "")} />
-      <TextField
-        ref={phoneRef}
-        label={t("form.phone")}
-        value={draft.phone}
-        inputMode="tel"
-        autoComplete="off"
-        latinValue
-        placeholder="98860 44321"
-        onChange={(e) => set("phone", e.currentTarget.value)}
-        onBlur={() => set("phone", tidyTyped(draft.phone))}
-        error={problemOf("phone", "")}
-        helper={
-          sibling ? (
-            <span>
-              {t("form.sameNumber", { name: sibling.name })}
-            </span>
-          ) : (
-            <span translate="no">+91</span>
-          )
-        }
-      />
-      <Segmented
-        label={t("form.language")}
-        name="parent-language"
-        value={draft.parentLanguage}
-        onChange={(value) => set("parentLanguage", value)}
-        options={[
-          { value: locales[0], label: <span lang={locales[0]}>{localeNames[locales[0]]}</span> },
-          { value: locales[1], label: <span lang={locales[1]}>{localeNames[locales[1]]}</span> },
-          { value: locales[2], label: <span lang={locales[2]}>{localeNames[locales[2]]}</span> },
-          { value: locales[3], label: <span lang={locales[3]}>{localeNames[locales[3]]}</span> },
-        ]}
-      />
-      <SelectField label={t("form.batch")} value={batchValue} onChange={(value) => set("batchId", value)} options={batchOptions} />
-      <SelectField label={t("form.dueDay")} value={String(draft.dueDay)} onChange={(value) => set("dueDay", Number(value))} options={dayOptions} />
-      <TextField
-        ref={feeRef}
-        label={t("form.fee")}
-        value={draft.fee}
-        inputMode="numeric"
-        autoComplete="off"
-        latinValue
-        onChange={(e) => set("fee", e.currentTarget.value)}
-        onBlur={() => set("fee", tidyRupees(draft.fee, FEE_LIMITS))}
-        error={problemOf("fee", "")}
-        helper={editing ? t("form.feeFromNextMonth") : undefined}
-      />
-      <TextField
-        ref={owesRef}
-        label={t("form.owes")}
-        value={draft.owes}
-        inputMode="numeric"
-        autoComplete="off"
-        latinValue
-        placeholder="0"
-        readOnly={owesLocked || owesChecking}
-        onChange={(e) => set("owes", e.currentTarget.value)}
-        onBlur={() => set("owes", tidyRupees(draft.owes, OWES_LIMITS))}
-        error={problemOf("owes", "")}
-        helper={owesLocked ? t("form.owesLocked") : undefined}
-      />
+    <form noValidate onSubmit={(event) => submit(event, "save")} className="flex flex-col gap-6">
+      <fieldset className="flex min-w-0 flex-col gap-4">
+        <legend className="type-label mb-3 text-ink-label">{t("form.groupWho")}</legend>
+        <TextField ref={nameRef} label={t("form.name")} value={draft.name} autoCapitalize="words" autoComplete="off" onChange={(e) => set("name", e.currentTarget.value)} error={problemOf("name", "")} />
+        <TextField ref={parentNameRef} label={t("form.parentName")} value={draft.parentName} autoCapitalize="words" autoComplete="off" onChange={(e) => set("parentName", e.currentTarget.value)} error={problemOf("parentName", "")} />
+        <TextField
+          ref={phoneRef}
+          label={t("form.phone")}
+          value={draft.phone}
+          inputMode="tel"
+          autoComplete="off"
+          latinValue
+          placeholder="98860 44321"
+          onChange={(e) => set("phone", e.currentTarget.value)}
+          onBlur={() => set("phone", tidyTyped(draft.phone))}
+          error={problemOf("phone", "")}
+          helper={
+            sibling ? (
+              <span>
+                {t("form.sameNumber", { name: sibling.name })}
+              </span>
+            ) : (
+              <span translate="no">+91</span>
+            )
+          }
+        />
+        <Segmented
+          label={t("form.language")}
+          name="parent-language"
+          value={draft.parentLanguage}
+          onChange={(value) => set("parentLanguage", value)}
+          options={[
+            { value: locales[0], label: <span lang={locales[0]}>{localeNames[locales[0]]}</span> },
+            { value: locales[1], label: <span lang={locales[1]}>{localeNames[locales[1]]}</span> },
+            { value: locales[2], label: <span lang={locales[2]}>{localeNames[locales[2]]}</span> },
+            { value: locales[3], label: <span lang={locales[3]}>{localeNames[locales[3]]}</span> },
+          ]}
+        />
+        <div className="flex flex-col gap-1">
+          <label className="flex min-h-tap items-start gap-3 py-1">
+            <input
+              ref={permissionRef}
+              type="checkbox"
+              checked={draft.permission}
+              onChange={(e) => set("permission", e.currentTarget.checked)}
+              aria-invalid={permissionError ? "true" : undefined}
+              aria-describedby={permissionError ? `${permissionHintId} ${permissionErrorId}` : permissionHintId}
+              className="mt-0.5 size-6 shrink-0 accent-blue"
+            />
+            <span className="type-body-sm wrap-anywhere">{t("form.permission")}</span>
+          </label>
+          <p id={permissionHintId} className="type-caption pl-9 text-ink-soft wrap-anywhere">
+            {t("form.permissionHint")}
+          </p>
+          {permissionError ? (
+            <p id={permissionErrorId} className="type-caption font-semibold text-cloth wrap-anywhere">
+              {t("err.permissionNeeded")}
+            </p>
+          ) : null}
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="flex min-h-tap items-start gap-3 py-1">
-          <input
-            ref={permissionRef}
-            type="checkbox"
-            checked={draft.permission}
-            onChange={(e) => set("permission", e.currentTarget.checked)}
-            aria-invalid={permissionError ? "true" : undefined}
-            className="mt-0.5 size-6 shrink-0 accent-blue"
-          />
-          <span className="type-body-sm wrap-anywhere">{t("form.permission")}</span>
-        </label>
-        {permissionError ? <p className="type-caption font-semibold text-cloth wrap-anywhere">{t("err.permissionNeeded")}</p> : null}
-      </div>
+        <SelectField label={t("form.batch")} value={batchValue} onChange={(value) => set("batchId", value)} options={batchOptions} />
+      </fieldset>
+
+      <fieldset className="flex min-w-0 flex-col gap-4">
+        <legend className="type-label mb-3 text-ink-label">{t("form.groupFee")}</legend>
+        <SelectField label={t("form.dueDay")} value={String(draft.dueDay)} onChange={(value) => set("dueDay", Number(value))} options={dayOptions} />
+        <TextField
+          ref={feeRef}
+          label={t("form.fee")}
+          value={draft.fee}
+          inputMode="numeric"
+          autoComplete="off"
+          latinValue
+          onChange={(e) => set("fee", e.currentTarget.value)}
+          onBlur={() => set("fee", tidyRupees(draft.fee, FEE_LIMITS))}
+          error={problemOf("fee", "")}
+          helper={editing ? t("form.feeFromNextMonth") : undefined}
+        />
+      </fieldset>
+
+      <fieldset className="flex min-w-0 flex-col gap-4">
+        <legend className="type-label mb-3 text-ink-label">{t("form.groupOwes")}</legend>
+        <TextField
+          ref={owesRef}
+          label={t("form.owes")}
+          value={draft.owes}
+          inputMode="numeric"
+          autoComplete="off"
+          latinValue
+          placeholder="0"
+          readOnly={owesLocked || owesChecking}
+          onChange={(e) => set("owes", e.currentTarget.value)}
+          onBlur={() => set("owes", tidyRupees(draft.owes, OWES_LIMITS))}
+          error={problemOf("owes", "")}
+          helper={owesLocked ? t("form.owesLocked") : t("form.owesHint")}
+        />
+      </fieldset>
 
       <p role="status" className="type-body-sm font-bold text-stamp empty:hidden">
         {status}
