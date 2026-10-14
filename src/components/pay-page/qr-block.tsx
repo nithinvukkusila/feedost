@@ -2,7 +2,7 @@
 
 // The QR code, opened under the Pay area (spec R1-9 criteria 43 and 44). It draws the very `upi://pay` string the Pay
 // button links to, on this phone: the encoder is fetched once, on the first tap, by `qrMatrix`, and nothing about the
-// payment goes anywhere. One SVG path, ink on the lightest paper, a quiet border of 4 modules, never under 220px.
+// payment goes anywhere. One SVG path, ink on the lightest paper, a quiet border of 4 modules, 256px at normal text size, 204px at 200% text (it shrinks with the viewport, never clipped).
 import { useEffect, useState } from "react";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";

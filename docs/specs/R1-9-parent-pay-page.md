@@ -778,6 +778,7 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 6. In the tutor app, tap Remind on a student with a phone and a UPI ID: the message shows `https://feedost.vercel.app/p/...` and still the "Or pay to UPI ID" line; open WhatsApp: the same text arrives; open the link on the parent's phone: the pay page opens (after Part B is on production).
 7. Turn the network off and tap Remind: the message shows the old `upi://` link and nothing breaks (or the screen says it is offline, as before).
 8. Tap the link in the real WhatsApp message on a second phone: it opens the pay page, not an error. Do this against production before merging Part C (criterion 48).
+9. Scan the code at 200% text size with the longest Telugu tutor name: the code (204px at that size) is not cut off, the name wraps, and the scan still works.
 
 ## C11. Open questions for the founder
 
