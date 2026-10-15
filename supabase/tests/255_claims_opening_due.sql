@@ -85,7 +85,7 @@ select tests.act_as(tests.tutor_a());
 select lives_ok($$update public.students set opening_balance = 0 where id = 'a1000000-0000-4000-8000-000000000004'$$, '(e) A clears it');
 select tests.reset();
 select is((select count(*) from public.dues where student_id = 'a1000000-0000-4000-8000-000000000004' and kind = 'opening')::int, 0, '(e) the opening due is gone');
-select is((select status || '/' || amount from public.payment_claims c join public.dues d on d.id = c.due_id where c.id = 'a6000000-0000-4000-8000-000000000004'), 'pending/100000', '(e) the claim is still pending and its monthly fee is unchanged');
+select is((select c.status || '/' || d.amount from public.payment_claims c join public.dues d on d.id = c.due_id where c.id = 'a6000000-0000-4000-8000-000000000004'), 'pending/100000', '(e) the claim is still pending and its monthly fee is unchanged');
 
 -- (f) Tutor B's edits touch nothing of tutor A
 select tests.act_as(tests.tutor_b());

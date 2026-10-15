@@ -72,11 +72,12 @@ describe("the Deno wiring (index.ts) against the migration", () => {
     expect(sigs.paypage_hit).toEqual(["p_hash", "p_limit"]);
   });
 
-  it("the claims migration declares the functions R1-10 needs, and re-declares get_pay_page with the same argument", () => {
+  it("the claims migration declares the functions R1-10 needs, and re-declares get_pay_page and sync_opening_due with the same arguments", () => {
     expect(Object.keys(signatures(claimsMigration)).sort()).toEqual(
-      ["claim_hit", "confirm_claim", "get_pay_page", "open_dues_oldest_first", "payment_claims_guard", "reject_claim", "submit_claim"],
+      ["claim_hit", "confirm_claim", "get_pay_page", "open_dues_oldest_first", "payment_claims_guard", "reject_claim", "submit_claim", "sync_opening_due"],
     );
     expect(signatures(claimsMigration).get_pay_page).toEqual(["p_token"]);
+    expect(signatures(claimsMigration).sync_opening_due).toEqual([]);
     expect(sigs.submit_claim).toEqual(["p_token", "p_upi_ref", "p_screenshot_path"]);
     expect(sigs.claim_hit).toEqual(["p_hash", "p_limit"]);
     expect(sigs.confirm_claim).toEqual(["p_claim", "p_request_id"]);
