@@ -33,6 +33,8 @@ Build strictly in this order. Each release must be shippable on its own.
 | Waitlist | Form on both tools: name, phone, city, approx. number of students → saved to `waitlist` table |
 | SEO | Each tool page has a unique title/description per language, server-rendered/static HTML |
 
+> Note 2026-10-16 (founder decision): parent-facing output (the receipt maker's PDF, `/p/`, `/r/` and the app's receipt PDF) is English-only until a named human reviewer signs off each language. The tool pages themselves still work in en, hi, kn and te, and every string stays translated in all four message files (§9). Detail: `docs/specs/parent-pages-english.md`.
+
 ### Release 1 — MVP (free plan)
 
 | Feature | Acceptance criteria |
