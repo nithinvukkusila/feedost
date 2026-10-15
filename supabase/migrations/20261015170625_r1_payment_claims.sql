@@ -49,10 +49,14 @@
 --   Hashes only. No tutor_id on purpose: the rows belong to no tutor. RLS on, no policy, no grant.
 -- * open_dues_oldest_first(): the ONE definition of "the open fees, oldest first", used by submit_claim and confirm_claim and
 --   pinned equal to the order get_pay_page lists them in (see 275_open_dues_order.sql).
--- * confirm_claim does NOT copy any money rule. It takes the tutor's receipt-counter lock (the same lock record_payment takes,
---   first, so no deadlock with Mark paid), then calls record_payment once per fee, oldest first, with a request id derived from
---   its own. Every record_payment check, the 90-day rule, the numbering and the due update stay in that one function.
+-- * confirm_claim takes the tutor's receipt-counter lock (the same lock record_payment takes, first, so no deadlock with Mark
+--   paid), then calls record_payment once per fee, oldest first, with a request id derived from its own.
+--   confirm_claim pre-empts, does not replace, three of record_payment's checks (student archived, the 90-day window, the
+--   amount owed), so that a refusal changes nothing and costs no receipt number. record_payment still runs every check and does
+--   the numbering and the due update. If R1-7's date or amount rule changes, change both functions; 280_confirm_claim.sql pins
+--   them together.
 -- * get_pay_page gains one key after consent: pending_claim.
+-- * sync_opening_due() is re-created: an opening due named by a pending claim is not changed or deleted.
 
 -- ---------------------------------------------------------------------------------------------
 -- dues: the key a claim's foreign key needs
@@ -93,7 +97,9 @@ create table public.payment_claims (
     or (status <> 'confirmed' and confirm_request_id is null and confirmed_receipt_from is null and confirmed_receipt_count is null) is true
   ),
   -- A claim names a student and a fee of the SAME tutor, and the fee must be that student's. Cascade (nothing references
-  -- claims): deleting a student, a fee or a tutor removes the claims in any order.
+  -- claims): deleting a student or a tutor removes the claims in any order. The cascade on payment_claims_due_fkey is reached
+  -- only when sync_opening_due deletes an opening due with no payment and no pending claim (it freezes a due a pending claim
+  -- names, below), so only rejected claims can go with it: a confirmed claim always made a payment on its fee.
   constraint payment_claims_student_fkey
     foreign key (tutor_id, student_id) references public.students (tutor_id, id)
     on delete cascade,
@@ -115,6 +121,47 @@ create unique index payment_claims_confirm_request_key on public.payment_claims 
 -- The inbox (pending, newest first) and Earlier (handled, newest first).
 create index payment_claims_inbox_idx on public.payment_claims (tutor_id, status, created_at desc);
 create index payment_claims_handled_idx on public.payment_claims (tutor_id, handled_at desc);
+
+-- ---------------------------------------------------------------------------------------------
+-- sync_opening_due: a pending claim freezes the opening due it names
+-- ---------------------------------------------------------------------------------------------
+
+-- Re-created from 20261012135000_r1_opening_due_with_payments.sql with one change: an opening due named by a pending claim is,
+-- like one with a payment, never changed or deleted by the trigger. The claim says "I paid what the page showed", so its due
+-- must keep that amount, and cascade on payment_claims_due_fkey must never remove a pending claim. Everything else is as
+-- before. The triggers already point at this function name, so create or replace is enough; its privileges (revoked from
+-- public, anon, authenticated) stay.
+create or replace function public.sync_opening_due()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'INSERT' then
+    insert into public.dues (tutor_id, student_id, kind, month, amount, amount_paid, status, due_date)
+    values (new.tutor_id, new.id, 'opening', null, new.opening_balance, 0, 'due', public.india_day(now()))
+    on conflict do nothing;
+  else
+    if new.opening_balance > 0 then
+      insert into public.dues (tutor_id, student_id, kind, month, amount, amount_paid, status, due_date)
+      values (new.tutor_id, new.id, 'opening', null, new.opening_balance, 0, 'due', public.india_day(now()))
+      on conflict do nothing;
+      update public.dues
+         set amount = new.opening_balance
+       where student_id = new.id and kind = 'opening' and amount_paid = 0
+         and not exists (select 1 from public.payments p where p.due_id = dues.id)
+         and not exists (select 1 from public.payment_claims c where c.student_id = new.id and c.due_id = dues.id and c.status = 'pending');
+    else
+      delete from public.dues
+       where student_id = new.id and kind = 'opening' and amount_paid = 0
+         and not exists (select 1 from public.payments p where p.due_id = dues.id)
+         and not exists (select 1 from public.payment_claims c where c.student_id = new.id and c.due_id = dues.id and c.status = 'pending');
+    end if;
+  end if;
+  return null;
+end;
+$$;
 
 -- A claim goes pending -> confirmed or pending -> rejected, once, and nothing about what was claimed ever changes. Applies to
 -- the table owner too, so a later function or a hand-run statement cannot rewrite a claim.

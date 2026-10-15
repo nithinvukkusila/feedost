@@ -1,11 +1,12 @@
 -- R1-10 Part A criteria 8, 9 and 10 (docs/specs/R1-10-paid-claims-inbox.md, plan sections 3 and 9). confirm_claim: one payment and one
--- receipt per fee, oldest first, through record_payment (no second copy of the money rules); consecutive receipt numbers from the same
--- counter as Mark paid; every refusal changes nothing and uses no number; a retry with the same request id returns the same claim.
+-- receipt per fee, oldest first, through record_payment (which still runs every check; confirm_claim pre-empts three of them, and the
+-- archived and 90-day pairs below pin the two functions together); consecutive receipt numbers from the same counter as Mark paid;
+-- every refusal changes nothing and uses no number; a retry with the same request id returns the same claim.
 -- Self-contained: makes its own users and rolls everything back. The error words are the contract at the top of
 -- 20261015170625_r1_payment_claims.sql. Times are relative to now(), which does not move inside this transaction.
 begin;
 select tests.assert_ready();
-select plan(64);
+select plan(68);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -167,6 +168,31 @@ select tests.act_as(tests.tutor_a());
 select is((select confirmed_receipt_from from public.confirm_claim('a6000000-0000-4000-8000-000000000006', 'a4000000-0000-4000-8000-000000000006')), 10, 'a claim sent exactly 90 days ago is confirmed (receipt 10)');
 select tests.reset();
 select is((select paid_on from public.payments where receipt_no = 10 and tutor_id = tests.tutor_a()), public.india_day(now() - interval '90 days'), 'it is dated the India day it was sent');
+
+-- confirm_claim pre-empts record_payment's archived and 90-day checks (the C4, C5 and C6 cases above). THESE PAIRS MUST AGREE:
+-- record_payment called directly on the same days gives the same answers, so a change to either rule fails here. Run as the test
+-- runner with tutor A's session claims, so india_day can be called. The accepted call is undone by a sentinel error, so it uses no
+-- receipt number and the numbering below is unchanged.
+do $$
+declare v_result text;
+begin
+  perform set_config('request.jwt.claims', json_build_object('sub', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'role', 'authenticated')::text, true);
+  begin
+    perform public.record_payment('a2000000-0000-4000-8000-00000000000a', 1000, 'upi', public.india_day(now()) - 90, gen_random_uuid());
+    raise exception 'tests_undo' using errcode = 'TS001';
+  exception
+    when sqlstate 'TS001' then v_result := 'accepted';
+    when others then v_result := sqlerrm;
+  end;
+  perform set_config('tests.paid_90', v_result, true);
+  perform set_config('request.jwt.claims', '', true);
+end $$;
+select is(current_setting('tests.paid_90'), 'accepted', 'record_payment accepts paid_on 90 India days ago, as confirm_claim accepts a claim sent 90 days ago');
+select set_config('request.jwt.claims', json_build_object('sub', tests.tutor_a(), 'role', 'authenticated')::text, true);
+select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-00000000000a', 1000, 'upi', public.india_day(now()) - 91, gen_random_uuid())$$, 'P0001', 'date_out_of_range', 'record_payment refuses paid_on 91 India days ago with date_out_of_range, as confirm_claim does');
+select throws_ok($$select public.record_payment('a2000000-0000-4000-8000-000000000007', 1000, 'upi', public.india_day(now()), gen_random_uuid())$$, 'P0001', 'student_archived', 'record_payment refuses an archived student with student_archived, as confirm_claim does');
+select tests.reset();
+select is((select last_no || '/' || (select count(*) from public.payments where tutor_id = tests.tutor_a()) from public.receipt_counters where tutor_id = tests.tutor_a()), '10/10', 'the direct calls left no payment and used no receipt number');
 
 -- Undo of one payment of a claim leaves the claim confirmed; the next Mark paid still gets a new number
 select tests.act_as(tests.tutor_a());

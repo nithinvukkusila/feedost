@@ -4,7 +4,7 @@
 -- Self-contained: makes its own users and rolls everything back. Fixtures are made as the test runner (the table owner).
 begin;
 select tests.assert_ready();
-select plan(65);
+select plan(66);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -15,12 +15,16 @@ insert into public.students (id, tutor_id, name) values
   ('a1000000-0000-4000-8000-000000000003', tests.tutor_a(), 'A three'),
   ('b1000000-0000-4000-8000-000000000001', tests.tutor_b(), 'B one');
 insert into public.dues (id, tutor_id, student_id, kind, month, amount, due_date) values
-  ('a2000000-0000-4000-8000-000000000001', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000001', 'monthly', '2026-10-01', 120000, '2026-10-05'),
+  ('a2000000-0000-4000-8000-000000000001', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000001', 'opening', null, 120000, '2026-10-05'),
   ('a2000000-0000-4000-8000-000000000002', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000002', 'monthly', '2026-10-01', 100000, '2026-10-05'),
   ('a2000000-0000-4000-8000-000000000003', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000003', 'monthly', '2026-10-01', 100000, '2026-10-05'),
   ('b2000000-0000-4000-8000-000000000001', tests.tutor_b(), 'b1000000-0000-4000-8000-000000000001', 'monthly', '2026-10-01', 90000, '2026-10-05');
+-- A one's fee is its earlier balance: the student now says so too (the trigger finds the due and keeps its id)
+update public.students set opening_balance = 120000 where id = 'a1000000-0000-4000-8000-000000000001';
+-- A one's claim is already handled (rejected): a pending claim freezes its fee and is never cascaded (255_claims_opening_due.sql)
+insert into public.payment_claims (id, tutor_id, student_id, due_id, amount, fee_count, upi_ref, status, handled_at) values
+  ('a6000000-0000-4000-8000-000000000001', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000001', 'a2000000-0000-4000-8000-000000000001', 120000, 1, '628104739915', 'rejected', now());
 insert into public.payment_claims (id, tutor_id, student_id, due_id, amount, fee_count, upi_ref) values
-  ('a6000000-0000-4000-8000-000000000001', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000001', 'a2000000-0000-4000-8000-000000000001', 120000, 1, '628104739915'),
   ('a6000000-0000-4000-8000-000000000002', tests.tutor_a(), 'a1000000-0000-4000-8000-000000000002', 'a2000000-0000-4000-8000-000000000002', 100000, 1, '111111111111'),
   ('b6000000-0000-4000-8000-000000000001', tests.tutor_b(), 'b1000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000001', 90000, 1, '222222222222');
 
@@ -115,12 +119,14 @@ select throws_ok($$insert into public.payment_claims (tutor_id, student_id, due_
 select throws_ok($$insert into public.payment_claims (tutor_id, student_id, due_id, amount, fee_count, upi_ref, status, handled_at) values (tests.tutor_a(), 'b1000000-0000-4000-8000-000000000001', 'b2000000-0000-4000-8000-000000000001', 1000, 1, '333333333333', 'rejected', now())$$, '23503', null, 'a claim naming tutor A with tutor B student breaks the foreign key');
 select lives_ok($$insert into public.payment_claims (tutor_id, student_id, due_id, amount, fee_count, upi_ref) values (tests.tutor_a(), 'a1000000-0000-4000-8000-000000000003', 'a2000000-0000-4000-8000-000000000003', 1000, 1, '333333333333')$$, 'a well formed claim is accepted');
 
--- Deleting a student removes its claims; deleting a fee removes its claims; deleting a tutor removes the rest
+-- Deleting a student removes its claims; a fee deleted by the earlier-balance trigger takes its handled claims; deleting a tutor
+-- removes the rest
 delete from public.students where id = 'a1000000-0000-4000-8000-000000000002';
 select is((select count(*) from public.payment_claims where student_id = 'a1000000-0000-4000-8000-000000000002')::int, 0, 'deleting a student removes its claims');
 select is((select count(*) from public.payment_claims where tutor_id = tests.tutor_a())::int, 2, 'and leaves the same tutor other claims');
-delete from public.dues where id = 'a2000000-0000-4000-8000-000000000001';
-select is((select count(*) from public.payment_claims where due_id = 'a2000000-0000-4000-8000-000000000001')::int, 0, 'deleting a fee removes its claims');
+update public.students set opening_balance = 0 where id = 'a1000000-0000-4000-8000-000000000001';
+select is((select count(*) from public.dues where id = 'a2000000-0000-4000-8000-000000000001')::int, 0, 'clearing the earlier balance deletes its fee (no payment, no pending claim)');
+select is((select count(*) from public.payment_claims where due_id = 'a2000000-0000-4000-8000-000000000001')::int, 0, 'a fee deleted by the earlier-balance trigger takes its handled claims with it (criterion 2)');
 delete from auth.users where id = tests.tutor_a();
 select is((select count(*) from public.payment_claims where tutor_id = tests.tutor_a())::int, 0, 'deleting a tutor removes all their claims');
 select is((select count(*) from public.payment_claims where tutor_id = tests.tutor_b())::int, 1, 'and leaves the other tutor claims');
