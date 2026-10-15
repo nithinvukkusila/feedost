@@ -650,7 +650,7 @@ Manual (the spec's section 11 steps 1 to 15 and 17; 16 needs Part C). Staging fu
 
 ## B14. Open questions
 
-No new founder question. The two existing blockers stay: questions 3 and 5 block the production release of Part B (B6). Question 11 (the QR dependency) stays open for Part C. No new dependency is proposed.
+No new founder question. ~~The two existing blockers stay: questions 3 and 5 block the production release of Part B (B6).~~ **Superseded by the amendment of 2026-10-16** (end of this file): question 5 is answered, and question 3 alone blocks the release to real parents. Question 11 (the QR dependency) stays open for Part C. No new dependency is proposed.
 
 **Starts first: `frontend-dev`, task 1 (split `src/lib/upi-link.ts` out of `reminder.ts` and `src/lib/public-words.ts` out of `receipt-words.ts`, proving R0-2, R1-8 and `/r/` unchanged), then tasks 2 to 6 in order.**
 
