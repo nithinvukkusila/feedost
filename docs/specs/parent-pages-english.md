@@ -50,7 +50,7 @@ Making reminders English would also undo R0-2 criterion 28 and R1-8 criterion 9.
   - S2 and S3: `src/lib/receipt-words.review.json`.
   - S4: the R0-3 review record on PR #12 (`src/lib/receipt/templates.review.json`).
 - **A model review never counts.** No agent writes `"reviewed"` in any record. The founder names the reviewer, and the reviewer's name goes in the record.
-- **Changed text locks the language again.** If text is changed after it was signed, the hashes no longer match. That language goes back to English on that surface until it is signed again. A screen never mixes a reviewed language with English.
+- **Changed text locks the language again.** If text is changed after it was signed, the hashes no longer match. That language goes back to English on that surface until it is signed again. A screen never mixes a reviewed language with English, except the consent lines (below).
 - **What the page language becomes:**
   - S1 and S2 use the student's `parent_language` if it is unlocked, otherwise English.
   - Where today's rule falls back to the tutor's language or the browser's first language, each step is used only if that language is unlocked, otherwise English.
@@ -99,7 +99,7 @@ Making reminders English would also undo R0-2 criterion 28 and R1-8 criterion 9.
 | Finding, paying or naming the reviewers | The founder (question 4) |
 | Writing or improving hi, kn, te text | Each slice's words, as they are now |
 | Privacy and consent wording, who is controller, retention, withdrawal, full notice page | R1-9 question 3 (still open) |
-| Making reminders or share messages English | Not decided (question 1) |
+| Making reminders or share messages English | Founder chose not to (question 1, 2026-10-16) |
 | A "not reviewed" label or warning anywhere | Not built (section 3) |
 | Not shipping locked languages' words in the page | `tech-lead`'s call (bundle only; never visible) |
 
@@ -123,9 +123,9 @@ None. No events change.
 
 ## 10. Open questions for the founder
 
-1. **Reminders and receipt share messages (S5, S6).** Default: not covered, for the reasons in section 3. This means a Hindi parent gets a Hindi message whose link opens an English page. Say if you want these messages in English too until a reviewer signs them.
+1. **Reminders and receipt share messages (S5, S6).** Default: not covered, for the reasons in section 3. This means a Hindi parent gets a Hindi message whose link opens an English page. Say if you want these messages in English too until a reviewer signs them. **Answered 2026-10-16 (founder): keep the default.** Reminders and share messages stay in the parent's language.
 2. **R1-9 question 3 (privacy and consent wording) is still open.** You declined to draft it now. It stays a gate on releasing to real parents (the public launch, and also giving feedost.vercel.app to any real tutor). It does **not** block merging #25 to `main`. Today `main` deploys only to feedost.vercel.app, which runs against staging with made-up data, and no real parent can reach it (`docs/ENVIRONMENTS.md`, "Temporary: feedost.vercel.app").
-3. **QR code size (R1-9 criterion 43).** #25 draws the QR code at 204px at 200% text. Criterion 43 says at least 220px square. Either make #25 meet 220px at every text size, or change the criterion (for example, 220px at normal text and at least 200px at 200%). Your call; not decided here.
+3. **QR code size (R1-9 criterion 43).** #25 draws the QR code at 204px at 200% text. Criterion 43 says at least 220px square. Either make #25 meet 220px at every text size, or change the criterion (for example, 220px at normal text and at least 200px at 200%). **Answered 2026-10-16 (founder): 220px at every text size.** Criterion 43 stands.
 4. **Who reviews each language?** No sign-off can happen until you name a reader for hi, kn and te. Nothing waits on it now.
 
 ## 11. Hand-off
@@ -272,7 +272,7 @@ The constraint "on main before or with #25" is enforced by order: #25 must merge
 
 **#25:**
 
-- `src/components/pay-page/qr-block.tsx`: `export const QR_MIN_PX = 200;` plus `style={{ minWidth: QR_MIN_PX }}` on the QR box (line 53). Inline `minWidth` is not a token rule violation.
+- `src/components/pay-page/qr-block.tsx`: `export const QR_MIN_PX = 220;` plus `style={{ minWidth: QR_MIN_PX }}` on the QR box (line 54). Inline `minWidth` is not a token rule violation.
 - `e2e/pay-page-qr.spec.ts`: the 200% assertion becomes `>= QR_MIN_PX` (imported). Its hi, kn and te runs use `unlockedLink`.
 
 **#12:**
@@ -313,14 +313,14 @@ None. No migration, no RLS change, no Edge Function change. `parent_language` is
 | 7 | Unit on #12: `makePdf({ lang: "en", student: "क्षितिज" / "ಶ್ರೀನಿವಾಸ" / "శ్రీనివాస్" })` fetches that script's font. fontkit layout of each name in the shipped subset font has no glyph id 0 and fewer glyphs than code points (the conjunct is shaped). | `src/lib/receipt/make-pdf.test.ts` (#12) |
 | 8 | Unit on #12: `unlockedFrom("receiptTool", { records: signedFixture("receiptTool", ["kn"]) })` gives `["en","kn"]`. `ReceiptTool` with `languages=["en","kn"]` on `/kn/` draws the picker with two options, preselects ಕನ್ನಡ, and the preview and `makePdf` get `lang: "kn"`. With the shipped record: `["en"]`. | `src/lib/unlocked-languages.test.ts`, `receipt-tool.test.tsx` (#12) |
 | 9 | Existing `i18n:check` key-parity tests stay green. Unit: no value returned by `payPageWords()` or `receiptWords()` contains `TODO-translate`. | `src/lib/unlocked-languages.test.ts` |
-| 10 | e2e: the existing 360px / 100-130-200% layout runs for hi, kn and te, pointed at `/dev/unlocked/p/` and `/dev/unlocked/r/` with the same stubs; en stays on the real route. A unit test asserts `next.config.ts` excludes `.dev.tsx` when `VERCEL_ENV=production` (it exists from F2; extend it to name `dev/unlocked`). | `pay-page-layout.spec.ts`, `receipt-public-layout.spec.ts` |
+| 10 | e2e: the existing 360px / 100-130-200% layout runs for hi, kn and te, pointed at `/dev/unlocked/p/` and `/dev/unlocked/r/` with the same stubs; en stays on the real route. The CI step "Production build leaves out the dev routes" (`.github/workflows/ci.yml`, fails if `out/dev` exists) already covers `/dev/unlocked/*`. PR A adds one sentinel string from the new pages to that step so a rename cannot slip through. | `pay-page-layout.spec.ts`, `receipt-public-layout.spec.ts` |
 | 11 | No change to `src/lib/reminder/**` in PR A. `app-reminder.test.ts`, `templates.test.ts` and `remind-run.test.tsx` stay green unmodified, and one of them already asserts a Hindi student's message is Hindi; `code-reviewer` checks the diff touches none of them. | existing |
 | 12 | Unit: the table in section 2, one case per row, on temp directories (the pattern of `pay-page-review.test.ts`). The shipped records give: plain passes; strict fails with the consent-draft line and **not** with "pay page words are not reviewed" / "receipt words are not reviewed". A test that `isSigned` and `checkReviewRecord` agree on 8 vectors. | `src/lib/pay-page-review.test.ts`, `src/lib/i18n-check.test.ts` |
 | guard | Code rule: no `"use client"` file imports `@/lib/unlocked-languages` or `scripts/`. No file under `src/components/pay-page`, `src/components/receipt` or `src/app/{p,r}` imports `locales` from `@/config/locales`, except `localeNames` and the type. | `src/lib/pay-page-code-rules.test.ts` |
 
 ## 7. QR size (founder question 3), prepared as a one-line change
 
-#25 adds `export const QR_MIN_PX = 200` in `qr-block.tsx`, applied as `style={{ minWidth: QR_MIN_PX }}` on the QR box. `e2e/pay-page-qr.spec.ts` imports it for the 200% assertion; the 100% assertion stays at 220.
+**Decided 2026-10-16: "220 everywhere".** #25 adds `export const QR_MIN_PX = 220` in `qr-block.tsx`, applied as `style={{ minWidth: QR_MIN_PX }}` on the QR box. `e2e/pay-page-qr.spec.ts` imports it for the 200% assertion; the 100% assertion stays at 220.
 
 - **"Change the criterion"** (220 normal, at least 200 at 200%): no code change. The spec text is updated.
 - **"220 everywhere"**: change `QR_MIN_PX` to `220`. The box is a centred flex child, so it spreads 8px into each side margin at 200% (the margins are at least 32px there). The same spec's sideways-scroll check proves the page still does not scroll. Frontend-dev runs this variant once on #25 and records the result in the PR, so the change is known to work before the founder answers.
@@ -348,7 +348,7 @@ None. No migration, no RLS change, no Edge Function change. `parent_language` is
 
 **#25, branch `r1-9-part-c`:**
 
-6. `frontend-dev`: merge `origin/main` (with A). Fix `pay-page.spec.ts` and `fee-screen.test.tsx` overlaps, add the `QR_MIN_PX` constant and the e2e import, move the QR hi, kn and te runs to `unlockedLink`, try `QR_MIN_PX = 220` once and record the result, and change criterion 48's checklist wording to "English". Re-measure `/p/`.
+6. `frontend-dev`: merge `origin/main` (with A). Fix `pay-page.spec.ts` and `fee-screen.test.tsx` overlaps, add the `QR_MIN_PX` constant and the e2e import, move the QR hi, kn and te runs to `unlockedLink`, set `QR_MIN_PX = 220` and record the 200% result in the PR, and change criterion 48's checklist wording to "English". Re-measure `/p/`.
 
 **#12, branch `r0-3b-receipt-maker` (after A; can run alongside 6):**
 
@@ -361,7 +361,7 @@ None. No migration, no RLS change, no Edge Function change. `parent_language` is
 - **Hash drift between check and page.** If the page and `i18n:check` hashed differently, a language could be "signed" in one and not the other. Avoided: one `isSigned` and one hash function in `scripts/language-unlock.mjs`, plus the agreement test.
 - **Hashing stripped text.** `loadMessages` strips `TODO-translate`, and hashing its output would let a marked word look signed. The wrapper hashes the raw imported JSON, and a test plants a marker and expects `["en"]`.
 - **Server-only code in a client bundle.** `node:crypto` in an island breaks the build or, worse, ships records. Covered by the code-rule test. The wrapper is imported only by `page.tsx` files.
-- **Dev fixture reaching production.** It relies on `.dev.tsx` being excluded when `VERCEL_ENV=production`. The existing F2 test is extended. Even on a preview, it reads only staging data, and the path is not linked from anywhere.
+- **Dev fixture reaching production.** It relies on `.dev.tsx` being excluded when `VERCEL_ENV=production`. The CI step "Production build leaves out the dev routes" guards it, plus PR A's sentinel string. Even on a preview, it reads only staging data, and the path is not linked from anywhere.
 - **Stale signatures silently relocking.** Covered by the strict failure. Plain `i18n:check` prints a note on every PR.
 - **The menu's Close word.** `LanguageMenu` uses `pay.consent.close`. With the consent override, that word is English inside an unlocked Hindi page. This is accepted (one word, only once a language is unlocked). Moving the key is a message-file rename, not done here.
 - **Consent lines in an unlocked language** are English by spec (criterion 36). This is a deliberate mix the spec allows. The render test pins it so nobody "fixes" it.
@@ -385,7 +385,7 @@ None. No migration, no RLS change, no Edge Function change. `parent_language` is
 - **T1.** R0-3 criterion 33 and `receiptTool.meta.title` / `description` in all four files say "PDF in 4 languages" / "in English, Hindi, Kannada or Telugu". With S4 English-only, these are untrue. What should the English title and description say? Suggested: "Free fee receipt maker for tutors: PDF in one minute" / "Make a fee receipt PDF in one minute. Free, no sign-up, made on your phone and not saved anywhere." hi, kn and te would be `TODO-translate` until reviewed. **#12 does not merge until answered.**
 - **T2.** S6 says R0-3's "Share on WhatsApp" text stays "in the parent's language". The tool has no parent language: the old picker was the only signal, and it is now hidden. Which language does the share text use? Default in the plan: the page's language (what a tutor who never touched the picker got before). This is a one-line choice in `receipt-tool.tsx` (`waText(pageLocale, …)` vs `waText(receiptLang, …)`).
 
-Founder question 3 (QR size) stays open. Section 7 makes either answer a one-line change.
+Founder question 3 (QR size) is answered: 220px everywhere (section 7).
 
 ## 13. Start
 

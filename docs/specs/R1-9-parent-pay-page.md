@@ -763,7 +763,7 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 - **Scanning contrast.** Black on the lightest paper token, quiet border of 4 modules, ECC M, `crispEdges`. The DESIGN tokens have no pure white; if the paper tone fails a real scan, frontend-dev says so and tech-lead decides (a white token is a design decision). Manual phone step 5 below.
 - **`pay_token` spreading.** Reading it for the Remind screen only, from `pay-tokens.ts`, held in component state, never in the queue snapshot, the provider, the log call, `console`, storage, the address or an error message. The grep rule: `pay_token` appears in `src/` only in `pay-tokens.ts`, `students.ts` comments, and tests.
 - **A link that changes under the tutor.** The preview waits for the token read to settle, so it does not flip from `upi://` to the pay link after she has read it.
-- **A new link points at a page that is not live.** Criterion 48: Part C must not be merged until Part B is on production (and the consent wording, spec questions 3 and 5, is answered). `lead-reviewer` checks this before merging; the PR body says it.
+- **A new link points at a page that is not live.** Criterion 48 (reworded 2026-10-16): Part C must not be merged until the founder has done the manual phone check in criterion 48 against feedost.vercel.app (`main` on staging). Question 5 is answered (English-only parent pages) and question 3 gates the release to real parents, not this merge. `lead-reviewer` checks this before merging; the PR body says it.
 - **Host change.** The link carries `brand.domain`; spec question 6 stands (the old host must keep serving `/p/` and `/r/`).
 - **Reminders for amounts above the page's ceiling.** Both caps are the same (₹10,00,000), so a reminder link never leads to a page that refuses to show a Pay button for an amount the reminder allowed. The existing test of `APP_MAX_PAISE` against `PAY_PAGE_MAX_PAISE` is added if missing.
 - **Tutor total versus the reminder's single fee** (spec question 1): the page shows the total of all open fees, the message names one fee. Accepted default, unchanged.
@@ -791,7 +791,7 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 
 1. **A QR when there is no Pay button?** Default (chosen): no. QR appears only where the Pay button does (a valid UPI ID and an amount within the ceiling). Say if you want it elsewhere.
 2. **Offline before the first tap.** Default (chosen): the QR needs the network once, on the first tap, and otherwise shows the failure line. The alternative is to prefetch the 6 KB chunk when the page is idle. Say if you want that.
-3. **No other new question.** `uqr` is approved under question 11. The three release blocks stay: question 3 and 5 (consent wording, translation review) and Part B live on production (criterion 48).
+3. **No other new question.** `uqr` is approved under question 11. Release blocks, as amended 2026-10-16: merging Part C needs the founder's phone check in criterion 48 (against feedost.vercel.app on staging). Releasing to real parents needs question 3 (consent wording). Question 5 is answered: parent pages are English-only until each language is signed (`docs/specs/parent-pages-english.md`).
 
 **Starts first: `frontend-dev`, task 1 (add `uqr` 0.1.3 exactly, `pnpm audit --prod`, and `src/lib/qr.ts` with its fixture test), then tasks 2 to 4.**
 
@@ -804,6 +804,7 @@ Product decision, not a technical plan. `docs/specs/parent-pages-english.md` hol
 - criteria 29, 32, 34, 36 and 48;
 - question 5 (answered);
 - question 3 (status recorded: still open, gates the release to real parents, not merging);
+- C8 and C11 item 3 (the Part C merge and release gates), reworded to match criterion 48;
 - the release gate in B6 and B12: "questions 3 and 5 block the production release" now reads "question 3 blocks the release to real parents". Hindi, Kannada and Telugu marked "not reviewed" no longer block, because they are not shown.
 
-Open for the founder, not decided here: #25 draws the QR code at 204px at 200% text, while criterion 43 says at least 220px square (`parent-pages-english.md` question 3).
+QR size answered by the founder on 2026-10-16: criterion 43 stands, at least 220px square at every text size including 200% (`parent-pages-english.md` question 3).
