@@ -1,5 +1,6 @@
 // @vitest-environment node
-// R1-9 Part A criteria 3, 10, 14 and 15, added by test-engineer. The handler tests use fake dependencies, so they cannot
+// R1-9 Part A criteria 3, 10, 14 and 15, added by test-engineer; extended in R1-10 Part A for submit-claim (its migration, its
+// salt, its wiring) and for get_pay_page, which R1-10 replaced in a later migration (so the newest definition is the one read here). The handler tests use fake dependencies, so they cannot
 // see the two things that sit between a handler and the database: the Deno wiring in each index.ts (which secret it
 // reads, which database function and parameter names it calls) and the settings in config.toml. These tests read those
 // files as text and check them against the migration, so a renamed parameter or a wrong salt fails here and not on staging.
@@ -10,17 +11,24 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { handle as payPage, type Deps as PayDeps } from "../pay-page/handler.ts";
 import { handle as recordConsent, type Deps as ConsentDeps } from "../record-consent/handler.ts";
+import { handle as submitClaim, type Deps as ClaimDeps } from "../submit-claim/handler.ts";
 
 const read = (relative: string) => readFileSync(fileURLToPath(new URL(relative, import.meta.url)), "utf8");
 const migration = read("../../migrations/20261012230218_r1_pay_page.sql");
+const claimsMigration = read("../../migrations/20261015170625_r1_payment_claims.sql");
 const config = read("../../config.toml");
 const envExample = read("../../../.env.example");
-const indexes = { "pay-page": read("../pay-page/index.ts"), "record-consent": read("../record-consent/index.ts") };
+const SALTS = ["WAITLIST_HASH_SALT", "RECEIPT_HASH_SALT", "PAYPAGE_HASH_SALT", "CLAIM_HASH_SALT"];
+const indexes = {
+  "pay-page": { source: read("../pay-page/index.ts"), salt: "PAYPAGE_HASH_SALT" },
+  "record-consent": { source: read("../record-consent/index.ts"), salt: "PAYPAGE_HASH_SALT" },
+  "submit-claim": { source: read("../submit-claim/index.ts"), salt: "CLAIM_HASH_SALT" },
+};
 
 /** name -> argument names, from the function declarations in the migration. */
 function signatures(sql: string): Record<string, string[]> {
   const out: Record<string, string[]> = {};
-  for (const m of sql.matchAll(/create\s+function\s+public\.(\w+)\(([^)]*)\)/g)) {
+  for (const m of sql.matchAll(/create\s+(?:or\s+replace\s+)?function\s+public\.(\w+)\(([^)]*)\)/g)) {
     out[m[1]] = m[2].split(",").map((a) => a.trim().split(/\s+/)[0]).filter(Boolean);
   }
   return out;
@@ -36,34 +44,46 @@ function rpcCalls(source: string): { name: string; keys: string[] }[] {
 
 describe("config.toml and .env.example", () => {
   it("both functions are public (verify_jwt = false), because parents have no login", () => {
-    for (const name of ["pay-page", "record-consent"]) {
+    for (const name of ["pay-page", "record-consent", "submit-claim"]) {
       expect(config, name).toMatch(new RegExp(`\\[functions\\.${name}\\]\\s*\\n(?:#[^\\n]*\\n)*verify_jwt = false`));
     }
   });
 
-  it("the three hash salts are three different values, and the new one is set for the local runtime", () => {
+  it("the four hash salts are four different values, and each is set for the local runtime", () => {
     const salts = [...config.matchAll(/^(\w+_HASH_SALT) = "([^"]+)"/gm)].map((m) => [m[1], m[2]]);
     const names = salts.map(([n]) => n);
-    expect(names).toEqual(expect.arrayContaining(["WAITLIST_HASH_SALT", "RECEIPT_HASH_SALT", "PAYPAGE_HASH_SALT"]));
+    expect(names).toEqual(expect.arrayContaining(SALTS));
     expect(new Set(salts.map(([, v]) => v)).size).toBe(salts.length);
   });
 
-  it(".env.example names PAYPAGE_HASH_SALT and holds no value for it", () => {
+  it(".env.example names PAYPAGE_HASH_SALT and CLAIM_HASH_SALT and holds no value for either", () => {
     expect(envExample).toMatch(/^#?\s*PAYPAGE_HASH_SALT=\s*$/m);
+    expect(envExample).toMatch(/^#?\s*CLAIM_HASH_SALT=\s*$/m);
   });
 });
 
 describe("the Deno wiring (index.ts) against the migration", () => {
-  const sigs = signatures(migration);
+  const sigs = { ...signatures(migration), ...signatures(claimsMigration) };
 
-  it("the migration declares the four functions this part needs", () => {
-    expect(Object.keys(sigs).sort()).toEqual(["current_notice_version", "get_pay_page", "paypage_hit", "record_consent"]);
+  it("the pay page migration declares the four functions R1-9 needs", () => {
+    expect(Object.keys(signatures(migration)).sort()).toEqual(["current_notice_version", "get_pay_page", "paypage_hit", "record_consent"]);
     expect(sigs.get_pay_page).toEqual(["p_token"]);
     expect(sigs.record_consent).toEqual(["p_token", "p_notice_version"]);
     expect(sigs.paypage_hit).toEqual(["p_hash", "p_limit"]);
   });
 
-  for (const [fn, source] of Object.entries(indexes)) {
+  it("the claims migration declares the functions R1-10 needs, and re-declares get_pay_page with the same argument", () => {
+    expect(Object.keys(signatures(claimsMigration)).sort()).toEqual(
+      ["claim_hit", "confirm_claim", "get_pay_page", "open_dues_oldest_first", "payment_claims_guard", "reject_claim", "submit_claim"],
+    );
+    expect(signatures(claimsMigration).get_pay_page).toEqual(["p_token"]);
+    expect(sigs.submit_claim).toEqual(["p_token", "p_upi_ref", "p_screenshot_path"]);
+    expect(sigs.claim_hit).toEqual(["p_hash", "p_limit"]);
+    expect(sigs.confirm_claim).toEqual(["p_claim", "p_request_id"]);
+    expect(sigs.reject_claim).toEqual(["p_claim"]);
+  });
+
+  for (const [fn, { source, salt }] of Object.entries(indexes)) {
     it(`${fn}: every rpc call names a real function and exactly its parameters`, () => {
       const calls = rpcCalls(source);
       expect(calls.length).toBeGreaterThan(0);
@@ -73,12 +93,12 @@ describe("the Deno wiring (index.ts) against the migration", () => {
       }
     });
 
-    it(`${fn}: reads PAYPAGE_HASH_SALT and no other salt, uses no console, and calls only functions the migration revokes from clients`, () => {
-      expect(source).toContain('Deno.env.get("PAYPAGE_HASH_SALT")');
-      expect(source).not.toMatch(/WAITLIST_HASH_SALT|RECEIPT_HASH_SALT/);
+    it(`${fn}: reads ${salt} and no other salt, uses no console, and calls only functions a migration revokes from clients`, () => {
+      expect(source).toContain(`Deno.env.get("${salt}")`);
+      for (const other of SALTS.filter((name) => name !== salt)) expect(source).not.toContain(other);
       expect(source).not.toMatch(/console\./);
       for (const call of rpcCalls(source)) {
-        expect(migration, call.name).toMatch(new RegExp(`revoke all on function public\\.${call.name}\\([^)]*\\) from public, anon, authenticated;`));
+        expect(migration + claimsMigration, call.name).toMatch(new RegExp(`revoke all on function public\\.${call.name}\\([^)]*\\) from public, anon, authenticated;`));
       }
     });
 
@@ -94,6 +114,21 @@ describe("the Deno wiring (index.ts) against the migration", () => {
     for (const name of ["current_notice_version", "get_pay_page", "paypage_hit", "record_consent"]) {
       expect(migration, name).toMatch(new RegExp(`revoke all on function public\\.${name}\\([^)]*\\) from public, anon, authenticated;`));
     }
+  });
+});
+
+describe("the claims migration's privileges", () => {
+  it("only confirm_claim and reject_claim are granted to a client role, and the other functions are revoked from every client", () => {
+    const granted = [...claimsMigration.matchAll(/grant\s+execute\s+on\s+function\s+public\.(\w+)\([^)]*\)\s+to\s+(\w+)/gi)].map((m) => `${m[1]}:${m[2]}`).sort();
+    expect(granted).toEqual(["confirm_claim:authenticated", "reject_claim:authenticated"]);
+    for (const name of ["submit_claim", "claim_hit", "open_dues_oldest_first", "payment_claims_guard", "get_pay_page"]) {
+      expect(claimsMigration, name).toMatch(new RegExp(`revoke (?:all|execute) on function public\\.${name}\\([^)]*\\) from public, anon, authenticated;`));
+    }
+    expect(claimsMigration).not.toMatch(/to_jsonb\(\s*(s|s0|d|c|x)\s*\)|row_to_json|to_json\(\s*(s|s0|d|c|x)\s*\)/);
+  });
+
+  it("get_pay_page builds pending_claim from exactly amount and submitted_on", () => {
+    expect(claimsMigration).toMatch(/jsonb_build_object\('amount', c\.amount, 'submitted_on', to_char\(public\.india_day\(c\.created_at\), 'YYYY-MM-DD'\)\)/);
   });
 });
 
@@ -173,6 +208,37 @@ describe("with the default logger and across every status", () => {
     const printed = log.mock.calls.flat();
     expect(printed.length).toBe(cases.length);
     for (const word of printed) expect(WORDS.has(word as string), String(word)).toBe(true);
+    expect(err).not.toHaveBeenCalled();
+  });
+
+  it("submit-claim: console.log gets fixed words only, and no body repeats the token, the reference or the address", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const REF = "6281 0473 9915";
+    const words = new Set(["ok", "not_found", "rate_limited", "refused", "error"]);
+    const base: ClaimDeps = { ...common, hitIp: async () => true, hitToken: async () => true, submitClaim: async (t) => (t === TOKEN ? "ok" : "not_found") };
+    const cases: [string, ClaimDeps, unknown][] = [
+      ["200", base, { token: TOKEN, upi_ref: REF }],
+      ["409", { ...base, submitClaim: async () => "duplicate_reference" }, { token: TOKEN, upi_ref: REF }],
+      ["404", base, { token: "ZyXwVuTsRqPoNmLkJiHgFeDc", upi_ref: REF }],
+      ["404 malformed", base, { token: "bad", upi_ref: REF }],
+      ["422", base, { token: TOKEN, upi_ref: "123" }],
+      ["400", base, { token: TOKEN }],
+      ["429 ip", { ...base, hitIp: async () => false }, { token: TOKEN, upi_ref: REF }],
+      ["429 token", { ...base, hitToken: async () => false }, { token: TOKEN, upi_ref: REF }],
+      ["500", { ...base, submitClaim: async () => { throw new Error("secret " + TOKEN + IP + REF); } }, { token: TOKEN, upi_ref: REF }],
+    ];
+    for (const [name, deps, body] of cases) {
+      const res = await submitClaim(request("https://x.test/submit-claim", body), deps);
+      const text = await res.text();
+      for (const secret of [TOKEN, IP, "628104739915", REF]) {
+        expect(text, name).not.toContain(secret);
+        for (const [key, value] of res.headers) expect(value, `${name} header ${key}`).not.toContain(secret);
+      }
+    }
+    const printed = log.mock.calls.flat();
+    expect(printed.length).toBe(cases.length);
+    for (const word of printed) expect(words.has(word as string), String(word)).toBe(true);
     expect(err).not.toHaveBeenCalled();
   });
 
