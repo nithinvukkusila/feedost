@@ -47,7 +47,7 @@ Each can be reversed; none blocks Part A.
 10. **The inbox shows newest first, with the last 20 handled claims under "Earlier".** Older ones are not shown. A claim never expires on its own.
 11. **No push, no realtime, no polling.** The count on Home is read when Home loads and when the app comes back to the foreground.
 12. **Tutor screens need network** (no outbox before R1-12): offline, Confirm and Not received are refused with R1-7's message and nothing is saved. The parent's page also needs network and never queues.
-13. **Words:** parent-side words are in the `payPage` namespace and ship in all four languages like the rest of the page; tutor-side words are in a new `claims` namespace. English is final; hi, kn and te are `TODO-translate` until reviewed, and the parent never sees `TODO-translate` (R1-9 criterion 36 holds).
+13. **Words:** parent-side words are in the `payPage` namespace and ship in all four languages like the rest of the page; tutor-side words are in a new `claims` namespace. English is final; hi, kn and te are `TODO-translate` until reviewed, and the parent never sees `TODO-translate` (R1-9 criterion 36 holds). Since 2026-10-16 the claim sheet is English-only, like the rest of `/p/`, until a named person signs a language (`docs/specs/parent-pages-english.md`).
 14. **Screenshots (Part D):** JPEG, PNG or WebP, at most 2 MB, shrunk on the parent's phone to a longest side of 1280px before sending (this also drops location data). Shown to the tutor through a link that works for 60 seconds. Kept until the student or account is deleted (question 5).
 15. **Analytics:** none fires in this slice; see section 8.
 
@@ -267,7 +267,7 @@ Each has a default. Nothing blocks Part A. Questions 4 and 5 block releasing Par
 10. **A pending claim and the Pay button.** Default: the Pay button stays while a claim waits, because the claim might be wrong. The risk is a parent who paid and claims, then pays again. The pending note says what she told the tutor; it does not tell her to stop paying. Do you want the Pay button hidden while a claim is pending?
 11. **Fake claims.** A parent can enter any 12 digits, and a tutor in a hurry might confirm without checking. Default: the card says "Check your UPI app, then confirm." and nothing else. Is that enough for the first 5 tutors, or should Confirm ask once ("Did the money reach your UPI app?")? It would cost a tap.
 12. **Same reference, second tutor.** Default: references are unique per tutor, not across tutors. A parent who pays two tutors has two different references anyway. No action unless you disagree.
-13. **Parent words review.** Same gate as R1-9 question 5: who reviews hi, kn and te for the claim sheet, and is English on the sheet acceptable for a parent whose language is not reviewed? Default: English fallback with the language button; Hindi reviewed before production.
+13. **Parent words review.** Same gate as R1-9 question 5: who reviews hi, kn and te for the claim sheet, and is English on the sheet acceptable for a parent whose language is not reviewed? Default: English fallback with the language button; Hindi reviewed before production. **Answered 2026-10-16 (founder):** English only on the whole `/p/` page, claim sheet included, and no language button until a second language is signed. Hindi is no longer a release gate. See `docs/specs/parent-pages-english.md`.
 
 ## 13. Hand-off
 
