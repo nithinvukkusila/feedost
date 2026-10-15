@@ -4,7 +4,7 @@
 import { expect, test } from "@playwright/test";
 import { brand } from "../src/config/brand";
 import { fontsSettled, langs, messageText, type Lang } from "./helpers";
-import { FUNCTION_HOST, TOKEN, cancelled, link, okBody, paid, stubReceipt } from "./receipt-public-helpers";
+import { FUNCTION_HOST, TOKEN, cancelled, link, okBody, pageLink, paid, stubReceipt, unlockedLink } from "./receipt-public-helpers";
 
 const word = (lang: Lang, key: string) => messageText(lang, `receipt.${key}`);
 
@@ -12,8 +12,9 @@ test.describe("the receipt", () => {
   for (const lang of langs) {
     test(`criterion 28 and 31 [${lang}]: the page language is the receipt's, and the receipt is as drawn`, async ({ page }) => {
       await stubReceipt(page, okBody({ language: lang }));
-      // The address and the browser say English; the receipt says `lang`.
-      await page.goto(link());
+      // The address and the browser say English; the receipt says `lang`. hi, kn and te run on the fixture page, where a
+      // test fixture unlocks them: /r/ itself is English only until a person signs a language (spec parent-pages-english).
+      await page.goto(pageLink(lang));
       await fontsSettled(page);
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "ok");
@@ -82,7 +83,7 @@ test.describe("the receipt", () => {
   for (const lang of ["hi", "kn", "te"] as const) {
     test(`criterion 29 and 31 [${lang}]: a cancelled receipt reads in its own language`, async ({ page }) => {
       await stubReceipt(page, { status: 200, body: { code: "ok", receipt: { ...cancelled, language: lang } } });
-      await page.goto(link());
+      await page.goto(unlockedLink());
       await expect(page.locator("main")).toContainText(word(lang, "cancelled.title"));
       await expect(page.locator("main")).toContainText(word(lang, "stampCancelled"));
     });
@@ -161,7 +162,7 @@ test.describe("the other states", () => {
       const context = await browser.newContext({ locale: { hi: "hi-IN", kn: "kn-IN", te: "te-IN" }[lang] });
       const page = await context.newPage();
       await stubReceipt(page, { status: 404, body: { code: "not_found" } });
-      await page.goto(link());
+      await page.goto(unlockedLink());
       await expect(page.locator("main")).toContainText(word(lang, "notFound.title"));
       await context.close();
     });

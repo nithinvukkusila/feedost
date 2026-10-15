@@ -2,9 +2,11 @@
 // 80-character student name with no spaces, an 80-character tutor name, 8 subjects, a total of ₹10,00,000, 24 fee
 // lines, a Telugu tutor name and a Hindi student name: no sideways scroll, every control 44px (Pay 72px), nothing under
 // 14px, nothing cut with an ellipsis, the amount never cut, status a word plus a mark under grayscale.
+// English runs on /p/ itself; hi, kn and te on /dev/unlocked/p/, where a test fixture unlocks them (spec
+// parent-pages-english, criterion 10), so a sign-off never waits on a layout fix.
 import { expect, test } from "@playwright/test";
 import { box, fontsSettled, langs, sidewaysScroll, textProblems } from "./helpers";
-import { feeBody, link, notice, stubPayPage } from "./pay-page-helpers";
+import { feeBody, notice, pageLink, stubPayPage } from "./pay-page-helpers";
 
 const sizes = ["100%", "130%", "200%"] as const;
 const dues = Array.from({ length: 24 }, (_, i) => ({
@@ -44,7 +46,7 @@ for (const lang of langs) {
     test("the fee page with the longest of everything", async ({ page }) => {
       test.setTimeout(120_000);
       await stubPayPage(page, { pay: { status: 200, body: { code: "ok", page: { ...feeBody, ...heavy(lang) } } } });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "fee");
       await fontsSettled(page);
@@ -76,7 +78,7 @@ for (const lang of langs) {
     test("the consent screen with a Telugu tutor name and a Hindi student name", async ({ page }) => {
       test.setTimeout(90_000);
       await stubPayPage(page, { pay: notice({ language: lang, tutor_name: "మీనా అయ్యర్ ట్యూషన్స్", student_name: "रवि कुमार शर्मा", tutor_subjects: subjects }) });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "consent");
       await fontsSettled(page);
@@ -93,7 +95,7 @@ for (const lang of langs) {
 
     test("the long names on the consent screen wrap and the agree button stays reachable", async ({ page }) => {
       await stubPayPage(page, { pay: notice({ language: lang, tutor_name: "T".repeat(80), student_name: "S".repeat(80), tutor_subjects: subjects }) });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       await expect(page.locator("main")).toHaveAttribute("data-state", "consent");
       await fontsSettled(page);
       for (const size of sizes) {
@@ -107,7 +109,7 @@ for (const lang of langs) {
 
     test("the failure state with its button", async ({ page }) => {
       await stubPayPage(page, { pay: { status: 500, body: { code: "error" } } });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "failed");
       await fontsSettled(page);

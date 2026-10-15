@@ -2,9 +2,11 @@
 // an 80-character student name, a 60-character parent name and a seven-figure amount: no sideways scroll, the amount
 // never cut, every control 44px, nothing under 14px, nothing cut with an ellipsis. With the colour taken away the
 // status is still a word.
+// English runs on /r/ itself; hi, kn and te on /dev/unlocked/r/, where a test fixture unlocks them (spec
+// parent-pages-english, criterion 10).
 import { expect, test } from "@playwright/test";
 import { box, fontsSettled, langs, sidewaysScroll, textProblems } from "./helpers";
-import { link, okBody, stubReceipt } from "./receipt-public-helpers";
+import { link, okBody, pageLink, stubReceipt } from "./receipt-public-helpers";
 
 const LONG_STUDENT = "A".repeat(80);
 const LONG_PARENT = "Venkatasubrahmanyalakshminarasimha Rao-Naidu".repeat(1);
@@ -18,7 +20,7 @@ for (const lang of langs) {
         page,
         okBody({ language: lang, student_name: LONG_STUDENT, parent_name: LONG_PARENT, tutor_name: "T".repeat(60), amount: 123456700, balance_after: 99900000, status: "part_paid" }),
       );
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "ok");
       await fontsSettled(page);
@@ -42,7 +44,7 @@ for (const lang of langs) {
 
     test("the failure state with its button", async ({ page }) => {
       await stubReceipt(page, { status: 500, body: { code: "error" } });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "failed");
       await fontsSettled(page);

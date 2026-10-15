@@ -64,3 +64,12 @@ export const link = (token: string = TOKEN, slash = true) => `/p/${token}${slash
 
 /** The page's own words, for a language, as the message files have them (TODO-translate shows as English). */
 export { messageText } from "./helpers";
+
+/**
+ * The same page with hi, kn and te unlocked by a test fixture (spec parent-pages-english, criterion 10). /p/ itself
+ * shows English only until a person signs a language, so the layout and language tests of hi, kn and te run here.
+ */
+export const unlockedLink = (token: string = TOKEN) => `/dev/unlocked/p/?t=${token}`;
+
+/** English on the parent's own address; any other language on the fixture page. */
+export const pageLink = (lang: string, token: string = TOKEN) => (lang === "en" ? link(token) : unlockedLink(token));

@@ -4,11 +4,12 @@
 // the lateness of a fee around midnight in India under four device time zones. The functions are answered by page.route.
 import { expect, test, type Page } from "@playwright/test";
 import { box, fontsSettled, messageText as text, sidewaysScroll, textProblems } from "./helpers";
-import { feeBody, UPI_ID, TOKEN, consentOk, fee, link, notice, stubPayPage, PAY_URL } from "./pay-page-helpers";
+import { feeBody, UPI_ID, TOKEN, consentOk, fee, link, notice, stubPayPage, PAY_URL, unlockedLink } from "./pay-page-helpers";
 
-async function openFee(page: Page, change: Record<string, unknown> = {}) {
+// hi, kn and te run on the fixture page (`unlockedLink`): /p/ itself is English only until a person signs a language.
+async function openFee(page: Page, change: Record<string, unknown> = {}, address: string = link()) {
   const seen = await stubPayPage(page, { pay: fee(change) });
-  await page.goto(link());
+  await page.goto(address);
   await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
   return seen;
 }
@@ -449,7 +450,7 @@ test.describe("what is owed: an earlier balance, many fees, the cap", () => {
   });
 
   test("the language button changes the words of the Pay button and nothing in its link", async ({ page }) => {
-    await openFee(page);
+    await openFee(page, {}, unlockedLink());
     const pay = page.locator('main a[href^="upi://"]');
     const href = await pay.getAttribute("href");
     for (const [lang, own] of [["hi", "हिन्दी"], ["kn", "ಕನ್ನಡ"], ["te", "తెలుగు"], ["en", "English"]] as const) {
@@ -555,7 +556,7 @@ for (const lang of ["hi", "kn", "te"] as const) {
     for (const [kind, answer] of [["fee", fee(names)], ["consent", notice(names)]] as const) {
       await page.unrouteAll();
       await stubPayPage(page, { pay: answer });
-      await page.goto(link());
+      await page.goto(unlockedLink());
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", kind);
       await fontsSettled(page);
@@ -578,7 +579,7 @@ for (const lang of ["hi", "kn", "te"] as const) {
 for (const lang of ["hi", "kn", "te"] as const) {
   test(`[${lang}] a long tutor name leaves no text problem at 200% text (criterion 34)`, async ({ page }) => {
     await stubPayPage(page, { pay: fee({ tutor_name: long[lang].tutor, student_name: long[lang].student, tutor_subjects: long[lang].subjects, language: lang }) });
-    await page.goto(link());
+    await page.goto(unlockedLink());
     await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
     await fontsSettled(page);
     await page.evaluate(() => document.documentElement.style.setProperty("font-size", "200%"));

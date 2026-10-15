@@ -308,20 +308,28 @@ describe("the shape of ci.yml, gaps found by mutation (criteria 5, 14, 15, 34, 4
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
   });
 
-  it("the normal build looks for all four sentinels", () => {
+  it("the normal build looks for all five sentinels", () => {
     const normal = check.slice(at(check, "The dev-page sentinels"), at(check, "pnpm size"));
-    for (const s of ["Venkatasubrahmanyalakshminarasimharao", "Which Supabase does this build talk to?", "env-check-result", "banner-live-taps"]) {
+    // The last: the /dev/unlocked fixture pages (spec parent-pages-english, plan section 6, criterion 10).
+    for (const s of ["Venkatasubrahmanyalakshminarasimharao", "Which Supabase does this build talk to?", "env-check-result", "banner-live-taps", "Parent page with every language unlocked (test fixture)"]) {
       expect(normal, s).toContain(`grep -rqF "${s}"`);
     }
   });
 
-  it("the production build step sets VERCEL_ENV, refuses out/dev and all five sentinels, then scans for secrets", () => {
+  it("the production build step sets VERCEL_ENV, refuses out/dev and all six sentinels, then scans for secrets", () => {
     const production = check.slice(at(check, "Production build leaves out the dev routes"));
     expect(production).toContain("VERCEL_ENV=production pnpm build");
     expect(production).toContain("[ -e out/dev ]");
     const list = /for sentinel in (.*); do/.exec(production)?.[1] ?? "";
     expect(list.split('" "').map((s) => s.replace(/"/g, "")).sort()).toEqual(
-      ["Venkatasubrahmanyalakshminarasimharao", "banner-live-taps", "Which Supabase does this build talk to?", "env-check-result", "TODO-translate"].sort(),
+      [
+        "Venkatasubrahmanyalakshminarasimharao",
+        "banner-live-taps",
+        "Which Supabase does this build talk to?",
+        "env-check-result",
+        "Parent page with every language unlocked (test fixture)",
+        "TODO-translate",
+      ].sort(),
     );
     expect(production.indexOf("pnpm check:secrets")).toBeGreaterThan(production.indexOf("for sentinel in"));
     expect(production).toContain("exit 1");

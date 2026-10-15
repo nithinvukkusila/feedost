@@ -2,8 +2,10 @@
 
 // The parent's receipt page (spec R1-7 Part B, criteria 28 to 31; canvas "Receipt"). A static shell: the token is
 // read from the address in an effect, one POST asks the `receipt` function for that receipt, and the page shows
-// what comes back. The words of all four languages arrive as a prop; the receipt's own `language` picks one.
-// Before there is a receipt (opening, not found, too many tries, failed) the browser's preferred language is used.
+// what comes back. The words of the unlocked languages arrive as a prop (English, and each language a named person has
+// signed: spec parent-pages-english); the receipt's own `language` picks one if it is there, otherwise English.
+// Before there is a receipt (opening, not found, too many tries, failed) the browser's preferred language is used, by
+// the same gate.
 //
 // Nothing here is kept: no storage, no cookie, no analytics. The token lives only in the effect that sends it
 // (and again in the retry, which reads the address afresh); it is never rendered or put in the title.
@@ -16,8 +18,9 @@ import { brand } from "@/config/brand";
 import type { Locale } from "@/config/locales";
 import { amountFit } from "@/lib/amount-fit";
 import { formatDate, formatRupees } from "@/lib/format";
-import { fetchReceipt, tokenFromPath, type CancelledReceipt, type Outcome, type PaidReceipt } from "@/lib/receipt-public";
-import { browserLanguage, fill, monthLabel, parts, subjectsLine, type AllReceiptWords, type ReceiptWords } from "@/lib/receipt-words";
+import { wordsIn } from "@/lib/public-words";
+import { fetchReceipt, tokenFromLocation, type CancelledReceipt, type Outcome, type PaidReceipt, type TokenSource } from "@/lib/receipt-public";
+import { browserLanguage, fill, monthLabel, parts, shownLanguage, subjectsLine, type AllReceiptWords, type ReceiptWords } from "@/lib/receipt-words";
 
 type State = { kind: "loading" } | Outcome;
 
@@ -145,7 +148,11 @@ function Opening({ words }: Readonly<{ words: ReceiptWords }>) {
 
 const subscribeToNothing = () => () => {};
 
-export function PublicReceipt({ words }: Readonly<{ words: AllReceiptWords }>) {
+/**
+ * `tokenSource` is where the token is read: the path (`/r/{token}`, the parent's link) or `?t=` (only the /dev fixture
+ * page that carries every language for the layout tests).
+ */
+export function PublicReceipt({ words, tokenSource = "path" }: Readonly<{ words: AllReceiptWords; tokenSource?: TokenSource }>) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
   // The browser's preferred languages, read once the page is in the browser; English in the delivered HTML.
@@ -159,16 +166,17 @@ export function PublicReceipt({ words }: Readonly<{ words: AllReceiptWords }>) {
   useEffect(() => {
     const stop = new AbortController();
     // A fresh read of the address each time: nothing else holds the token. An address that cannot hold one asks nothing.
-    const token = tokenFromPath(window.location.pathname);
+    const token = tokenFromLocation(window.location, tokenSource);
     const outcome: Promise<Outcome> = token === null ? Promise.resolve({ kind: "not_found" }) : fetchReceipt(token, stop.signal);
     void outcome.then((result) => {
       if (!stop.signal.aborted) setState(result);
     });
     return () => stop.abort();
-  }, [attempt]);
+  }, [attempt, tokenSource]);
 
-  const language: Locale = state.kind === "ok" || state.kind === "cancelled" ? state.receipt.language : fallback;
-  const w = words[language];
+  // Only a language whose words are on the page can be shown; anything else (a locked language) is English.
+  const language: Locale = shownLanguage(words, state.kind === "ok" || state.kind === "cancelled" ? state.receipt.language : fallback);
+  const w = wordsIn(words, language);
 
   // The page's own language, for screen readers and for the script's font and line height.
   useEffect(() => {

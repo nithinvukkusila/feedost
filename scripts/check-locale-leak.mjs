@@ -9,6 +9,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
+import { RECORDS, unlockedFrom } from "./language-unlock.mjs";
 
 const OUT = "out";
 const locales = ["en", "hi", "kn", "te"];
@@ -227,22 +228,35 @@ for (const locale of locales) {
     console.log(`${address}: ${(page.htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${page.files.length - 1} scripts`);
   }
 }
-// Pages outside every language folder that carry the words of all four languages on purpose, because the
-// language is chosen at run time (the parent's receipt, spec R1-7 Part B, criterion 31). The exception is
-// narrow: only the values of the named namespace, taken out of the page's HTML and scripts before the search.
-// Everything else a language owns must still be absent, no language may be missing from the page, and no
-// TODO-translate marker may be on it (a parent never sees one).
+// Pages outside every language folder that carry the words of more than one language on purpose, because the
+// language is chosen at run time (the parent's receipt, spec R1-7 Part B, criterion 31). Since spec
+// parent-pages-english they carry English and each language unlocked for them (`surface`, the same rule the build
+// uses: scripts/language-unlock.mjs), and nothing of a locked language. The exception is narrow: only the values of
+// the named namespace of the unlocked languages, taken out of the page's HTML and scripts before the search. A locked
+// language's words left on the page are a leak, everything else a language owns must still be absent, every unlocked
+// language must be on the page, and no TODO-translate marker may be on it (a parent never sees one).
 // The parent's pay page (spec R1-9 Part B) is the same kind of page. It also borrows the receipt's month and subject
 // names, so `extra` lists exactly those keys of another namespace; no other `receipt` word may be on the page.
 const SHELLS = [
-  { path: "r/index.html", name: "parent receipt", namespace: "receipt" },
+  { path: "r/index.html", name: "parent receipt", namespace: "receipt", surface: "receipt" },
   {
     path: "p/index.html",
     name: "parent pay",
     namespace: "payPage",
+    surface: "payPage",
     extra: [{ namespace: "receipt", keys: ["months", "monthYear", "earlier", "subjects", "tuition"] }],
   },
 ];
+/** A file parsed, or null when it is missing or broken (i18n:check reports that; here it simply signs nothing). */
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
+}
+const rawMessages = Object.fromEntries(locales.map((locale) => [locale, readJson(join("messages", `${locale}.json`))]));
+const parentRecords = Object.fromEntries(Object.entries(RECORDS).map(([name, { file }]) => [name, readJson(file)]));
 for (const shell of SHELLS) {
   const file = join(OUT, shell.path);
   if (!existsSync(file)) {
@@ -252,6 +266,8 @@ for (const shell of SHELLS) {
   }
   pageCount += 1;
   const { files, htmlGzip } = filesOf(file);
+  const unlocked = unlockedFrom(shell.surface, { records: parentRecords, messages: rawMessages });
+  const locked = locales.filter((locale) => !unlocked.includes(locale));
   const own = {};
   const removable = new Set();
   for (const locale of locales) {
@@ -259,6 +275,7 @@ for (const shell of SHELLS) {
     const tree = all[shell.namespace] ?? {};
     const borrowed = (shell.extra ?? []).map((extra) => Object.fromEntries(extra.keys.map((key) => [key, (all[extra.namespace] ?? {})[key] ?? {}])));
     own[locale] = [tree, ...borrowed].flatMap((node) => leaves(node)).filter((value) => value.length >= MIN_LENGTH);
+    if (!unlocked.includes(locale)) continue; // a locked language's words are not taken out: found, they are a leak
     for (const value of own[locale]) for (const spelling of spellings(value)) removable.add(spelling);
   }
   const cut = [...removable].sort((a, b) => b.length - a.length);
@@ -272,21 +289,24 @@ for (const shell of SHELLS) {
     for (const locale of locales) {
       for (const value of unique[locale]) {
         if (has(searched, value)) {
-          console.error(`the ${shell.name} page loads a ${locale} message outside "${shell.namespace}": "${value}" is in ${f.name}`);
+          const why = locked.includes(locale) && own[locale].includes(value) ? `${locale} is locked for it, so its "${shell.namespace}" words must not ship` : `outside "${shell.namespace}"`;
+          console.error(`the ${shell.name} page loads a ${locale} message (${why}): "${value}" is in ${f.name}`);
           failed = true;
         }
       }
     }
   }
-  // The exception must be real: every language's own receipt words are on the page (not just English).
-  for (const locale of locales) {
+  // The exception must be real: every unlocked language's own words are on the page (English always).
+  for (const locale of unlocked) {
     const missing = own[locale].filter((value) => unique[locale].includes(value) || locale === "en").find((value) => !files.some((f) => has(f.text, value)));
     if (missing !== undefined) {
       console.error(`the ${shell.name} page does not carry the ${locale} words: "${missing}" is not in its HTML or scripts`);
       failed = true;
     }
   }
-  console.log(`/${shell.path}: ${(htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${files.length - 1} scripts, all four languages' ${shell.namespace} words`);
+  console.log(
+    `/${shell.path}: ${(htmlGzip / 1024).toFixed(1)} KB gzipped HTML, ${files.length - 1} scripts, ${shell.namespace} words of ${unlocked.join(", ")}${locked.length ? ` (locked, not shipped: ${locked.join(", ")})` : ""}`,
+  );
 }
 
 // Fail closed: if no page shows any of its own words, the search above proved nothing.

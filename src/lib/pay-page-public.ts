@@ -11,10 +11,25 @@ export const TIMEOUT_MS = 15_000;
 // 22 or more URL-safe characters (spec criterion 16). The top limit only keeps an absurd address from being sent.
 const TOKEN = /^[A-Za-z0-9_-]{22,128}$/;
 
+/** Whether `raw` has the shape of a pay-page token (22 to 128 URL-safe characters). */
+export function isToken(raw: string | null | undefined): raw is string {
+  return typeof raw === "string" && TOKEN.test(raw);
+}
+
 /** The token in `/p/{token}` or `/p/{token}/`; null when the address has none or it cannot be one (no request is made then). */
 export function tokenFromPath(pathname: string): string | null {
   const match = /^\/p\/([^/]+)\/?$/.exec(pathname);
-  return match && TOKEN.test(match[1]) ? match[1] : null;
+  return match && isToken(match[1]) ? match[1] : null;
+}
+
+/** Where a page reads its token: the address's path (`/p/{token}`), or `?t=` (only the /dev fixture page). */
+export type TokenSource = "path" | "query";
+
+/** The token of this address, read as `source` says; null when there is none or it cannot be one. */
+export function tokenFromLocation(location: Pick<Location, "pathname" | "search">, source: TokenSource = "path"): string | null {
+  if (source === "path") return tokenFromPath(location.pathname);
+  const raw = new URLSearchParams(location.search).get("t");
+  return isToken(raw) ? raw : null;
 }
 
 /** What is known before the parent agrees: the notice header, and nothing about money. */
