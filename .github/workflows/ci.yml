@@ -111,6 +111,8 @@ jobs:
         run: bash supabase/tests/concurrency/record_payment_concurrent.sh
       - name: Two consents and ten counter hits at the same moment (pay page)
         run: bash supabase/tests/concurrency/record_consent_concurrent.sh
+      - name: Two confirms, Confirm against Mark paid, two submissions at the same moment (claims)
+        run: bash supabase/tests/concurrency/confirm_claim_concurrent.sh
       - name: Stop the local stack
         if: always()
         run: pnpm db:stop

@@ -71,8 +71,8 @@ select is((select array_agg(k order by k collate "C") from jsonb_object_keys(pub
 select is(public.get_pay_page('GapBareNewToken_bbbbbbb')->'tutor_name', 'null'::jsonb, 'the tutor name is present as null');
 select is(public.get_pay_page('GapBareNewToken_bbbbbbb')->'tutor_subjects', '[]'::jsonb, 'no subjects is an empty list');
 select is((select array_agg(k order by k collate "C") from jsonb_object_keys(public.get_pay_page('GapBareToken_bbbbbbbbbbb')) k),
-  array['consent_needed','language','notice_version','open_dues','open_dues_more','receipts','receipts_more','student_name','today','total_remaining','tutor_name','tutor_subjects','upi_id'],
-  'a tutor with no UPI id: still exactly thirteen keys after consent');
+  array['consent_needed','language','notice_version','open_dues','open_dues_more','pending_claim','receipts','receipts_more','student_name','today','total_remaining','tutor_name','tutor_subjects','upi_id'],
+  'a tutor with no UPI id: still exactly fourteen keys after consent (R1-10: pending_claim added)');
 select is(public.get_pay_page('GapBareToken_bbbbbbbbbbb')->'upi_id', 'null'::jsonb, 'the UPI id is present as null (the page can tell there is none)');
 
 -- Definer functions fix their search path

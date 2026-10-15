@@ -394,6 +394,8 @@ WAITLIST_HASH_SALT = "local-dummy-salt-not-a-secret"
 RECEIPT_HASH_SALT = "local-dummy-receipt-salt-not-a-secret"
 # R1-9 A: a third salt for pay-page and record-consent, different from the other two. Dummy locally; real values are set per environment.
 PAYPAGE_HASH_SALT = "local-dummy-paypage-salt-not-a-secret"
+# R1-10 A: a fourth salt for submit-claim, different from the other three. Dummy locally; real values are set per environment.
+CLAIM_HASH_SALT = "local-dummy-claim-salt-not-a-secret"
 
 # The health function is public by design and answers one word.
 [functions.health]
@@ -413,6 +415,10 @@ verify_jwt = false
 
 # R1-9 A: the parent's agreement to the privacy notice, posted from the pay page with a token and no login. Exactly two body keys, rate limited.
 [functions.record-consent]
+verify_jwt = false
+
+# R1-10 A: the parent's "I've paid" claim, posted from the pay page with a token and no login. Exactly two body keys, rate limited, writes only through submit_claim.
+[functions.submit-claim]
 verify_jwt = false
 
 [analytics]
