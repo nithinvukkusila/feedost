@@ -178,8 +178,8 @@ Criteria referred to above: U1 the date shown is the earliest next due date over
 ## 6. Findings (filled in during the work)
 
 - B1: (staging check result, Case A or B)
-- F6a: (before numbers)
-- F6b: (after numbers, kept or reverted)
+- F6a: (before numbers) Measured on the staged e2e harness (production build with the CI fake host, signed-in fixture with 5 students, Chromium at 360px, CPU 4x slower, network 1.6 Mbps down / 750 kbps up / 150 ms, and 300 ms added to every answer from the data host; median of 5 cold loads of /en/home/). Not real staging: no staging credentials were available, so the region question (question 5) is not answered by these numbers. Milliseconds from navigation start: first data request (tutor row) 5,350; students read starts 5,694; dues function and dues read start 6,063; first dues row on screen 6,573. So the scripts and the client library take about 5.3 s to get to the first data request (the "Opening your book..." wait is mostly that), and the tutor-then-roster step costs about 350 ms (5 percent). Runs on the same build varied by about 1 s between sessions of the machine, so only back-to-back comparisons are used.
+- F6b: (after numbers, kept or reverted) Roster prefetch: DROPPED, not built. The chain it removes costs about 350 ms (one 300 ms round trip), under the 1 s trigger and under the keep rule (15 percent or 500 ms). Preconnect (`preconnect(supabaseUrl, { crossOrigin: "anonymous" })` in `app-gate.tsx`, emitted into the static HTML of app routes only; `anonymous` is needed because the library's reads are CORS fetches that cannot reuse a connection opened for credentialed requests): KEPT as the spec's low-risk change, but its saving is NOT measured: the harness answers the host from Playwright, so no DNS, TCP or TLS happens. Back-to-back builds without and with it: first row 6,573 vs 6,659 ms (no difference, as expected). Expected real saving is the connection set-up (about 2 to 3 round trips) hidden behind the 5 s of script download. Please confirm on a phone or staging (section 5 step 6) and revert the one commit if it does not show.
 
 ## 7. Sources read
 
