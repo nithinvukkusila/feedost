@@ -9,10 +9,12 @@ import {
   daysBetween,
   defaultTab,
   dueState,
+  earliestNextDue,
   indiaToday,
   monthMoves,
   monthParts,
   needsRead,
+  nextDueDate,
   shiftMonth,
 } from "./dues-board";
 import { formatRupees } from "./format";
@@ -292,5 +294,36 @@ describe("the board code does money and days only in whole numbers (36)", () => 
   it.each(files)("%s has no float, rounding, local-time getter or Intl", (file) => {
     const text = readFileSync(join(process.cwd(), file), "utf8").replace(/\/\/.*$/gm, "");
     expect(text).not.toMatch(/parseFloat|toFixed|Math\.round|Intl\.|toLocale|new Date|getFullYear|getMonth|getDate|getDay|getHours/);
+  });
+});
+
+describe("nextDueDate and earliestNextDue (UX-review-fixes, U1 and U2)", () => {
+  it("is this month when the due day is still ahead", () => {
+    expect(nextDueDate(20, "2026-10-14")).toBe("2026-10-20");
+  });
+  it("is next month when the due day is today, because today's due is already made", () => {
+    expect(nextDueDate(14, "2026-10-14")).toBe("2026-11-14");
+  });
+  it("is next month when the due day has passed", () => {
+    expect(nextDueDate(1, "2026-10-14")).toBe("2026-11-01");
+    expect(nextDueDate(4, "2026-10-14")).toBe("2026-11-04");
+  });
+  it("rolls the year from December", () => {
+    expect(nextDueDate(28, "2026-12-30")).toBe("2027-01-28");
+  });
+  it("handles due day 1 on the last day of a month", () => {
+    expect(nextDueDate(1, "2026-02-28")).toBe("2026-03-01");
+    expect(nextDueDate(1, "2026-12-31")).toBe("2027-01-01");
+  });
+  it("takes the soonest over active students with a fee, ignoring archived and fee 0", () => {
+    const list = [
+      student("a", "A", { dueDay: 4 }),
+      student("b", "B", { dueDay: 1 }),
+      student("c", "C", { dueDay: 20, active: false }),
+      student("d", "D", { dueDay: 15, monthlyFee: 0 }),
+    ];
+    expect(earliestNextDue(list, "2026-10-14")).toBe("2026-11-01");
+    expect(earliestNextDue([list[2], list[3]], "2026-10-14")).toBeNull();
+    expect(earliestNextDue([], "2026-10-14")).toBeNull();
   });
 });

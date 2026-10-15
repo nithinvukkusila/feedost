@@ -1,0 +1,19 @@
+Copyright (c) 2026 Nithin Vukkusila. All rights reserved.
+
+This source code is published so that it can be read. It is not open-source
+software. No licence is granted to copy, modify, distribute, sublicense,
+host, sell or use this code, or any part of it, in any other product or
+service, without the written permission of the copyright holder.
+
+You may view the code and run it locally for the sole purpose of evaluating it.
+
+The names "FeeDost" and the "Bahi-khata" visual design (colours, type roles,
+illustrations, copy) are part of the product and are not licensed for reuse.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
+USE OF THE SOFTWARE.
+
+Third-party packages keep their own licences (see package.json and the lockfile).

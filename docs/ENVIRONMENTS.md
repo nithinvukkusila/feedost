@@ -87,13 +87,14 @@ The free plan has no automatic backups. Before each production migration the fou
 - R0-4 adds one function secret, `WAITLIST_HASH_SALT` (a long random value, set with `supabase secrets set` on each project, never pasted into a chat or commit; locally a dummy in `supabase/config.toml`). `waitlist-join` is deployed with `verify_jwt` off; `config.toml` carries that. Not set or deployed yet.
 - R1-7 Part B adds `RECEIPT_HASH_SALT` for the `receipt` function: a long random value, a different one from `WAITLIST_HASH_SALT`, set with `supabase secrets set` on each project, never pasted into a chat or commit; locally a dummy in `supabase/config.toml`. `receipt` is deployed with `verify_jwt` off. Not set or deployed yet. Optional `RECEIPT_ALLOWED_HOSTS` overrides the allowed browser origins (same format as `WAITLIST_ALLOWED_HOSTS`).
 - R1-9 Part A adds `PAYPAGE_HASH_SALT` for the `pay-page` and `record-consent` functions: a long random value, different from `WAITLIST_HASH_SALT` and `RECEIPT_HASH_SALT`, set with `supabase secrets set` on each project, never pasted into a chat or commit; locally a dummy in `supabase/config.toml`. Both functions are deployed with `verify_jwt` off. Not set or deployed yet; until the secret is set both answer 500 on every call. Optional `PAYPAGE_ALLOWED_HOSTS` overrides the allowed browser origins (same format as `RECEIPT_ALLOWED_HOSTS`).
+- Temporary: `FEEDOST_STAGING_AS_PRODUCTION=1`, Vercel Production scope only, set by the founder; not a secret, not `NEXT_PUBLIC_`. See the section "Temporary: feedost.vercel.app". Remove at real launch.
 - The Vercel Development scope is not used. No variable is set per branch.
 - `.env.example` has placeholder names only. Its command-line-only block (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `VERCEL_AUTOMATION_BYPASS_SECRET`) is for your shell, never for Vercel.
 - The Vercel CLI is not installed. Agents cannot list deployments, read variables or deploy from the terminal. They use the GitHub pull request page for preview URLs. The founder uses the Vercel dashboard for anything else.
 
 ## Vercel previews and protection
 
-- Every branch except `main` builds as a Preview. `vercel.json` turns off auto-deploy for `main` only.
+- Every branch builds as a Preview, and since 2026-10-13 `main` auto-deploys too (see the temporary arrangement below). Before that, `vercel.json` turned off auto-deploy for `main` only.
 - Previews sit behind Vercel's login by default. That blocks `preprod-qa` and Playwright. The chosen answer is: keep Vercel Authentication on, and the founder creates a "Protection Bypass for Automation" secret. It is given to `preprod-qa` and `release-manager` for a test session as the shell variable `VERCEL_AUTOMATION_BYPASS_SECRET`.
 - Production is never behind that login.
 - The `/dev/components` and `/dev/supabase` pages exist in Preview and local builds only. A production build has neither.
@@ -133,6 +134,25 @@ On the free plan a project with no activity for about a week is paused. If `pnpm
 - **Vercel Preview variables:** added by the founder on 2026-10-11 (URL and the anon JWT key, type Config, Preview only).
 - **Build guard:** wired into `build` (`node scripts/check-build-env.mjs && next build`). It skips builds that are not on Vercel, stops a Preview build whose URL or key is missing or belongs to another project, and stops every Production build until a production ref is recorded. The key in use is an anon JWT, which the guard ties to the project; the gap for `sb_publishable_` keys (below) still stands and must be closed before one is used.
 - **Not done yet:** production (no project yet; `production.ref` stays null and `smoke:env production` fails on purpose).
+
+## Temporary: feedost.vercel.app runs `main` against STAGING (2026-10-13)
+
+The founder approved this on 2026-10-13. It is not a production release. No production Supabase project exists.
+
+- `https://feedost.vercel.app` serves every push to `main`. `vercel.json` no longer has `git.deploymentEnabled.main: false`. Rewrites and headers for `/p/*` and `/r/*` are unchanged.
+- That site is built in Vercel's Production scope, whose `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` the founder sets to the **staging** project's public values (ref `cujjgadbdqbxcsseogfx`). So it reads and writes staging data: made-up data only. Do not give it to real tutors.
+- **Build guard exception (2026-10-14, founder-approved).** `check:build-env` normally stops every Production build while `production.ref` is null. The narrow exception: a Production-scope build may point at the **staging** ref only when `FEEDOST_STAGING_AS_PRODUCTION` is exactly `1`. The founder sets that variable themself in Vercel, Production scope only (a plain, non-secret value). Everything else still fails: any other ref, a missing or malformed URL, a bad key, and any other value of the variable (`true`, `0`, empty, ` 1`). The exception ignores itself once a production ref is recorded in `supabase/environments.json`, so it cannot outlive launch. When it is used, the build log carries a `!!! WARNING ... PRODUCTION build uses the STAGING Supabase project ... !!!` line. Do not work around it by putting the staging ref in the `production` entry: the guard also rejects equal refs.
+- `pnpm smoke:env production` still fails on purpose (no production ref). Use `pnpm smoke:env staging` for this site.
+- Approvals do not change. The human alone approves running a migration on production and releasing to production. Deploying `main` to this site is not that approval and never runs a migration.
+
+### What must change at real launch
+
+1. Create the production Supabase project (Mumbai, `ap-south-1`) and record its ref in `supabase/environments.json` under `production`.
+2. Replace the Vercel Production-scope variables with the production URL and anon key. Staging values stay in Preview only.
+3. Delete `FEEDOST_STAGING_AS_PRODUCTION` from Vercel, then remove the exception from `scripts/check-build-env-lib.mjs` and its tests.
+4. Re-add gating so `main` does not go live without the founder's yes: either restore `git.deploymentEnabled.main: false` and use the deploy hook, or the staged-production fallback (see "How a production build is made").
+5. Set the function secrets, `APP_ENV=production`, and the production Auth URL settings; follow the release steps above, with the founder's yes.
+6. Update this page and the Vercel variable rows to remove this section.
 
 ## Verified and unverified today
 

@@ -40,6 +40,8 @@ export const textPairs: Pair[] = [
   { fg: "ink", bg: "highlight", use: "due tag" },
   { fg: "on-cloth", bg: "cloth", use: "text on cloth" },
   { fg: "on-cloth-soft", bg: "cloth", use: "secondary text on cloth" },
+  { fg: "on-cloth", bg: "cloth-deep", use: "landing text on the deep cloth (UX-review-fixes, item 7)" },
+  { fg: "on-cloth-soft", bg: "cloth-deep", use: "landing secondary text on the deep cloth (UX-review-fixes, item 7)" },
   { fg: "on-cloth", bg: "sheet-ground", use: "sheet context header" },
   // The five F2b components.
   { fg: "on-cloth", bg: "ink", use: "offline banner detail" },

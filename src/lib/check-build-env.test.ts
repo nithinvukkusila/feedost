@@ -219,3 +219,73 @@ describe("gaps found by mutation (criterion 32)", () => {
     expect(problems(good({ VERCEL_AUTOMATION_BYPASS_SECRET: "x", SUPABASE_DB_PASSWORD: "x", NEXT_PUBLIC_POSTHOG_KEY: "x" }))).toEqual([]);
   });
 });
+
+describe("temporary exception: staging as production (FEEDOST_STAGING_AS_PRODUCTION)", () => {
+  const noProd = { ...envs, production: { ref: null } };
+  const prodBuild = (extra: Record<string, string> = {}) => good({ VERCEL_ENV: "production", FEEDOST_STAGING_AS_PRODUCTION: "1", ...extra });
+  const result = (env: Record<string, string>, e: Envs = noProd) => {
+    const r = checkBuildEnv(env, e);
+    if (r.skipped) throw new Error("skipped");
+    return r;
+  };
+
+  it("allows a production build on the staging ref when the variable is exactly 1, with a loud warning", () => {
+    const r = result(prodBuild());
+    expect(r.problems).toEqual([]);
+    expect(r.warnings).toHaveLength(1);
+    expect(r.warnings[0]).toMatch(/WARNING.*PRODUCTION build uses the STAGING/);
+    expect(r.warnings[0]).not.toContain(STAGING);
+  });
+  it("without the variable, the old behaviour: production with a null ref fails", () => {
+    const env = good({ VERCEL_ENV: "production" });
+    expect(problems(env, noProd).join()).toMatch(/record the project ref first/);
+    expect(result(env).warnings).toEqual([]);
+  });
+  it("any value other than exactly 1 does not enable it", () => {
+    for (const v of ["0", "true", "yes", "", " 1", "1 ", "01", "TRUE"]) {
+      const out = problems(prodBuild({ FEEDOST_STAGING_AS_PRODUCTION: v }), noProd);
+      expect(out.join(), JSON.stringify(v)).toMatch(/record the project ref first/);
+    }
+  });
+  it("rejects any other ref, including a made-up one and the future production ref", () => {
+    for (const ref of [PROD, "zzzzzzzzzzzzzzzzzzzz"]) {
+      const out = problems(prodBuild({ NEXT_PUBLIC_SUPABASE_URL: `https://${ref}.supabase.co` }), noProd);
+      expect(out.join(), ref).toMatch(/not the staging project/);
+    }
+  });
+  it("rejects a missing, malformed or non-supabase URL", () => {
+    for (const url of ["", "not a url", "http://localhost:54321", `http://${STAGING}.supabase.co`, `https://${STAGING}.example.com`, "https://short.supabase.co"]) {
+      expect(problems(prodBuild({ NEXT_PUBLIC_SUPABASE_URL: url }), noProd).length, url).toBeGreaterThan(0);
+      expect(result(prodBuild({ NEXT_PUBLIC_SUPABASE_URL: url })).warnings, url).toEqual([]);
+    }
+  });
+  it("still checks the key and forbidden names, and gives no warning when it fails", () => {
+    const r = result(prodBuild({ NEXT_PUBLIC_SUPABASE_ANON_KEY: adminStyle }));
+    expect(r.problems.length).toBeGreaterThan(0);
+    expect(r.warnings).toEqual([]);
+    expect(problems(prodBuild({ [["NEXT_PUBLIC_DB", "SEC" + "RET"].join("_")]: "x" }), noProd).join()).toContain("must not exist");
+  });
+  it("needs a valid staging ref recorded", () => {
+    expect(problems(prodBuild(), { ...noProd, staging: { ref: null } }).join()).toMatch(/record the project ref first/);
+    expect(problems(prodBuild(), { ...noProd, staging: { ref: "nope" } }).join()).toMatch(/not a 20-character/);
+  });
+  it("expires by itself once a production ref is recorded: staging URL is then rejected", () => {
+    const out = result(prodBuild(), envs);
+    expect(out.problems.join()).toMatch(/not the production project/);
+    expect(out.warnings).toEqual([]);
+  });
+  it("does nothing for preview builds (no warning, staging rules as before)", () => {
+    const r = result(good({ FEEDOST_STAGING_AS_PRODUCTION: "1" }));
+    expect(r.problems).toEqual([]);
+    expect(r.warnings).toEqual([]);
+  });
+  it("the command exits 0 and prints the warning on stderr", () => {
+    const script = join(process.cwd(), "scripts", "check-build-env.mjs");
+    const r = spawnSync("node", [script], {
+      encoding: "utf8",
+      env: { PATH: process.env.PATH ?? "", NODE_ENV: "test", VERCEL: "1", VERCEL_ENV: "production", FEEDOST_STAGING_AS_PRODUCTION: "1", NEXT_PUBLIC_SUPABASE_URL: "https://cujjgadbdqbxcsseogfx.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: publishable },
+    });
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain("WARNING");
+  });
+});

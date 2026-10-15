@@ -29,7 +29,7 @@ export type StudentDraft = {
 
 export type FieldName = "name" | "parentName" | "phone" | "fee" | "owes" | "permission";
 /** The order the fields sit on the screen: the first one with an error is focused. */
-export const FIELD_ORDER: readonly FieldName[] = ["name", "parentName", "phone", "fee", "owes", "permission"];
+export const FIELD_ORDER: readonly FieldName[] = ["name", "parentName", "phone", "permission", "fee", "owes"];
 
 /** Keys under `students.state` (the tag beside the label) and `students.err` (the sentence beneath). */
 export type StateKey = "missing" | "tooLong" | "tooShort" | "checkNumber" | "checkAmount" | "wholeRupees" | "tooBig";

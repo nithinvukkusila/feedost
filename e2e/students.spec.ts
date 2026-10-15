@@ -72,9 +72,10 @@ test.describe("2, 3: the bottom navigation and Attendance", () => {
     await signedIn(page);
     await page.goto("/en/attendance/");
     await expect(page.locator("h1")).toHaveText("Attendance");
-    await expect(page.getByText("Attendance arrives in a later update.")).toBeVisible();
-    // Nothing but the four links of the navigation, and no button.
-    await expect(page.locator("a")).toHaveCount(4);
+    await expect(page.getByText("Attendance is not ready yet. Your students and fees work without it.")).toBeVisible();
+    // The four links of the navigation and the way back to Home.
+    await expect(page.locator("a")).toHaveCount(5);
+    await expect(page.getByRole("link", { name: "Back to Home" })).toHaveAttribute("href", "/en/home/");
     await expect(nav(page).getByRole("link")).toHaveCount(4);
     await expect(page.locator("button")).toHaveCount(0);
   });
@@ -241,6 +242,9 @@ test.describe("13 to 15: the home", () => {
     await page.goto("/en/home/");
     // R1-6 replaced the R1-3 filled home (the count, the monthly total, "See all students", the later line).
     await expect(page.locator("h1")).toHaveText("Nothing is due yet.");
+    // Today is 12 Oct; the soonest ahead is the 22nd, so the first fee is made on 22 Oct 2026 (UX-review-fixes, U1).
+    await expect(page.getByText("Your next fee comes in on 22 Oct 2026.")).toBeVisible();
+    await expect(page.getByText("add it under Already owes")).toBeVisible();
     await expect(page.getByRole("link", { name: "See your students" })).toHaveAttribute("href", "/en/students/");
     await expect(page.getByText("each month")).toHaveCount(0);
     await expect(page.getByRole("link", { name: "See all students" })).toHaveCount(0);
