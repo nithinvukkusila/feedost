@@ -1,16 +1,18 @@
 // Spec R1-9 Part C, criteria 43 and 44: "Show QR code" on the parent's pay page. The encoder is a separate chunk
 // fetched on the first tap; after that it works with the network off. Decoding the picture with a real UPI app is a
-// manual step (plan C10).
+// manual step (plan C10). English runs on /p/ itself; hi, kn and te on /dev/unlocked/p/, where a test fixture unlocks
+// them (spec parent-pages-english, criterion 10).
 import { expect, test, type Page } from "@playwright/test";
 import { box, fontsSettled, langs, sidewaysScroll, textProblems } from "./helpers";
-import { fee, link, stubPayPage, UPI_ID } from "./pay-page-helpers";
+import { fee, link, pageLink, stubPayPage, UPI_ID } from "./pay-page-helpers";
+import { QR_MIN_PX } from "../src/components/pay-page/qr-block";
 import { qrMatrix } from "../src/lib/qr";
 
 const PAY_LINK = `upi://pay?pa=${UPI_ID}&pn=Meena%20Iyer&am=3400.00&cu=INR&tn=Fees%20due%20Ravi`;
 
-async function openFee(page: Page, change: Record<string, unknown> = {}) {
+async function openFee(page: Page, change: Record<string, unknown> = {}, address: string = link()) {
   const seen = await stubPayPage(page, { pay: fee(change) });
-  await page.goto(link());
+  await page.goto(address);
   await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
   return seen;
 }
@@ -34,7 +36,8 @@ test.describe("Show QR code", () => {
     const svg = main.getByRole("img", { name: "Scan with a UPI app on another phone" });
     await expect(svg).toBeVisible();
     const size = await box(svg);
-    expect(size.width).toBeGreaterThanOrEqual(220);
+    expect(QR_MIN_PX).toBe(220);
+    expect(size.width).toBeGreaterThanOrEqual(QR_MIN_PX);
     expect(Math.abs(size.width - size.height)).toBeLessThan(2);
     // The same string as the Pay button, drawn by the same function.
     expect(await main.locator('a[href^="upi://"]').getAttribute("href")).toBe(PAY_LINK);
@@ -99,22 +102,28 @@ test.describe("Show QR code", () => {
   });
 });
 
+const sizes = ["100%", "130%", "200%"] as const;
+
 for (const lang of langs) {
   test(`the QR block at 360px and larger text in ${lang}`, async ({ page }) => {
-    await openFee(page, { language: lang, tutor_name: "T".repeat(80), upi_id: "a".repeat(40) + "@okhdfcbank" });
+    await openFee(page, { language: lang, tutor_name: "T".repeat(80), upi_id: "a".repeat(40) + "@okhdfcbank" }, pageLink(lang));
     const main = page.locator("main");
+    // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+    await expect(main).toHaveAttribute("lang", lang);
     await fontsSettled(page);
     await main.getByRole("button", { name: /QR|TODO/ }).first().scrollIntoViewIfNeeded();
-    await main.locator('button[aria-expanded]').click();
+    await main.locator("button[aria-expanded]").click();
     const svg = main.locator("[data-qr=drawn] svg");
     await expect(svg).toBeVisible();
-    for (const size of ["100%", "200%"]) {
+    for (const size of sizes) {
       await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
       await fontsSettled(page);
       expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
       const b = await box(svg);
-      // 220px at normal text. At 200% the page's own side margins double and the code takes the width that is left (204px measured).
-      expect(b.width, `QR width at ${size}`).toBeGreaterThanOrEqual(size === "100%" ? 220 : 200);
+      test.info().annotations.push({ type: "qr-size", description: `${lang} ${size}: ${String(b.width)}x${String(b.height)}` });
+      // At least QR_MIN_PX square at every text size (criterion 43, founder 2026-10-16), never cut by the screen edge.
+      expect(b.width, `QR width at ${size}`).toBeGreaterThanOrEqual(QR_MIN_PX);
+      expect(Math.abs(b.width - b.height), `QR square at ${size}`).toBeLessThan(2);
       expect(b.x).toBeGreaterThanOrEqual(0);
       expect(b.x + b.width).toBeLessThanOrEqual(360 + 1);
       for (const el of await main.locator("[data-qr] button:visible").all()) expect((await box(el)).height).toBeGreaterThanOrEqual(44);

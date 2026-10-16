@@ -2,6 +2,7 @@
 // and te "not reviewed"), every state of /p/{token} and /r/{token} shows only English words, whatever the student's
 // language or the browser's, with no language button and `lang="en"`. Names stay as saved, in any script, with
 // translate="no"; amounts and dates use 0-9 digits. The functions are answered by page.route, as in the other specs.
+// The QR code block (R1-9 Part C) is part of /p/ (spec section 3, S1): its words are English too, drawn and failed.
 import { expect, test, type Page } from "@playwright/test";
 import { fontsSettled, messageText as text } from "./helpers";
 import { fee, link as payLink, notice, stubPayPage } from "./pay-page-helpers";
@@ -79,6 +80,13 @@ test.describe("/p/ is English while only English is unlocked (criteria 1, 4 and 
       await expect(page.locator("main .type-amount")).toHaveText("₹3,400");
       await expect(page.locator("main")).toContainText("2026");
 
+      // The QR block, opened and closed: its words are English.
+      await page.locator("main").getByRole("button", { name: text("en", "payPage.qr") }).click();
+      await expect(page.locator("main [data-qr=drawn]")).toContainText(text("en", "payPage.qrHelp"));
+      await expectEnglish(page, "fee");
+      await page.locator("main [data-qr]").getByRole("button", { name: text("en", "payPage.qrClose") }).click();
+      await expect(page.locator("main [data-qr]")).toHaveCount(0);
+
       await page.locator("main").getByRole("button", { name: text("en", "payPage.consent.notice") }).click();
       await expectEnglish(page, "notice");
 
@@ -117,6 +125,11 @@ test.describe("/p/ is English while only English is unlocked (criteria 1, 4 and 
       test(`a ${lang} student's fee page is English too`, async ({ page }) => {
         await stubPayPage(page, { pay: fee({ ...names, language: lang }) });
         await page.goto(payLink());
+        await expectEnglish(page, "fee");
+        // The QR block when its code cannot be made: the failure line is English as well.
+        await page.route("**/_next/static/chunks/**", (route) => route.abort("failed"));
+        await page.locator("main").getByRole("button", { name: text("en", "payPage.qr") }).click();
+        await expect(page.locator("main [data-qr=failed]")).toContainText(text("en", "payPage.qrFailed"));
         await expectEnglish(page, "fee");
       });
     });
