@@ -4,7 +4,7 @@
 // never call `.from(...)`.
 //
 // Only the columns the database grants are ever sent, `tutor_id` never (the database fills it from the
-// session), and `pay_token` is never read. Every single-row write ends in `.select().single()`, so an
+// session), and `pay_token` is never read here (the Remind screen reads it with `pay-tokens.ts`; the roster does not). Every single-row write ends in `.select().single()`, so an
 // update that changed no row is an error, not silence.
 import { isLocale, type Locale } from "@/config/locales";
 import { getClient } from "./supabase";

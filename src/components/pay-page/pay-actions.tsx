@@ -2,7 +2,7 @@
 
 // Under the headline: the Pay button, what it does, and the fallbacks (spec R1-9 criteria 24 to 26). The Pay button is
 // a real link to `upi://pay?...` built on the parent's phone; it records nothing, because the page cannot know whether
-// the payment happened. Copy UPI ID is drawn only when the browser can copy. There is no QR button in Part B.
+// the payment happened. Copy UPI ID is drawn only when the browser can copy. The QR button sits with them, only where the Pay button does (Part C).
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { formatRupees } from "@/lib/format";
@@ -10,6 +10,7 @@ import type { PayArea } from "@/lib/pay-page-view";
 import type { PayPageWords } from "@/lib/pay-page-words";
 import { fill } from "@/lib/public-words";
 import { Filled } from "./filled";
+import { QrBlock } from "./qr-block";
 
 const subscribeToNothing = () => () => {};
 // Read in the browser only: the delivered HTML never has a Copy button.
@@ -65,6 +66,32 @@ const UpiId = ({ value }: Readonly<{ value: string }>) => (
   </span>
 );
 
+/** Opens the QR code of the Pay button's own link, under the buttons. Close puts the focus back on the button that opened it. */
+function QrArea({ href, upiId, words }: Readonly<{ href: string; upiId: string; words: PayPageWords }>) {
+  const [open, setOpen] = useState(false);
+  const opener = useRef<HTMLDivElement>(null);
+  return (
+    <>
+      <div ref={opener} className="pr-1.5">
+        <Button variant="outline" full aria-expanded={open} onClick={() => setOpen(true)}>
+          {words.qr}
+        </Button>
+      </div>
+      {open ? (
+        <QrBlock
+          text={href}
+          upiId={upiId}
+          words={words}
+          onClose={() => {
+            setOpen(false);
+            opener.current?.querySelector("button")?.focus();
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
 export function PayActions({ words, area, total }: Readonly<{ words: PayPageWords; area: PayArea; total: number }>) {
   const clipboard = useSyncExternalStore(subscribeToNothing, canCopy, () => false);
   if (area.kind === "nothing") return null;
@@ -95,14 +122,15 @@ export function PayActions({ words, area, total }: Readonly<{ words: PayPageWord
       <p className="type-body-sm mt-3.5 text-ink-soft wrap-anywhere">
         <Filled template={words.payNote} values={{ upiId: area.upiId }} classes={{ upiId: UPI_ID_CLASS }} />
       </p>
-      {clipboard ? (
-        <div className="mt-2.5 flex flex-col gap-1.5">
+      <div className="mt-2.5 flex flex-col gap-2.5">
+        {clipboard ? (
           <div className="pr-1.5">
             <CopyButton upiId={area.upiId} words={words} />
           </div>
-          <p className="type-caption text-ink-soft wrap-anywhere">{words.fallback}</p>
-        </div>
-      ) : null}
+        ) : null}
+        <QrArea href={area.href} upiId={area.upiId} words={words} />
+        {clipboard ? <p className="type-caption text-ink-soft wrap-anywhere">{words.fallback}</p> : null}
+      </div>
       <p className="type-body-sm mt-3 text-ink-soft wrap-anywhere">{words.paidAlready}</p>
     </div>
   );

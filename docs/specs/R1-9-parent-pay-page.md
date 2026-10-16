@@ -786,6 +786,7 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 6. In the tutor app, tap Remind on a student with a phone and a UPI ID: the message shows `https://feedost.vercel.app/p/...` and still the "Or pay to UPI ID" line; open WhatsApp: the same text arrives; open the link on the parent's phone: the pay page opens (after Part B is on production).
 7. Turn the network off and tap Remind: the message shows the old `upi://` link and nothing breaks (or the screen says it is offline, as before).
 8. Tap the link in the real WhatsApp message on a second phone: it opens the pay page, not an error. Do this against production before merging Part C (criterion 48).
+9. Scan the code at 200% text size with the longest Telugu tutor name: the code (at least 220px at that size) is not cut off, the name wraps, and the scan still works.
 
 ## C11. Open questions for the founder
 
@@ -796,6 +797,19 @@ Build gates: `pnpm size` (the `p/index.html` budget stays 151 KB; `home` stays 1
 **Starts first: `frontend-dev`, task 1 (add `uqr` 0.1.3 exactly, `pnpm audit --prod`, and `src/lib/qr.ts` with its fixture test), then tasks 2 to 4.**
 
 ---
+
+## Part C built (frontend-dev, 2026-10-13)
+
+- **Dependency:** `uqr` 0.1.3, exact. `pnpm audit --prod`: "No known vulnerabilities found" (run after adding it).
+- **Files:** `src/lib/{qr,pay-link,pay-tokens}.ts` (+ `qr.fixture.json`), `src/components/pay-page/{qr-block,pay-actions}.tsx`, `src/components/remind/{remind-run,remind-step}.tsx`, `payPage.{qr,qrHelp,qrFailed,qrClose}` in all four message files (hi, kn, te `TODO-translate`), `src/CLAUDE.md`, `students.ts` comment. Tests: unit beside each file, `e2e/pay-page-qr.spec.ts`, `e2e/qr-chunk.spec.ts`, `e2e/remind.spec.ts` (two new tests, one assertion updated), `pay-page.spec.ts` (the "no QR" line now asserts the button is there); after PR A, `pay-page-qr.spec.ts` runs hi, kn and te on `/dev/unlocked/p/` and `parent-english.spec.ts` also opens the QR block (drawn and failed) and finds it English.
+- **Bundle:** `/p/` 143.1 to 144.1 KB gzipped JS (budget 151 KB); 144.5 KB after merging `main` with PR A (2026-10-16); `remind` 169.1 to 169.6 KB; `home` 172.2 KB unchanged. The encoder is its own chunk, 10.2 KB raw and 3.8 KB gzipped, listed by no page (checked in `e2e/qr-chunk.spec.ts` and by a request recorder on the first tap).
+- **Deviations:**
+  1. `QR_TEXT_MAX` is 800, not 200 (plan C3). A tutor name in Hindi, Kannada or Telugu is percent-encoded at about 9 characters per letter, so a real link can pass 500 characters.
+  2. At 200% text size the QR was first 204px. After the founder's answer of 2026-10-16 it has a floor, `QR_MIN_PX = 220` (`qr-block.tsx`), so it is at least 220px square at every text size (measured sizes are in PR #25).
+  3. The QR block has no card around it (a card's padding doubled with the text size and shrank the code to 140px).
+  4. Remind waits for the token read (at most 5 seconds, then the raw UPI link) and shows "Loading…" (`common.loading`) meanwhile, so the preview never changes after it is shown. Offline, the read is skipped at once.
+  5. The QR button sits between Copy and the "UPI app did not open?" line; it shows even when the browser cannot copy.
+- **Not verified here:** decoding the code with a real UPI app (manual step 2 of C10), the real production pay page (criterion 48).
 
 ## Amendment 2026-10-16: English-only parent pages
 

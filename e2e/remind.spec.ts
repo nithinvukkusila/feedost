@@ -90,7 +90,7 @@ test.describe("2 to 4: the board's buttons", () => {
 test.describe("13 to 19, 24, 31: one reminder", () => {
   test("the screen, the tone, the link, the log and the return", async ({ page }) => {
     const others = watchOtherHosts(page, ORIGIN);
-    const { dues, rem } = await setup(page);
+    const { dues, rem, roster } = await setup(page);
     await page.goto("/en/home/");
     await remindBtn(page, "Ravi Kumar").click();
     await expect(page).toHaveURL(/\/en\/remind\/$/);
@@ -114,7 +114,12 @@ test.describe("13 to 19, 24, 31: one reminder", () => {
     const polite = await link.getAttribute("href");
     expect(polite).toMatch(/^https:\/\/wa\.me\/919876543210\?text=/);
     expect(decodeURIComponent(polite!.split("?text=")[1])).toBe((await messageText(page)).replace(/\n$/, ""));
-    expect(decodeURIComponent(polite!.split("?text=")[1])).toContain("am=1200.00");
+    // R1-9: the message carries the pay page's link, not the raw UPI link; the UPI ID line stays.
+    const sent = decodeURIComponent(polite!.split("?text=")[1]);
+    const ravi = roster.students.find((student) => student.id === R)!;
+    expect(sent).toContain(`https://feedost.vercel.app/p/${ravi.pay_token}`);
+    expect(sent).not.toContain("upi://");
+    expect(sent).toContain("@");
 
     // Polite to Firm: the message and the link change, and nothing is asked of the network.
     const before = rem.requests.length;
@@ -131,6 +136,8 @@ test.describe("13 to 19, 24, 31: one reminder", () => {
     expect(Object.keys(call).sort()).toEqual(["p_due", "p_request_id", "p_template"]);
     expect(call.p_due).toBe(dueOf(dues, R).id);
     expect(call.p_template).toBe("firm:hi:month");
+    // The pay token is read for the message only: it is not in the log call.
+    expect(JSON.stringify(rem.requests.map((r) => [r.path, r.body]))).not.toContain(ravi.pay_token);
 
     // Back from WhatsApp: the page was hidden, then it is visible.
     await hidden(page);
@@ -363,3 +370,34 @@ test.describe("20: layout", () => {
   }
 });
 void NOW;
+
+test.describe("R1-9 criteria 45 to 47: the pay-page link in the message", () => {
+  test("the token is read once, after the Remind screen opens, and the preview shows the pay page link", async ({ page }) => {
+    const { roster } = await setup(page);
+    await page.goto("/en/home/");
+    const reads = () => roster.requests.filter((r) => r.method === "GET" && r.query.includes("pay_token"));
+    expect(reads()).toHaveLength(0);
+    await remindBtn(page, "Ravi Kumar").click();
+    const ravi = roster.students.find((student) => student.id === R)!;
+    await expect(page.locator('[data-slot="link"]')).toHaveText(`https://feedost.vercel.app/p/${ravi.pay_token}`);
+    expect(reads()).toHaveLength(1);
+    expect(reads()[0].query).toContain("select=id%2Cpay_token");
+    await expect(page.getByText("Or pay to UPI ID").or(page.locator('[data-slot="upiId"]')).first()).toBeVisible();
+    const href = await openLink(page).getAttribute("href");
+    expect(decodeURIComponent(href!.split("?text=")[1])).toBe((await messageText(page)).replace(/\n$/, ""));
+  });
+
+  test("when the read fails the message carries the raw UPI link and nothing breaks", async ({ page }) => {
+    const { rem } = await setup(page);
+    await page.route(
+      (url) => url.origin === HOST && url.pathname === "/rest/v1/students" && url.search.includes("pay_token"),
+      (route) => route.fulfill({ status: 500, body: "{}", contentType: "application/json", headers: { "access-control-allow-origin": route.request().headers()["origin"] ?? "*" } }),
+    );
+    await page.goto("/en/home/");
+    await remindBtn(page, "Ravi Kumar").click();
+    await expect(page.locator('[data-slot="link"]')).toContainText("upi://pay?");
+    await expect(openLink(page)).toBeVisible();
+    await openLinkTapped(page);
+    await expect.poll(() => rem.calls().length).toBe(1);
+  });
+});

@@ -23,6 +23,7 @@ src/i18n/                      next-intl request config, message loading
 src/styles/                    design tokens, fonts and type roles (the only place hex values live)
 src/lib/                       supabase client, formatters, outbox, analytics
 src/lib/reminder/              the fee reminder: checks, UPI link, message, WhatsApp link, and its templates
+src/lib/qr.ts                  the only importer of `uqr` (loaded with `import()` when a QR is shown); `pay-link.ts` builds the pay-page address; `pay-tokens.ts` is the only tutor-side reader of `pay_token`
 src/config/brand.ts            product name and domain, the only place they appear
 src/config/locales.ts          the four languages and their own names, the only place they are listed
 ```

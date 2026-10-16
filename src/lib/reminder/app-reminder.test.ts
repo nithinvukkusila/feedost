@@ -1,6 +1,7 @@
 // The R0-2 builder as the app uses it (spec R1-8, criteria 5 to 12): earlier balance, a higher ceiling,
 // a ready-made link and `waLink`. The tool's own tests are in reminder.test.ts and are not changed.
 import { describe, expect, it } from "vitest";
+import { brand } from "@/config/brand";
 import { locales } from "@/config/locales";
 import { buildAppMessage, greetingName, parentWord } from "./app-message";
 import { APP_MAX_PAISE, checkAmount, MAX_PAISE, reminderParts, reminderText, upiLink, waLink } from "./reminder";
@@ -127,6 +128,33 @@ describe("buildAppMessage", () => {
     const m = buildAppMessage({ student: student(), due: monthly(), tutor, tone: "polite", link: "https://pay.example/t" });
     expect(m.link).toBe("https://pay.example/t");
     expect(m.text).not.toContain("upi://");
+  });
+
+  it("with the pay-page link: it is the {link}, the UPI ID line stays, and there is no name, product name or phone (R1-9 criterion 45)", () => {
+    const link = "https://feedost.vercel.app/p/abcdefghijklmnopqrstuv";
+    for (const locale of locales) {
+      for (const tone of ["polite", "firm"] as const) {
+        for (const due of [monthly(), opening()]) {
+          const m = buildAppMessage({ student: student({ parentLanguage: locale }), due, tutor, tone, link });
+          expect(m.link, `${locale} ${tone}`).toBe(link);
+          expect(m.text).toContain(link);
+          expect(m.text).not.toContain("upi://");
+          expect(m.text).toContain(tutor.upiId);
+          expect(m.text).not.toContain(brand.name);
+          expect(m.text).not.toMatch(/\+91|\d{10}/);
+          // Exactly the raw-link message with the link swapped: nothing else moved.
+          const raw = buildAppMessage({ student: student({ parentLanguage: locale }), due, tutor, tone });
+          expect(m.text).toBe(raw.text.replace(raw.link, link));
+        }
+      }
+    }
+  });
+
+  it("with a null link it is the raw UPI link message (R1-9 criterion 47)", () => {
+    const raw = buildAppMessage({ student: student(), due: monthly(), tutor, tone: "polite" });
+    const none = buildAppMessage({ student: student(), due: monthly(), tutor, tone: "polite", link: null });
+    expect(none.text).toBe(raw.text);
+    expect(none.link).toMatch(/^upi:\/\/pay\?/);
   });
 
   it("is never English for a Hindi, Kannada or Telugu parent (criterion 9)", () => {
