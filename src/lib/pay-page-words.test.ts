@@ -12,10 +12,12 @@ describe("pageWords", () => {
     const all = pageWords(await getAllWords("payPage"), await getAllWords("receipt"));
     expect(Object.keys(all)).toEqual([...locales]);
     for (const locale of locales) {
-      expect(Object.keys(all[locale])).toEqual(["pay", "receipt"]);
-      expect(Object.keys(all[locale].receipt).sort()).toEqual(["earlier", "monthYear", "months", "subjects", "tuition"]);
+      expect(Object.keys(all[locale]!)).toEqual(["pay", "receipt", "consentLang"]);
+      // Each language's consent lines are its own here; payPageWords sets "en" while the wording is a draft.
+      expect(all[locale]!.consentLang).toBe(locale);
+      expect(Object.keys(all[locale]!.receipt).sort()).toEqual(["earlier", "monthYear", "months", "subjects", "tuition"]);
     }
-    expect(monthLabel(all.hi.receipt, "2026-10-01")).toBe("अक्तूबर 2026");
+    expect(monthLabel(all.hi!.receipt, "2026-10-01")).toBe("अक्तूबर 2026");
     expect(monthLabel(all.en.receipt, "2026-10-01")).toBe("October 2026");
     expect(subjectsLine(all.en.receipt, ["maths", "Sanskrit"])).toBe("Maths, Sanskrit tuition");
   });

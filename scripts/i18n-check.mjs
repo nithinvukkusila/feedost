@@ -4,6 +4,7 @@
 // templates no native reader has signed off.
 import { existsSync, readFileSync } from "node:fs";
 import { check, checkAppTemplates, checkConsentWording, checkReviewRecord, checkTemplates, leafPaths, locales } from "./i18n-check-lib.mjs";
+import { RECORDS, SURFACES, lockedEverywhere, unlockedFrom } from "./language-unlock.mjs";
 
 const TEMPLATES = "src/lib/reminder/templates.json";
 const REVIEW = "src/lib/reminder/templates.review.json";
@@ -24,17 +25,35 @@ const COPY_KEYS = [
 ];
 
 // The parent's receipt page (spec R1-7 Part B, criterion 31): every word of the `receipt` namespace. A parent
-// reads these on a page a tutor sent them, so none may be a TODO-translate and each of hi, kn and te needs a
-// native reader's sign-off before release. The keys are read from en.json, so a new word is covered at once.
+// reads these on a page a tutor sent them. Like the pay page words (below), a word still marked TODO-translate cannot
+// be signed and its language stays locked, so the parent sees English; that is allowed (spec parent-pages-english,
+// plan section 2). The keys are read from en.json, so a new word is covered at once.
 const RECEIPT_REVIEW = "src/lib/receipt-words.review.json";
 // The parent's pay page (spec R1-9 Part B, criterion 40): every word of the `payPage` namespace, with the same rules as
 // the receipt words, plus a "consentWording" block for the privacy notice that only the founder can approve (questions
 // 3 and 5). A word still marked TODO-translate shows English to the parent, so it is allowed until release; `--strict`
-// (the release gate) fails on it, on any language not reviewed, and on wording not approved.
+// (the release gate) fails on it and on wording not approved.
 const PAYPAGE_REVIEW = "src/lib/pay-page-words.review.json";
+//
+// Both are parent records (spec parent-pages-english): a language not signed in them is locked, and every parent sees
+// English there. So "not reviewed" is not a release problem, and neither is a TODO-translate word of a parent page in a
+// locked language. A signature whose text changed since is a problem under --strict, and so is draft consent wording.
 
 const strict = process.argv.includes("--strict");
-const { problems, keyCount, todoCount } = check("messages", { strict });
+
+/** A file parsed, or null when it is missing or broken (the checks below report that). */
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return null;
+  }
+}
+const rawMessages = Object.fromEntries(locales.map((locale) => [locale, readJson(`messages/${locale}.json`)]));
+const parentRecords = Object.fromEntries(Object.entries(RECORDS).map(([name, { file }]) => [name, readJson(file)]));
+const unlocked = Object.fromEntries(Object.keys(SURFACES).map((surface) => [surface, unlockedFrom(surface, { records: parentRecords, messages: rawMessages })]));
+
+const { problems, keyCount, todoCount } = check("messages", { strict, skipTodo: lockedEverywhere(unlocked) });
 
 let templateSummary = "";
 if (existsSync(TEMPLATES)) {
@@ -76,7 +95,7 @@ if (existsSync(COPY_REVIEW)) {
 let receiptSummary = "";
 if (existsSync(RECEIPT_REVIEW)) {
   const keys = leafPaths(JSON.parse(readFileSync("messages/en.json", "utf8")).receipt ?? {}, "receipt");
-  const receipt = checkReviewRecord(RECEIPT_REVIEW, keys, { strict, label: "receipt-words.review.json", noun: "parent receipt word" });
+  const receipt = checkReviewRecord(RECEIPT_REVIEW, keys, { strict, label: "receipt-words.review.json", noun: "parent receipt word", todoAllowed: true, parent: true });
   problems.push(...receipt.problems);
   for (const note of receipt.notes) console.log(note);
   const waiting = receipt.notReviewed;
@@ -95,6 +114,7 @@ if (existsSync(PAYPAGE_REVIEW)) {
     noun: "pay page word",
     ignoreKeys: ["consentWording"],
     todoAllowed: true,
+    parent: true,
   });
   const wording = checkConsentWording(JSON.parse(readFileSync(PAYPAGE_REVIEW, "utf8")), { strict, label: "pay-page-words.review.json" });
   problems.push(...payPage.problems, ...wording.problems);
@@ -106,6 +126,11 @@ if (existsSync(PAYPAGE_REVIEW)) {
       : `; ${keys.length} pay page words, ${waiting.length} language${waiting.length === 1 ? "" : "s"} not reviewed (${waiting.join(", ")})`) +
     (wording.approved ? ", consent wording approved" : ", consent wording a draft");
 }
+
+// Which languages a parent can see on each parent page, from the same rule the pages are built with.
+const shown = Object.entries(SURFACES).map(([surface, { path }]) => `${path} ${unlocked[surface].join(", ")}`);
+const lockedAll = locales.filter((locale) => Object.keys(SURFACES).some((surface) => !unlocked[surface].includes(locale)));
+console.log(`parent pages: ${shown.join(" | ")}${lockedAll.length ? ` (locked: ${lockedAll.join(", ")})` : ""}`);
 
 for (const problem of problems) console.error(problem);
 if (problems.length) {

@@ -10,12 +10,14 @@
 // This is a convenience for the person, not security. The database's row-level security is the wall:
 // a signed-out visitor gets zero rows whatever this page draws.
 import { useLocale, useTranslations } from "next-intl";
+import { preconnect } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Locale } from "@/config/locales";
 import { localeHref, placePath, signInPath, type Place } from "@/config/routes";
 import { setNotice, signOut, useSession } from "@/lib/auth";
 import { nextRoute } from "@/lib/profile";
+import { supabaseUrl } from "@/lib/supabase-env";
 import { getTutor, syncLanguage, type Tutor } from "@/lib/tutor";
 import { LoadError } from "./load-error";
 import { LoadingBook } from "./loading-book";
@@ -55,6 +57,10 @@ export function placeOf(pathname: string, locale: Locale): Place {
 }
 
 export function AppGate({ children }: Readonly<{ children: ReactNode }>) {
+  // Open the connection to the data host (DNS, TCP, TLS) while the scripts are still downloading, so the
+  // first read does not pay for it. It sends no request and no data, so a signed-out visitor is unaffected.
+  // `anonymous` because the library's reads are cross-origin fetches, which use their own connection pool.
+  if (supabaseUrl) preconnect(supabaseUrl, { crossOrigin: "anonymous" });
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();

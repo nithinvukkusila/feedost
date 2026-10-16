@@ -10,6 +10,7 @@ src/app/[locale]/              /en/ /hi/ /kn/ /te/: the root layout, prerendered
 src/app/[locale]/(public)/     landing, tools (later slices)
 src/app/[locale]/(app)/        signed-in tutor app, client-rendered (later slices)
 src/app/dev/                   /dev/components, outside production builds (its own root layout)
+src/app/dev/unlocked/          /dev/unlocked/{p,r}/?t=: the parent pages with hi, kn, te unlocked by a test fixture (layout e2e only)
 src/app/r/                     /r/{token}: the parent's receipt, one static shell (its own root layout)
 src/app/p/                     /p/{token}: the parent's pay page, one static shell (its own root layout)
 src/app/join/                  static shell for the referral route (later slice)
@@ -32,6 +33,7 @@ There is no `src/app/layout.tsx`: there are five root layouts, `(jump)`, `[local
 ## Rules
 
 - This is a static export. No server actions, no route handlers, no `cookies()` or `headers()`, no dynamic rendering. Anything that needs a server is a Supabase Edge Function.
+- A parent surface's languages come from `src/lib/unlocked-languages.ts`; never list `locales` on `/p/`, `/r/` or in a parent PDF. A language shows there only once a named person has signed its review record (docs/specs/parent-pages-english.md).
 - Token pages (`/p`, `/r`, `/join`) are one static shell each. Read the token from `window.location`, then call the Edge Function. Do not add `generateStaticParams` for tokens.
 - Every string comes from `useTranslations` or, for a client island that needs only plain words, `getWords()` in the server page (see `src/i18n/words.ts`). If you type English inside JSX, it is a bug.
 - Money: keep paise as integers. Format only with `formatRupees()` from `src/lib/format.ts`. Dates only with `formatDate()`.

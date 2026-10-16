@@ -6,6 +6,7 @@
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
 import { StatusTag } from "@/components/ui/status-tag";
+import type { Locale } from "@/config/locales";
 import { amountFit } from "@/lib/amount-fit";
 import { formatDate, formatRupees } from "@/lib/format";
 import type { FeePage } from "@/lib/pay-page-public";
@@ -49,12 +50,14 @@ function Line({ words, monthWords, line }: Readonly<{ words: PayPageWords; month
 
 type Props = {
   words: PayPageWords;
+  /** The language of `words.consent` (see PageWords): the notice link carries it. */
+  consentLang: Locale;
   monthWords: MonthWords;
   page: FeePage;
   onOpenNotice: () => void;
 };
 
-export function FeeScreen({ words, monthWords, page, onOpenNotice }: Readonly<Props>) {
+export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice }: Readonly<Props>) {
   const area = payArea(page);
   const paidUp = page.totalRemaining === 0;
   const figures = formatRupees(page.totalRemaining);
@@ -99,7 +102,7 @@ export function FeeScreen({ words, monthWords, page, onOpenNotice }: Readonly<Pr
 
       <EarlierReceipts words={words} monthWords={monthWords} receipts={page.receipts} more={page.receiptsMore} />
 
-      <button type="button" onClick={onOpenNotice} className="type-control-sm flex min-h-tap items-center self-start underline ring:ground-ring">
+      <button type="button" lang={consentLang} onClick={onOpenNotice} className="type-control-sm flex min-h-tap items-center self-start underline ring:ground-ring">
         {words.consent.notice}
       </button>
     </div>

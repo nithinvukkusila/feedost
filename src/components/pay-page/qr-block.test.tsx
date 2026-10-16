@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 const page = (): FeePage => readPage({ code: "ok", page: feeBody }) as FeePage;
-const show = () => render(<FeeScreen words={en.payPage} monthWords={en.receipt} page={page()} onOpenNotice={() => {}} />);
+const show = () => render(<FeeScreen words={en.payPage} consentLang="en" monthWords={en.receipt} page={page()} onOpenNotice={() => {}} />);
 
 describe("Show QR code", () => {
   it("draws exactly the Pay button's link, with the words and the UPI ID under it", async () => {
@@ -44,7 +44,7 @@ describe("Show QR code", () => {
     vi.doMock("@/lib/qr", () => ({ qrMatrix: () => Promise.reject(new Error("no chunk")) }));
     vi.resetModules();
     const { FeeScreen: Fresh } = await import("./fee-screen");
-    render(<Fresh words={en.payPage} monthWords={en.receipt} page={page()} onOpenNotice={() => {}} />);
+    render(<Fresh words={en.payPage} consentLang="en" monthWords={en.receipt} page={page()} onOpenNotice={() => {}} />);
     await userEvent.click(screen.getByRole("button", { name: "Show QR code" }));
     await waitFor(() => expect(screen.getByText("Couldn't make the QR code. Use Copy UPI ID instead.")).toBeTruthy());
     expect(screen.getByRole("link", { name: /^Pay / })).toBeTruthy();
@@ -54,7 +54,7 @@ describe("Show QR code", () => {
 
   it("is not offered when there is nothing to pay, no UPI ID or too large a total", () => {
     for (const change of [{ totalRemaining: 0, openDues: [] }, { upiId: null }, { totalRemaining: 100_000_001 }] as Partial<FeePage>[]) {
-      render(<FeeScreen words={en.payPage} monthWords={en.receipt} page={{ ...page(), ...change }} onOpenNotice={() => {}} />);
+      render(<FeeScreen words={en.payPage} consentLang="en" monthWords={en.receipt} page={{ ...page(), ...change }} onOpenNotice={() => {}} />);
       expect(screen.queryByRole("button", { name: "Show QR code" })).toBeNull();
       cleanup();
     }

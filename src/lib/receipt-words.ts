@@ -1,17 +1,16 @@
-// The parent's receipt words (spec R1-7 Part B, criteria 28 and 31). The page ships the words of all four
-// languages and picks one at run time from the receipt's own `language`, because the address says nothing
+// The parent's receipt words (spec R1-7 Part B, criteria 28 and 31). The page ships the words of every unlocked
+// language (spec parent-pages-english: English, and each language a named person has signed) and picks one at run time from the receipt's own `language`, because the address says nothing
 // about it. The words hold plain text and `{name}` arguments; nothing parses them in the browser except the
 // small replace below (src/i18n/words.ts `getAllWords` is the one place that hands them over).
-import type { Locale } from "@/config/locales";
 import type en from "../../messages/en.json";
 import { PRESET_SUBJECTS } from "./receipt-public";
-import { fill } from "./public-words";
+import { fill, type UnlockedWords } from "./public-words";
 
 // The template helpers live in public-words.ts (shared with the pay page); re-exported so imports stay.
-export { browserLanguage, fill, parts, type Part } from "./public-words";
+export { browserLanguage, fill, parts, shownLanguage, wordsIn, type Part } from "./public-words";
 
 export type ReceiptWords = (typeof en)["receipt"];
-export type AllReceiptWords = Record<Locale, ReceiptWords>;
+export type AllReceiptWords = UnlockedWords<ReceiptWords>;
 
 /** The only receipt words `monthLabel` and `subjectsLine` read; the pay page (R1-9) ships just these, not the whole receipt. */
 export type MonthWords = Pick<ReceiptWords, "months" | "monthYear" | "earlier" | "subjects" | "tuition">;

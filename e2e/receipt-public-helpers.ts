@@ -73,3 +73,12 @@ export async function stubReceipt(page: Page, answer: Answer): Promise<Seen> {
 
 /** Opens a receipt link the way a parent would. */
 export const link = (token: string = TOKEN, slash = true) => `/r/${token}${slash ? "/" : ""}`;
+
+/**
+ * The same page with hi, kn and te unlocked by a test fixture (spec parent-pages-english, criterion 10). /r/ itself
+ * shows English only until a person signs a language, so the layout and language tests of hi, kn and te run here.
+ */
+export const unlockedLink = (token: string = TOKEN) => `/dev/unlocked/r/?t=${token}`;
+
+/** English on the parent's own address; any other language on the fixture page. */
+export const pageLink = (lang: string, token: string = TOKEN) => (lang === "en" ? link(token) : unlockedLink(token));

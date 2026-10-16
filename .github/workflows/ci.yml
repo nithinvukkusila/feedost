@@ -45,13 +45,15 @@ jobs:
           grep -rqF "Which Supabase does this build talk to?" out || { echo "the Supabase page sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
           grep -rqF "env-check-result" out/_next || { echo "the Supabase chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
           grep -rqF "banner-live-taps" out/_next || { echo "the chunk sentinel is not in a chunk of a normal build: it was renamed, so update this file"; exit 1; }
+          grep -rqF "Parent page with every language unlocked (test fixture)" out/dev/unlocked || { echo "the /dev/unlocked sentinel is not in a normal build: it was renamed, so update this file"; exit 1; }
       - run: pnpm check:404
       - run: pnpm size
       - run: pnpm check:leak
       - run: pnpm check:secrets
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
-      # Last, because it overwrites out/: a production build must not contain /dev/components.
+      # Last, because it overwrites out/: a production build must not contain /dev/components, /dev/supabase or
+      # /dev/unlocked (the parent pages with every language unlocked by a test fixture, spec parent-pages-english).
       - name: Production build leaves out the dev routes
         # The build must be there, the folder must be gone, and so must the page's own words and its
         # chunk's test id (a chunk could carry the page without the route).
@@ -62,7 +64,7 @@ jobs:
             echo "out/dev exists in a production build"
             exit 1
           fi
-          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "Which Supabase does this build talk to?" "env-check-result" "TODO-translate"; do
+          for sentinel in "Venkatasubrahmanyalakshminarasimharao" "banner-live-taps" "Which Supabase does this build talk to?" "env-check-result" "Parent page with every language unlocked (test fixture)" "TODO-translate"; do
             if grep -rqF "$sentinel" out; then
               echo "the production build must not contain this text: found $sentinel"
               exit 1
@@ -111,6 +113,8 @@ jobs:
         run: bash supabase/tests/concurrency/record_payment_concurrent.sh
       - name: Two consents and ten counter hits at the same moment (pay page)
         run: bash supabase/tests/concurrency/record_consent_concurrent.sh
+      - name: Two confirms, Confirm against Mark paid, two submissions at the same moment (claims)
+        run: bash supabase/tests/concurrency/confirm_claim_concurrent.sh
       - name: Stop the local stack
         if: always()
         run: pnpm db:stop

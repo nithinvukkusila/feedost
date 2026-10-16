@@ -9,6 +9,16 @@ const KEY = "ui-language";
 const saved = (page: import("@playwright/test").Page) => page.evaluate((k) => localStorage.getItem(k), KEY);
 const names: Record<Lang, string> = localeNames;
 
+/**
+ * Waits until React has hydrated a row, so its tap handler (the save) is attached. A row tapped before that is still a
+ * plain link: it loads the next page and saves nothing. On a slow runner the next page's scripts can land after the
+ * address has changed, which is how "each of the four saves its own code" once read "kn" where it expected "te".
+ */
+async function tappable(row: import("@playwright/test").Locator) {
+  await expect.poll(() => row.evaluate((el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")))).toBe(true);
+  return row;
+}
+
 for (const lang of langs) {
   test.describe(`/${lang}/language/`, () => {
     test(`1: lists the four endonyms, each row at least 64px high with its own lang, ${lang} marked Chosen in words`, async ({ page }) => {
@@ -70,7 +80,7 @@ test.describe("2: tapping a language", () => {
   test("saves it and the page reloads in that language", async ({ page }) => {
     await page.goto("/en/language/");
     expect(await saved(page)).toBeNull();
-    await page.locator('main ul a[lang="hi"]').click();
+    await (await tappable(page.locator('main ul a[lang="hi"]'))).click();
     await expect(page).toHaveURL(/\/hi\/language\/$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
     expect(await saved(page)).toBe("hi");
@@ -81,9 +91,9 @@ test.describe("2: tapping a language", () => {
   test("each of the four saves its own code", async ({ page }) => {
     await page.goto("/en/language/");
     for (const code of ["kn", "te", "en", "hi"] as const) {
-      await page.locator(`main ul a[lang="${code}"]`).click();
+      await (await tappable(page.locator(`main ul a[lang="${code}"]`))).click();
       await expect(page).toHaveURL(new RegExp(`/${code}/language/$`));
-      expect(await saved(page)).toBe(code);
+      await expect.poll(() => saved(page)).toBe(code);
     }
   });
 

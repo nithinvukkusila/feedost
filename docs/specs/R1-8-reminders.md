@@ -28,7 +28,7 @@ Each can be reversed. Nothing blocks.
 
 1. **Remind opens a screen, not WhatsApp directly.** Tap Remind, see the message and the tone, tap "Open WhatsApp" (the blue button). Two taps, and the tutor sees what will be sent. The same screen serves bulk (canvas `Remind`), so single remind is "Reminder 1 of 1". (Question 1.)
 2. **Tone is Polite or Firm, chosen on that screen. Starts Polite.** The choice is remembered while the tutor stays in the book (in memory, like R1-6's view). Not stored on the phone or the server; there is no tone column and none is added.
-3. **Message language is the student's `parent_language`** (R1-3). Not changed per send. To change it the tutor edits the student.
+3. **Message language is the student's `parent_language`** (R1-3). Not changed per send. To change it the tutor edits the student. (2026-10-16: the founder's English-only rule for parent pages does not cover this message. The tutor reads the whole message and sends it herself from her own WhatsApp. See `docs/specs/parent-pages-english.md`, section 3 and question 1.)
 4. **The message is the R0-2 template** for that tone and language, with its five placeholders. `{link}` is the UPI link built from the tutor's profile UPI ID and name, the remaining amount, and the fee's month. The plain UPI ID line stays.
 5. **Amount is what is still owed** on that fee (the amount minus what was part paid), not the full fee.
 6. **One reminder per fee per India day is the default.** A second tap the same day asks first, with a one-tap override.

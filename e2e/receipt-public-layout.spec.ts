@@ -2,25 +2,33 @@
 // an 80-character student name, a 60-character parent name and a seven-figure amount: no sideways scroll, the amount
 // never cut, every control 44px, nothing under 14px, nothing cut with an ellipsis. With the colour taken away the
 // status is still a word.
+// English runs on /r/ itself; hi, kn and te on /dev/unlocked/r/, where a test fixture unlocks them (spec
+// parent-pages-english, criterion 10).
 import { expect, test } from "@playwright/test";
 import { box, fontsSettled, langs, sidewaysScroll, textProblems } from "./helpers";
-import { link, okBody, stubReceipt } from "./receipt-public-helpers";
+import { link, okBody, pageLink, stubReceipt } from "./receipt-public-helpers";
 
 const LONG_STUDENT = "A".repeat(80);
 const LONG_PARENT = "Venkatasubrahmanyalakshminarasimha Rao-Naidu".repeat(1);
 const sizes = ["100%", "130%", "200%"] as const;
 
+// The browser's language too, so the states with no data (failed) are laid out in that language and not in English.
+const browserLocale = { en: "en-IN", hi: "hi-IN", kn: "kn-IN", te: "te-IN" } as const;
+
 for (const lang of langs) {
   test.describe(`/r/ in ${lang}`, () => {
+    test.use({ locale: browserLocale[lang] });
     test("the receipt", async ({ page }) => {
       test.setTimeout(90_000);
       await stubReceipt(
         page,
         okBody({ language: lang, student_name: LONG_STUDENT, parent_name: LONG_PARENT, tutor_name: "T".repeat(60), amount: 123456700, balance_after: 99900000, status: "part_paid" }),
       );
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "ok");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
       for (const size of sizes) {
@@ -42,9 +50,11 @@ for (const lang of langs) {
 
     test("the failure state with its button", async ({ page }) => {
       await stubReceipt(page, { status: 500, body: { code: "error" } });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "failed");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);

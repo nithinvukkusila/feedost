@@ -18,7 +18,7 @@ const DUE = { kind: "monthly", month: "2026-10-01", due_date: "2026-10-05", amou
 const RECEIPT = { receipt_no: 3, receipt_token: "RcptTokenAbCdEfGhIjKlMn", month: null, amount: 10000, paid_on: "2026-10-08", balance_after: 0 };
 const POST = {
   ...PRE, consent_needed: false, upi_id: "asha@okbank", today: "2026-10-12", total_remaining: 70000,
-  open_dues: [DUE], open_dues_more: 0, receipts: [RECEIPT], receipts_more: false,
+  open_dues: [DUE], open_dues_more: 0, receipts: [RECEIPT], receipts_more: false, pending_claim: null,
 };
 // Things the database must never send; if one ever leaked in, the allow-list must still drop it.
 const LEAK = { tutor_id: "t", student_id: "s", phone: "+919876543210", parent_phone: "+911234567890", email: "a@b.c", amount: 777700, pay_token: "x", id: "i" };
@@ -91,17 +91,17 @@ describe("a good token, before consent", () => {
 });
 
 describe("a good token, after consent", () => {
-  it("answers 200 with exactly the thirteen keys", async () => {
+  it("answers 200 with exactly the fourteen keys (R1-10 added pending_claim)", async () => {
     const { deps } = fake();
     const res = await handle(post({ token: TOKEN }), deps);
     expect(res.status).toBe(200);
     const page = await pageOf(res);
     expect(sorted(page)).toEqual([...POST_CONSENT_KEYS].sort());
-    expect(POST_CONSENT_KEYS).toHaveLength(13);
+    expect(POST_CONSENT_KEYS).toHaveLength(14);
     expect(page).toEqual(POST);
   });
 
-  it("a polluted row yields exactly thirteen keys, with nested objects copied to their six keys", async () => {
+  it("a polluted row yields exactly fourteen keys, with nested objects copied to their six keys", async () => {
     const dirty = {
       ...POST, ...LEAK, consent_needed: false,
       open_dues: [{ ...DUE, id: "d", due_id: "d", tutor_id: "t", student_id: "s" }],
@@ -128,6 +128,7 @@ describe("a good token, after consent", () => {
     expect(page.receipts_more).toBe(false);
     expect(page.upi_id).toBeNull();
     expect(page.tutor_subjects).toBeNull();
+    expect(page.pending_claim).toBeNull();
   });
 
   it("a total or count that is not a whole finite number is a 500, never 0", async () => {
@@ -139,6 +140,45 @@ describe("a good token, after consent", () => {
         expect(await res.text()).toBe('{"code":"error"}');
       }
     }
+  });
+
+  // R1-10 criterion 15: a waiting claim carries exactly amount and submitted_on and nothing else.
+  it("a waiting claim is copied to exactly amount and submitted_on, dropping anything else the row carries", async () => {
+    const claim = { amount: 90000, submitted_on: "2026-10-12", upi_ref: "628104739915", id: "c", status: "pending", screenshot_path: "t/x.png", student_id: "s" };
+    const { deps } = fake({ [TOKEN]: { ...POST, pending_claim: claim } });
+    const page = await pageOf(await handle(post({ token: TOKEN }), deps));
+    expect(page.pending_claim).toEqual({ amount: 90000, submitted_on: "2026-10-12" });
+    expect(JSON.stringify(page)).not.toMatch(/628104739915|screenshot|pending"|"id"|status/);
+  });
+
+  it("no claim, an absent key and a null are all null", async () => {
+    for (const row of [{ ...POST, pending_claim: null }, { ...POST, pending_claim: undefined }]) {
+      const { deps } = fake({ [TOKEN]: row });
+      expect((await pageOf(await handle(post({ token: TOKEN }), deps))).pending_claim).toBeNull();
+    }
+  });
+
+  it("a claim of a shape we do not know is a 500, never a guess", async () => {
+    const odd: unknown[] = [
+      "pending", 5, true, [], [{ amount: 1, submitted_on: "2026-10-12" }],
+      {}, { amount: 90000 }, { submitted_on: "2026-10-12" },
+      { amount: "90000", submitted_on: "2026-10-12" }, { amount: 0, submitted_on: "2026-10-12" }, { amount: -5, submitted_on: "2026-10-12" },
+      { amount: 1.5, submitted_on: "2026-10-12" }, { amount: Number.NaN, submitted_on: "2026-10-12" },
+      { amount: 90000, submitted_on: 20261012 }, { amount: 90000, submitted_on: "12 Oct 2026" }, { amount: 90000, submitted_on: null },
+    ];
+    for (const claim of odd) {
+      const { deps } = fake({ [TOKEN]: { ...POST, pending_claim: claim } });
+      const res = await handle(post({ token: TOKEN }), deps);
+      expect(res.status, JSON.stringify(claim)).toBe(500);
+      expect(await res.text()).toBe('{"code":"error"}');
+    }
+  });
+
+  it("before consent a claim in the row never appears", async () => {
+    const { deps } = fake({ [TOKEN]: { ...POST, consent_needed: true, pending_claim: { amount: 90000, submitted_on: "2026-10-12" } } });
+    const page = await pageOf(await handle(post({ token: TOKEN }), deps));
+    expect(page).not.toHaveProperty("pending_claim");
+    expect(sorted(page)).toEqual([...PRE_CONSENT_KEYS].sort());
   });
 
   it("a total above the 32-bit range passes through unchanged", async () => {

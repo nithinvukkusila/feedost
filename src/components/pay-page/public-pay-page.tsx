@@ -3,9 +3,10 @@
 // The parent's pay page (spec R1-9 Part B, criteria 16 to 36). A static shell: the token is read from the address in
 // an effect, one POST asks the `pay-page` function for the page, and the page shows what comes back. Before the parent
 // agrees the server sends only the notice header; "I agree" calls `record-consent` and then reads the page again.
-// The words of all four languages arrive as a prop; the student's own `language` picks one, and the language button
-// changes it for this visit only. Before there is a page (opening, not found, too many tries, failed) the browser's
-// preferred language is used.
+// The words of the unlocked languages arrive as a prop (English, and each language a named person has signed: spec
+// parent-pages-english); the student's own `language` picks one if it is there, otherwise English, and the language
+// button changes it for this visit only. The button is drawn only when more than English is there. Before there is a
+// page (opening, not found, too many tries, failed) the browser's preferred language is used, by the same gate.
 //
 // Nothing here is kept: no storage, no cookie, no analytics. The token lives only in the effect that sends it (and
 // again in the retry and the consent call, which read the address afresh); it is never rendered or put in the title.
@@ -16,12 +17,13 @@ import type { Locale } from "@/config/locales";
 import {
   fetchPayPage,
   postConsent,
-  tokenFromPath,
+  tokenFromLocation,
   type PageOutcome,
   type PayPageData,
+  type TokenSource,
 } from "@/lib/pay-page-public";
 import type { AllPageWords, PageWords } from "@/lib/pay-page-words";
-import { browserLanguage } from "@/lib/public-words";
+import { browserLanguage, languagesOf, shownLanguage, wordsIn } from "@/lib/public-words";
 import { subjectsLine } from "@/lib/receipt-words";
 import { ConsentScreen } from "./consent-screen";
 import { FeeScreen } from "./fee-screen";
@@ -61,7 +63,11 @@ function Opening({ words }: Readonly<{ words: PageWords["pay"] }>) {
   );
 }
 
-export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
+/**
+ * `tokenSource` is where the token is read: the path (`/p/{token}`, the parent's link) or `?t=` (only the /dev fixture
+ * page that carries every language for the layout tests).
+ */
+export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words: AllPageWords; tokenSource?: TokenSource }>) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [chosen, setChosen] = useState<Locale | null>(null);
@@ -81,17 +87,20 @@ export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
     const stop = new AbortController();
     leaving.current = stop;
     // A fresh read of the address each time: nothing else holds the token. An address that cannot hold one asks nothing.
-    const token = tokenFromPath(window.location.pathname);
+    const token = tokenFromLocation(window.location, tokenSource);
     const outcome: Promise<PageOutcome> = token === null ? Promise.resolve({ kind: "not_found" }) : fetchPayPage(token, stop.signal);
     void outcome.then((result) => {
       if (!stop.signal.aborted) setState(fromOutcome(result));
     });
     return () => stop.abort();
-  }, [attempt]);
+  }, [attempt, tokenSource]);
 
   const page = state.kind === "page" ? state.page : null;
-  const language: Locale = chosen ?? page?.language ?? fallback;
-  const w = words[language];
+  // Only a language whose words are on the page can be shown; anything else (a locked language) is English.
+  const language: Locale = shownLanguage(words, chosen ?? page?.language ?? fallback);
+  const w = wordsIn(words, language);
+  const choices = languagesOf(words);
+  const choose = useCallback((next: Locale) => setChosen(words[next] === undefined ? null : next), [words]);
 
   // The page's own language, for screen readers and for the script's font and line height.
   useEffect(() => {
@@ -110,7 +119,7 @@ export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
     const current = state.page;
     setState({ kind: "page", page: current, saving: "saving" });
     const signal = leaving.current?.signal;
-    const token = tokenFromPath(window.location.pathname);
+    const token = tokenFromLocation(window.location, tokenSource);
     if (token === null) {
       agreeing.current = false;
       setState({ kind: "not_found" });
@@ -134,7 +143,7 @@ export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
     if (signal?.aborted) return;
     agreeing.current = false;
     setState(fromOutcome(next));
-  }, [state]);
+  }, [state, tokenSource]);
 
   // The frame's header: the tutor, what they teach, and the language button once there is a page to be in a language.
   let header: ReactNode;
@@ -153,7 +162,9 @@ export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
           ...(subjects ? [subjects] : []),
           ...(asking ? [<Filled key="for" template={w.pay.for} values={{ student: page.studentName }} />] : []),
         ]}
-        action={<LanguageMenu current={language} onChoose={setChosen} title={w.pay.language} closeLabel={w.pay.consent.close} />}
+        action={
+          choices.length > 1 ? <LanguageMenu current={language} choices={choices} onChoose={choose} title={w.pay.language} closeLabel={w.pay.consent.close} /> : undefined
+        }
       />
     );
   }
@@ -166,14 +177,14 @@ export function PublicPayPage({ words }: Readonly<{ words: AllPageWords }>) {
   } else if (page && page.consentNeeded) {
     ground = "cloth";
     name = "consent";
-    body = <ConsentScreen mode="ask" words={w.pay} tutorName={page.tutorName} saving={state.kind === "page" ? state.saving : "idle"} onAgree={() => void agree()} />;
+    body = <ConsentScreen mode="ask" words={w.pay} lang={language} consentLang={w.consentLang} tutorName={page.tutorName} saving={state.kind === "page" ? state.saving : "idle"} onAgree={() => void agree()} />;
   } else if (page && view === "notice") {
     ground = "cloth";
     name = "notice";
-    body = <ConsentScreen mode="read" words={w.pay} tutorName={page.tutorName} onClose={() => setView("fee")} />;
+    body = <ConsentScreen mode="read" words={w.pay} lang={language} consentLang={w.consentLang} tutorName={page.tutorName} onClose={() => setView("fee")} />;
   } else if (page) {
     name = "fee";
-    body = <FeeScreen words={w.pay} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} />;
+    body = <FeeScreen words={w.pay} consentLang={w.consentLang} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} />;
   } else {
     // No page to show: only words that came with no tutor or child data.
     const states = w.pay.state;

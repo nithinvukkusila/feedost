@@ -16,9 +16,11 @@ export const LIMIT_PER_TOKEN_PER_HOUR = 120;
 export const PRE_CONSENT_KEYS = ["consent_needed", "notice_version", "tutor_name", "tutor_subjects", "student_name", "language"] as const;
 /** The only keys after consent. */
 export const POST_CONSENT_KEYS = [
-  ...PRE_CONSENT_KEYS, "upi_id", "today", "total_remaining", "open_dues", "open_dues_more", "receipts", "receipts_more",
+  ...PRE_CONSENT_KEYS, "upi_id", "today", "total_remaining", "open_dues", "open_dues_more", "receipts", "receipts_more", "pending_claim",
 ] as const;
 export const DUE_KEYS = ["kind", "month", "due_date", "amount", "amount_paid", "remaining"] as const;
+/** R1-10: a waiting claim shows only how much and on which India day, never the reference, file, id or status. */
+export const PENDING_CLAIM_KEYS = ["amount", "submitted_on"] as const;
 export const RECEIPT_KEYS = ["receipt_no", "receipt_token", "month", "amount", "paid_on", "balance_after"] as const;
 
 /** The text that is hashed, with a prefix so the pay-page counters never collide with record-consent's or any other function's. */
@@ -52,6 +54,17 @@ const list = (value: unknown, keys: readonly string[]) =>
 /** A missing count is 0. A present value that is not a whole finite number is NaN, which allowListed turns into a 500. */
 const whole = (value: unknown) => (value === undefined || value === null ? 0 : typeof value === "number" && Number.isInteger(value) ? value : Number.NaN);
 
+/** null for no claim; the two allowed keys for a well formed one; undefined for anything odd (the caller refuses the whole page). */
+function pendingClaim(value: unknown): Record<string, unknown> | null | undefined {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) return undefined;
+  const claim = copy(value as Record<string, unknown>, PENDING_CLAIM_KEYS);
+  const day = claim.submitted_on;
+  if (typeof claim.amount !== "number" || !Number.isInteger(claim.amount) || claim.amount < 1) return undefined;
+  if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return undefined;
+  return claim;
+}
+
 /**
  * Copies only the allowed keys, chosen by consent_needed. Returns null when consent_needed is not a boolean:
  * never guess the stricter or the looser state.
@@ -70,6 +83,10 @@ export function allowListed(row: Record<string, unknown>): Record<string, unknow
   if (!Number.isInteger(page.total_remaining) || !Number.isInteger(page.open_dues_more)) return null;
   page.receipts = list(row.receipts, RECEIPT_KEYS);
   page.receipts_more = row.receipts_more === true;
+  const claim = pendingClaim(row.pending_claim);
+  // Never show a claim the database did not send in a shape we know: refuse the page instead.
+  if (claim === undefined) return null;
+  page.pending_claim = claim;
   return page;
 }
 

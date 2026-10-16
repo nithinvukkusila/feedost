@@ -7,7 +7,7 @@
 -- security definer functions; the privilege checks use service_role, anon and the tutors.
 begin;
 select tests.assert_ready();
-select plan(108);
+select plan(114);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -166,11 +166,11 @@ select is((select tutor_id from public.consents where student_id = 'a1000000-000
 select is((select notice_version from public.consents where student_id = 'a1000000-0000-4000-8000-000000000002'), 'v1', 'the row holds the version');
 select is(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'consent_needed', 'true'::jsonb, 'a sibling consent does not count for Ravi');
 
--- After consent (Ravi): exactly 13 keys and fixed element keys
+-- After consent (Ravi): exactly 14 keys (R1-10 added pending_claim) and fixed element keys
 select is(public.record_consent('PayRaviToken_aaaaaaaaaa', 'v1'), 'ok', 'Ravi parent agrees');
 select is((select array_agg(k order by k collate "C") from jsonb_object_keys(public.get_pay_page('PayRaviToken_aaaaaaaaaa')) k),
-  array['consent_needed','language','notice_version','open_dues','open_dues_more','receipts','receipts_more','student_name','today','total_remaining','tutor_name','tutor_subjects','upi_id'],
-  'after consent the answer has exactly the thirteen keys');
+  array['consent_needed','language','notice_version','open_dues','open_dues_more','pending_claim','receipts','receipts_more','student_name','today','total_remaining','tutor_name','tutor_subjects','upi_id'],
+  'after consent the answer has exactly the fourteen keys (R1-10: pending_claim added)');
 select is((select array_agg(k order by k collate "C") from (select distinct k from jsonb_array_elements(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'open_dues') e, jsonb_object_keys(e) k) q),
   array['amount','amount_paid','due_date','kind','month','remaining'], 'each open due has exactly six keys');
 select is((select array_agg(k order by k collate "C") from (select distinct k from jsonb_array_elements(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'receipts') e, jsonb_object_keys(e) k) q),
@@ -216,8 +216,8 @@ select is(public.get_pay_page('PayRcptToken_aaaaaaaaaaa')#>>'{receipts,11,receip
 
 -- Nothing private in any answer, before or after consent
 select is((select count(*) from unnest(array['PayRaviToken_aaaaaaaaaa','PayMeenaToken_aaaaaaaaaa','PayManyToken_aaaaaaaaaaa','PayRcptToken_aaaaaaaaaaa','PayNoneToken_aaaaaaaaaaa','PayFreshToken_aaaaaaaaaa','PayPaidToken_aaaaaaaaaaa','PayBhanuToken_bbbbbbbbb']) t
-  where public.get_pay_page(t)::text ~* '(phone|email|tutor_id|student_id|due_id|payment_id|"id"|created_at|claim|reminder|plan|pay_token|parent|9876543210|9812345678|Sunita|Lata|example\.test|Pay[A-Za-z]+Token_)')::int,
-  0, 'no phone, parent, email, pay token, id name or claim, reminder or plan word appears in any answer');
+  where replace(public.get_pay_page(t)::text, '"pending_claim"', '') ~* '(phone|email|tutor_id|student_id|due_id|payment_id|"id"|created_at|claim|reminder|plan|pay_token|parent|9876543210|9812345678|Sunita|Lata|example\.test|Pay[A-Za-z]+Token_)')::int,
+  0, 'no phone, parent, email, pay token, id name or claim, reminder or plan word appears in any answer (R1-10: the one key pending_claim is the only claim word allowed)');
 select is((select count(*) from unnest(array['PayRaviToken_aaaaaaaaaa','PayMeenaToken_aaaaaaaaaa','PayManyToken_aaaaaaaaaaa','PayRcptToken_aaaaaaaaaaa','PayNoneToken_aaaaaaaaaaa','PayFreshToken_aaaaaaaaaa','PayPaidToken_aaaaaaaaaaa','PayBhanuToken_bbbbbbbbb']) t
   where public.get_pay_page(t)::text ~* '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')::int,
   0, 'no identifier of any kind (UUID shape) appears in any answer');
@@ -240,6 +240,18 @@ reset role;
 select is((select n from public.paypage_hits where key_hash = 'hash-a'), 6, 'the counter holds the number of calls');
 select is((select count(*) from public.paypage_hits where key_hash = 'old')::int, 0, 'a row more than a day old is removed by the next call');
 select is((select count(*) from public.receipt_hits where key_hash in ('hash-a', 'hash-b'))::int + (select count(*) from public.waitlist_hits where ip_hash in ('hash-a', 'hash-b'))::int, 0, 'pay page counts are kept apart from the receipt and waitlist counts');
+
+-- R1-10 criterion 15: pending_claim. One key after consent and none before; null, or an object with exactly amount and submitted_on.
+select is(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'pending_claim', 'null'::jsonb, 'with no claim waiting, pending_claim is present as null');
+insert into public.payment_claims (tutor_id, student_id, due_id, amount, fee_count, upi_ref) values
+  (tests.tutor_a(), 'a1000000-0000-4000-8000-000000000001', 'a2000000-0000-4000-8000-000000000003', 90000, 2, '628104739915'),
+  (tests.tutor_a(), 'a1000000-0000-4000-8000-000000000007', 'a2000000-0000-4000-8000-000000000005', 777700, 1, '111122223333');
+select is((select array_agg(k order by k collate "C") from jsonb_object_keys(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'pending_claim') k), array['amount','submitted_on'], 'a waiting claim shows exactly amount and submitted_on');
+select is(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'pending_claim', jsonb_build_object('amount', 90000, 'submitted_on', to_char(public.india_day(now()), 'YYYY-MM-DD')), 'with the claimed paise and the India day it was sent');
+select ok(replace(public.get_pay_page('PayRaviToken_aaaaaaaaaa')::text, '"pending_claim"', '') !~* '(628104739915|status|pending|confirmed|rejected|claim|screenshot)', 'the answer never carries the reference, status, id or screenshot of the claim');
+update public.payment_claims set status = 'rejected', handled_at = now() where student_id = 'a1000000-0000-4000-8000-000000000001';
+select is(public.get_pay_page('PayRaviToken_aaaaaaaaaa')->'pending_claim', 'null'::jsonb, 'a rejected claim shows nothing');
+select is(public.get_pay_page('PayFreshToken_aaaaaaaaaa')::text !~* 'claim', true, 'before consent a waiting claim does not appear (and the key is absent)');
 
 select * from finish();
 rollback;
