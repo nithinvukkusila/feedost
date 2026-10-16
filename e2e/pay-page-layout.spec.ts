@@ -6,7 +6,7 @@
 // parent-pages-english, criterion 10), so a sign-off never waits on a layout fix.
 import { expect, test } from "@playwright/test";
 import { box, fontsSettled, langs, sidewaysScroll, textProblems } from "./helpers";
-import { feeBody, notice, pageLink, stubPayPage } from "./pay-page-helpers";
+import { draftConsentLink, feeBody, notice, pageLink, stubPayPage } from "./pay-page-helpers";
 
 const sizes = ["100%", "130%", "200%"] as const;
 const dues = Array.from({ length: 24 }, (_, i) => ({
@@ -131,6 +131,47 @@ for (const lang of langs) {
         const retry = main.getByRole("button");
         expect((await box(retry)).height).toBeGreaterThanOrEqual(44);
         expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
+      }
+    });
+  });
+}
+
+// Spec parent-pages-english, criteria 4 and 10: a language signed while the consent wording is still a draft. The
+// consent screen and the notice link are English inside a hi, kn or te page, and say so with lang="en", so they are
+// laid out in the Latin face and line height while the rest of the page is in the language's own.
+for (const lang of ["hi", "kn", "te"] as const) {
+  test.describe(`/p/ in ${lang} with the consent wording a draft`, () => {
+    test.use({ locale: browserLocale[lang] });
+    test("the consent screen and the privacy notice: English lines marked en, at 100%, 130% and 200%", async ({ page }) => {
+      test.setTimeout(120_000);
+      await stubPayPage(page, {
+        pay: (call) => (call === 1 ? notice({ language: lang, tutor_name: "మీనా అయ్యర్ ట్యూషన్స్", student_name: "रवि कुमार शर्मा", tutor_subjects: subjects }) : { status: 200, body: { code: "ok", page: { ...feeBody, ...heavy(lang) } } }),
+      });
+      await page.goto(draftConsentLink());
+      const main = page.locator("main");
+      for (const state of ["consent", "notice"] as const) {
+        if (state === "notice") {
+          await main.locator("section button").first().click();
+          await expect(main).toHaveAttribute("data-state", "fee");
+          const link = main.locator('button[lang="en"]');
+          await expect(link).toHaveCount(1);
+          await link.click();
+        }
+        await expect(main).toHaveAttribute("data-state", state);
+        await expect(main).toHaveAttribute("lang", lang);
+        const section = main.locator("section[aria-labelledby=consent-title]");
+        await expect(section).toHaveAttribute("lang", "en");
+        await fontsSettled(page);
+        const heading = await section.locator("h1").evaluate((el) => getComputedStyle(el).fontFamily);
+        expect(heading, "the English heading is not in an Indic face").not.toMatch(/Anek (Devanagari|Kannada|Telugu)/i);
+        for (const size of sizes) {
+          await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
+          await fontsSettled(page);
+          expect(await sidewaysScroll(page), `${state}: sideways scroll at ${size}`).toBe(0);
+          for (const el of await main.locator("a:visible, button:visible").all()) expect((await box(el)).height, `${state}: control at ${size}`).toBeGreaterThanOrEqual(44);
+          expect(await textProblems(page, "main"), `${state}: text problems at ${size}`).toEqual([]);
+        }
+        await page.evaluate(() => document.documentElement.style.removeProperty("font-size"));
       }
     });
   });

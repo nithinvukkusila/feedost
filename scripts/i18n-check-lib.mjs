@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse, TYPE } from "@formatjs/icu-messageformat-parser";
-import { consentApproved, consentHashOf, copyHash, isSigned, leafPaths, locales } from "./language-unlock.mjs";
+import { FIXTURE_REVIEWER, consentApproved, consentHashOf, copyHash, isSigned, leafPaths, locales } from "./language-unlock.mjs";
 
 // The hash functions and the language list live in language-unlock.mjs (one copy for the check and the pages);
 // re-exported so every existing import keeps working.
@@ -162,6 +162,8 @@ const STATUSES = ["reviewed", "not reviewed"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const isText = (v) => typeof v === "string" && v.trim() !== "";
+/** The name the test fixture signs with (language-unlock.mjs): never a person, so never a sign-off in a real record. */
+const isFixture = (v) => typeof v === "string" && v.trim().toLowerCase() === FIXTURE_REVIEWER.toLowerCase();
 const count = (text, piece) => text.split(piece).length - 1;
 
 /** What a reviewer signs: a language's two templates and twelve month names, as the file stands. */
@@ -592,6 +594,9 @@ export function checkReviewRecord(
       if (!isText(entry.reviewer)) {
         problems.push(`${label} "${locale}" is marked reviewed with no reviewer's name`);
         complete = false;
+      } else if (isFixture(entry.reviewer)) {
+        problems.push(`${label} "${locale}" is signed by "${FIXTURE_REVIEWER}", the test fixture: only a named person can sign a language`);
+        complete = false;
       }
       if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
         problems.push(`${label} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
@@ -670,6 +675,9 @@ export function checkConsentWording(record, { strict = false, label = "pay-page-
     let complete = true;
     if (!isText(block.approvedBy)) {
       problems.push(`${label} "consentWording" is marked approved with no name in approvedBy`);
+      complete = false;
+    } else if (isFixture(block.approvedBy)) {
+      problems.push(`${label} "consentWording" is approved by "${FIXTURE_REVIEWER}", the test fixture: only the founder can approve it`);
       complete = false;
     }
     if (typeof block.date !== "string" || !DATE.test(block.date)) {

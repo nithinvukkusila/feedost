@@ -133,6 +133,8 @@ export function consentApproved(record, messages) {
 }
 
 const FIXTURE_DATE = "2026-10-16";
+/** The name signedFixture signs with. `i18n:check` refuses it in a real record, so a pasted fixture entry unlocks nothing. */
+export const FIXTURE_REVIEWER = "Test fixture";
 const unsigned = () => ({ status: "not reviewed", reviewer: "", date: "", sha256: "" });
 
 /**
@@ -153,13 +155,13 @@ export function signedFixture(surface, langs, { messages, consent = false }) {
     records[name] = {};
     for (const locale of locales.filter((l) => l !== "en")) {
       records[name][locale] = langs.includes(locale)
-        ? { status: "reviewed", reviewer: "Test fixture", date: FIXTURE_DATE, sha256: recordHash(name, locale, messages) ?? "" }
+        ? { status: "reviewed", reviewer: FIXTURE_REVIEWER, date: FIXTURE_DATE, sha256: recordHash(name, locale, messages) ?? "" }
         : unsigned();
     }
   }
   if (records.payPage) {
     records.payPage.consentWording = consent
-      ? { status: "approved", approvedBy: "Test fixture", date: FIXTURE_DATE, sha256: consentHashOf(messages) ?? "" }
+      ? { status: "approved", approvedBy: FIXTURE_REVIEWER, date: FIXTURE_DATE, sha256: consentHashOf(messages) ?? "" }
       : { status: "draft, not approved", approvedBy: "", date: "", sha256: "" };
   }
   return records;

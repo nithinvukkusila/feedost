@@ -48,6 +48,15 @@ async function expectNames(page: Page, saved: readonly string[]) {
   for (const name of saved) await expect(page.locator('main [translate="no"]', { hasText: name }).first()).toBeVisible();
 }
 
+test("the /dev/unlocked fixture pages, whose address holds a token, send no referrer and say noindex like /p/ and /r/", async ({ request }) => {
+  for (const path of ["/dev/unlocked/p/?t=Zx3k9Qw7LmN2pRtVb8YcAe", "/dev/unlocked/p-draft/?t=Zx3k9Qw7LmN2pRtVb8YcAe", "/dev/unlocked/r/?t=Zx3k9Qw7LmN2pRtVb8YcAe"]) {
+    const response = await request.get(path);
+    expect(response.status(), path).toBe(200);
+    expect(response.headers()["referrer-policy"], path).toBe("no-referrer");
+    expect(response.headers()["x-robots-tag"], path).toBe("noindex, nofollow");
+  }
+});
+
 test.describe("/p/ is English while only English is unlocked (criteria 1, 4 and 5)", () => {
   test("the shell itself holds no Hindi, Kannada or Telugu text", async ({ request }) => {
     const shell = await (await request.get(payLink())).text();

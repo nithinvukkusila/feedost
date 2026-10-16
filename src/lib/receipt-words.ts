@@ -7,7 +7,7 @@ import { PRESET_SUBJECTS } from "./receipt-public";
 import { fill, type UnlockedWords } from "./public-words";
 
 // The template helpers live in public-words.ts (shared with the pay page); re-exported so imports stay.
-export { browserLanguage, fill, parts, shownLanguage, type Part } from "./public-words";
+export { browserLanguage, fill, parts, shownLanguage, wordsIn, type Part } from "./public-words";
 
 export type ReceiptWords = (typeof en)["receipt"];
 export type AllReceiptWords = UnlockedWords<ReceiptWords>;

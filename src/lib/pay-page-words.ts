@@ -2,14 +2,20 @@
 // unlocked language (spec parent-pages-english: English, and each language a named person has signed) and picks one
 // at run time: the student's own `language`, or the parent's choice from the language button. The page also needs month and subject names; they are the receipt's (written once, never typed twice), so
 // only those keys of the `receipt` namespace travel with it.
+import type { Locale } from "@/config/locales";
 import type en from "../../messages/en.json";
 import { languagesOf, type UnlockedWords } from "./public-words";
 import type { MonthWords, ReceiptWords } from "./receipt-words";
 
 export type PayPageWords = (typeof en)["payPage"];
 
-/** One language's words for the page: its own, and the month and subject names it borrows from the receipt. */
-export type PageWords = { pay: PayPageWords; receipt: MonthWords };
+/**
+ * One language's words for the page: its own, and the month and subject names it borrows from the receipt.
+ * `consentLang` is the language `pay.consent` is written in: the page's own, or English while the founder has not
+ * approved the consent wording (spec parent-pages-english, section 3). The consent screen and the notice link carry
+ * it as their `lang`, so English lines inside a Hindi page are never drawn with Hindi's face or read in Hindi's voice.
+ */
+export type PageWords = { pay: PayPageWords; receipt: MonthWords; consentLang: Locale };
 export type AllPageWords = UnlockedWords<PageWords>;
 
 /** The month and subject words of a receipt namespace, and nothing else. */
@@ -26,7 +32,7 @@ export function pageWords(pay: UnlockedWords<PayPageWords>, receipt: UnlockedWor
     languagesOf(pay).map((locale) => {
       const own = receipt[locale];
       if (own === undefined) throw new RangeError(`${locale}: the pay page words are there but the receipt's are not`);
-      return [locale, { pay: pay[locale], receipt: monthWordsOf(own) }];
+      return [locale, { pay: pay[locale], receipt: monthWordsOf(own), consentLang: locale }];
     }),
   ) as AllPageWords;
 }

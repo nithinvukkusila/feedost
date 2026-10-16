@@ -29,5 +29,11 @@ const messages = { en: stripTodo(en), hi: stripTodo(hi), kn: stripTodo(kn), te: 
 /** The pay page with hi, kn and te signed and the consent wording approved, so its hi, kn and te consent text is laid out too. */
 export const payPageFixture: UnlockSource = { records: signedFixture("payPage", ["hi", "kn", "te"], { messages, consent: true }), messages };
 
+/**
+ * The pay page with hi, kn and te signed but the consent wording still a draft (the shipped state of R1-9 question 3):
+ * the consent screen and the notice link are English, marked lang="en", inside a hi, kn or te page.
+ */
+export const payPageDraftConsentFixture: UnlockSource = { records: signedFixture("payPage", ["hi", "kn", "te"], { messages }), messages };
+
 /** The receipt page with hi, kn and te signed. */
 export const receiptFixture: UnlockSource = { records: signedFixture("receipt", ["hi", "kn", "te"], { messages }), messages };

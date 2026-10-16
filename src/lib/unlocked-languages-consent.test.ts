@@ -48,11 +48,15 @@ describe("the consent lines of an unlocked language", () => {
     expect(words.hi?.pay.total).toBe(hi.payPage.total);
     expect(words.hi?.pay.total).not.toBe(en.payPage.total);
     expect(words.hi?.receipt.months).toEqual(hi.receipt.months);
+    // And the page knows the consent lines are English, so they carry lang="en" (criterion 4).
+    expect(words.hi?.consentLang).toBe("en");
+    expect(words.en.consentLang).toBe("en");
   });
 
   it("are the language's own once the founder approves the wording as it stands", async () => {
     const words = await payPageWords({ records: signedFixture("payPage", ["hi"], { messages, consent: true }), messages });
     expect(words.hi?.pay.consent.title).toBe("हिन्दी सहमति title");
+    expect(words.hi?.consentLang).toBe("hi");
     expect(words.en.pay.consent.title).toBe(en.payPage.consent.title);
   });
 

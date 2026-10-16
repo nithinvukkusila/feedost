@@ -188,7 +188,7 @@ describe(".env.example and .gitignore (criteria 28 and 29)", () => {
 });
 
 describe("vercel.json (criterion 36)", () => {
-  it("routes /r/{token} and /p/{token} to their shells, with no referrer and noindex, and no longer turns off auto-deploy for main (temporary, 2026-10-13)", () => {
+  it("routes /r/{token} and /p/{token} to their shells, with no referrer and noindex there and on /dev/unlocked, and no longer turns off auto-deploy for main (temporary, 2026-10-13)", () => {
     expect(JSON.parse(read("vercel.json"))).toEqual({
       $schema: "https://openapi.vercel.sh/vercel.json",
       // The only production routing the app has: the receipt (R1-7 Part B) and the pay page (R1-9 Part B). /join/* arrives with R1-13.
@@ -208,6 +208,15 @@ describe("vercel.json (criterion 36)", () => {
         },
         {
           source: "/p/(.*)",
+          headers: [
+            { key: "Referrer-Policy", value: "no-referrer" },
+            { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          ],
+        },
+        // The /dev fixture pages that render /p/ and /r/ with every language unlocked (spec parent-pages-english); their
+        // address holds a token too. Absent from production builds; on previews they get the same headers.
+        {
+          source: "/dev/unlocked/(.*)",
           headers: [
             { key: "Referrer-Policy", value: "no-referrer" },
             { key: "X-Robots-Tag", value: "noindex, nofollow" },

@@ -25,8 +25,9 @@ const COPY_KEYS = [
 ];
 
 // The parent's receipt page (spec R1-7 Part B, criterion 31): every word of the `receipt` namespace. A parent
-// reads these on a page a tutor sent them, so none may be a TODO-translate and each of hi, kn and te needs a
-// native reader's sign-off before release. The keys are read from en.json, so a new word is covered at once.
+// reads these on a page a tutor sent them. Like the pay page words (below), a word still marked TODO-translate cannot
+// be signed and its language stays locked, so the parent sees English; that is allowed (spec parent-pages-english,
+// plan section 2). The keys are read from en.json, so a new word is covered at once.
 const RECEIPT_REVIEW = "src/lib/receipt-words.review.json";
 // The parent's pay page (spec R1-9 Part B, criterion 40): every word of the `payPage` namespace, with the same rules as
 // the receipt words, plus a "consentWording" block for the privacy notice that only the founder can approve (questions
@@ -94,7 +95,7 @@ if (existsSync(COPY_REVIEW)) {
 let receiptSummary = "";
 if (existsSync(RECEIPT_REVIEW)) {
   const keys = leafPaths(JSON.parse(readFileSync("messages/en.json", "utf8")).receipt ?? {}, "receipt");
-  const receipt = checkReviewRecord(RECEIPT_REVIEW, keys, { strict, label: "receipt-words.review.json", noun: "parent receipt word", parent: true });
+  const receipt = checkReviewRecord(RECEIPT_REVIEW, keys, { strict, label: "receipt-words.review.json", noun: "parent receipt word", todoAllowed: true, parent: true });
   problems.push(...receipt.problems);
   for (const note of receipt.notes) console.log(note);
   const waiting = receipt.notReviewed;

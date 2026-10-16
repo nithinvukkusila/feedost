@@ -7,7 +7,12 @@
 //
 // `ask` has the agree button and "Asked only once". `read` is the same notice reopened from the fee page: a Close
 // button and nothing to agree to.
+//
+// `consentLang` is the language of `words.consent` (English while the founder has not approved the wording, spec
+// parent-pages-english); the section carries it. `lang` is the page's, for the two words here that are not consent
+// words: "your tutor" when there is no name, and Try again.
 import { Button } from "@/components/ui/button";
+import type { Locale } from "@/config/locales";
 import type { PayPageWords } from "@/lib/pay-page-words";
 import { Filled } from "./filled";
 
@@ -26,21 +31,25 @@ function Mark({ kind }: Readonly<{ kind: "kept" | "never" }>) {
 type Props = {
   words: PayPageWords;
   tutorName: string | null;
+  lang: Locale;
+  consentLang: Locale;
 } & (
   | { mode: "ask"; saving: "idle" | "saving" | "failed"; onAgree: () => void }
   | { mode: "read"; onClose: () => void }
 );
 
 export function ConsentScreen(props: Readonly<Props>) {
-  const { words, tutorName } = props;
+  const { words, tutorName, lang, consentLang } = props;
   const c = words.consent;
+  // Only set where it differs from what is around it, so the markup is unchanged while both are the same.
+  const own = lang === consentLang ? undefined : lang;
   return (
-    <section aria-labelledby="consent-title" className="on-paper-ground flex flex-col gap-4 border-t-2 border-ink bg-slip px-5 py-5.5 text-ink">
+    <section aria-labelledby="consent-title" lang={consentLang} className="on-paper-ground flex flex-col gap-4 border-t-2 border-ink bg-slip px-5 py-5.5 text-ink">
       <h1 id="consent-title" className="type-headline text-3xl wrap-anywhere">
         {c.title}
       </h1>
       <p className="type-body text-ink-soft wrap-anywhere">
-        <Filled template={c.intro} values={{ tutor: tutorName ?? words.yourTutor }} />
+        <Filled template={c.intro} values={{ tutor: tutorName ?? words.yourTutor }} langs={tutorName === null && own ? { tutor: own } : {}} />
       </p>
 
       <ul className="border-t-2 border-ink">
@@ -76,7 +85,7 @@ export function ConsentScreen(props: Readonly<Props>) {
           {props.saving === "failed" ? (
             <div role="alert" className="flex flex-col gap-2">
               <p className="type-body-sm font-bold text-ink wrap-anywhere">{c.failed}</p>
-              <Button variant="outline" full onClick={props.onAgree}>
+              <Button variant="outline" full lang={own} onClick={props.onAgree}>
                 {words.state.retry}
               </Button>
             </div>

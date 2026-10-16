@@ -180,6 +180,47 @@ describe("checkReviewRecord for a parent record (parent: true)", () => {
   });
 });
 
+describe("the test fixture's name (signedFixture) is never a sign-off in a real record", () => {
+  it("refuses a language signed by Test fixture, even with the right hash, and keeps it locked", () => {
+    const hash = copyHash({ payPage: { a: "ए", b: "बी" } }, KEYS);
+    for (const reviewer of ["Test fixture", " test FIXTURE "]) {
+      const { dir, file } = setup({ ...record, hi: { status: "reviewed", reviewer, date: "2026-10-16", sha256: hash } }, { a: "ए", b: "बी" });
+      const result = checkReviewRecord(file, KEYS, { messagesDir: dir, ignoreKeys: ["consentWording"], todoAllowed: true, parent: true, label: "pay-page-words.review.json" });
+      expect(result.problems).toEqual(['pay-page-words.review.json "hi" is signed by "Test fixture", the test fixture: only a named person can sign a language']);
+      expect(result.notReviewed).toContain("hi");
+    }
+  });
+
+  it("refuses consent wording approved by Test fixture", () => {
+    const { dir } = consentDir("Agree");
+    const sha256 = consentHash(dir) ?? "";
+    const result = checkConsentWording({ consentWording: { status: "approved", approvedBy: "Test fixture", date: "2026-10-16", sha256 } }, { messagesDir: dir });
+    expect(result.problems.join()).toContain("the test fixture: only the founder can approve it");
+    expect(result.approved).toBe(false);
+  });
+});
+
+describe("i18n-check.mjs treats both parent records alike", () => {
+  it("passes todoAllowed and parent for the receipt record and the pay page record", () => {
+    const script = readFileSync("scripts/i18n-check.mjs", "utf8");
+    const calls = [...script.matchAll(/checkReviewRecord\((RECEIPT_REVIEW|PAYPAGE_REVIEW), keys, \{([^}]*)\}/g)];
+    expect(calls.map((c) => c[1]).sort()).toEqual(["PAYPAGE_REVIEW", "RECEIPT_REVIEW"]);
+    for (const call of calls) {
+      expect(call[2], call[1]).toMatch(/todoAllowed: true/);
+      expect(call[2], call[1]).toMatch(/parent: true/);
+    }
+  });
+
+  it("lets a TODO-translate receipt word in a locked language pass plain and strict alike", () => {
+    const run = (strict: boolean) => {
+      const { dir, file } = setup(record, { a: "TODO-translate: A", b: "बी" });
+      return checkReviewRecord(file, KEYS, { messagesDir: dir, strict, ignoreKeys: ["consentWording"], noun: "parent receipt word", todoAllowed: true, parent: true }).problems;
+    };
+    expect(run(false)).toEqual([]);
+    expect(run(true)).toEqual([]);
+  });
+});
+
 describe("check() with skipTodo", () => {
   it("skips the strict marker problem only where it is told to", () => {
     const dir = mkdtempSync(join(tmpdir(), "skip-todo-"));

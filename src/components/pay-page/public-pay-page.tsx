@@ -177,14 +177,14 @@ export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words:
   } else if (page && page.consentNeeded) {
     ground = "cloth";
     name = "consent";
-    body = <ConsentScreen mode="ask" words={w.pay} tutorName={page.tutorName} saving={state.kind === "page" ? state.saving : "idle"} onAgree={() => void agree()} />;
+    body = <ConsentScreen mode="ask" words={w.pay} lang={language} consentLang={w.consentLang} tutorName={page.tutorName} saving={state.kind === "page" ? state.saving : "idle"} onAgree={() => void agree()} />;
   } else if (page && view === "notice") {
     ground = "cloth";
     name = "notice";
-    body = <ConsentScreen mode="read" words={w.pay} tutorName={page.tutorName} onClose={() => setView("fee")} />;
+    body = <ConsentScreen mode="read" words={w.pay} lang={language} consentLang={w.consentLang} tutorName={page.tutorName} onClose={() => setView("fee")} />;
   } else if (page) {
     name = "fee";
-    body = <FeeScreen words={w.pay} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} />;
+    body = <FeeScreen words={w.pay} consentLang={w.consentLang} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} />;
   } else {
     // No page to show: only words that came with no tutor or child data.
     const states = w.pay.state;

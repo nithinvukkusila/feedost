@@ -187,10 +187,24 @@ describe("the parent's pay page with only some languages unlocked", () => {
     expect(two.hi?.pay.consent).toEqual(two.en.pay.consent);
     expect(two.hi?.pay.total).toBe(hi.payPage.total);
     replies.pay = () => pay({ ...noticeBody, language: "hi" });
+    expect(two.hi?.consentLang).toBe("en");
     render(<PublicPayPage words={two} />);
     await waitFor(() => expect(main().getAttribute("data-state")).toBe("consent"));
     expect(main().getAttribute("lang")).toBe("hi");
-    expect(screen.getByRole("button", { name: en.payPage.consent.agree })).toBeTruthy();
+    // The English consent lines say they are English (criterion 4): no Hindi face, line height or voice for them.
+    const section = main().querySelector("section[aria-labelledby=consent-title]")!;
+    expect(section.getAttribute("lang")).toBe("en");
+    expect(section.contains(screen.getByRole("button", { name: en.payPage.consent.agree }))).toBe(true);
+    cleanup();
+
+    // The fee page: its words are Hindi, and the privacy notice link (a consent word) is English with lang="en".
+    replies.pay = () => pay({ ...feeBody, language: "hi" });
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(screen.getByRole("button", { name: en.payPage.consent.notice }).getAttribute("lang")).toBe("en");
+    await userEvent.click(screen.getByRole("button", { name: en.payPage.consent.notice }));
+    expect(main().getAttribute("data-state")).toBe("notice");
+    expect(main().querySelector("section[aria-labelledby=consent-title]")?.getAttribute("lang")).toBe("en");
   });
 
   it.each(["hi", "kn", "te"] as const)("with English alone, a %s student sees English and no language button", async (language) => {

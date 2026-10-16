@@ -51,7 +51,8 @@ export async function receiptWords(source: UnlockSource = {}): Promise<AllReceip
 /**
  * The pay page's words (`/p/`): English and each language unlocked for it. Until the founder approves the consent
  * wording (R1-9 question 3), the consent and privacy-notice lines are English in every language (spec section 3),
- * so a language's `pay.consent` is replaced by English's. `pay.consent` is exactly what `consentHashOf` covers.
+ * so a language's `pay.consent` is replaced by English's and its `consentLang` says "en". `pay.consent` is exactly
+ * what `consentHashOf` covers.
  */
 export async function payPageWords(source: UnlockSource = {}): Promise<AllPageWords> {
   const languages = unlockedLanguages("payPage", source);
@@ -60,7 +61,7 @@ export async function payPageWords(source: UnlockSource = {}): Promise<AllPageWo
   const english = words.en.pay.consent;
   for (const locale of languages) {
     const own = words[locale];
-    if (locale !== "en" && own !== undefined) words[locale] = { ...own, pay: { ...own.pay, consent: english } };
+    if (locale !== "en" && own !== undefined) words[locale] = { ...own, pay: { ...own.pay, consent: english }, consentLang: "en" };
   }
   return words;
 }

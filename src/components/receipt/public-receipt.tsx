@@ -18,9 +18,8 @@ import { brand } from "@/config/brand";
 import type { Locale } from "@/config/locales";
 import { amountFit } from "@/lib/amount-fit";
 import { formatDate, formatRupees } from "@/lib/format";
-import { wordsIn } from "@/lib/public-words";
 import { fetchReceipt, tokenFromLocation, type CancelledReceipt, type Outcome, type PaidReceipt, type TokenSource } from "@/lib/receipt-public";
-import { browserLanguage, fill, monthLabel, parts, shownLanguage, subjectsLine, type AllReceiptWords, type ReceiptWords } from "@/lib/receipt-words";
+import { browserLanguage, fill, monthLabel, parts, shownLanguage, subjectsLine, wordsIn, type AllReceiptWords, type ReceiptWords } from "@/lib/receipt-words";
 
 type State = { kind: "loading" } | Outcome;
 

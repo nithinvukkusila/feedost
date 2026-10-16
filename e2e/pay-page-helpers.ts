@@ -71,5 +71,11 @@ export { messageText } from "./helpers";
  */
 export const unlockedLink = (token: string = TOKEN) => `/dev/unlocked/p/?t=${token}`;
 
+/**
+ * The fixture page with hi, kn and te unlocked but the consent wording still a draft: the consent lines are English,
+ * marked lang="en", inside those languages (the state a sign-off before R1-9 question 3 leads to).
+ */
+export const draftConsentLink = (token: string = TOKEN) => `/dev/unlocked/p-draft/?t=${token}`;
+
 /** English on the parent's own address; any other language on the fixture page. */
 export const pageLink = (lang: string, token: string = TOKEN) => (lang === "en" ? link(token) : unlockedLink(token));
