@@ -1,11 +1,12 @@
 "use client";
 
 // The language button of the pay page (spec R1-9 criterion 29): it shows the current language's own name and opens a
-// list of the four, each at least 44px. Choosing one changes the words of this visit only; nothing is stored and no
+// list of the page's languages (`choices`: English and each unlocked one, spec parent-pages-english), each at least
+// 44px. The page draws it only when there is more than English to choose. Choosing one changes the words of this visit only; nothing is stored and no
 // request is made. The list is the existing Sheet (a native dialog), so focus, Escape and focus return are the browser's.
 import { useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
-import { localeNames, locales, type Locale } from "@/config/locales";
+import { localeNames, type Locale } from "@/config/locales";
 import { cx } from "@/lib/cx";
 
 function Tick() {
@@ -16,7 +17,13 @@ function Tick() {
   );
 }
 
-export function LanguageMenu({ current, onChoose, title, closeLabel }: Readonly<{ current: Locale; onChoose: (locale: Locale) => void; title: string; closeLabel: string }>) {
+export function LanguageMenu({
+  current,
+  choices,
+  onChoose,
+  title,
+  closeLabel,
+}: Readonly<{ current: Locale; choices: readonly Locale[]; onChoose: (locale: Locale) => void; title: string; closeLabel: string }>) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -31,7 +38,7 @@ export function LanguageMenu({ current, onChoose, title, closeLabel }: Readonly<
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={title} closeLabel={closeLabel}>
         <ul className="flex flex-col border-t-2 border-ink">
-          {locales.map((code) => {
+          {choices.map((code) => {
             const on = code === current;
             return (
               <li key={code} className="border-b border-rule">

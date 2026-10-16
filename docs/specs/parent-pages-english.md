@@ -322,8 +322,8 @@ None. No migration, no RLS change, no Edge Function change. `parent_language` is
 
 **Decided 2026-10-16: "220 everywhere".** #25 adds `export const QR_MIN_PX = 220` in `qr-block.tsx`, applied as `style={{ minWidth: QR_MIN_PX }}` on the QR box. `e2e/pay-page-qr.spec.ts` imports it for the 200% assertion; the 100% assertion stays at 220.
 
-- **"Change the criterion"** (220 normal, at least 200 at 200%): no code change. The spec text is updated.
-- **"220 everywhere"**: change `QR_MIN_PX` to `220`. The box is a centred flex child, so it spreads 8px into each side margin at 200% (the margins are at least 32px there). The same spec's sideways-scroll check proves the page still does not scroll. Frontend-dev runs this variant once on #25 and records the result in the PR, so the change is known to work before the founder answers.
+- **"Change the criterion"** (220 normal, at least 200 at 200%): not chosen.
+- **"220 everywhere"** (the founder's choice): `QR_MIN_PX` is `220`. The box is a centred flex child, so it spreads 8px into each side margin at 200% (the margins are at least 32px there). The same spec's sideways-scroll check proves the page still does not scroll. Frontend-dev records the 200% result in #25.
 
 ## 8. Bundle impact
 

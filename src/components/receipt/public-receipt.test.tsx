@@ -171,3 +171,62 @@ describe("the parent's receipt page", () => {
     expect(window.sessionStorage.length).toBe(0);
   });
 });
+
+// Spec parent-pages-english, criteria 2 and 3: the page shows only the languages it was given, and English otherwise.
+describe("the parent's receipt page with only some languages unlocked", () => {
+  it.each(["hi", "kn", "te"] as const)("with English alone, a %s receipt reads in English", async (language) => {
+    ok({ language });
+    const { container } = render(<PublicReceipt words={{ en: en.receipt }} />);
+    await screen.findByText("Meena Iyer");
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    expect(container.textContent).toContain(en.receipt.footer);
+  });
+
+  it("with Hindi unlocked, a Hindi receipt is Hindi and a Telugu one English", async () => {
+    ok({ language: "hi" });
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(hi.receipt.footer);
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("hi");
+    cleanup();
+    ok({ language: "te" });
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(en.receipt.footer);
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("en");
+  });
+
+  it("with English alone, a Kannada browser's not-found state is English", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["kn-IN"]);
+    render(<PublicReceipt words={{ en: en.receipt }} />);
+    await screen.findByText(en.receipt.notFound.title);
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("en");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a Hindi browser's not-found state is Hindi, with lang hi", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["hi-IN", "en-IN"]);
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(hi.receipt.notFound.title);
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("hi");
+    expect(document.documentElement.lang).toBe("hi");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a browser that prefers Telugu first is English: a locked first choice does not move on to Hindi", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["te-IN", "hi-IN"]);
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(en.receipt.notFound.title);
+    expect(screen.queryByText(hi.receipt.notFound.title)).toBeNull();
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    vi.restoreAllMocks();
+  });
+
+  it("reads the token from ?t= only when told to (the /dev fixture page)", async () => {
+    window.history.pushState({}, "", `/dev/unlocked/r/?t=${TOKEN}`);
+    ok();
+    render(<PublicReceipt words={{ en: en.receipt }} tokenSource="query" />);
+    await screen.findByText("Meena Iyer");
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({ token: TOKEN });
+  });
+});

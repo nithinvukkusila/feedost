@@ -4,14 +4,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import { brand } from "../src/config/brand";
 import { box, langs, messageText as text, type Lang } from "./helpers";
-import { FUNCTION_HOST, TOKEN, UPI_ID, consentOk, fee, link, notice, stubPayPage } from "./pay-page-helpers";
+import { FUNCTION_HOST, TOKEN, UPI_ID, consentOk, fee, link, notice, pageLink, stubPayPage, unlockedLink } from "./pay-page-helpers";
 
 const word = (lang: Lang, key: string) => text(lang, `payPage.${key}`);
 const PAY_LINK = `upi://pay?pa=${UPI_ID}&pn=Meena%20Iyer&am=3400.00&cu=INR&tn=Fees%20due%20Ravi`;
 
-async function openFee(page: Page, change: Record<string, unknown> = {}) {
+// hi, kn and te run on the fixture page (`unlockedLink`): /p/ itself is English only until a person signs a language.
+async function openFee(page: Page, change: Record<string, unknown> = {}, address: string = link()) {
   const seen = await stubPayPage(page, { pay: fee(change) });
-  await page.goto(link());
+  await page.goto(address);
   await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
   return seen;
 }
@@ -70,7 +71,7 @@ test.describe("first visit: consent (criteria 18 to 20)", () => {
   for (const lang of langs) {
     test(`criterion 18 and 19 [${lang}]: the notice, the three lines with marks, and no money anywhere`, async ({ page }) => {
       const seen = await stubPayPage(page, { pay: notice({ language: lang }) });
-      await page.goto(link());
+      await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "consent");
       await expect(main).toHaveAttribute("lang", lang);
@@ -91,9 +92,10 @@ test.describe("first visit: consent (criteria 18 to 20)", () => {
       expect(html).not.toMatch(/total_remaining|upi_id|open_dues|receipt_token/);
       expect(seen.pay).toHaveLength(1);
       expect(main.getByRole("link")).toHaveCount(0);
-      // The agree button is at least 60px tall, and the page keeps the language button.
+      // The agree button is at least 60px tall, and the page keeps the language button (none on /p/ while only English is unlocked).
       expect((await box(main.getByRole("button", { name: word(lang, "consent.agree") }))).height).toBeGreaterThanOrEqual(60);
-      await expect(main.getByRole("button", { name: { en: "English", hi: "हिन्दी", kn: "ಕನ್ನಡ", te: "తెలుగు" }[lang] })).toBeVisible();
+      if (lang === "en") await expect(main.getByRole("button", { name: "English" })).toHaveCount(0);
+      else await expect(main.getByRole("button", { name: { hi: "हिन्दी", kn: "ಕನ್ನಡ", te: "తెలుగు" }[lang] })).toBeVisible();
     });
   }
 
@@ -221,7 +223,7 @@ test.describe("the fee page (criteria 22 to 25)", () => {
 
   for (const lang of ["hi", "kn", "te"] as const) {
     test(`criterion 24 [${lang}]: the amount in the Pay label and on the too-big line is in the mono face, never Anek, with 0-9 digits`, async ({ page }) => {
-      await openFee(page, { language: lang });
+      await openFee(page, { language: lang }, unlockedLink());
       const family = (el: import("@playwright/test").Locator) => el.evaluate((node) => getComputedStyle(node).fontFamily);
       const pay = page.locator('main a[href^="upi://"]');
       const amount = pay.locator('span[translate="no"]');
@@ -232,7 +234,7 @@ test.describe("the fee page (criteria 22 to 25)", () => {
       expect(await pay.textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
       // Too big: the same amount rule on the sentence.
       await page.goto("/en/");
-      await openFee(page, { language: lang, total_remaining: 100_000_001 });
+      await openFee(page, { language: lang, total_remaining: 100_000_001 }, unlockedLink());
       const big = page.locator('main span[translate="no"]', { hasText: "₹10,00,000.01" });
       await expect(big).toHaveCount(1);
       expect(await family(big)).toBe(mono);
@@ -330,10 +332,10 @@ test.describe("earlier receipts (criterion 27)", () => {
   });
 });
 
-test.describe("language (criterion 29)", () => {
+test.describe("language (criterion 29), on the fixture page with every language unlocked", () => {
   test("the page opens in the student's language, the button names it, and choosing another changes every word with no new request", async ({ page }) => {
     const seen = await stubPayPage(page, { pay: fee({ language: "hi" }) });
-    await page.goto(link());
+    await page.goto(unlockedLink());
     const main = page.locator("main");
     await expect(main).toHaveAttribute("lang", "hi");
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
@@ -359,7 +361,7 @@ test.describe("language (criterion 29)", () => {
 
   test("the consent screen keeps the language button and does not reload when it is used", async ({ page }) => {
     const seen = await stubPayPage(page, { pay: notice() });
-    await page.goto(link());
+    await page.goto(unlockedLink());
     const main = page.locator("main");
     await main.getByRole("button", { name: "English" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "తెలుగు" }).click();
@@ -440,7 +442,7 @@ test.describe("the other states (criterion 32)", () => {
       const context = await browser.newContext({ locale: { hi: "hi-IN", kn: "kn-IN", te: "te-IN" }[lang] });
       const page = await context.newPage();
       await stubPayPage(page, { pay: { status: 404, body: { code: "not_found" } } });
-      await page.goto(link());
+      await page.goto(unlockedLink());
       await expect(page.locator("main")).toContainText(word(lang, "state.notFound"));
       await context.close();
     });
@@ -505,10 +507,10 @@ test.describe("one centred column (criterion 35)", () => {
 test("criterion 36: the consent screen and the fee page show no TODO-translate marker in any language", async ({ page }) => {
   for (const lang of langs) {
     await stubPayPage(page, { pay: (call) => (call % 2 === 1 ? notice({ language: lang }) : fee({ language: lang })) });
-    await page.goto(link());
+    await page.goto(pageLink(lang));
     await expect(page.locator("main")).toHaveAttribute("data-state", "consent");
     expect(await page.evaluate(() => document.documentElement.outerHTML)).not.toContain("TODO-translate");
-    await page.goto(link());
+    await page.goto(pageLink(lang));
     await expect(page.locator("main")).toHaveAttribute("data-state", "fee");
     expect(await page.evaluate(() => document.documentElement.outerHTML)).not.toContain("TODO-translate");
     await page.unrouteAll();

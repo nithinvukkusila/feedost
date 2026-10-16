@@ -17,7 +17,7 @@ afterEach(() => {
 
 const page = (change: Partial<FeePage> = {}): FeePage => ({ ...(readPage({ code: "ok", page: feeBody }) as FeePage), ...change });
 const show = (change: Partial<FeePage> = {}, onOpenNotice = () => {}) =>
-  render(<FeeScreen words={en.payPage} monthWords={en.receipt} page={page(change)} onOpenNotice={onOpenNotice} />);
+  render(<FeeScreen words={en.payPage} consentLang="en" monthWords={en.receipt} page={page(change)} onOpenNotice={onOpenNotice} />);
 const clipboard = (writeText: (text: string) => Promise<void>) => vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
 
 describe("FeeScreen", () => {

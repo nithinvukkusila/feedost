@@ -9,6 +9,8 @@ import te from "../../../messages/te.json";
 import { stripTodo } from "@/i18n/messages";
 import { feeBody, noticeBody, TOKEN } from "@/lib/pay-page.test-util";
 import { pageWords } from "@/lib/pay-page-words";
+import { payPageWords } from "@/lib/unlocked-languages";
+import { signedFixture } from "../../../scripts/language-unlock.mjs";
 import { PublicPayPage } from "./public-pay-page";
 
 configure({ asyncUtilTimeout: 5000 });
@@ -149,5 +151,118 @@ describe("the parent's pay page", () => {
     expect(main().textContent).toContain(message);
     expect(main().textContent).not.toContain("Meena");
     expect(main().textContent).not.toContain("Ravi");
+  });
+});
+
+// Spec parent-pages-english, criteria 1 and 3: the page shows only the languages it was given, and English otherwise.
+describe("the parent's pay page with only some languages unlocked", () => {
+  // The raw files with their markers taken out, so a fixture can sign hi (its pay page words still carry markers).
+  const plain = { en: stripTodo(en), hi: stripTodo(hi), kn: stripTodo(kn), te: stripTodo(te) };
+  const hindiOnly = () => payPageWords({ records: signedFixture("payPage", ["hi"], { messages: plain }), messages: plain });
+  const englishOnly = pageWords({ en: stripTodo(en.payPage) }, { en: stripTodo(en.receipt) });
+
+  it("opens a Hindi student's page in Hindi and a Kannada student's in English, and the menu lists English and हिन्दी", async () => {
+    const two = await hindiOnly();
+    expect(Object.keys(two)).toEqual(["en", "hi"]);
+    replies.pay = () => pay({ ...feeBody, language: "hi" });
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(main().getAttribute("lang")).toBe("hi");
+    expect(main().textContent).toContain(hi.payPage.total);
+    await userEvent.click(screen.getByRole("button", { name: "हिन्दी" }));
+    const listed = document.querySelectorAll("dialog li");
+    expect([...listed].map((li) => li.textContent)).toEqual(["English", "हिन्दी"]);
+    cleanup();
+
+    replies.pay = () => pay({ ...feeBody, language: "kn" });
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(main().getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    expect(main().textContent).toContain(en.payPage.total);
+  });
+
+  it("keeps the consent lines English inside a Hindi page while the consent wording is a draft", async () => {
+    const two = await hindiOnly();
+    expect(two.hi?.pay.consent).toEqual(two.en.pay.consent);
+    expect(two.hi?.pay.total).toBe(hi.payPage.total);
+    replies.pay = () => pay({ ...noticeBody, language: "hi" });
+    expect(two.hi?.consentLang).toBe("en");
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("consent"));
+    expect(main().getAttribute("lang")).toBe("hi");
+    // The English consent lines say they are English (criterion 4): no Hindi face, line height or voice for them.
+    const section = main().querySelector("section[aria-labelledby=consent-title]")!;
+    expect(section.getAttribute("lang")).toBe("en");
+    expect(section.contains(screen.getByRole("button", { name: en.payPage.consent.agree }))).toBe(true);
+    cleanup();
+
+    // The fee page: its words are Hindi, and the privacy notice link (a consent word) is English with lang="en".
+    replies.pay = () => pay({ ...feeBody, language: "hi" });
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(screen.getByRole("button", { name: en.payPage.consent.notice }).getAttribute("lang")).toBe("en");
+    await userEvent.click(screen.getByRole("button", { name: en.payPage.consent.notice }));
+    expect(main().getAttribute("data-state")).toBe("notice");
+    expect(main().querySelector("section[aria-labelledby=consent-title]")?.getAttribute("lang")).toBe("en");
+  });
+
+  it.each(["hi", "kn", "te"] as const)("with English alone, a %s student sees English and no language button", async (language) => {
+    replies.pay = (n) => (n === 1 ? pay({ ...noticeBody, language }) : pay({ ...feeBody, language }));
+    render(<PublicPayPage words={englishOnly} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("consent"));
+    expect(main().getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    expect(screen.queryByRole("button", { name: /English|हिन्दी|ಕನ್ನಡ|తెలుగు/ })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: en.payPage.consent.agree }));
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(main().getAttribute("lang")).toBe("en");
+    expect(main().textContent).toContain(en.payPage.total);
+    expect(screen.queryByRole("button", { name: /English|हिन्दी|ಕನ್ನಡ|తెలుగు/ })).toBeNull();
+  });
+
+  it("with English alone, a Hindi browser's not-found state is English", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["hi-IN", "kn-IN"]);
+    render(<PublicPayPage words={englishOnly} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(main().textContent).toContain(en.payPage.state.notFound);
+    expect(main().getAttribute("lang")).toBe("en");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a Hindi browser's not-found state is Hindi, with lang hi", async () => {
+    const two = await hindiOnly();
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["hi-IN", "en-IN"]);
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(main().textContent).toContain(hi.payPage.state.notFound);
+    expect(main().getAttribute("lang")).toBe("hi");
+    expect(document.documentElement.lang).toBe("hi");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a browser that prefers Kannada first is English: a locked first choice does not move on to Hindi", async () => {
+    const two = await hindiOnly();
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["kn-IN", "hi-IN"]);
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(main().textContent).toContain(en.payPage.state.notFound);
+    expect(main().textContent).not.toContain(hi.payPage.state.notFound);
+    expect(main().getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    vi.restoreAllMocks();
+  });
+
+  it("reads the token from ?t= only when told to (the /dev fixture page)", async () => {
+    window.history.pushState({}, "", `/dev/unlocked/p/?t=${TOKEN}`);
+    replies.pay = () => pay(feeBody);
+    render(<PublicPayPage words={englishOnly} tokenSource="query" />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("fee"));
+    expect(calls[0].body).toEqual({ token: TOKEN });
+    cleanup();
+    calls = [];
+    render(<PublicPayPage words={englishOnly} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(calls).toHaveLength(0);
   });
 });

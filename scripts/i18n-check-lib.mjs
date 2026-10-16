@@ -4,8 +4,11 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse, TYPE } from "@formatjs/icu-messageformat-parser";
+import { FIXTURE_REVIEWER, consentApproved, consentHashOf, copyHash, isSigned, leafPaths, locales } from "./language-unlock.mjs";
 
-export const locales = ["en", "hi", "kn", "te"];
+// The hash functions and the language list live in language-unlock.mjs (one copy for the check and the pages);
+// re-exported so every existing import keeps working.
+export { copyHash, leafPaths, locales };
 const TODO = "TODO-translate";
 const TODO_PREFIX = `${TODO}: `;
 const CAMEL = /^[a-z][a-zA-Z0-9]*$/;
@@ -33,8 +36,10 @@ function signature(elements, found = new Set()) {
 /**
  * Checks messagesDir/{en,hi,kn,te}.json.
  * Returns { problems, keyCount, todoCount }; the caller decides the exit code.
+ * `skipTodo(locale, key)` (under `strict`): a marked value it returns true for is not a problem. The script passes
+ * "a parent page's key in a language every parent sees as English" (spec parent-pages-english, criterion 12).
  */
-export function check(messagesDir, { strict = false } = {}) {
+export function check(messagesDir, { strict = false, skipTodo = /** @type {(locale: string, key: string) => boolean} */ (() => false) } = {}) {
   const problems = [];
   const files = {};
   for (const locale of locales) {
@@ -81,7 +86,7 @@ export function check(messagesDir, { strict = false } = {}) {
       return { text: value, todo: false };
     }
     todoCount++;
-    if (strict) problems.push(`${label} "${key}" is still marked ${TODO}`);
+    if (strict && !skipTodo(locale, key)) problems.push(`${label} "${key}" is still marked ${TODO}`);
     return { text: value.slice(TODO_PREFIX.length), todo: true };
   }
 
@@ -157,6 +162,8 @@ const STATUSES = ["reviewed", "not reviewed"];
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const isText = (v) => typeof v === "string" && v.trim() !== "";
+/** The name the test fixture signs with (language-unlock.mjs): never a person, so never a sign-off in a real record. */
+const isFixture = (v) => typeof v === "string" && v.trim().toLowerCase() === FIXTURE_REVIEWER.toLowerCase();
 const count = (text, piece) => text.split(piece).length - 1;
 
 /** What a reviewer signs: a language's two templates and twelve month names, as the file stands. */
@@ -504,22 +511,21 @@ export function checkAppTemplates(file, reviewFile, { strict = false } = {}) {
 // other word, but they are a promise about someone's phone number, so each of hi, kn and te also
 // needs a native reader's sign-off in its own review record, and may never be a TODO-translate.
 
-/** What a reader signs: the values of the listed keys in one language's file, as the file stands. */
-export function copyHash(messages, keys) {
-  const read = (key) => key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), messages);
-  return createHash("sha256").update(JSON.stringify(keys.map((key) => [key, read(key)]))).digest("hex");
-}
-
 /**
  * Checks the review record of the promise sentences: `keys` are dotted paths into the message files
  * (for example "waitlistForm.consent"). Returns { problems, notReviewed, notes }. Under `strict` a
  * language with no valid sign-off, or whose text changed after its sign-off, is a problem.
  * A promise sentence still marked TODO-translate is always a problem: it cannot be reviewed.
+ *
+ * `parent: true` is for the records of the parent pages (spec parent-pages-english, plan section 2). A language that
+ * is not signed is locked: every parent sees English there, so "not reviewed" is a note, also under `strict`, and a
+ * word still marked TODO-translate in it is not a strict problem. A signature whose text changed since is still a
+ * strict problem: someone edited signed text. Whether a language counts as signed is `isSigned`, as on the pages.
  */
 export function checkReviewRecord(
   reviewFile,
   keys,
-  { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence", ignoreKeys = /** @type {string[]} */ ([]), todoAllowed = false } = {},
+  { messagesDir = "messages", strict = false, label = "copy.review.json", noun = "promise sentence", ignoreKeys = /** @type {string[]} */ ([]), todoAllowed = false, parent = false } = {},
 ) {
   const problems = [];
   const notes = [];
@@ -560,7 +566,7 @@ export function checkReviewRecord(
       // `todoAllowed` (the pay page): a word still marked TODO-translate shows its English text to the parent, which is
       // allowed until release; it is a problem only under `strict`, and the language cannot count as reviewed meanwhile.
       if (todoAllowed) {
-        if (marked.length > 0 && strict) problems.push(`messages/${locale}.json has ${marked.length} ${noun}${marked.length === 1 ? "" : "s"} still marked ${TODO}; write them and have them read`);
+        if (marked.length > 0 && strict && !parent) problems.push(`messages/${locale}.json has ${marked.length} ${noun}${marked.length === 1 ? "" : "s"} still marked ${TODO}; write them and have them read`);
         current = marked.length === 0 ? copyHash(messages, keys) : null;
       } else {
         for (const key of marked) problems.push(`messages/${locale}.json "${key}" is a ${noun} and cannot be marked ${TODO}; write it and have it read`);
@@ -588,6 +594,9 @@ export function checkReviewRecord(
       if (!isText(entry.reviewer)) {
         problems.push(`${label} "${locale}" is marked reviewed with no reviewer's name`);
         complete = false;
+      } else if (isFixture(entry.reviewer)) {
+        problems.push(`${label} "${locale}" is signed by "${FIXTURE_REVIEWER}", the test fixture: only a named person can sign a language`);
+        complete = false;
       }
       if (typeof entry.date !== "string" || !DATE.test(entry.date)) {
         problems.push(`${label} "${locale}" is marked reviewed with no date written YYYY-MM-DD`);
@@ -597,9 +606,18 @@ export function checkReviewRecord(
         problems.push(`${label} "${locale}" is marked reviewed with no sha256 of the text that was read`);
         complete = false;
       }
-      if (complete && current !== null && entry.sha256 === current) continue; // signed off, and the text has not changed since
+      if (complete && isSigned(entry, current)) {
+        // Signed off, and the text has not changed since.
+        if (parent) notes.push(`${locale}: ${noun}s signed by ${entry.reviewer} on ${entry.date}; parents see ${locale}`);
+        continue;
+      }
       notReviewed.push(locale);
-      if (complete && current !== null) {
+      if (complete && parent) {
+        // Stale: changed (or marked TODO-translate) after it was signed. Parents see English until it is signed again.
+        const changed = `messages/${locale}.json ${noun}s changed after the review of ${entry.date} by ${entry.reviewer}: ${locale} is locked again and parents see English. Sign it again, or set "${locale}" back to "not reviewed" in ${label} to ship English on purpose`;
+        if (strict) problems.push(changed);
+        else notes.push(`${locale}: ${noun}s locked again: text changed after review by ${entry.reviewer} on ${entry.date}${current === null ? "" : `; current text ${current}`}`);
+      } else if (complete && current !== null) {
         const changed = `messages/${locale}.json ${noun}s changed after the review of ${entry.date} by ${entry.reviewer}`;
         if (strict) problems.push(changed);
         else notes.push(`${changed}; it counts as not reviewed. Current text ${current}`);
@@ -607,7 +625,9 @@ export function checkReviewRecord(
       continue;
     }
     notReviewed.push(locale);
-    if (strict) {
+    if (parent) {
+      notes.push(`${locale}: ${noun}s not reviewed, so locked: parents see English${current === null ? "" : `; current text ${current}`}`);
+    } else if (strict) {
       problems.push(`messages/${locale}.json ${noun}s are not reviewed (${keys.length} keys): get a native reader's sign-off and record it in ${label}`);
     } else if (current !== null) {
       notes.push(`${locale}: ${noun}s not reviewed; current text ${current}`);
@@ -616,36 +636,30 @@ export function checkReviewRecord(
   return { problems, notReviewed, notes };
 }
 
-export function leafPaths(node, path) {
-  return Object.entries(node).flatMap(([key, value]) =>
-    value !== null && typeof value === "object" ? leafPaths(value, `${path}.${key}`) : [`${path}.${key}`],
-  );
+/** The four message files of `messagesDir`, parsed; null when one cannot be read (the main check reports that). */
+function readMessages(messagesDir) {
+  try {
+    return Object.fromEntries(locales.map((locale) => [locale, JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), "utf8"))]));
+  } catch {
+    return null;
+  }
 }
 
 /**
  * What the founder approves: one sha256 over the `payPage.consent.*` values of all four message files, in language
- * order. Returns null when a file cannot be read (the main check reports that).
+ * order (consentHashOf in language-unlock.mjs). Returns null when a file cannot be read (the main check reports that).
  */
 export function consentHash(messagesDir = "messages") {
-  const sum = createHash("sha256");
-  try {
-    const en = JSON.parse(readFileSync(join(messagesDir, "en.json"), "utf8"));
-    const keys = leafPaths(en?.payPage?.consent ?? {}, "payPage.consent");
-    for (const locale of locales) {
-      const messages = JSON.parse(readFileSync(join(messagesDir, `${locale}.json`), "utf8"));
-      sum.update(`${locale}:${copyHash(messages, keys)}\n`);
-    }
-  } catch {
-    return null;
-  }
-  return sum.digest("hex");
+  const messages = readMessages(messagesDir);
+  return messages === null ? null : consentHashOf(messages);
 }
 
 /**
- * The consent and privacy-notice wording of the parent's pay page (spec R1-9 questions 3 and 5). The wording is the
+ * The consent and privacy-notice wording of the parent's pay page (spec R1-9 question 3). The wording is the
  * founder's to approve, so the review record carries a top-level `consentWording` block that no parent can see.
  * An approval carries the sha256 of the text that was read (see consentHash); wording that changed after it is not
- * approved. Returns { problems, notes, approved }. Not approved is a note on every run and a problem under `strict`.
+ * approved. Returns { problems, notes, approved }; `approved` is `consentApproved`, the rule the pages use. Not
+ * approved is a note on every run and a problem under `strict`: it is the gate on releasing to real parents.
  */
 export function checkConsentWording(record, { strict = false, label = "pay-page-words.review.json", messagesDir = "messages" } = {}) {
   const problems = [];
@@ -655,11 +669,15 @@ export function checkConsentWording(record, { strict = false, label = "pay-page-
     problems.push(`${label} has no "consentWording" block; it records whether the founder approved the privacy notice wording`);
     return { problems, notes, approved: false };
   }
-  const current = consentHash(messagesDir);
+  const messages = readMessages(messagesDir);
+  const current = messages === null ? null : consentHashOf(messages);
   if (block.status === "approved") {
     let complete = true;
     if (!isText(block.approvedBy)) {
       problems.push(`${label} "consentWording" is marked approved with no name in approvedBy`);
+      complete = false;
+    } else if (isFixture(block.approvedBy)) {
+      problems.push(`${label} "consentWording" is approved by "${FIXTURE_REVIEWER}", the test fixture: only the founder can approve it`);
       complete = false;
     }
     if (typeof block.date !== "string" || !DATE.test(block.date)) {
@@ -676,9 +694,9 @@ export function checkConsentWording(record, { strict = false, label = "pay-page-
       else notes.push(changed);
       return { problems, notes, approved: false };
     }
-    return { problems, notes, approved: complete };
+    return { problems, notes, approved: complete && messages !== null && consentApproved(record, messages) };
   }
-  const message = "payPage consent wording is a draft: release blocked on founder answers to R1-9 questions 3 and 5";
+  const message = "payPage consent wording is a draft: release to real parents blocked on R1-9 question 3";
   if (strict) problems.push(message);
   else notes.push(message);
   return { problems, notes, approved: false };

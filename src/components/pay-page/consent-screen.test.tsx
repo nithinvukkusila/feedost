@@ -12,7 +12,7 @@ const para = (text: string) => screen.getByText((_, el) => el?.tagName === "P" &
 
 describe("ConsentScreen, ask", () => {
   it("shows the heading, the intro with the tutor's name, three lines with marks, the button and 'Asked only once'", () => {
-    const { container } = render(<ConsentScreen mode="ask" words={words} tutorName="Meena Iyer" saving="idle" onAgree={() => {}} />);
+    const { container } = render(<ConsentScreen mode="ask" words={words} lang="en" consentLang="en" tutorName="Meena Iyer" saving="idle" onAgree={() => {}} />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Before you see the fee, a word on privacy.");
     expect(para("Meena Iyer uses this service to share fee details with you. This is what is kept:")).toBeTruthy();
     const lines = container.querySelectorAll("li");
@@ -25,20 +25,20 @@ describe("ConsentScreen, ask", () => {
   });
 
   it("says 'Your tutor' when the tutor has no name, and never invents one", () => {
-    render(<ConsentScreen mode="ask" words={words} tutorName={null} saving="idle" onAgree={() => {}} />);
+    render(<ConsentScreen mode="ask" words={words} lang="en" consentLang="en" tutorName={null} saving="idle" onAgree={() => {}} />);
     expect(para("Your tutor uses this service to share fee details with you. This is what is kept:")).toBeTruthy();
   });
 
   it("calls agree on a tap", async () => {
     const onAgree = vi.fn();
-    render(<ConsentScreen mode="ask" words={words} tutorName="M" saving="idle" onAgree={onAgree} />);
+    render(<ConsentScreen mode="ask" words={words} lang="en" consentLang="en" tutorName="M" saving="idle" onAgree={onAgree} />);
     await userEvent.click(screen.getByRole("button", { name: "I agree, show the fee" }));
     expect(onAgree).toHaveBeenCalledTimes(1);
   });
 
   it("shows Saving… and does nothing on a tap while saving", async () => {
     const onAgree = vi.fn();
-    render(<ConsentScreen mode="ask" words={words} tutorName="M" saving="saving" onAgree={onAgree} />);
+    render(<ConsentScreen mode="ask" words={words} lang="en" consentLang="en" tutorName="M" saving="saving" onAgree={onAgree} />);
     const button = screen.getByRole("button", { name: "Saving…" });
     expect(button.getAttribute("aria-busy")).toBe("true");
     await userEvent.click(button);
@@ -47,17 +47,35 @@ describe("ConsentScreen, ask", () => {
 
   it("says it could not save and offers Try again, which agrees again", async () => {
     const onAgree = vi.fn();
-    render(<ConsentScreen mode="ask" words={words} tutorName="M" saving="failed" onAgree={onAgree} />);
+    render(<ConsentScreen mode="ask" words={words} lang="en" consentLang="en" tutorName="M" saving="failed" onAgree={onAgree} />);
     expect(screen.getByRole("alert").textContent).toContain("Couldn't save. Check your connection and try again.");
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(onAgree).toHaveBeenCalledTimes(1);
   });
 });
 
+// Spec parent-pages-english, criterion 4: while the consent wording is a draft its lines are English inside an
+// unlocked language's page, and say so; the page's own words in the section keep the page's language.
+describe("ConsentScreen, consent lines in another language than the page", () => {
+  it("marks the section with the consent language, and Try again and 'your tutor' with the page's", () => {
+    const hindiPage = { ...words, yourTutor: "आपके ट्यूटर", state: { ...words.state, retry: "फिर कोशिश करें" } };
+    const { container } = render(<ConsentScreen mode="ask" words={hindiPage} lang="hi" consentLang="en" tutorName={null} saving="failed" onAgree={() => {}} />);
+    expect(container.querySelector("section")?.getAttribute("lang")).toBe("en");
+    expect(screen.getByRole("button", { name: "फिर कोशिश करें" }).getAttribute("lang")).toBe("hi");
+    expect(screen.getByText("आपके ट्यूटर").getAttribute("lang")).toBe("hi");
+  });
+
+  it("adds no extra lang inside when both are the same", () => {
+    const { container } = render(<ConsentScreen mode="ask" words={words} lang="hi" consentLang="hi" tutorName={null} saving="failed" onAgree={() => {}} />);
+    expect(container.querySelector("section")?.getAttribute("lang")).toBe("hi");
+    expect(container.querySelectorAll("section [lang]")).toHaveLength(0);
+  });
+});
+
 describe("ConsentScreen, read", () => {
   it("has Close and no agree button and no 'Asked only once'", async () => {
     const onClose = vi.fn();
-    render(<ConsentScreen mode="read" words={words} tutorName="Meena Iyer" onClose={onClose} />);
+    render(<ConsentScreen mode="read" words={words} lang="en" consentLang="en" tutorName="Meena Iyer" onClose={onClose} />);
     expect(screen.queryByRole("button", { name: "I agree, show the fee" })).toBeNull();
     expect(screen.queryByText("Asked only once")).toBeNull();
     expect(screen.queryByText(/Not agreeing/)).toBeNull();

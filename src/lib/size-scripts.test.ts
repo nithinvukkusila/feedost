@@ -6,6 +6,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { signedFixture } from "../../scripts/language-unlock.mjs";
 
 const sizeScript = join(process.cwd(), "scripts", "size.mjs");
 const leakScript = join(process.cwd(), "scripts", "check-locale-leak.mjs");
@@ -55,6 +56,11 @@ type Options = {
   shellScriptBytes?: number;
   /** The body of a language's tool page and app pages. Default: that language's own line. */
   toolBody?: (locale: string) => string;
+  /**
+   * The languages the parent pages' review records sign (spec parent-pages-english). Default: hi, kn and te, so the
+   * shells carry all four. `[]` is the shipped state: every parent sees English, and no other language may ship.
+   */
+  unlock?: readonly string[];
 };
 
 function project(options: Options = {}): string {
@@ -104,6 +110,10 @@ function project(options: Options = {}): string {
   for (const [locale, tree] of Object.entries(options.messages ?? messages)) {
     writeFileSync(join(root, "messages", `${locale}.json`), JSON.stringify(tree));
   }
+  const records = signedFixture("payPage", options.unlock ?? ["hi", "kn", "te"], { messages: options.messages ?? messages });
+  mkdirSync(join(root, "src", "lib"), { recursive: true });
+  writeFileSync(join(root, "src", "lib", "pay-page-words.review.json"), JSON.stringify(records.payPage));
+  writeFileSync(join(root, "src", "lib", "receipt-words.review.json"), JSON.stringify(records.receipt));
   return root;
 }
 
@@ -207,7 +217,7 @@ describe("pnpm check:leak, the parent's receipt shell (R1-7 Part B, criterion 31
   it("fails when the shell carries another namespace's words of another language", () => {
     const result = run(leakScript, project({ shellBody: `<p>${allReceiptWords} ${messages.kn.home.placeholder}</p>` }));
     expect(result.status).toBe(1);
-    expect(result.out).toContain('the parent receipt page loads a kn message outside "receipt"');
+    expect(result.out).toContain('the parent receipt page loads a kn message (outside "receipt")');
   });
 
   it("fails when a TODO-translate marker is on the shell", () => {
@@ -240,13 +250,55 @@ describe("pnpm check:leak, the parent's pay page shell (R1-9 Part B)", () => {
   it("fails when the shell carries a receipt word it did not borrow, of another language", () => {
     const result = run(leakScript, project({ payBody: `<p>${allPayPageWords} ${messages.kn.receipt.footer}</p>` }));
     expect(result.status).toBe(1);
-    expect(result.out).toContain('the parent pay page loads a kn message outside "payPage"');
+    expect(result.out).toContain('the parent pay page loads a kn message (outside "payPage")');
   });
 
   it("fails when a TODO-translate marker is on the shell", () => {
     const result = run(leakScript, project({ payBody: `<p>${allPayPageWords} TODO-translate: something</p>` }));
     expect(result.status).toBe(1);
     expect(result.out).toContain("TODO-translate");
+  });
+});
+
+// Spec parent-pages-english (plan section 2): the shells carry English and each unlocked language, and a locked
+// language's words left on a shell are a leak. This is criterion 1 and 2 as a build-level proof.
+describe("pnpm check:leak, the parent shells with locked languages", () => {
+  const englishReceipt = `${messages.en.receipt.footer} ${messages.en.receipt.earlier}`;
+  const englishPay = `${messages.en.payPage.footer} ${messages.en.receipt.earlier}`;
+
+  it("passes with nothing signed when both shells carry English only", () => {
+    const result = run(leakScript, project({ unlock: [], shellBody: `<p>${englishReceipt}</p>`, payBody: `<p>${englishPay}</p>` }));
+    expect(result.status).toBe(0);
+    expect(result.out).toContain("receipt words of en (locked, not shipped: hi, kn, te)");
+    expect(result.out).toContain("payPage words of en (locked, not shipped: hi, kn, te)");
+  });
+
+  it.each(["hi", "kn", "te"] as const)("fails when a locked %s receipt word is on /r/", (locale) => {
+    const result = run(leakScript, project({ unlock: [], shellBody: `<p>${englishReceipt} ${messages[locale].receipt.footer}</p>`, payBody: `<p>${englishPay}</p>` }));
+    expect(result.status).toBe(1);
+    expect(result.out).toContain(`the parent receipt page loads a ${locale} message (${locale} is locked for it, so its "receipt" words must not ship)`);
+  });
+
+  it.each(["hi", "kn", "te"] as const)("fails when a locked %s pay page word, or a borrowed month word, is on /p/", (locale) => {
+    for (const word of [messages[locale].payPage.footer, messages[locale].receipt.earlier]) {
+      const result = run(leakScript, project({ unlock: [], shellBody: `<p>${englishReceipt}</p>`, payBody: `<p>${englishPay} ${word}</p>` }));
+      expect(result.status).toBe(1);
+      expect(result.out).toContain(`the parent pay page loads a ${locale} message (${locale} is locked for it`);
+    }
+  });
+
+  it("with only Hindi signed, needs the Hindi words and refuses the Kannada ones", () => {
+    const hindi = `${messages.hi.payPage.footer} ${messages.hi.receipt.earlier}`;
+    const hindiReceipt = `${messages.hi.receipt.footer} ${messages.hi.receipt.earlier}`;
+    const ok = run(leakScript, project({ unlock: ["hi"], shellBody: `<p>${englishReceipt} ${hindiReceipt}</p>`, payBody: `<p>${englishPay} ${hindi}</p>` }));
+    expect(ok.status).toBe(0);
+    expect(ok.out).toContain("payPage words of en, hi (locked, not shipped: kn, te)");
+    const missing = run(leakScript, project({ unlock: ["hi"], shellBody: `<p>${englishReceipt}</p>`, payBody: `<p>${englishPay} ${hindi}</p>` }));
+    expect(missing.status).toBe(1);
+    expect(missing.out).toContain("the parent receipt page does not carry the hi words");
+    const extra = run(leakScript, project({ unlock: ["hi"], shellBody: `<p>${englishReceipt} ${hindiReceipt}</p>`, payBody: `<p>${englishPay} ${hindi} ${messages.kn.payPage.footer}</p>` }));
+    expect(extra.status).toBe(1);
+    expect(extra.out).toContain("the parent pay page loads a kn message (kn is locked for it");
   });
 });
 
