@@ -12,8 +12,12 @@ const LONG_STUDENT = "A".repeat(80);
 const LONG_PARENT = "Venkatasubrahmanyalakshminarasimha Rao-Naidu".repeat(1);
 const sizes = ["100%", "130%", "200%"] as const;
 
+// The browser's language too, so the states with no data (failed) are laid out in that language and not in English.
+const browserLocale = { en: "en-IN", hi: "hi-IN", kn: "kn-IN", te: "te-IN" } as const;
+
 for (const lang of langs) {
   test.describe(`/r/ in ${lang}`, () => {
+    test.use({ locale: browserLocale[lang] });
     test("the receipt", async ({ page }) => {
       test.setTimeout(90_000);
       await stubReceipt(
@@ -23,6 +27,8 @@ for (const lang of langs) {
       await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "ok");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
       for (const size of sizes) {
@@ -47,6 +53,8 @@ for (const lang of langs) {
       await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "failed");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);

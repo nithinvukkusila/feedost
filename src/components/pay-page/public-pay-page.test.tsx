@@ -216,6 +216,29 @@ describe("the parent's pay page with only some languages unlocked", () => {
     vi.restoreAllMocks();
   });
 
+  it("with Hindi unlocked, a Hindi browser's not-found state is Hindi, with lang hi", async () => {
+    const two = await hindiOnly();
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["hi-IN", "en-IN"]);
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(main().textContent).toContain(hi.payPage.state.notFound);
+    expect(main().getAttribute("lang")).toBe("hi");
+    expect(document.documentElement.lang).toBe("hi");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a browser that prefers Kannada first is English: a locked first choice does not move on to Hindi", async () => {
+    const two = await hindiOnly();
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["kn-IN", "hi-IN"]);
+    render(<PublicPayPage words={two} />);
+    await waitFor(() => expect(main().getAttribute("data-state")).toBe("not_found"));
+    expect(main().textContent).toContain(en.payPage.state.notFound);
+    expect(main().textContent).not.toContain(hi.payPage.state.notFound);
+    expect(main().getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    vi.restoreAllMocks();
+  });
+
   it("reads the token from ?t= only when told to (the /dev fixture page)", async () => {
     window.history.pushState({}, "", `/dev/unlocked/p/?t=${TOKEN}`);
     replies.pay = () => pay(feeBody);

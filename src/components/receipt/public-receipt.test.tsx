@@ -203,6 +203,25 @@ describe("the parent's receipt page with only some languages unlocked", () => {
     vi.restoreAllMocks();
   });
 
+  it("with Hindi unlocked, a Hindi browser's not-found state is Hindi, with lang hi", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["hi-IN", "en-IN"]);
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(hi.receipt.notFound.title);
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("hi");
+    expect(document.documentElement.lang).toBe("hi");
+    vi.restoreAllMocks();
+  });
+
+  it("with Hindi unlocked, a browser that prefers Telugu first is English: a locked first choice does not move on to Hindi", async () => {
+    vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["te-IN", "hi-IN"]);
+    render(<PublicReceipt words={{ en: en.receipt, hi: hi.receipt }} />);
+    await screen.findByText(en.receipt.notFound.title);
+    expect(screen.queryByText(hi.receipt.notFound.title)).toBeNull();
+    expect(document.querySelector("main")?.getAttribute("lang")).toBe("en");
+    expect(document.documentElement.lang).toBe("en");
+    vi.restoreAllMocks();
+  });
+
   it("reads the token from ?t= only when told to (the /dev fixture page)", async () => {
     window.history.pushState({}, "", `/dev/unlocked/r/?t=${TOKEN}`);
     ok();

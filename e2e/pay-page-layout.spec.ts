@@ -41,14 +41,20 @@ const heavy = (language: string, extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
+// The browser's language too, so the states with no data (failed) are laid out in that language and not in English.
+const browserLocale = { en: "en-IN", hi: "hi-IN", kn: "kn-IN", te: "te-IN" } as const;
+
 for (const lang of langs) {
   test.describe(`/p/ in ${lang}`, () => {
+    test.use({ locale: browserLocale[lang] });
     test("the fee page with the longest of everything", async ({ page }) => {
       test.setTimeout(120_000);
       await stubPayPage(page, { pay: { status: 200, body: { code: "ok", page: { ...feeBody, ...heavy(lang) } } } });
       await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "fee");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
       for (const size of sizes) {
@@ -81,6 +87,8 @@ for (const lang of langs) {
       await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "consent");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
@@ -97,6 +105,8 @@ for (const lang of langs) {
       await stubPayPage(page, { pay: notice({ language: lang, tutor_name: "T".repeat(80), student_name: "S".repeat(80), tutor_subjects: subjects }) });
       await page.goto(pageLink(lang));
       await expect(page.locator("main")).toHaveAttribute("data-state", "consent");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(page.locator("main")).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
@@ -112,6 +122,8 @@ for (const lang of langs) {
       await page.goto(pageLink(lang));
       const main = page.locator("main");
       await expect(main).toHaveAttribute("data-state", "failed");
+      // Laid out in {lang} itself: the fixture page must really show it (criterion 10).
+      await expect(main).toHaveAttribute("lang", lang);
       await fontsSettled(page);
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);

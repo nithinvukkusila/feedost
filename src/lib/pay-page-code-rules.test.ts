@@ -116,6 +116,20 @@ describe("the parent pages' languages", () => {
     expect(source(join(root, "src", "app", "r", "page.tsx"))).toMatch(/import \{ receiptWords \} from "@\/lib\/unlocked-languages"/);
   });
 
+  it("/p/ and /r/ use the shipped records and raw message files: they pass no fixture to the unlock rule", () => {
+    // payPageWords() and receiptWords() with no argument read the shipped review records and the raw message files.
+    // Any argument here (a fixture, stripped messages) would let the /dev fixture's hashes decide what a parent sees.
+    const p = stripComments(source(join(root, "src", "app", "p", "page.tsx")));
+    const r = stripComments(source(join(root, "src", "app", "r", "page.tsx")));
+    expect(p.match(/payPageWords\(([^)]*)\)/g)).toEqual(["payPageWords()"]);
+    expect(r.match(/receiptWords\(([^)]*)\)/g)).toEqual(["receiptWords()"]);
+    for (const text of [p, r]) expect(/stripTodo|loadMessages|messages\/[a-z]{2}\.json|review\.json/.test(text)).toBe(false);
+    // The wrapper's own defaults are the raw imports: no marker is taken out before hashing.
+    const wrapper = stripComments(source(join(root, "src", "lib", "unlocked-languages.ts")));
+    expect(wrapper).toMatch(/const shippedMessages: Readonly<Record<Locale, unknown>> = \{ en, hi, kn, te \};/);
+    expect(/stripTodo|loadMessages/.test(wrapper), "unlocked-languages.ts must hash the raw files").toBe(false);
+  });
+
   it("only the /dev pages and tests use the signed test fixture", () => {
     for (const path of code) {
       if (name(path).startsWith("src/app/dev/")) continue;

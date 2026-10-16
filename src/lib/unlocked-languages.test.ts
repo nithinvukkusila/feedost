@@ -113,6 +113,21 @@ describe("the shipped records", () => {
     expect(receipt.en.footer).toBe(en.receipt.footer);
   });
 
+  it("are checked against the raw files: records signed over the marker-stripped files (the /dev fixture's) unlock nothing on the real pages", async () => {
+    // The /dev fixture signs hashes taken over the files with their markers taken out. The real pages pass no
+    // messages, so the shipped raw files are used: a marked word keeps its hash null and the language stays locked.
+    // If the production path ever hashed stripped files, these records would unlock every language that still has a
+    // marked pay page word.
+    const stripped = { pay: signedFixture("payPage", ["hi", "kn", "te"], { messages: plain, consent: true }), receipt: signedFixture("receipt", ["hi", "kn", "te"], { messages: plain }) };
+    const marked = (["hi", "kn", "te"] as const).filter((locale) => recordHash("payPage", locale, raw) === null);
+    expect(marked.length, "a language with a marked pay page word, so the test can tell raw from stripped").toBeGreaterThan(0);
+    const pay = unlockedLanguages("payPage", { records: stripped.pay });
+    for (const locale of marked) expect(pay).not.toContain(locale);
+    expect(Object.keys(await payPageWords({ records: stripped.pay })).filter((l) => (marked as readonly string[]).includes(l))).toEqual([]);
+    // The same records, checked against the stripped files, do unlock them: so it is the files, not the records, that lock.
+    expect(unlockedLanguages("payPage", { records: stripped.pay, messages: plain })).toEqual(["en", "hi", "kn", "te"]);
+  });
+
   it("hash the raw files: the same records over the files with markers taken out would differ", () => {
     // hi's pay page words still carry markers, so the raw hash is null and nothing can sign it as it stands.
     expect(recordHash("payPage", "hi", raw)).toBeNull();
