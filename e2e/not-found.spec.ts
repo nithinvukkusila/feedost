@@ -204,7 +204,9 @@ test.describe("vercel.json rewrites resolve the way Vercel serves a static expor
   test("every rewrite source, with a sample token, serves its destination page with the no-referrer headers", async ({ request }) => {
     for (const { source, destination } of config.rewrites) {
       const address = source.replace(/:[A-Za-z]+/g, "x");
-      const response = await request.get(address, { maxRedirects: 0 });
+      // Redirects are followed: Vercel answers a slash-less address with a 308 to the slashed one (trailingSlash),
+      // the local server serves it at once. Either way the tutor's link must end on the page.
+      const response = await request.get(address);
       expect(response.status(), address).toBe(200);
       expect(await response.text(), address).toBe(await (await request.get(destination)).text());
       expect(response.headers()["referrer-policy"], address).toBe("no-referrer");
@@ -212,11 +214,11 @@ test.describe("vercel.json rewrites resolve the way Vercel serves a static expor
     }
   });
 
-  // (/p/index.html is no test here: it matches /p/:token, so it is the pay page for the token "index.html", as on Vercel.)
+  // (/p/index.html is no test here: it matches /p/:token, so locally it is the pay page for the token "index.html";
+  // what Vercel answers for it is not checked, and no link the app sends looks like it.)
   test("an index.html address is a 404, as on Vercel", async ({ request }) => {
     for (const address of ["/index.html", "/en/index.html", "/en/claims/index.html", "/dev/unlocked/p/index.html"]) {
       expect((await request.get(address, { maxRedirects: 0 })).status(), address).toBe(404);
     }
-    expect((await request.get("/404.html")).status()).toBe(200);
   });
 });

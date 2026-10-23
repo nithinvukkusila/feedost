@@ -25,8 +25,9 @@ const base = `type-control px-5 py-2.5 ${shape}`;
 const compactBase = `type-control-sm px-3 py-2 ${shape}`;
 // A `card` button breaks its label only between words: it is never narrower than its longest word, so a
 // label like "Not received" goes onto two lines rather than "Not / receiv / ed" (R1-10, criterion 21).
-// Its sides are 12px, not 20px, so the label fits the 104px the canvas draws. `wrap-break-word` stays as
-// the last resort for a single word wider than the whole card, so nothing ever runs off the screen.
+// Its sides are 12px, not 20px, so the label fits the 104px the canvas draws. Because the button never
+// shrinks below its longest word, `wrap-break-word` does not split a word here: a single word wider than the
+// card would overflow, and the sideways-scroll checks in claims-layout.spec.ts are what guard against that.
 const cardBase = `type-control px-3 py-2.5 wrap-break-word ${shape}`;
 const anywhere = "wrap-anywhere";
 

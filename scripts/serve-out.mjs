@@ -28,7 +28,8 @@ const types = {
 // Vercel serves an exported page at its clean address only: out/p/index.html is the page `/p/`, and the
 // address `/p/index.html` is a 404 there (it is not a file Vercel serves). This server does the same, both
 // for a request and for a rewrite destination, so a destination like `/p/index.html` fails here as it does
-// on Vercel. The one exception is /404.html, which Next writes as a top-level file.
+// on Vercel. /404.html is still served here as a file with 200; Vercel answers that address with its
+// not-found status, so no test may depend on /404.html returning 200.
 const isIndexFile = (urlPath) => /(^|\/)index\.html$/i.test(urlPath);
 const config = JSON.parse(readFileSync("vercel.json", "utf8"));
 const matcher = (source) => {
