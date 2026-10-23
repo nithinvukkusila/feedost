@@ -87,6 +87,21 @@ describe("Button element and content (criteria 18 and 19)", () => {
     expect(names.filter((n) => /^(truncate|text-ellipsis|overflow-hidden|line-clamp|h-|max-h-)/.test(n))).toEqual([]);
   });
 
+  it("a card button breaks its label only between words and grows in height", () => {
+    render(
+      <Button variant="outline" size="card">
+        Not received
+      </Button>,
+    );
+    const button = screen.getByRole("button");
+    const names = classes(button);
+    expect(names).toEqual(expect.arrayContaining(["min-h-13", "whitespace-normal", "wrap-break-word"]));
+    expect(names).not.toContain("wrap-anywhere");
+    // The label may not shrink below its longest word.
+    expect(classes(button.querySelector("span")!)).not.toContain("min-w-0");
+    expect(names.filter((n) => /^(truncate|text-ellipsis|overflow-hidden|line-clamp|h-|max-h-)/.test(n))).toEqual([]);
+  });
+
   it("passes native attributes through", () => {
     render(
       <Button variant="outline" data-force="pressed" name="share">

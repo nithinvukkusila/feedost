@@ -192,11 +192,12 @@ describe("vercel.json (criterion 36)", () => {
     expect(JSON.parse(read("vercel.json"))).toEqual({
       $schema: "https://openapi.vercel.sh/vercel.json",
       // The only production routing the app has: the receipt (R1-7 Part B) and the pay page (R1-9 Part B). /join/* arrives with R1-13.
+      // The destination is the page's clean address: Vercel serves an exported page at `/p/`, and `/p/index.html` is a 404 there.
       rewrites: [
-        { source: "/r/:token", destination: "/r/index.html" },
-        { source: "/r/:token/", destination: "/r/index.html" },
-        { source: "/p/:token", destination: "/p/index.html" },
-        { source: "/p/:token/", destination: "/p/index.html" },
+        { source: "/r/:token", destination: "/r/" },
+        { source: "/r/:token/", destination: "/r/" },
+        { source: "/p/:token", destination: "/p/" },
+        { source: "/p/:token/", destination: "/p/" },
       ],
       headers: [
         {
