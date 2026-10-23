@@ -7,7 +7,7 @@ import { makeFake } from "./db-fake.test-util";
 const fake = makeFake();
 vi.mock("./supabase", () => ({ getClient: () => Promise.resolve(fake.client) }));
 
-import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readOpeningPaid, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
+import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readOpeningPaid, readPaymentsByReceipt, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: "p1",
@@ -160,6 +160,28 @@ describe("only this file touches payments", () => {
       const text = readFileSync(file, "utf8");
       expect(text, file).not.toMatch(/record_payment|void_payment|from\(\s*["'`]payments["'`]/);
     }
+  });
+});
+
+describe("readPaymentsByReceipt (the payments a Confirm made)", () => {
+  it("reads the numbers from `first` for `count`, oldest first, through the named columns", async () => {
+    fake.answer(ok([row({ receipt_no: 214 }), row({ id: "p2", receipt_no: 215 })]));
+    const payments = await readPaymentsByReceipt(214, 2);
+    expect(payments.map((p) => p.receiptNo)).toEqual([214, 215]);
+    expect(fake.calls.map((c) => [c.op, ...c.args])).toEqual([
+      ["from", "payments"],
+      ["select", PAYMENT_COLUMNS],
+      ["gte", "receipt_no", 214],
+      ["lt", "receipt_no", 216],
+      ["order", "receipt_no", { ascending: true }],
+    ]);
+  });
+
+  it("refuses a range that cannot be right without a request, and fails on an error", async () => {
+    for (const [first, count] of [[0, 1], [5, 0], [1.5, 1], [1, -1]]) await expect(readPaymentsByReceipt(first, count)).rejects.toMatchObject({ code: "invalid_argument" });
+    expect(fake.calls).toEqual([]);
+    fake.answer({ data: null, error: { code: "500" } });
+    await expect(readPaymentsByReceipt(1, 1)).rejects.toMatchObject({ code: "failed" });
   });
 });
 

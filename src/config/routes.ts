@@ -20,6 +20,8 @@ export const attendancePath = "attendance/";
 export const receiptPath = "receipt/";
 /** The Remind screen (R1-8), one reminder or a run of them. Not a `Place`: the gate treats it as home. What is queued is held in memory, never in the address. */
 export const remindPath = "remind/";
+/** The inbox of parents' "I've paid" claims (R1-10), reached from Home's chip. Not a `Place`: the gate treats it as home. */
+export const claimsPath = "claims/";
 export const setupProfilePath = "setup/profile/";
 export const setupUpiPath = "setup/upi/";
 

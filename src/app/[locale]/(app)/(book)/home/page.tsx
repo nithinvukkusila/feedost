@@ -5,7 +5,7 @@
 import { ClientMessages } from "@/components/i18n/client-messages";
 import { HomeScreen } from "@/components/home/home-screen";
 
-const namespaces = ["appState", "home", "nav", "students", "board", "pay", "remind"] as const;
+const namespaces = ["appState", "home", "nav", "students", "board", "pay", "remind", "claims"] as const;
 
 export default function HomePage() {
   return (

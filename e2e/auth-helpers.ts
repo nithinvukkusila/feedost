@@ -253,6 +253,16 @@ export async function stubSupabase(page: Page | BrowserContext, initial: { tutor
       await json(route, 200, 0);
       return;
     }
+    // Parents' claims (R1-10): none, unless a spec registers `stubClaims` (claims-helpers.ts). The chip on Home asks for a count.
+    if (url.pathname === "/rest/v1/payment_claims" && (request.method() === "GET" || request.method() === "HEAD")) {
+      if (stub.networkDown) {
+        await route.abort("failed");
+        return;
+      }
+      if (request.method() === "HEAD") await route.fulfill({ status: 200, headers: { ...cors(request), "content-range": "*/0" } });
+      else await json(route, 200, []);
+      return;
+    }
     stub.unknown.push(logged);
     await json(route, 404, { message: "nothing is stubbed at this address" });
   });

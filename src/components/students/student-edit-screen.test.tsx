@@ -16,6 +16,8 @@ vi.mock("@/lib/students", () => ({ setActive: (...a: unknown[]) => setActive(...
 
 const readOpeningPaid = vi.fn();
 vi.mock("@/lib/payments", () => ({ readOpeningPaid: (...a: unknown[]) => readOpeningPaid(...a) }));
+const readOpeningClaimPending = vi.fn();
+vi.mock("@/lib/claims", () => ({ readOpeningClaimPending: (...a: unknown[]) => readOpeningClaimPending(...a) }));
 
 import { StudentEditScreen } from "./student-edit-screen";
 
@@ -34,6 +36,7 @@ beforeEach(() => {
   put.mockReset();
   setActive.mockReset();
   readOpeningPaid.mockReset().mockResolvedValue(false);
+  readOpeningClaimPending.mockReset().mockResolvedValue(false);
 });
 afterEach(cleanup);
 
@@ -112,6 +115,44 @@ describe("Already owes (R1-7, criterion 20)", () => {
     renderWithWords(<StudentEditScreen />);
     await screen.findByRole("button", { name: "Archive student" });
     expect(readOpeningPaid).toHaveBeenCalled();
+    await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
+  });
+});
+
+describe("Already owes while a parent's claim waits (R1-10, section 17)", () => {
+  const CLAIM_LINE = "A parent says this is paid, so it can't be changed. Open “to confirm” on Home, then tap Confirm paid or Not received.";
+  const PAID_LINE = "A payment has been recorded against this, so it can't be changed";
+
+  it("locks the field and says a claim is the reason", async () => {
+    show(true);
+    readOpeningClaimPending.mockResolvedValue(true);
+    renderWithWords(<StudentEditScreen />);
+    expect(await screen.findByText(CLAIM_LINE)).toBeTruthy();
+    expect(readOpeningClaimPending).toHaveBeenCalledWith("s1");
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(true);
+    expect(screen.queryByText(PAID_LINE)).toBeNull();
+  });
+
+  it("shows the payment line, not the claim's, when both are true", async () => {
+    show(true);
+    readOpeningPaid.mockResolvedValue(true);
+    readOpeningClaimPending.mockResolvedValue(true);
+    renderWithWords(<StudentEditScreen />);
+    expect(await screen.findByText(PAID_LINE)).toBeTruthy();
+    expect(screen.queryByText(CLAIM_LINE)).toBeNull();
+    expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(true);
+  });
+
+  it("holds the field until the claim read has answered too", async () => {
+    show(true);
+    let answer: (pending: boolean) => void = () => {};
+    readOpeningClaimPending.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)));
+    renderWithWords(<StudentEditScreen />);
+    const field = await screen.findByLabelText("Already owes ₹");
+    await Promise.resolve();
+    expect((field as HTMLTextAreaElement).readOnly).toBe(true);
+    expect(screen.queryByText(CLAIM_LINE)).toBeNull();
+    answer(false);
     await waitFor(() => expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false));
   });
 });

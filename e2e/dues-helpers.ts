@@ -151,6 +151,12 @@ export async function stubDues(page: Page, initial: (Partial<DueRow> & { student
       if (month?.startsWith("eq.")) rows = rows.filter((row) => row.month === month.slice(3));
       else if (month === "not.is.null") rows = rows.filter((row) => row.month !== null);
       if (q.get("status") === "neq.paid") rows = rows.filter((row) => row.status !== "paid");
+      // `id=in.(a,b)`: the inbox reads the fees its cards name (R1-10).
+      const ids = q.get("id");
+      if (ids?.startsWith("in.(")) {
+        const wanted = ids.slice(4, -1).split(",");
+        rows = rows.filter((row) => wanted.includes(row.id));
+      }
       for (const column of ["id", "student_id", "kind"] as const) {
         const wanted = q.get(column);
         if (wanted?.startsWith("eq.")) rows = rows.filter((row) => row[column] === wanted.slice(3));

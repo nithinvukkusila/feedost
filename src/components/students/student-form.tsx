@@ -36,7 +36,8 @@ import { newId } from "@/lib/uuid";
 export type StudentFormProps =
   | { mode: "add"; initialBatchId?: string }
   /** `owesLocked`: a payment has been recorded against the earlier balance, so "Already owes" cannot change (R1-7, criterion 20). */
-  | { mode: "edit"; student: Student; owesLocked?: boolean; owesChecking?: boolean };
+  /** `owesClaimPending`: a parent's claim waits on the earlier balance, so it cannot change until the tutor handles it (R1-10, section 17). */
+  | { mode: "edit"; student: Student; owesLocked?: boolean; owesClaimPending?: boolean; owesChecking?: boolean };
 
 const NO_BATCH = "";
 
@@ -65,6 +66,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const roster = useRoster();
   const editing = props.mode === "edit";
   const owesLocked = props.mode === "edit" && props.owesLocked === true;
+  const owesClaimPending = props.mode === "edit" && props.owesClaimPending === true;
   // Held read-only (without the "payment recorded" words) until the edit screen has read whether a payment exists.
   const owesChecking = props.mode === "edit" && props.owesChecking === true;
   const saved = props.mode === "edit" ? props.student : null;
@@ -242,11 +244,12 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
           autoComplete="off"
           latinValue
           placeholder="0"
-          readOnly={owesLocked || owesChecking}
+          readOnly={owesLocked || owesClaimPending || owesChecking}
           onChange={(e) => set("owes", e.currentTarget.value)}
           onBlur={() => set("owes", tidyRupees(draft.owes, OWES_LIMITS))}
           error={problemOf("owes", "")}
-          helper={owesLocked ? t("form.owesLocked") : t("form.owesHint")}
+          // A payment locks it for good, so that line wins over the claim's.
+          helper={owesLocked ? t("form.owesLocked") : owesClaimPending ? t("form.owesClaimPending") : t("form.owesHint")}
         />
       </fieldset>
 

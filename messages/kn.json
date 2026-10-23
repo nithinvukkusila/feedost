@@ -384,6 +384,7 @@
       "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
       "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch.",
       "owesLocked": "TODO-translate: A payment has been recorded against this, so it can't be changed",
+      "owesClaimPending": "TODO-translate: A parent says this is paid, so it can't be changed. Open “to confirm” on Home, then tap Confirm paid or Not received.",
       "groupWho": "TODO-translate: Who",
       "groupFee": "TODO-translate: Fee",
       "groupOwes": "TODO-translate: Opening balance",
@@ -679,7 +680,8 @@
       "reused": "TODO-translate: This may already be saved. Close this and check the fee on the board before trying again.",
       "signedOut": "TODO-translate: You were signed out. Sign in again. Nothing was recorded.",
       "undoFailed": "TODO-translate: Couldn't undo. Nothing was changed. Try again.",
-      "undoLate": "TODO-translate: This payment can no longer be undone."
+      "undoLate": "TODO-translate: This payment can no longer be undone.",
+      "undoPartial": "TODO-translate: Some of these payments were undone and some are still recorded. Open each fee's receipt to undo the rest."
     },
     "banner": {
       "paid": "TODO-translate: {name} marked paid, {amount}",
@@ -716,6 +718,46 @@
       "loadError": "TODO-translate: Couldn't load the receipt. Nothing is lost.",
       "retry": "TODO-translate: Try again"
     }
+  },
+  "claims": {
+    "chip": "TODO-translate: {n} to confirm",
+    "back": "TODO-translate: Back to home",
+    "heading": "TODO-translate: {n} parents say they've paid",
+    "headingOne": "TODO-translate: 1 parent says they've paid",
+    "sub": "TODO-translate: Check your UPI app, then confirm.",
+    "card": "TODO-translate: {name}'s parent says {amount} paid. Confirm?",
+    "when": {
+      "today": "TODO-translate: Today {time}",
+      "yesterday": "TODO-translate: Yesterday {time}",
+      "date": "TODO-translate: {date}"
+    },
+    "fee": {
+      "earlier": "TODO-translate: Earlier balance",
+      "fees": "TODO-translate: {n} fees"
+    },
+    "ref": "TODO-translate: UPI reference",
+    "copy": "TODO-translate: Copy",
+    "copyFor": "TODO-translate: Copy the UPI reference of {name}",
+    "copied": "TODO-translate: Copied",
+    "screenshot": "TODO-translate: Screenshot",
+    "confirm": "TODO-translate: Confirm paid",
+    "confirming": "TODO-translate: Saving…",
+    "notReceived": "TODO-translate: Not received",
+    "notReceivedAsk": "TODO-translate: Not received? {name}'s parent will not be told.",
+    "notReceivedYes": "TODO-translate: Yes, not received",
+    "cancel": "TODO-translate: Cancel",
+    "earlier": "TODO-translate: Earlier",
+    "confirmedOn": "TODO-translate: CONFIRMED {date} · NO. {n}",
+    "confirmedMore": "TODO-translate: CONFIRMED {date} · NO. {n} and {k} more",
+    "notReceivedOn": "TODO-translate: NOT RECEIVED {date}",
+    "empty": "TODO-translate: Nothing to confirm right now.",
+    "overRemaining": "TODO-translate: Only {amount} is open now. Mark it paid yourself or tap Not received.",
+    "handled": "TODO-translate: Already handled.",
+    "archived": "TODO-translate: {name} is archived. Restore the student to confirm.",
+    "tooOld": "TODO-translate: This was sent over 90 days ago. Use Mark paid on the fee.",
+    "failed": "TODO-translate: Couldn't save. Nothing was recorded. Try again.",
+    "loadError": "TODO-translate: Couldn't load the claims. Nothing is lost.",
+    "retry": "TODO-translate: Try again"
   },
   "remind": {
     "button": "TODO-translate: Remind",

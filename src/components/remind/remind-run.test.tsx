@@ -2,7 +2,7 @@
 // included, sits inside the element marked for the error reporter and analytics to leave alone.
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithWords } from "@/test-utils/render-with-words";
 import type { QueueItem } from "@/lib/reminder-rules";
 
@@ -21,7 +21,15 @@ beforeAll(() => {
     this.removeAttribute("open");
   };
 });
-afterEach(cleanup);
+// Midday in India, so "30 minutes before" is the same India day whenever the suite runs (it failed just after midnight).
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-10-15T12:00:00+05:30"));
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 const item = (n: number): QueueItem => ({
   dueId: `d${n}`,

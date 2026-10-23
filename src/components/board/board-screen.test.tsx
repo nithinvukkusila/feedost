@@ -21,6 +21,8 @@ vi.mock("@/components/remind/remind-provider", () => ({
 
 const held: { roster: Roster; board: Board } = { roster: undefined as unknown as Roster, board: undefined as unknown as Board };
 vi.mock("@/components/app/roster", () => ({ useRoster: () => held.roster }));
+// The "to confirm" chip reads a count from the database; it is tested in claims-chip.test.tsx.
+vi.mock("@/lib/claims", () => ({ countPendingClaims: () => Promise.reject(new Error("not in this test")) }));
 vi.mock("./board-state", () => ({ useBoard: () => held.board }));
 
 import { BoardScreen } from "./board-screen";
@@ -55,6 +57,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     settings: { month: null, tab: null, filter: "all" },
     notice: null,
     applyPayment: vi.fn(),
+    applyPayments: vi.fn(),
     applyVoid: vi.fn(),
     refresh: vi.fn(),
     showNotice: vi.fn(),

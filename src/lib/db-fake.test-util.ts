@@ -1,6 +1,6 @@
 // A small fake of the Supabase client for the data modules' tests. Test code only.
 // Every call is recorded; the call that ends a chain answers from `queue` (the last answer repeats).
-export type Outcome = { data: unknown; error: { code?: string; message?: string; details?: string } | null; status?: number };
+export type Outcome = { count?: number | null; data: unknown; error: { code?: string; message?: string; details?: string } | null; status?: number };
 
 export type Call = { op: string; args: unknown[] };
 
@@ -13,7 +13,7 @@ export function makeFake() {
 
   function chain(): Record<string, unknown> {
     const proxy: Record<string, unknown> = {};
-    for (const op of ["select", "insert", "update", "delete", "eq", "neq", "not", "in", "order", "limit", "range"]) {
+    for (const op of ["select", "insert", "update", "delete", "eq", "neq", "gte", "lt", "not", "in", "order", "limit", "range"]) {
       proxy[op] = (...args: unknown[]) => {
         calls.push({ op, args });
         if (state.throwOnQuery) throw new Error("network");

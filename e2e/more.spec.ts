@@ -75,7 +75,11 @@ test.describe("35, 36: changing the language from More", () => {
     await page.goto("/en/more/");
     await page.getByRole("link", { name: /Language/ }).click();
     await expect(page).toHaveURL(/\/en\/language\/$/);
-    await page.getByRole("link", { name: new RegExp(localeNames.hi) }).click();
+    // Wait until React has hydrated the row, so its tap handler (the save) is attached; a row tapped before that is a
+    // plain link that saves nothing (the same race language-picker.spec.ts guards against).
+    const hindi = page.getByRole("link", { name: new RegExp(localeNames.hi) });
+    await expect.poll(() => hindi.evaluate((el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")))).toBe(true);
+    await hindi.click();
     await expect(page).toHaveURL(/\/hi\/language\/$/);
     await page.getByRole("link", { name: messageText("hi", "language.continue") }).click();
     // Sign-in sends a signed-in tutor straight on; home in the new language.

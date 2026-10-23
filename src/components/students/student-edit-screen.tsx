@@ -16,6 +16,7 @@ import { WriteNotice, type WriteProblem } from "@/components/app/write-notice";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/config/locales";
 import { localeHref, studentsPath } from "@/config/routes";
+import { readOpeningClaimPending } from "@/lib/claims";
 import { readOpeningPaid } from "@/lib/payments";
 import { setActive, type Student } from "@/lib/students";
 import { ArchivedTag } from "./archived-tag";
@@ -40,15 +41,18 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
   const roster = useRoster();
   const [working, setWorking] = useState(false);
   const [problem, setProblem] = useState<WriteProblem | "missing">(null);
-  // Once any payment has been recorded against the earlier balance, "Already owes" is read-only (R1-7, criterion 20).
-  // Until the read has answered the field is held too (owesChecking); a failed read counts as locked.
+  // Once any payment has been recorded against the earlier balance, "Already owes" is read-only (R1-7, criterion 20),
+  // and so it is while a parent's claim waits on it (R1-10, section 17). Until both reads have answered the field
+  // is held too (owesChecking); a failed read counts as locked.
   const [owesLocked, setOwesLocked] = useState(false);
+  const [owesClaimPending, setOwesClaimPending] = useState(false);
   const [owesChecking, setOwesChecking] = useState(true);
   useEffect(() => {
     let current = true;
-    void readOpeningPaid(student.id).then((paid) => {
+    void Promise.all([readOpeningPaid(student.id), readOpeningClaimPending(student.id)]).then(([paid, claimed]) => {
       if (!current) return;
       setOwesLocked(paid);
+      setOwesClaimPending(claimed);
       setOwesChecking(false);
     });
     return () => {
@@ -82,7 +86,7 @@ function EditBody({ student }: Readonly<{ student: Student }>) {
         </div>
       )}
       <div className="mt-3">
-        <StudentForm key={student.id} mode="edit" student={student} owesLocked={owesLocked} owesChecking={owesChecking} />
+        <StudentForm key={student.id} mode="edit" student={student} owesLocked={owesLocked} owesClaimPending={owesClaimPending} owesChecking={owesChecking} />
       </div>
 
       <section className="mt-6 border-t-2 border-ink pt-4">

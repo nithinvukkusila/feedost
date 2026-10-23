@@ -16,6 +16,7 @@ export type Board = BoardSnapshot & {
   setFilter: (filter: BatchFilterValue) => void;
   retry: (today: string) => void;
   applyPayment: BoardStore["applyPayment"];
+  applyPayments: BoardStore["applyPayments"];
   applyVoid: BoardStore["applyVoid"];
   refresh: (today: string) => void;
   showNotice: BoardStore["showNotice"];
@@ -35,6 +36,7 @@ export function useBoard(): Board {
       setFilter: store.setFilter,
       retry: store.retry,
       applyPayment: store.applyPayment,
+      applyPayments: store.applyPayments,
       applyVoid: store.applyVoid,
       refresh: store.refresh,
       showNotice: store.showNotice,

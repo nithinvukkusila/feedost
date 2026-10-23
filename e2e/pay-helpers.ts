@@ -146,7 +146,13 @@ export async function stubPayments(page: Page, dues: Dues, initial: (Partial<Pay
         let rows = state.payments.slice();
         const due = url.searchParams.get("due_id");
         if (due?.startsWith("eq.")) rows = rows.filter((row) => row.due_id === due.slice(3));
-        rows.sort((a, b) => b.receipt_no - a.receipt_no);
+        // `receipt_no=gte.N&receipt_no=lt.M`: the payments a Confirm made (R1-10), oldest first.
+        const ascending = url.searchParams.get("order") === "receipt_no.asc";
+        for (const bound of url.searchParams.getAll("receipt_no")) {
+          if (bound.startsWith("gte.")) rows = rows.filter((row) => row.receipt_no >= Number(bound.slice(4)));
+          else if (bound.startsWith("lt.")) rows = rows.filter((row) => row.receipt_no < Number(bound.slice(3)));
+        }
+        rows.sort((a, b) => (ascending ? a.receipt_no - b.receipt_no : b.receipt_no - a.receipt_no));
         await json(route, 200, rows.map((row) => Object.fromEntries(select.split(",").map((column) => [column, (row as Record<string, unknown>)[column]]))));
         return;
       }

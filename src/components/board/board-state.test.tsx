@@ -278,6 +278,16 @@ describe("a payment the database confirmed (R1-7, criteria 14 and 15)", () => {
     expect(held.board.months["2026-10-01"].rows[0]).toMatchObject({ amountPaid: 100, status: "paid" });
   });
 
+  it("applyPayments (a Confirm that covered several fees, R1-10) patches each fee from its own payment", async () => {
+    lib.readUnpaid.mockResolvedValue([due("a"), due("old", "2026-09-01")]);
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    act(() => held.board.applyPayments([payment({ id: "p0", dueId: "old", amount: 100, balanceAfter: 0 }), payment()]));
+    expect(held.board.unpaid?.rows[1]).toMatchObject({ id: "old", amountPaid: 100, status: "paid" });
+    expect(held.board.unpaid?.rows[0]).toMatchObject({ id: "a", amountPaid: 40, status: "partial" });
+  });
+
   it("applying the same payment twice changes nothing more", async () => {
     await openBoard();
     act(() => held.board.applyPayment(payment()));
