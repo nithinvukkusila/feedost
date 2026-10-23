@@ -21,9 +21,10 @@ export type BoardSettings = { month: string | null; tab: Tab | null; filter: Bat
 
 /** What the banner under the list says (spec R1-7, criteria 14 and 15). */
 export type NoticeBody =
-  | { kind: "paid"; payment: Payment; name: string }
+  // `payment` is the last one made. A Confirm of a claim that covered several fees (R1-10) also sets `payments`, all of them oldest first.
+  | { kind: "paid"; payment: Payment; name: string; payments?: readonly Payment[] }
   | { kind: "undone" }
-  | { kind: "undo-failed"; reason: "failed" | "offline" | "late" };
+  | { kind: "undo-failed"; reason: "failed" | "offline" | "late" | "partial" };
 
 /** A notice and the moment (milliseconds since 1970) it stops being shown. The banner takes it down then; the board keeps no timer. */
 export type Notice = NoticeBody & { until: number };
@@ -191,6 +192,11 @@ export class BoardStore {
 
   /** The database recorded this payment: the fee has what is left after it. There is no earlier, optimistic state. */
   readonly applyPayment = (payment: Payment): void => this.patch(payment.dueId, (due) => withPaid(due, due.amount - payment.balanceAfter));
+
+  /** The database recorded these payments (a Confirm that covered several fees): each fee has what is left after its own. */
+  readonly applyPayments = (payments: readonly Payment[]): void => {
+    for (const payment of payments) this.applyPayment(payment);
+  };
 
   /** The database undid this payment: the fee has its amount back. */
   readonly applyVoid = (payment: Payment): void => this.patch(payment.dueId, (due) => withPaid(due, due.amountPaid - payment.amount));

@@ -170,6 +170,29 @@ export async function readPaymentsOfDue(dueId: string): Promise<Payment[]> {
 }
 
 /**
+ * The payments a Confirm made (R1-10): the tutor's payments with receipt numbers from `first` for `count`
+ * numbers (the claim holds the range; Confirm takes them one after the other, so there is no gap), oldest
+ * first. Here, not in claims.ts, because this is the one file that reads the `payments` table.
+ */
+export async function readPaymentsByReceipt(first: number, count: number): Promise<Payment[]> {
+  if (!Number.isSafeInteger(first) || first < 1 || !Number.isSafeInteger(count) || count < 1) throw new PaymentError("invalid_argument");
+  let result;
+  try {
+    const client = await getClient();
+    result = await client
+      .from("payments")
+      .select(PAYMENT_COLUMNS)
+      .gte("receipt_no", first)
+      .lt("receipt_no", first + count)
+      .order("receipt_no", { ascending: true });
+  } catch {
+    throw new PaymentError("failed");
+  }
+  if (result.error) throw new PaymentError("failed");
+  return ((result.data as unknown[] | null) ?? []).map(paymentFromRow);
+}
+
+/**
  * Whether any payment (voided or not) has been recorded against this student's earlier balance (criterion 20:
  * "Already owes" is then locked on the student's edit screen). The database does not refuse a later change: it
  * silently leaves the due as it was, so students.opening_balance would drift from the due. This lock is what

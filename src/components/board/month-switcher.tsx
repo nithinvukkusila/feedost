@@ -5,6 +5,7 @@
 // outline, and is announced as disabled. The month word comes from the page's language; the year is passed
 // as text, so no language groups or re-draws its digits.
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { BackIcon, NextIcon } from "@/components/app/icons";
 import { monthParts } from "@/lib/dues-board";
 
@@ -27,21 +28,26 @@ export type MonthSwitcherProps = {
   canNext: boolean;
   onPrev: () => void;
   onNext: () => void;
+  /** Something at the far end of the row (Home's "to confirm" chip). The row wraps when there is no room. */
+  trailing?: ReactNode;
 };
 
-export function MonthSwitcher({ label, canPrev, canNext, onPrev, onNext }: Readonly<MonthSwitcherProps>) {
+export function MonthSwitcher({ label, canPrev, canNext, onPrev, onNext, trailing }: Readonly<MonthSwitcherProps>) {
   const t = useTranslations("board");
   return (
-    <div className="flex items-center px-2 pt-1.5">
-      <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
-        <BackIcon />
-      </button>
-      <p aria-live="polite" aria-atomic="true" className="type-label min-w-0 px-1 text-center text-ink">
-        {label}
-      </p>
-      <button type="button" aria-label={t("next")} disabled={!canNext} onClick={onNext} className={arrow}>
-        <NextIcon />
-      </button>
+    <div className="flex flex-wrap items-center justify-between gap-y-1 px-2 pt-1.5">
+      <div className="flex items-center">
+        <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
+          <BackIcon />
+        </button>
+        <p aria-live="polite" aria-atomic="true" className="type-label min-w-0 px-1 text-center text-ink">
+          {label}
+        </p>
+        <button type="button" aria-label={t("next")} disabled={!canNext} onClick={onNext} className={arrow}>
+          <NextIcon />
+        </button>
+      </div>
+      {trailing}
     </div>
   );
 }

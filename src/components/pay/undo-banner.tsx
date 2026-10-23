@@ -44,17 +44,27 @@ export function UndoBanner({ today }: Readonly<{ today: string }>) {
     return () => clearTimeout(timer);
   }, [notice, clearNotice]);
 
-  async function undo(payment: Payment) {
+  // One payment, or the several a Confirm made (R1-10): voided newest first, one call each, stopping at the
+  // first failure. If some were undone before it, the words say the rest are still recorded.
+  async function undo(payments: readonly Payment[]) {
     if (working.current) return;
     working.current = true;
+    let done = 0;
     try {
-      const voided = await voidPayment(payment.id);
-      applyVoid(voided);
+      for (const payment of [...payments].reverse()) {
+        const voided = await voidPayment(payment.id);
+        done += 1;
+        applyVoid(voided);
+      }
       refresh(today);
       showNotice({ kind: "undone" });
     } catch (error) {
       const code = error instanceof PaymentError ? error.code : "failed";
-      showNotice({ kind: "undo-failed", reason: code === "offline" ? "offline" : code === "undo_window_over" || code === "already_voided" ? "late" : "failed" });
+      if (done > 0) refresh(today);
+      showNotice({
+        kind: "undo-failed",
+        reason: done > 0 ? "partial" : code === "offline" ? "offline" : code === "undo_window_over" || code === "already_voided" ? "late" : "failed",
+      });
     } finally {
       working.current = false;
     }
@@ -63,13 +73,15 @@ export function UndoBanner({ today }: Readonly<{ today: string }>) {
   let banner = null;
   if (notice?.kind === "paid") {
     const { payment, name } = notice;
+    const made = notice.payments ?? [payment];
+    const total = made.reduce((sum, p) => sum + p.amount, 0);
     const href = `${localeHref(locale, receiptPath)}?due=${encodeURIComponent(payment.dueId)}`;
     banner = (
       <Banner
         kind="undo"
-        message={t("banner.paid", { name, amount: formatRupees(payment.amount) })}
+        message={t("banner.paid", { name, amount: formatRupees(total) })}
         actions={[
-          { label: t("banner.undo"), onClick: () => void undo(payment) },
+          { label: t("banner.undo"), onClick: () => void undo(made) },
           { label: t("banner.send"), href, onClick: (event) => soft(href)(event as MouseEvent<HTMLAnchorElement>), icon: <ChatIcon /> },
         ]}
       />
@@ -77,7 +89,7 @@ export function UndoBanner({ today }: Readonly<{ today: string }>) {
   } else if (notice?.kind === "undone") {
     banner = <Banner kind="undo" message={t("banner.undone")} actions={[]} />;
   } else if (notice?.kind === "undo-failed") {
-    banner = <Banner kind="error" title={null} detail={t(notice.reason === "offline" ? "error.offline" : notice.reason === "late" ? "error.undoLate" : "error.undoFailed")} />;
+    banner = <Banner kind="error" title={null} detail={t(notice.reason === "offline" ? "error.offline" : notice.reason === "late" ? "error.undoLate" : notice.reason === "partial" ? "error.undoPartial" : "error.undoFailed")} />;
   }
   return (
     <div aria-live="polite" aria-atomic="true" className="px-3 pb-3 empty:hidden">

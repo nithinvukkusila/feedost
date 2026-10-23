@@ -14,6 +14,7 @@ import { useTutor } from "@/components/app/app-gate";
 import { AppScreen } from "@/components/app/app-screen";
 import { useRoster } from "@/components/app/roster";
 import { UndoBanner } from "@/components/pay/undo-banner";
+import { ClaimsChip } from "@/components/claims/claims-chip";
 import { useRemind } from "@/components/remind/remind-provider";
 import { BatchFilter, effectiveFilter } from "@/components/students/batch-filter";
 import { Slip } from "@/components/ui/slip";
@@ -163,7 +164,7 @@ export function BoardScreen() {
 
   return (
     <AppScreen nav="home" above={<UndoBanner today={today} />}>
-      <MonthSwitcher label={months.label(month)} canPrev={moves.prev} canNext={moves.next} onPrev={() => go(shiftMonth(month, -1))} onNext={() => go(shiftMonth(month, 1))} />
+      <MonthSwitcher label={months.label(month)} canPrev={moves.prev} canNext={moves.next} onPrev={() => go(shiftMonth(month, -1))} onNext={() => go(shiftMonth(month, 1))} trailing={<ClaimsChip />} />
 
       {board.blocked ? (
         <p role="status" className="type-caption px-5 pt-2 text-ink-soft wrap-anywhere">

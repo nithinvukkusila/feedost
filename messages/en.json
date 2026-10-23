@@ -679,7 +679,8 @@
       "reused": "This may already be saved. Close this and check the fee on the board before trying again.",
       "signedOut": "You were signed out. Sign in again. Nothing was recorded.",
       "undoFailed": "Couldn't undo. Nothing was changed. Try again.",
-      "undoLate": "This payment can no longer be undone."
+      "undoLate": "This payment can no longer be undone.",
+      "undoPartial": "Some of these payments were undone and some are still recorded. Open each fee's receipt to undo the rest."
     },
     "banner": {
       "paid": "{name} marked paid, {amount}",
@@ -716,6 +717,46 @@
       "loadError": "Couldn't load the receipt. Nothing is lost.",
       "retry": "Try again"
     }
+  },
+  "claims": {
+    "chip": "{n} to confirm",
+    "back": "Back to home",
+    "heading": "{n} parents say they've paid",
+    "headingOne": "1 parent says they've paid",
+    "sub": "Check your UPI app, then confirm.",
+    "card": "{name}'s parent says {amount} paid. Confirm?",
+    "when": {
+      "today": "Today {time}",
+      "yesterday": "Yesterday {time}",
+      "date": "{date}"
+    },
+    "fee": {
+      "earlier": "Earlier balance",
+      "fees": "{n} fees"
+    },
+    "ref": "UPI reference",
+    "copy": "Copy",
+    "copyFor": "Copy the UPI reference of {name}",
+    "copied": "Copied",
+    "screenshot": "Screenshot",
+    "confirm": "Confirm paid",
+    "confirming": "Saving…",
+    "notReceived": "Not received",
+    "notReceivedAsk": "Not received? {name}'s parent will not be told.",
+    "notReceivedYes": "Yes, not received",
+    "cancel": "Cancel",
+    "earlier": "Earlier",
+    "confirmedOn": "CONFIRMED {date} · NO. {n}",
+    "confirmedMore": "CONFIRMED {date} · NO. {n} and {k} more",
+    "notReceivedOn": "NOT RECEIVED {date}",
+    "empty": "Nothing to confirm right now.",
+    "overRemaining": "Only {amount} is open now. Mark it paid yourself or tap Not received.",
+    "handled": "Already handled.",
+    "archived": "{name} is archived. Restore the student to confirm.",
+    "tooOld": "This was sent over 90 days ago. Use Mark paid on the fee.",
+    "failed": "Couldn't save. Nothing was recorded. Try again.",
+    "loadError": "Couldn't load the claims. Nothing is lost.",
+    "retry": "Try again"
   },
   "remind": {
     "button": "Remind",

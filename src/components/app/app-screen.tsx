@@ -49,6 +49,10 @@ export function AppScreen({ nav, above, children }: Readonly<{ nav?: BottomNavKe
           {above ? <div className={`on-paper-ground lg:sticky lg:bottom-0 lg:z-10 lg:self-end ${contentColumn}`}>{above}</div> : null}
         </div>
       ) : null}
+      {!nav && above ? (
+        // A screen with no navigation (the claims inbox) still pins its banner to the foot, in the same place.
+        <div className={`on-paper-ground sticky bottom-0 z-10 order-last lg:self-end ${contentColumn}`}>{above}</div>
+      ) : null}
       <main className={`${content}${above ? " lg:pb-32" : ""}`}>{children}</main>
     </Book>
   );

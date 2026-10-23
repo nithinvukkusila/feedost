@@ -27,6 +27,46 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe("the banner after a Confirm that covered several fees (R1-10)", () => {
+  const first: Payment = { ...payment, id: "p0", dueId: "d0", amount: 80000, receiptNo: 214, balanceAfter: 0 };
+  const several = (): Notice => ({ kind: "paid", payment, payments: [first, payment], name: "Ravi Kumar", until: Date.now() + 10_000 });
+
+  it("says the whole amount and links the last receipt", () => {
+    board.notice = several();
+    renderWithWords(<UndoBanner today="2026-10-12" />);
+    expect(screen.getByRole("status").textContent).toContain("Ravi Kumar marked paid, ₹2,000");
+    expect(screen.getByRole("link", { name: "View receipt" }).getAttribute("href")).toBe("/en/receipt/?due=d1");
+  });
+
+  it("Undo voids newest first, one call each, then says undone", async () => {
+    board.notice = several();
+    voidPayment.mockImplementation((id: string) => Promise.resolve({ ...(id === "p1" ? payment : first), voidedAt: 1 }));
+    renderWithWords(<UndoBanner today="2026-10-12" />);
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(board.showNotice).toHaveBeenCalledWith({ kind: "undone" }));
+    expect(voidPayment.mock.calls.map((c) => c[0])).toEqual(["p1", "p0"]);
+    expect(board.applyVoid).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops at the first failure; if some were undone it says the rest are still recorded", async () => {
+    board.notice = several();
+    voidPayment.mockResolvedValueOnce({ ...payment, voidedAt: 1 }).mockRejectedValueOnce(new PaymentError("failed"));
+    renderWithWords(<UndoBanner today="2026-10-12" />);
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(board.showNotice).toHaveBeenCalledWith({ kind: "undo-failed", reason: "partial" }));
+    expect(voidPayment).toHaveBeenCalledTimes(2);
+  });
+
+  it("a failure on the first call is the plain failure", async () => {
+    board.notice = several();
+    voidPayment.mockRejectedValue(new PaymentError("offline"));
+    renderWithWords(<UndoBanner today="2026-10-12" />);
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(board.showNotice).toHaveBeenCalledWith({ kind: "undo-failed", reason: "offline" }));
+    expect(voidPayment).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("the banner", () => {
   it("keeps its live region with nothing in it", () => {
     renderWithWords(<UndoBanner today="2026-10-12" />);

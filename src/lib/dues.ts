@@ -144,6 +144,20 @@ export async function readDue(id: string): Promise<Due | null> {
   return first === undefined ? null : dueFromRow(first);
 }
 
+/** The fees with these ids (the inbox's cards name the month of each). Ids that are not this tutor's, or are gone, are simply not returned. */
+export async function readDuesByIds(ids: readonly string[]): Promise<Due[]> {
+  if (ids.length === 0) return [];
+  let result;
+  try {
+    const client = await getClient();
+    result = await client.from("dues").select(DUE_COLUMNS).in("id", [...ids]);
+  } catch {
+    throw new DuesLoadError();
+  }
+  if (result.error) throw new DuesLoadError(classifyLoadFailure({ status: result.status, code: result.error.code }));
+  return ((result.data as unknown[] | null) ?? []).map(dueFromRow);
+}
+
 /** The id of this student's earlier-balance due, or null when there is none. Throws when it cannot be read. */
 export async function readOpeningDueId(studentId: string): Promise<string | null> {
   const client = await getClient();

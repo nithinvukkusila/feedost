@@ -26,3 +26,13 @@ describe("no component calls the database directly", () => {
     expect(text).not.toMatch(/\.rpc\(/);
   });
 });
+
+// Spec R1-10, criterion 27: claims are read and handled from one file, src/lib/claims.ts, as payments are from payments.ts.
+describe("only src/lib/claims.ts names the claims table and its two functions", () => {
+  const files = walk(join(process.cwd(), "src")).filter((path) => /\.(ts|tsx)$/.test(path) && !/\.test\./.test(path) && !/\.test-util\./.test(path));
+
+  it.each(files.map((path) => [path.slice(process.cwd().length + 1), path]))("%s", (name, path) => {
+    if (name === join("src", "lib", "claims.ts")) return;
+    expect(readFileSync(path, "utf8")).not.toMatch(/payment_claims|confirm_claim|reject_claim/);
+  });
+});
