@@ -136,7 +136,8 @@ export function ClaimCard({ claim, name, archived, tooOld, when, fee, onConfirme
     }
   }
 
-  let message: { kind: "error" | "offline"; text: string } | null = null;
+  // "quiet": the sentence is already on screen as Confirm's disabled reason (archived, too old), so it is only announced.
+  let message: { kind: "error" | "offline" | "quiet"; text: string } | null = null;
   if (problem !== null) {
     const { code, remaining } = problem;
     const text =
@@ -155,7 +156,7 @@ export function ClaimCard({ claim, name, archived, tooOld, when, fee, onConfirme
                   : code === "request_reused"
                     ? pay("error.reused")
                     : t("failed");
-    message = { kind: code === "offline" ? "offline" : "error", text };
+    message = { kind: code === "offline" ? "offline" : code === "student_archived" || code === "date_out_of_range" ? "quiet" : "error", text };
   }
   const reason = blocked === "gone" ? null : archived || blocked === "archived" ? t("archived", { name }) : tooOld || blocked === "old" ? t("tooOld") : null;
   const done = blocked === "gone";
@@ -207,7 +208,9 @@ export function ClaimCard({ claim, name, archived, tooOld, when, fee, onConfirme
 
       <div aria-live="polite" aria-atomic="true" className="empty:hidden">
         {message ? (
-          message.kind === "offline" ? (
+          message.kind === "quiet" ? (
+            <p className="sr-only">{message.text}</p>
+          ) : message.kind === "offline" ? (
             <Banner kind="offline" title={message.text} detail={null} />
           ) : (
             <Banner kind="error" title={null} detail={message.text} />

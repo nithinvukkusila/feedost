@@ -1,4 +1,6 @@
-// Spec R1-10, criteria 18, 19, 25: the inbox's pure helpers.
+// Spec R1-10, criteria 18, 19, 25 and 41: the inbox's pure helpers.
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { feeLabel, groupRef, receiptsOf, whenOf } from "./claim-view";
 import type { Claim } from "./claims";
@@ -58,4 +60,21 @@ describe("feeLabel", () => {
 describe("receiptsOf", () => {
   it("is the first number and how many more", () => expect(receiptsOf(claim({ status: "confirmed", handledAt: 1, receiptFrom: 214, receiptCount: 3 }))).toEqual({ first: 214, more: 2 }));
   it("is null unless confirmed", () => expect(receiptsOf(claim())).toBeNull());
+});
+
+describe("claims code does money and days only in whole numbers (41)", () => {
+  const dir = join("src", "components", "claims");
+  const components = readdirSync(join(process.cwd(), dir))
+    .filter((name) => /\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name))
+    .map((name) => join(dir, name));
+  const files = [join("src", "lib", "claims.ts"), join("src", "lib", "claim-view.ts"), ...components];
+
+  it("covers the components folder", () => {
+    expect(components.length).toBeGreaterThan(0);
+  });
+
+  it.each(files)("%s has no float, rounding, local-time getter or Intl", (file) => {
+    const text = readFileSync(join(process.cwd(), file), "utf8").replace(/\/\/.*$/gm, "");
+    expect(text).not.toMatch(/parseFloat|toFixed|Math\.round|Intl\.|toLocale|new Date|getFullYear|getMonth|getDate|getDay|getHours/);
+  });
 });

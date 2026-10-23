@@ -77,7 +77,14 @@ function Inbox() {
   const { applyPayments, showNotice, refresh } = board;
   const nameOf = (studentId: string) => roster.students.find((s) => s.id === studentId)?.name ?? "";
 
+  // A re-read sent before the database answered a Confirm or Not received would bring the handled card back:
+  // moving the ticket on drops it. The next re-read (the page shown again) reads what the database holds now.
+  function dropReadsInFlight() {
+    reading.current += 1;
+  }
+
   function confirmed(claim: Claim, payments: Payment[]) {
+    dropReadsInFlight();
     setState((held) =>
       held.status === "ready"
         ? { status: "ready", data: { ...held.data, pending: held.data.pending.filter((c) => c.id !== claim.id), handled: [claim, ...held.data.handled.filter((c) => c.id !== claim.id)].slice(0, EARLIER_MAX) } }
@@ -93,6 +100,7 @@ function Inbox() {
   }
 
   function rejected(claim: Claim) {
+    dropReadsInFlight();
     setState((held) =>
       held.status === "ready"
         ? { status: "ready", data: { ...held.data, pending: held.data.pending.filter((c) => c.id !== claim.id), handled: [claim, ...held.data.handled.filter((c) => c.id !== claim.id)].slice(0, EARLIER_MAX) } }

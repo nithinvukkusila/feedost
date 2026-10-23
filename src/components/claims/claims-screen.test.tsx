@@ -195,4 +195,20 @@ describe("after the database has answered (20, 21, 24)", () => {
     await waitFor(() => expect(readPendingClaims).toHaveBeenCalledTimes(2));
     expect(screen.getByRole("article", { name: "card Ravi Kumar" })).toBeTruthy();
   });
+
+  it.each(["confirm", "reject"])("a re-read sent before %s answered is dropped, so the handled card does not come back", async (how) => {
+    let answer: (claims: Claim[]) => void = () => {};
+    readPendingClaims.mockResolvedValueOnce([claim("c1", "s1"), claim("c2", "s2")]).mockReturnValueOnce(new Promise<Claim[]>((resolve) => (answer = resolve)));
+    renderWithWords(<ClaimsScreen />);
+    await screen.findByRole("heading", { name: "2 parents say they've paid" });
+    act(() => setVisibility("visible"));
+    await waitFor(() => expect(readPendingClaims).toHaveBeenCalledTimes(2));
+    await userEvent.click(screen.getByRole("button", { name: `${how} Ravi Kumar` }));
+    expect(screen.getByRole("heading", { name: "1 parent says they've paid" })).toBeTruthy();
+    // The stale read lands now, still holding Ravi's claim as pending.
+    await act(async () => answer([claim("c1", "s1"), claim("c2", "s2")]));
+    await act(async () => {});
+    expect(screen.queryByRole("article", { name: "card Ravi Kumar" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "1 parent says they've paid" })).toBeTruthy();
+  });
 });

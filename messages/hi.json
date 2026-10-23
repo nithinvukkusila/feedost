@@ -384,6 +384,7 @@
       "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
       "batchGone": "TODO-translate: That batch no longer exists. Pick another batch or No batch.",
       "owesLocked": "TODO-translate: A payment has been recorded against this, so it can't be changed",
+      "owesClaimPending": "TODO-translate: A parent says this is paid, so it can't be changed. Open “to confirm” on Home, then tap Confirm paid or Not received.",
       "groupWho": "TODO-translate: Who",
       "groupFee": "TODO-translate: Fee",
       "groupOwes": "TODO-translate: Opening balance",

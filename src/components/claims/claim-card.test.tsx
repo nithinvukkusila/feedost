@@ -179,7 +179,20 @@ describe("Confirm paid", () => {
     draw();
     await userEvent.click(confirmButton());
     await waitFor(() => expect((screen.getByRole("button", { name: "Confirm paid" }) as HTMLButtonElement).disabled).toBe(true));
-    expect(screen.getAllByText("This was sent over 90 days ago. Use Mark paid on the fee.").length).toBeGreaterThan(0);
+    // Shown once, as Confirm's reason; the live region only announces it (no second banner).
+    const lines = screen.getAllByText("This was sent over 90 days ago. Use Mark paid on the fee.");
+    expect(lines.filter((el) => !el.classList.contains("sr-only"))).toHaveLength(1);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("an archived refusal from the database shows its sentence once, too", async () => {
+    confirmClaim.mockRejectedValue(new ClaimError("student_archived"));
+    draw();
+    await userEvent.click(confirmButton());
+    await waitFor(() => expect((screen.getByRole("button", { name: "Confirm paid" }) as HTMLButtonElement).disabled).toBe(true));
+    const lines = screen.getAllByText("Ravi Kumar is archived. Restore the student to confirm.");
+    expect(lines.filter((el) => !el.classList.contains("sr-only"))).toHaveLength(1);
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });
 

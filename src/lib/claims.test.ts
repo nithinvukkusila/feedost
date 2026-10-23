@@ -7,7 +7,7 @@ import { makeFake } from "./db-fake.test-util";
 const fake = makeFake();
 vi.mock("./supabase", () => ({ getClient: () => Promise.resolve(fake.client) }));
 
-import { CLAIM_COLUMNS, ClaimError, claimFromRow, confirmClaim, countPendingClaims, errorOf, readHandledClaims, readPendingClaims, rejectClaim } from "./claims";
+import { CLAIM_COLUMNS, ClaimError, claimFromRow, confirmClaim, countPendingClaims, errorOf, readHandledClaims, readOpeningClaimPending, readPendingClaims, rejectClaim } from "./claims";
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: "c1",
@@ -180,6 +180,39 @@ describe("errorOf", () => {
   it("the call path maps a refused answer", async () => {
     fake.answer(fail("amount_over_remaining", { details: "30000" }));
     await expect(confirmClaim({ claimId: "c1", requestId: "r1" })).rejects.toMatchObject({ code: "amount_over_remaining", remaining: 30000 });
+  });
+});
+
+describe("readOpeningClaimPending", () => {
+  it("is true when a pending claim names the earlier-balance due", async () => {
+    fake.answer(ok([{ id: "D1" }]), ok([{ id: "c1" }]));
+    expect(await readOpeningClaimPending("S1")).toBe(true);
+    expect(fake.calls.filter((c) => c.op === "from").map((c) => c.args[0])).toEqual(["dues", "payment_claims"]);
+    const eqs = fake.calls.filter((c) => c.op === "eq").map((c) => c.args);
+    expect(eqs).toContainEqual(["due_id", "D1"]);
+    expect(eqs).toContainEqual(["status", "pending"]);
+    expect(fake.calls).toContainEqual({ op: "select", args: ["id"] });
+    expect(fake.calls).toContainEqual({ op: "limit", args: [1] });
+  });
+
+  it("is false when no claim waits on it, or there is no earlier balance", async () => {
+    fake.answer(ok([{ id: "D1" }]), ok([]));
+    expect(await readOpeningClaimPending("S1")).toBe(false);
+    fake.reset();
+    fake.answer(ok([]));
+    expect(await readOpeningClaimPending("S1")).toBe(false);
+    expect(fake.calls.filter((c) => c.op === "from").map((c) => c.args[0])).toEqual(["dues"]);
+  });
+
+  it("never throws, and fails closed: an error or a dead network says locked", async () => {
+    fake.answer({ data: null, error: { code: "500" } });
+    expect(await readOpeningClaimPending("S1")).toBe(true);
+    fake.reset();
+    fake.answer(ok([{ id: "D1" }]), { data: null, error: { code: "500" } });
+    expect(await readOpeningClaimPending("S1")).toBe(true);
+    fake.reset();
+    fake.state.throwOnQuery = true;
+    expect(await readOpeningClaimPending("S1")).toBe(true);
   });
 });
 

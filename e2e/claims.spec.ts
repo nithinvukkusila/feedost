@@ -396,6 +396,26 @@ test.describe("25, 26: Earlier and the empty inbox", () => {
   });
 });
 
+test.describe("section 17: Already owes while a claim waits on the earlier balance", () => {
+  test("the field is read-only with the claim's line, and opens again after Not received", async ({ page }) => {
+    const { claims } = await board(page, {}, (dues) => [
+      { student_id: S.meena, due_id: dues.dues.find((d) => d.student_id === S.meena && d.kind === "opening")!.id, amount: 240000, created_at: "2026-10-06T05:00:00Z" },
+    ]);
+    await page.goto(`/en/students/edit/?id=${S.meena}`);
+    const owes = page.getByLabel("Already owes ₹");
+    await expect(page.getByText("A parent says this is paid, so it can't be changed. Open \u201cto confirm\u201d on Home, then tap Confirm paid or Not received.")).toBeVisible();
+    await expect(owes).toHaveJSProperty("readOnly", true);
+    await expect(page.getByText("A payment has been recorded against this, so it can't be changed")).toHaveCount(0);
+    expect(claims.reads().some((r) => r.query.includes("due_id=eq.") && r.query.includes("status=eq.pending"))).toBe(true);
+
+    claims.handleElsewhere(claims.claims[0].id, "reject");
+    await page.reload();
+    await expect(page.getByText("A parent says this is paid", { exact: false })).toHaveCount(0);
+    await expect(owes).toHaveJSProperty("readOnly", false);
+    expect(claims.writes()).toEqual([]);
+  });
+});
+
 test.describe("26: an 80-character name and a claim for ₹10,00,000", () => {
   test("wrap and fit: no sideways scroll, nothing cut", async ({ page }) => {
     const LONG = "A".repeat(80);

@@ -173,6 +173,8 @@ export async function stubClaims(page: Page, dues: Dues, pay: Payments, roster: 
         const status = url.searchParams.get("status") ?? "";
         if (status.startsWith("eq.")) rows = rows.filter((row) => row.status === status.slice(3));
         else if (status.startsWith("in.(")) rows = rows.filter((row) => status.slice(4, -1).split(",").includes(row.status));
+        const due = url.searchParams.get("due_id") ?? "";
+        if (due.startsWith("eq.")) rows = rows.filter((row) => row.due_id === due.slice(3));
         const order = url.searchParams.get("order") ?? "";
         const [column, direction] = order.split(".");
         if (column) {

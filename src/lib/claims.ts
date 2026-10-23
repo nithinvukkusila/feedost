@@ -9,6 +9,7 @@
 //
 // Named columns, never `*`; `tutor_id` and `confirm_request_id` are not read. Money is integer paise. A row
 // the app does not understand fails the whole read or call: better an error than a wrong amount.
+import { readOpeningDueId } from "./dues";
 import { getClient } from "./supabase";
 import { isOffline } from "./students";
 
@@ -172,6 +173,25 @@ export async function countPendingClaims(): Promise<number> {
   const { count, error } = result;
   if (error || typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) throw new ClaimError("failed");
   return count;
+}
+
+/**
+ * Whether a pending claim names this student's earlier-balance due (spec R1-10, section 17): "Already owes" is
+ * then read-only on the edit screen, because the database refuses to change or delete a due a pending claim
+ * names. The due is found as readOpeningPaid finds it. Never throws: when it cannot be read the answer is true
+ * (locked), so a failed read can never let the tutor think her edit was saved.
+ */
+export async function readOpeningClaimPending(studentId: string): Promise<boolean> {
+  try {
+    const id = await readOpeningDueId(studentId);
+    if (id === null) return false;
+    const client = await getClient();
+    const { data, error } = await client.from("payment_claims").select("id").eq("due_id", id).eq("status", "pending").limit(1);
+    if (error) return true;
+    return ((data as unknown[] | null) ?? []).length > 0;
+  } catch {
+    return true;
+  }
 }
 
 async function call(name: "confirm_claim" | "reject_claim", args: Record<string, unknown>): Promise<Claim> {
