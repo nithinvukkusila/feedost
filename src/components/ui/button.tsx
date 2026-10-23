@@ -9,8 +9,9 @@ export type ButtonVariant = "send" | "record" | "outline";
 
 // Whole class names: Tailwind must be able to see them.
 // What Button and FlatButton share: the box, the wrapping text, the 80ms move and the focus ring.
+// How a label may break is chosen per size (below): `wrap-anywhere` lets a button shrink below its longest word.
 const shape =
-  "inline-flex items-center justify-center gap-2 rounded-sm border-2 text-center whitespace-normal wrap-anywhere transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
+  "inline-flex items-center justify-center gap-2 rounded-sm border-2 text-center whitespace-normal transition-transform duration-80 ease-linear motion-reduce:transition-none motion-reduce:duration-0 ring:ground-ring";
 
 // Heights: 48px; 56px for the one big call to action on a page (the landing hero); 60px for the
 // one primary action at the foot of a screen in the app (sign-in, language, setup), as the canvas draws it.
@@ -22,6 +23,12 @@ export type ButtonSize = keyof typeof sizes;
 
 const base = `type-control px-5 py-2.5 ${shape}`;
 const compactBase = `type-control-sm px-3 py-2 ${shape}`;
+// A `card` button breaks its label only between words: it is never narrower than its longest word, so a
+// label like "Not received" goes onto two lines rather than "Not / receiv / ed" (R1-10, criterion 21).
+// Its sides are 12px, not 20px, so the label fits the 104px the canvas draws. `wrap-break-word` stays as
+// the last resort for a single word wider than the whole card, so nothing ever runs off the screen.
+const cardBase = `type-control px-3 py-2.5 wrap-break-word ${shape}`;
+const anywhere = "wrap-anywhere";
 
 const rest: Record<ButtonVariant, string> = {
   send: "border-ink bg-blue text-slip shadow-button ground-shadow pressed:press-button pressed:bg-blue-pressed",
@@ -77,7 +84,14 @@ export function Button(props: ButtonProps) {
   const showReason = disabled && disabledReason != null;
   const working = busy && !disabled;
 
-  const className = cx(size === "compact" ? compactBase : base, sizes[size], disabled ? unavailable : rest[variant], full && "w-full");
+  const whole = size === "card";
+  const className = cx(
+    size === "compact" ? compactBase : whole ? cardBase : base,
+    !whole && anywhere,
+    sizes[size],
+    disabled ? unavailable : rest[variant],
+    full && "w-full",
+  );
   const describedBy = cx(native["aria-describedby"], showReason && reasonId) || undefined;
   const content = (
     <>
@@ -86,7 +100,7 @@ export function Button(props: ButtonProps) {
           {iconStart}
         </span>
       ) : null}
-      <span className="min-w-0">{working ? busyLabel : children}</span>
+      <span className={whole ? undefined : "min-w-0"}>{working ? busyLabel : children}</span>
       {iconEnd && !working ? (
         <span aria-hidden="true" className="inline-flex shrink-0">
           {iconEnd}
@@ -204,7 +218,7 @@ const flatLooks: Record<FlatLook, string> = {
 };
 
 // 16px text, as the canvas draws the buttons inside banners, and a 2px move: there is no shadow to move into.
-const flatBase = `type-body min-h-control px-3 py-2 font-bold pressed:press-flat ${shape}`;
+const flatBase = `type-body min-h-control px-3 py-2 font-bold wrap-anywhere pressed:press-flat ${shape}`;
 
 type FlatShared = {
   look: FlatLook;

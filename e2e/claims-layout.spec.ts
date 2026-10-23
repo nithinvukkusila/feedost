@@ -44,6 +44,27 @@ async function checkControls(page: Page, where: string) {
   }
 }
 
+// Every word in a card's buttons sits on one line: a label may wrap between words, never inside one ("Not / receiv /
+// ed" was the defect at 360px). Each word is measured with a Range: a word broken across lines has rects on two lines.
+function brokenWords(page: Page): Promise<string[]> {
+  return page.locator("main article button:visible").evaluateAll((buttons) => {
+    const broken: string[] = [];
+    for (const button of buttons) {
+      const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+        for (const match of (node.textContent ?? "").matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          const tops = new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top)));
+          if (tops.size > 1) broken.push(`${match[0]} in "${button.textContent?.trim()}"`);
+        }
+      }
+    }
+    return broken;
+  });
+}
+
 for (const lang of langs) {
   test.describe(`/${lang}/`, () => {
     test("Home's chip", async ({ page }) => {
@@ -75,6 +96,7 @@ for (const lang of langs) {
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
         expect(await textProblems(page, "main"), `text problems at ${size}`).toEqual([]);
         await checkControls(page, `the inbox at ${size}`);
+        expect(await brokenWords(page), `a word broken across lines in a card button at ${size}`).toEqual([]);
         // Confirm is reachable on the card with the longest name, whole in the window after scrolling to it.
         const confirm = long.getByRole("button").last();
         await confirm.scrollIntoViewIfNeeded();
@@ -87,6 +109,31 @@ for (const lang of langs) {
         expect(await page.locator("main").textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
         // Nothing is cut with an ellipsis.
         expect(await page.locator("main *").evaluateAll((els) => els.filter((el) => getComputedStyle(el).textOverflow === "ellipsis").length)).toBe(0);
+      }
+    });
+
+    test("Not received and its question: no word in a card button breaks across lines", async ({ page }) => {
+      test.setTimeout(90_000);
+      await setup(page, lang);
+      await page.goto(`/${lang}/claims/`);
+      const card = page.getByRole("article").filter({ hasText: "Asha Rao" });
+      await expect(card).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      for (const size of sizes) {
+        await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
+        expect(await brokenWords(page), `at rest, at ${size}`).toEqual([]);
+        // Not received is the first of the two buttons; it grows in height and is never under 44px.
+        const notReceived = card.getByRole("button").nth(-2);
+        expect((await box(notReceived)).height, `Not received at ${size}`).toBeGreaterThanOrEqual(52);
+      }
+      await page.evaluate(() => document.documentElement.style.removeProperty("font-size"));
+      await card.getByRole("button").nth(-2).click();
+      await expect(card.getByRole("alert")).toBeVisible();
+      for (const size of sizes) {
+        await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
+        expect(await sidewaysScroll(page), `sideways scroll while asking at ${size}`).toBe(0);
+        expect(await brokenWords(page), `while asking, at ${size}`).toEqual([]);
+        await checkControls(page, `the question at ${size}`);
       }
     });
 

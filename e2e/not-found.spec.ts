@@ -180,3 +180,43 @@ test.describe("the pay page shell and the 404", () => {
     }
   });
 });
+
+// vercel.json routes the parent links /p/{token} and /r/{token} to one exported page. On Vercel an exported page
+// is served only at its clean address (`/p/`), so a rewrite to `/p/index.html` was a 404 on the live site while the
+// local server still found the file. scripts/serve-out.mjs now refuses `index.html` addresses as Vercel does.
+test.describe("vercel.json rewrites resolve the way Vercel serves a static export", () => {
+  const config = JSON.parse(readFileSync("vercel.json", "utf8")) as {
+    rewrites: { source: string; destination: string }[];
+    headers: { source: string; headers: { key: string; value: string }[] }[];
+  };
+
+  test("every rewrite destination is a clean page address that is served directly", async ({ request }) => {
+    expect(config.rewrites.length).toBeGreaterThan(0);
+    for (const { destination } of config.rewrites) {
+      expect(destination, destination).not.toMatch(/\.html$/i);
+      expect(destination, destination).toMatch(/\/$/);
+      const response = await request.get(destination, { maxRedirects: 0 });
+      expect(response.status(), destination).toBe(200);
+      expect(response.headers()["content-type"], destination).toContain("text/html");
+    }
+  });
+
+  test("every rewrite source, with a sample token, serves its destination page with the no-referrer headers", async ({ request }) => {
+    for (const { source, destination } of config.rewrites) {
+      const address = source.replace(/:[A-Za-z]+/g, "x");
+      const response = await request.get(address, { maxRedirects: 0 });
+      expect(response.status(), address).toBe(200);
+      expect(await response.text(), address).toBe(await (await request.get(destination)).text());
+      expect(response.headers()["referrer-policy"], address).toBe("no-referrer");
+      expect(response.headers()["x-robots-tag"], address).toBe("noindex, nofollow");
+    }
+  });
+
+  // (/p/index.html is no test here: it matches /p/:token, so it is the pay page for the token "index.html", as on Vercel.)
+  test("an index.html address is a 404, as on Vercel", async ({ request }) => {
+    for (const address of ["/index.html", "/en/index.html", "/en/claims/index.html", "/dev/unlocked/p/index.html"]) {
+      expect((await request.get(address, { maxRedirects: 0 })).status(), address).toBe(404);
+    }
+    expect((await request.get("/404.html")).status()).toBe(200);
+  });
+});

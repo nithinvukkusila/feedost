@@ -234,12 +234,14 @@ export function ClaimCard({ claim, name, archived, tooOld, when, fee, onConfirme
         </div>
       ) : (
         <div className="flex flex-wrap items-stretch gap-3 pr-1.5 pb-1.5">
-          <div className="flex min-w-0 grow basis-26">
+          {/* No min-w-0 on these two: each is at least as wide as its button's longest word (criterion 21). When
+              both do not fit on one line, Confirm moves under Not received. */}
+          <div className="flex grow basis-26">
             <Button variant="outline" size="card" full onClick={() => setAsking(true)} disabled={busy !== null}>
               {t("notReceived")}
             </Button>
           </div>
-          <div className="flex min-w-0 grow-9999 basis-40">
+          <div className="flex grow-9999 basis-40">
             <Button
               variant="record"
               size="card"

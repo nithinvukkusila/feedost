@@ -3,19 +3,19 @@
   "rewrites": [
     {
       "source": "/r/:token",
-      "destination": "/r/index.html"
+      "destination": "/r/"
     },
     {
       "source": "/r/:token/",
-      "destination": "/r/index.html"
+      "destination": "/r/"
     },
     {
       "source": "/p/:token",
-      "destination": "/p/index.html"
+      "destination": "/p/"
     },
     {
       "source": "/p/:token/",
-      "destination": "/p/index.html"
+      "destination": "/p/"
     }
   ],
   "headers": [

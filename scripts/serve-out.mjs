@@ -24,6 +24,12 @@ const types = {
 // and headers, so the end-to-end tests exercise that file and not a copy of it. Only the two forms it uses
 // are understood: `:name` (one path segment) and `(.*)` (the rest). Like Vercel, a file that exists wins
 // over a rewrite.
+//
+// Vercel serves an exported page at its clean address only: out/p/index.html is the page `/p/`, and the
+// address `/p/index.html` is a 404 there (it is not a file Vercel serves). This server does the same, both
+// for a request and for a rewrite destination, so a destination like `/p/index.html` fails here as it does
+// on Vercel. The one exception is /404.html, which Next writes as a top-level file.
+const isIndexFile = (urlPath) => /(^|\/)index\.html$/i.test(urlPath);
 const config = JSON.parse(readFileSync("vercel.json", "utf8"));
 const matcher = (source) => {
   const pieces = source.split(/(:[A-Za-z]+|\(\.\*\))/);
@@ -37,6 +43,7 @@ async function resolve(urlPath) {
   try {
     // decodeURIComponent throws on a malformed escape; treat that as "not found".
     const safe = normalize(decodeURIComponent(urlPath)).replace(/^(\.\.[/\\])+/, "");
+    if (isIndexFile(safe)) return null;
     let file = join(ROOT, safe);
     if ((await stat(file)).isDirectory()) file = join(file, "index.html");
     return file;
