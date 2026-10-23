@@ -36,7 +36,7 @@ export function MonthSwitcher({ label, canPrev, canNext, onPrev, onNext, trailin
   const t = useTranslations("board");
   return (
     <div className="flex flex-wrap items-center justify-between gap-y-1 px-2 pt-1.5">
-      <div className="flex items-center">
+      <div className="flex min-w-0 max-w-full items-center">
         <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
           <BackIcon />
         </button>

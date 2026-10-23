@@ -238,6 +238,8 @@ test.describe("13 to 15: the home", () => {
   });
 
   test("with students and no fee reached yet: the board says nothing is due yet and the R1-3 filled home is gone", async ({ page }) => {
+    // The words below depend on today, so fix it to 12 Oct 2026 (India) rather than read the real clock.
+    await page.clock.setFixedTime(new Date("2026-10-12T05:00:00Z"));
     await signedIn(page, { students: PEOPLE, batches: THREE_BATCHES });
     await page.goto("/en/home/");
     // R1-6 replaced the R1-3 filled home (the count, the monthly total, "See all students", the later line).

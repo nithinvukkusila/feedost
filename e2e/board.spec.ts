@@ -529,7 +529,8 @@ test.describe("32: nothing is written, nothing leaves", () => {
     }
     // No write to any table from Home.
     expect(roster.requests.filter((r) => r.method !== "GET")).toEqual([]);
-    expect(stub.log.filter((r) => r.method !== "GET" && !r.path.startsWith("/auth/") && !r.path.endsWith("/rpc/ensure_my_dues"))).toEqual([]);
+    // HEAD is a read: the "to confirm" chip counts pending claims without downloading rows (R1-10 criterion 16).
+    expect(stub.log.filter((r) => r.method !== "GET" && r.method !== "HEAD" && !r.path.startsWith("/auth/") && !r.path.endsWith("/rpc/ensure_my_dues"))).toEqual([]);
     expect(await context.cookies()).toEqual([]);
     expect(others).toEqual([]);
   });
