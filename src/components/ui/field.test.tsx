@@ -353,6 +353,29 @@ describe("Field holds one line of text that wraps (criterion 63)", () => {
   });
 });
 
+describe("Field monoValue: a number read digit by digit (R1-10, the UPI reference)", () => {
+  it("draws the control and its copy in the mono value role only, and wins over latinValue", () => {
+    render(<Field label="Reference" defaultValue="6281 0473 9915" monoValue latinValue />);
+    const input = screen.getByRole("textbox");
+    for (const el of [input, input.parentElement!.querySelector("[data-field-mirror]")!]) {
+      expect(classes(el)).toContain("type-value-mono");
+      expect(classes(el)).not.toContain("type-value");
+      expect(classes(el)).not.toContain("type-value-latin");
+    }
+    expect(input.hasAttribute("monoValue")).toBe(false);
+  });
+
+  it("keeps its states on a single-line input: needs fixing shows the words and the mark", () => {
+    render(<Field label="Reference" type="text" inputMode="numeric" monoValue state="error" stateLabel="Check this" message="Check the 12 digits and try again." />);
+    const input = screen.getByRole("textbox");
+    expect(input.tagName).toBe("INPUT");
+    expect(classes(input)).toContain("type-value-mono");
+    expect(input.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText("Check the 12 digits and try again.")).toBeTruthy();
+    expect(screen.getByText("Check this")).toBeTruthy();
+  });
+});
+
 describe("Field latinValue: a value that is always Latin letters and digits (R0-2 fix)", () => {
   const mirrorOf = (input: Element) => input.parentElement!.querySelector("[data-field-mirror]")!;
 

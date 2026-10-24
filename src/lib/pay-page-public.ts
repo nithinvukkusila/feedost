@@ -1,5 +1,6 @@
-// What the parent's pay page asks and what it trusts (spec R1-9 Part B; the contract is A4 in the spec). Two
-// requests only: `pay-page` to read the page, `record-consent` to agree. Both are a POST with the token in the body,
+// What the parent's pay page asks and what it trusts (spec R1-9 Part B; the contract is A4 in the spec). Three
+// requests only: `pay-page` to read the page, `record-consent` to agree, and `submit-claim` to tell the tutor "I've
+// paid" (R1-10 Part C; contract in that spec's section 16). Each is a POST with the token in the body,
 // made with plain `fetch`: no Supabase library, no key, no cookie, no referrer. The token is read from the address in
 // the effect that calls these, and never written anywhere else: not the title, not storage, not a log.
 import { isLocale, type Locale } from "@/config/locales";
@@ -74,7 +75,12 @@ export type FeePage = Omit<NoticePage, "consentNeeded"> & {
   openDuesMore: number;
   receipts: PayReceipt[];
   receiptsMore: boolean;
+  /** A claim the parent sent that the tutor has not handled yet (R1-10 criterion 38), or null. */
+  pendingClaim: PendingClaim | null;
 };
+
+/** What the page knows of a waiting claim: the amount (integer paise) and the India day it was sent. Nothing else. */
+export type PendingClaim = { amount: number; submittedOn: string };
 
 export type PayPageData = NoticePage | FeePage;
 
@@ -90,6 +96,22 @@ export type ConsentOutcome =
   | { kind: "stale"; noticeVersion: string | null }
   | { kind: "not_found" }
   | { kind: "rate_limited" }
+  | { kind: "failed" };
+
+/**
+ * What `submit-claim` said (R1-10 Part A contract, section 16). `duplicate` is the function's `duplicate_reference`.
+ * A 403 is always `consent_needed`, which means "read the page again" (section 17, point 3), whatever came before.
+ */
+export type ClaimOutcome =
+  | { kind: "ok" }
+  | { kind: "bad_reference" }
+  | { kind: "no_proof" }
+  | { kind: "duplicate" }
+  | { kind: "already_pending" }
+  | { kind: "nothing_owed" }
+  | { kind: "consent_needed" }
+  | { kind: "rate_limited" }
+  | { kind: "not_found" }
   | { kind: "failed" };
 
 type Json = Record<string, unknown>;
@@ -127,6 +149,19 @@ function readReceipt(value: unknown): PayReceipt | null {
   return { receiptNo: value.receipt_no, receiptToken: value.receipt_token, month: value.month, amount: value.amount, paidOn: value.paid_on, balanceAfter: value.balance_after };
 }
 
+/**
+ * `pending_claim`: absent or null is "none"; otherwise an object with exactly `amount` (paise above 0) and
+ * `submitted_on` (a day). `undefined` means "not the function's answer", and the whole page fails.
+ */
+function readPendingClaim(value: unknown): PendingClaim | null | undefined {
+  if (value === undefined || value === null) return null;
+  if (!isObject(value)) return undefined;
+  const keys = Object.keys(value).sort();
+  if (keys.length !== 2 || keys[0] !== "amount" || keys[1] !== "submitted_on") return undefined;
+  if (!isPaise(value.amount, 1) || !isDay(value.submitted_on)) return undefined;
+  return { amount: value.amount, submittedOn: value.submitted_on };
+}
+
 /** Every element of a list through `read`; null if the list is not a list or any element fails. */
 function readList<T>(value: unknown, read: (item: unknown) => T | null): T[] | null {
   if (!Array.isArray(value)) return null;
@@ -161,7 +196,8 @@ export function readPage(body: unknown): PayPageData | null {
   if (typeof p.receipts_more !== "boolean") return null;
   const openDues = readList(p.open_dues, readDue);
   const receipts = readList(p.receipts, readReceipt);
-  if (openDues === null || receipts === null) return null;
+  const pendingClaim = readPendingClaim(p.pending_claim);
+  if (openDues === null || receipts === null || pendingClaim === undefined) return null;
   return {
     consentNeeded: false,
     ...head,
@@ -172,6 +208,7 @@ export function readPage(body: unknown): PayPageData | null {
     openDuesMore: p.open_dues_more,
     receipts,
     receiptsMore: p.receipts_more,
+    pendingClaim,
   };
 }
 
@@ -241,6 +278,41 @@ export async function postConsent(
   try {
     const body: unknown = await response.json();
     return isObject(body) && body.code === "ok" ? { kind: "ok" } : { kind: "failed" };
+  } catch {
+    return { kind: "failed" };
+  }
+}
+
+// The status and code `submit-claim` answers with, and what each means here. A status with a code it should not carry
+// is not the function's answer, so it is "failed".
+const CLAIM_CODES: Readonly<Record<number, Readonly<Record<string, ClaimOutcome["kind"]>>>> = {
+  200: { ok: "ok" },
+  422: { bad_reference: "bad_reference", no_proof: "no_proof" },
+  409: { duplicate_reference: "duplicate", already_pending: "already_pending", nothing_owed: "nothing_owed" },
+};
+
+/**
+ * Tells the tutor the parent has paid. The body is exactly `{token, upi_ref}`: the reference as the page normalised it;
+ * never an amount, a student or a time. Never throws: a network failure, a timeout and any reply that is not the
+ * function's are "failed", and nothing is retried or queued. The reference travels in this body and nowhere else.
+ */
+export async function postClaim(
+  token: string,
+  upiRef: string,
+  signal?: AbortSignal,
+  endpoint: string = `${supabaseUrl}/functions/v1/submit-claim`,
+): Promise<ClaimOutcome> {
+  const response = await post(endpoint, { token, upi_ref: upiRef }, signal);
+  if (response === null) return { kind: "failed" };
+  if (response.status === 403) return { kind: "consent_needed" };
+  if (response.status === 404) return { kind: "not_found" };
+  if (response.status === 429) return { kind: "rate_limited" };
+  const codes = CLAIM_CODES[response.status];
+  if (codes === undefined) return { kind: "failed" };
+  try {
+    const body: unknown = await response.json();
+    const kind = isObject(body) && typeof body.code === "string" && Object.hasOwn(codes, body.code) ? codes[body.code] : undefined;
+    return kind === undefined ? { kind: "failed" } : { kind };
   } catch {
     return { kind: "failed" };
   }

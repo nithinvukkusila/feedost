@@ -163,6 +163,24 @@ describe("Button element and content (criteria 18 and 19)", () => {
     expect(xl).not.toContain("min-h-14");
   });
 
+  it("is 62px high when sheet, for Send on the parent's claim sheet (R1-10), and keeps its busy form", () => {
+    const { rerender } = render(
+      <Button variant="send" size="sheet" full busyLabel="Sending…">
+        Send to Meena
+      </Button>,
+    );
+    const sheet = classes(screen.getByRole("button", { name: "Send to Meena" }));
+    expect(sheet).toContain("min-h-15.5");
+    expect(sheet).toContain("bg-blue");
+    expect(sheet).not.toContain("min-h-15");
+    rerender(
+      <Button variant="send" size="sheet" full busy busyLabel="Sending…">
+        Send to Meena
+      </Button>,
+    );
+    expect(screen.getByRole("button", { name: "Sending…" }).getAttribute("aria-busy")).toBe("true");
+  });
+
   it("is 72px high when pay, as a link, for the parent's Pay button (R1-9)", () => {
     render(
       <Button variant="send" size="pay" href="upi://pay?pa=a@b" full>

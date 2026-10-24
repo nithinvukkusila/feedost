@@ -10,6 +10,7 @@ export const TOKEN = "Zx3k9Qw7LmN2pRtVb8YcAe"; // 22 URL-safe characters
 export const FUNCTION_HOST = "cicicicicicicicicici.supabase.co";
 export const PAY_URL = `**/functions/v1/pay-page`;
 export const CONSENT_URL = `**/functions/v1/record-consent`;
+export const CLAIM_URL = `**/functions/v1/submit-claim`;
 export const UPI_ID = "meena.tuitions@okhdfc";
 
 export type Answer =
@@ -22,6 +23,11 @@ export type Answer =
 export const fee = (change: Record<string, unknown> = {}) => ({ status: 200, body: { code: "ok", page: { ...feeBody, ...change } } });
 export const notice = (change: Record<string, unknown> = {}) => ({ status: 200, body: { code: "ok", page: { ...noticeBody, ...change } } });
 export const consentOk = { status: 200, body: { code: "ok" } };
+/** `submit-claim` answers (R1-10 Part A contract, section 16): a status and a `{code}` body. */
+export const claimAnswer = (code: string, status: number) => ({ status, body: { code } });
+export const claimOk = claimAnswer("ok", 200);
+/** A claim waiting, as `pay-page` returns it after consent. */
+export const pendingClaim = { amount: 340000, submitted_on: "2026-10-12" };
 
 export type Seen = {
   /** Every request the page made, in order, with the parts a leak could be in. */
@@ -30,6 +36,8 @@ export type Seen = {
   pay: Request[];
   /** The POSTs that reached `record-consent`. */
   consent: Request[];
+  /** The POSTs that reached `submit-claim` (R1-10 Part C). */
+  claim: Request[];
 };
 
 async function serve(page: Page, url: string, answer: Answer, log: Request[]) {
@@ -48,14 +56,19 @@ async function serve(page: Page, url: string, answer: Answer, log: Request[]) {
   });
 }
 
-/** Answers both functions, and records every request from now on. Call before page.goto. */
-export async function stubPayPage(page: Page, answers: { pay: Answer; consent?: Answer }): Promise<Seen> {
-  const seen: Seen = { all: [], pay: [], consent: [] };
+/**
+ * Answers the three functions, and records every request from now on. Call before page.goto. `claim` answers
+ * `submit-claim` (default: ok); "abort" is a network failure, and a function of the call number can play a lost answer
+ * (the first call saved, its answer never arrived) followed by `already_pending`.
+ */
+export async function stubPayPage(page: Page, answers: { pay: Answer; consent?: Answer; claim?: Answer }): Promise<Seen> {
+  const seen: Seen = { all: [], pay: [], consent: [], claim: [] };
   page.on("request", (request) => {
     seen.all.push({ method: request.method(), url: request.url(), headers: request.headers(), body: request.postData(), isDocument: request.resourceType() === "document" });
   });
   await serve(page, PAY_URL, answers.pay, seen.pay);
   await serve(page, CONSENT_URL, answers.consent ?? consentOk, seen.consent);
+  await serve(page, CLAIM_URL, answers.claim ?? claimOk, seen.claim);
   return seen;
 }
 

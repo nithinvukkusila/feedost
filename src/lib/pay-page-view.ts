@@ -2,7 +2,7 @@
 // which fees are late, the UPI note and the link, and what the Pay area shows. Integer arithmetic only. The phone's
 // clock is never read: "today" is the India day the function returned.
 import { formatDate } from "@/lib/format";
-import type { FeePage, OpenDue } from "@/lib/pay-page-public";
+import type { FeePage, OpenDue, PayPageData } from "@/lib/pay-page-public";
 import { buildUpiLink, PAY_PAGE_MAX_PAISE, UPI_ID } from "@/lib/upi-link";
 
 /** The note is written in English in every language and holds no phone number and no amount. */
@@ -92,6 +92,14 @@ export type PayArea =
   | { kind: "too-big"; upiId: string }
   /** The Pay button. */
   | { kind: "pay"; upiId: string; href: string };
+
+/**
+ * Whether the "I've paid" button is drawn (R1-10 criterion 30): only after consent, only when something is owed, and
+ * only while no claim is waiting (criterion 38 draws the pending note in its place). The one place this rule lives.
+ */
+export function claimButtonVisible(page: PayPageData): boolean {
+  return !page.consentNeeded && page.totalRemaining > 0 && page.pendingClaim === null;
+}
 
 /** What the Pay area of a fee page shows (criterion 24). The link is built here, on the parent's phone, by the one shared builder. */
 export function payArea(page: FeePage): PayArea {

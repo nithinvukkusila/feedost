@@ -17,8 +17,9 @@ const shape =
 // one primary action at the foot of a screen in the app (sign-in, language, setup), as the canvas draws it.
 // 72px (`pay`) is the parent's Pay button on the pay page (R1-9), the one biggest action in the product.
 // `card` is 52px, for the Confirm and Not received buttons on a claim card (R1-10; canvas "Claims").
+// `sheet` is 62px, for "Send to {tutor}" at the foot of the parent's claim sheet (R1-10; canvas "Claim-sheet").
 // `compact` is 44px with smaller type and padding, for the button inside a list row (Mark paid, Receipt).
-const sizes = { compact: "min-h-tap", default: "min-h-control", large: "min-h-14", xl: "min-h-15", pay: "min-h-18", card: "min-h-13" } as const;
+const sizes = { compact: "min-h-tap", default: "min-h-control", large: "min-h-14", xl: "min-h-15", sheet: "min-h-15.5", pay: "min-h-18", card: "min-h-13" } as const;
 export type ButtonSize = keyof typeof sizes;
 
 const base = `type-control px-5 py-2.5 ${shape}`;
@@ -53,7 +54,7 @@ type Shared = {
   disabledReason?: ReactNode;
   /** Fill the width of the container. */
   full?: boolean;
-  /** `large` is 56px high instead of 48px; `xl` is 60px; `pay` is 72px (the pay page's Pay button); `card` is 52px (a claim card's buttons). For the single main call to action on a page or screen. `compact` is 44px, for a button inside a list row. */
+  /** `large` is 56px high instead of 48px; `xl` is 60px; `sheet` is 62px (the claim sheet's Send); `pay` is 72px (the pay page's Pay button); `card` is 52px (a claim card's buttons). For the single main call to action on a page or screen. `compact` is 44px, for a button inside a list row. */
   size?: ButtonSize;
 };
 

@@ -1,7 +1,7 @@
 // The parent's pay-page requests and what they trust (spec R1-9 Part B, criteria 16, 20, 33, 42).
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { feeBody, noticeBody, TOKEN } from "./pay-page.test-util";
-import { fetchPayPage, postConsent, readPage, tokenFromPath } from "./pay-page-public";
+import { fetchPayPage, postClaim, postConsent, readPage, tokenFromPath } from "./pay-page-public";
 
 const ok = (page: unknown) => ({ code: "ok", page });
 
@@ -192,5 +192,116 @@ describe("postConsent", () => {
     expect((await postConsent(TOKEN, "v1", undefined, "https://f.test/c")).kind).toBe("failed");
     stubFetch({ status: 200, throws: true });
     expect((await postConsent(TOKEN, "v1", undefined, "https://f.test/c")).kind).toBe("failed");
+  });
+});
+
+// Spec R1-10 Part C, criterion 38 and plan section 5: the one key the page gains after consent.
+describe("readPage: pending_claim", () => {
+  const fee = (pending: unknown) => readPage(ok({ ...feeBody, pending_claim: pending }));
+
+  it("reads absent and null as no claim waiting", () => {
+    expect(readPage(ok(feeBody))).toMatchObject({ pendingClaim: null });
+    expect(fee(null)).toMatchObject({ pendingClaim: null });
+  });
+
+  it("reads exactly an amount in paise and the India day it was sent", () => {
+    expect(fee({ amount: 340000, submitted_on: "2026-10-11" })).toMatchObject({ pendingClaim: { amount: 340000, submittedOn: "2026-10-11" } });
+    expect(fee({ amount: 2_000_000_000, submitted_on: "2026-02-28" })).toMatchObject({ pendingClaim: { amount: 2_000_000_000 } });
+  });
+
+  it.each([
+    ["a number", 5],
+    ["a string", "pending"],
+    ["a list", [340000, "2026-10-11"]],
+    ["a zero amount", { amount: 0, submitted_on: "2026-10-11" }],
+    ["a fraction of a paisa", { amount: 3400.5, submitted_on: "2026-10-11" }],
+    ["an amount as text", { amount: "340000", submitted_on: "2026-10-11" }],
+    ["a day that does not exist", { amount: 1, submitted_on: "2026-02-30" }],
+    ["a time, not a day", { amount: 1, submitted_on: "2026-10-11T10:00:00Z" }],
+    ["an extra key (the reference)", { amount: 1, submitted_on: "2026-10-11", upi_ref: "628104739915" }],
+    ["a missing key", { amount: 1 }],
+  ])("fails the whole page for %s", (_what, value) => {
+    expect(fee(value)).toBeNull();
+  });
+
+  it("is never read before consent", () => {
+    expect(readPage(ok({ ...noticeBody, pending_claim: { amount: 1, submitted_on: "2026-10-11" } }))).not.toHaveProperty("pendingClaim");
+  });
+});
+
+describe("postClaim", () => {
+  it("sends exactly {token, upi_ref}, as postConsent sends, and nothing else", async () => {
+    const calls = stubFetch({ status: 200, body: { code: "ok" } });
+    expect(await postClaim(TOKEN, "628104739915", undefined, "https://f.test/submit-claim")).toEqual({ kind: "ok" });
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("https://f.test/submit-claim");
+    expect(calls[0].init.method).toBe("POST");
+    expect(Object.keys(JSON.parse(calls[0].init.body as string))).toEqual(["token", "upi_ref"]);
+    expect(JSON.parse(calls[0].init.body as string)).toEqual({ token: TOKEN, upi_ref: "628104739915" });
+    expect(calls[0].init).toMatchObject({ credentials: "omit", cache: "no-store", referrerPolicy: "no-referrer" });
+    expect(Object.keys(calls[0].init.headers as object)).toEqual(["content-type"]);
+  });
+
+  it("names the submit-claim function on the functions host by default", async () => {
+    const calls = stubFetch({ status: 200, body: { code: "ok" } });
+    await postClaim(TOKEN, "628104739915");
+    expect(calls[0].url.endsWith("/functions/v1/submit-claim")).toBe(true);
+    expect(calls[0].url).not.toContain("?");
+    expect(calls[0].url).not.toContain("628104739915");
+  });
+
+  it.each([
+    [200, "ok", "ok"],
+    [422, "bad_reference", "bad_reference"],
+    [422, "no_proof", "no_proof"],
+    [409, "duplicate_reference", "duplicate"],
+    [409, "already_pending", "already_pending"],
+    [409, "nothing_owed", "nothing_owed"],
+    [403, "consent_needed", "consent_needed"],
+    [404, "not_found", "not_found"],
+    [429, "rate_limited", "rate_limited"],
+    [500, "error", "failed"],
+    [400, "invalid", "failed"],
+    [405, "invalid", "failed"],
+    [413, "invalid", "failed"],
+  ])("answers %i {code: %s} as %s", async (status, code, kind) => {
+    stubFetch({ status, body: { code } });
+    expect((await postClaim(TOKEN, "628104739915", undefined, "https://f.test/c")).kind).toBe(kind);
+  });
+
+  it("a 403 is always 'read the page again', whatever its body says", async () => {
+    stubFetch({ status: 403, text: "Forbidden" });
+    expect((await postClaim(TOKEN, "628104739915", undefined, "https://f.test/c")).kind).toBe("consent_needed");
+  });
+
+  it.each([
+    [200, { code: "already_pending" }],
+    [200, { code: "toString" }],
+    [422, { code: "ok" }],
+    [409, { code: "bad_reference" }],
+    [409, { code: "__proto__" }],
+    [409, {}],
+    [200, ["ok"]],
+  ])("answers failed for %i with a code it should not carry (%j)", async (status, body) => {
+    stubFetch({ status, body });
+    expect((await postClaim(TOKEN, "628104739915", undefined, "https://f.test/c")).kind).toBe("failed");
+  });
+
+  it("answers failed, never throws, for a network error and a body that is not JSON", async () => {
+    stubFetch({ status: 200, throws: true });
+    expect((await postClaim(TOKEN, "628104739915", undefined, "https://f.test/c")).kind).toBe("failed");
+    stubFetch({ status: 409, text: "nope" });
+    expect((await postClaim(TOKEN, "628104739915", undefined, "https://f.test/c")).kind).toBe("failed");
+  });
+
+  it("gives up after the timeout, as the other two calls do", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: string, init: RequestInit) => new Promise((_resolve, reject) => init.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError"))))),
+    );
+    const pending = postClaim(TOKEN, "628104739915", undefined, "https://f.test/c");
+    await vi.advanceTimersByTimeAsync(15_001);
+    expect((await pending).kind).toBe("failed");
   });
 });

@@ -5,6 +5,7 @@
 // moves focus in, keeps it in, makes the page behind inert, closes on Escape and returns focus.
 // Every word is passed in.
 import { useEffect, useId, useLayoutEffect, useRef, type ReactNode } from "react";
+import { cx } from "@/lib/cx";
 
 export type SheetContext = {
   /** A small label on the dark ground, for example the batch and month. */
@@ -21,11 +22,17 @@ export type SheetFrameProps = {
   closeLabel: ReactNode;
   onClose?: () => void;
   context?: SheetContext;
+  /**
+   * The title and the close control stay pinned at the top of the panel while it scrolls (the default). Set false
+   * for a title that holds a name of any length (the claim sheet's "Paid already? Tell {tutor}."): pinned, a long
+   * name at the largest text could fill the panel with the keypad open and cover the button below it.
+   */
+  pinTitle?: boolean;
   children: ReactNode;
 };
 
 /** What is drawn inside the sheet: the context header on the dark ground, then the slip panel. */
-export function SheetFrame({ title, titleId, closeLabel, onClose, context, children }: SheetFrameProps) {
+export function SheetFrame({ title, titleId, closeLabel, onClose, context, pinTitle = true, children }: SheetFrameProps) {
   return (
     // Rings inside the dark area are yellow; the panel below resets to paper.
     <div className="on-dark-ground flex h-full min-h-0 flex-col justify-end bg-sheet-ground md:h-auto md:max-h-modal md:justify-start">
@@ -38,8 +45,8 @@ export function SheetFrame({ title, titleId, closeLabel, onClose, context, child
       ) : null}
       {/* The panel scrolls inside itself when its content is taller than the screen. */}
       <div className="on-paper-ground flex min-h-0 flex-col overflow-y-auto overscroll-contain border-t-2 border-ink bg-slip text-ink">
-        {/* Sticky, so the close control stays reachable while the content scrolls. */}
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 bg-slip px-5 pt-4 pb-2">
+        {/* Sticky (unless pinTitle is false), so the close control stays reachable while the content scrolls. */}
+        <div data-pinned={pinTitle ? "" : undefined} className={cx("flex items-start justify-between gap-3 bg-slip px-5 pt-4 pb-2", pinTitle && "sticky top-0 z-10")}>
           <h2 id={titleId} className="type-headline min-w-0 py-1.5 text-3xl wrap-anywhere">
             {title}
           </h2>
@@ -69,10 +76,12 @@ export type SheetProps = {
   title: ReactNode;
   closeLabel: ReactNode;
   context?: SheetContext;
+  /** See SheetFrameProps. Default true. */
+  pinTitle?: boolean;
   children: ReactNode;
 };
 
-export function Sheet({ open, onClose, title, closeLabel, context, children }: SheetProps) {
+export function Sheet({ open, onClose, title, closeLabel, context, pinTitle = true, children }: SheetProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   // How many `close` events are on their way that this component caused itself by tidying up.
@@ -131,6 +140,7 @@ export function Sheet({ open, onClose, title, closeLabel, context, children }: S
           titleId={titleId}
           closeLabel={closeLabel}
           context={context}
+          pinTitle={pinTitle}
           onClose={() => dialog.current?.close()}
         >
           {children}

@@ -11,7 +11,9 @@ import { walk } from "@/test-utils/find-own-words";
 const root = process.cwd();
 const files = [
   ...walk(join(root, "src", "components", "pay-page")),
-  ...walk(join(root, "src", "lib")).filter((p) => /pay-page-[a-z-]+\.ts$/.test(p) || p.endsWith("upi-link.ts") || p.endsWith("public-words.ts")),
+  ...walk(join(root, "src", "lib")).filter((p) => /pay-page-[a-z-]+\.ts$/.test(p) || p.endsWith("upi-link.ts") || p.endsWith("public-words.ts") || p.includes(`${join("lib", "claim")}/`)),
+  // R1-10 criterion 41: the reference check the page shares with the function.
+  join(root, "supabase", "functions", "_shared", "upi-ref.ts"),
   join(root, "src", "app", "p", "page.tsx"),
   join(root, "src", "app", "p", "layout.tsx"),
 ].filter((path) => /\.tsx?$/.test(path) && !/\.(test|spec)\.tsx?$/.test(path) && !path.endsWith(".test-util.ts"));
@@ -21,7 +23,20 @@ const stripComments = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").re
 describe("the pay page's code", () => {
   it("finds the files it is meant to check", () => {
     const names = files.map((f) => f.slice(root.length + 1));
-    for (const expected of ["src/components/pay-page/public-pay-page.tsx", "src/lib/pay-page-view.ts", "src/lib/pay-page-public.ts", "src/lib/upi-link.ts", "src/lib/public-words.ts", "src/app/p/page.tsx"]) {
+    for (const expected of [
+      "src/components/pay-page/public-pay-page.tsx",
+      "src/lib/pay-page-view.ts",
+      "src/lib/pay-page-public.ts",
+      "src/lib/upi-link.ts",
+      "src/lib/public-words.ts",
+      "src/app/p/page.tsx",
+      // R1-10 Part C (criterion 41): the claim code is held to the same rules.
+      "src/components/pay-page/claim-sheet.tsx",
+      "src/components/pay-page/claim-area.tsx",
+      "src/lib/pay-page-claim.ts",
+      "src/lib/claim/upi-ref.ts",
+      "supabase/functions/_shared/upi-ref.ts",
+    ]) {
       expect(names).toContain(expected);
     }
   });
@@ -40,6 +55,8 @@ describe("the pay page's code", () => {
     ["analytics or error reporting", /\b(posthog|sentry)\b/i],
     ["a console call", /\bconsole\./],
     ["history rewriting", /\b(history\.(replaceState|pushState)|window\.history)\b/],
+    // R1-10 criterion 39: the reference (or anything else) is never written into the title or the address.
+    ["the title or the address being written", /document\.title\s*=|location\.(assign|replace)\(|location\.(href|search|hash)\s*=/],
   ];
 
   it.each(files.map((f) => [f.slice(root.length + 1), f] as const))("%s has none of the forbidden calls", (_name, path) => {

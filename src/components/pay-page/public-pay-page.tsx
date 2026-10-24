@@ -16,8 +16,10 @@ import { Slip } from "@/components/ui/slip";
 import type { Locale } from "@/config/locales";
 import {
   fetchPayPage,
+  postClaim,
   postConsent,
   tokenFromLocation,
+  type ClaimOutcome,
   type PageOutcome,
   type PayPageData,
   type TokenSource,
@@ -145,6 +147,28 @@ export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words:
     setState(fromOutcome(next));
   }, [state, tokenSource]);
 
+  // Reads the page again without the opening state (R1-10 Part C): after a claim is taken, so the pending note shows;
+  // and when a claim was refused because the page is out of date (nothing owed, a claim already waiting, not agreed).
+  const reread = useCallback(async () => {
+    const signal = leaving.current?.signal;
+    const token = tokenFromLocation(window.location, tokenSource);
+    if (token === null) {
+      setState({ kind: "not_found" });
+      return;
+    }
+    const next = await fetchPayPage(token, signal);
+    if (signal?.aborted) return;
+    setView("fee");
+    setState(fromOutcome(next));
+  }, [tokenSource]);
+
+  // The claim: the token read afresh from the address, the reference only in the body of this one call.
+  const sendClaim = useCallback(async (ref: string): Promise<ClaimOutcome> => {
+    const token = tokenFromLocation(window.location, tokenSource);
+    if (token === null) return { kind: "not_found" };
+    return postClaim(token, ref, leaving.current?.signal);
+  }, [tokenSource]);
+
   // The frame's header: the tutor, what they teach, and the language button once there is a page to be in a language.
   let header: ReactNode;
   if (state.kind === "loading") {
@@ -184,7 +208,7 @@ export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words:
     body = <ConsentScreen mode="read" words={w.pay} lang={language} consentLang={w.consentLang} tutorName={page.tutorName} onClose={() => setView("fee")} />;
   } else if (page) {
     name = "fee";
-    body = <FeeScreen words={w.pay} consentLang={w.consentLang} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} />;
+    body = <FeeScreen words={w.pay} consentLang={w.consentLang} monthWords={w.receipt} page={page} onOpenNotice={() => setView("notice")} sendClaim={sendClaim} onReread={() => void reread()} />;
   } else {
     // No page to show: only words that came with no tutor or child data.
     const states = w.pay.state;

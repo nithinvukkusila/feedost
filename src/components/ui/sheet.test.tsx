@@ -101,6 +101,19 @@ describe("Sheet content (criteria 53 and 54)", () => {
     // The bar with the title and the close control stays put while the content scrolls.
     expect(classes(screen.getByRole("button", { name: "Cancel" }).parentElement!)).toContain("sticky");
   });
+
+  it("lets the title scroll with the content when pinTitle is false (a title holding a name of any length, R1-10)", () => {
+    render(
+      <Sheet open onClose={() => {}} title="Paid already? Tell Meena." closeLabel="Close" pinTitle={false}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    const bar = screen.getByRole("button", { name: "Close" }).parentElement!;
+    expect(classes(bar)).not.toContain("sticky");
+    expect(bar.hasAttribute("data-pinned")).toBe(false);
+    // Still the same bar: the title names the dialog and the close control is beside it.
+    expect(screen.getByRole("dialog").getAttribute("aria-labelledby")).toBe(bar.querySelector("h2")!.id);
+  });
 });
 
 describe("Sheet opening and closing (criterion 55, the parts jsdom can show)", () => {
