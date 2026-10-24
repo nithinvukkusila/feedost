@@ -38,6 +38,8 @@ export type Payments = {
   loseNextResponse: boolean;
   /** Hold every function answer back this many milliseconds. */
   delayMs: number;
+  /** Answer every read of a month's payments (a `paid_on` range) with a server error, until set back. */
+  failMonthRead: boolean;
   /** Another phone paid: the fee has this much more paid, with a receipt, without this phone knowing. */
   payElsewhere(dueId: string, amount: number): PaymentRow;
   /** A payment made earlier, as a row (for the 24-hour window). */
@@ -66,6 +68,7 @@ export async function stubPayments(page: Page, dues: Dues, initial: (Partial<Pay
     failNext: false,
     loseNextResponse: false,
     delayMs: 0,
+    failMonthRead: false,
     payElsewhere(dueId, amount) {
       const due = dues.dues.find((row) => row.id === dueId);
       if (!due) throw new Error(`no due ${dueId}`);
@@ -75,7 +78,18 @@ export async function stubPayments(page: Page, dues: Dues, initial: (Partial<Pay
       const due = dues.dues.find((row) => row.id === partial.due_id);
       if (!due) throw new Error(`no due ${partial.due_id}`);
       const amount = partial.amount ?? due.amount;
-      return record(due.id, amount, partial.method ?? "upi", partial.paid_on ?? TODAY, partial.request_id ?? uuid(), partial.created_at);
+      const wasPaid = due.status === "paid";
+      const row = record(due.id, amount, partial.method ?? "upi", partial.paid_on ?? TODAY, partial.request_id ?? uuid(), partial.created_at);
+      // A payment seeded as already undone: it keeps its number, and the fee is as it was before (a fee the
+      // fixture already had as paid was not changed by `record`, so it is not changed back either).
+      if (partial.voided_at) {
+        row.voided_at = partial.voided_at;
+        if (!wasPaid) {
+          due.amount_paid -= amount;
+          due.status = due.amount_paid === 0 ? "due" : "partial";
+        }
+      }
+      return row;
     },
     calls: (name) => state.requests.filter((r) => r.path.endsWith(`/rpc/${name}`)).map((r) => JSON.parse(r.body ?? "{}") as Record<string, unknown>),
     reads: () => state.requests.filter((r) => r.method === "GET" && r.path === "/rest/v1/payments"),
@@ -152,7 +166,33 @@ export async function stubPayments(page: Page, dues: Dues, initial: (Partial<Pay
           if (bound.startsWith("gte.")) rows = rows.filter((row) => row.receipt_no >= Number(bound.slice(4)));
           else if (bound.startsWith("lt.")) rows = rows.filter((row) => row.receipt_no < Number(bound.slice(3)));
         }
-        rows.sort((a, b) => (ascending ? a.receipt_no - b.receipt_no : b.receipt_no - a.receipt_no));
+        // `paid_on=gte.M&paid_on=lt.N&voided_at=is.null`, ordered `paid_on.asc,id.asc`, paged by
+        // `offset`/`limit`: the month's payments for Collected (readPaymentsInMonth, UX-review-fixes-2 13.4).
+        const days = url.searchParams.getAll("paid_on");
+        for (const bound of days) {
+          if (bound.startsWith("gte.")) rows = rows.filter((row) => row.paid_on >= bound.slice(4));
+          else if (bound.startsWith("lt.")) rows = rows.filter((row) => row.paid_on < bound.slice(3));
+          else {
+            await json(route, 400, { code: "PGRST100", message: `a paid_on filter the fake does not know: ${bound}` });
+            return;
+          }
+        }
+        const voided = url.searchParams.get("voided_at");
+        if (voided === "is.null") rows = rows.filter((row) => row.voided_at === null);
+        else if (voided !== null) {
+          await json(route, 400, { code: "PGRST100", message: `a voided_at filter the fake does not know: ${voided}` });
+          return;
+        }
+        if (days.length > 0) {
+          if (state.failMonthRead) {
+            await json(route, 500, { code: "XX000", message: "the fake failed the month's payments" });
+            return;
+          }
+          rows.sort((a, b) => (a.paid_on < b.paid_on ? -1 : a.paid_on > b.paid_on ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        } else rows.sort((a, b) => (ascending ? a.receipt_no - b.receipt_no : b.receipt_no - a.receipt_no));
+        const offset = Number(url.searchParams.get("offset") ?? 0);
+        const limit = url.searchParams.get("limit");
+        rows = rows.slice(offset, limit === null ? undefined : offset + Number(limit));
         await json(route, 200, rows.map((row) => Object.fromEntries(select.split(",").map((column) => [column, (row as Record<string, unknown>)[column]]))));
         return;
       }

@@ -13,7 +13,7 @@ export function makeFake() {
 
   function chain(): Record<string, unknown> {
     const proxy: Record<string, unknown> = {};
-    for (const op of ["select", "insert", "update", "delete", "eq", "neq", "gte", "lt", "not", "in", "order", "limit", "range"]) {
+    for (const op of ["select", "insert", "update", "delete", "eq", "neq", "gte", "lt", "is", "not", "in", "order", "limit", "range"]) {
       proxy[op] = (...args: unknown[]) => {
         calls.push({ op, args });
         if (state.throwOnQuery) throw new Error("network");
