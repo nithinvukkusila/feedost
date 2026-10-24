@@ -282,7 +282,7 @@ for (const lang of langs) {
     await main.locator("[data-claim=ask] button").click();
     const sheet = page.getByRole("dialog");
     await expect(sheet).toBeVisible();
-    const input = sheet.locator("input");
+    const input = sheet.getByRole("textbox");
     await input.fill("6281 0473 991");
     const send = sheet.locator('button[type="submit"]');
     await send.click();

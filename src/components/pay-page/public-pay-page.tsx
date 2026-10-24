@@ -160,7 +160,9 @@ export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words:
     }
     const next = await fetchPayPage(token, signal);
     if (signal?.aborted) return;
-    if (keepOnFailure && next.kind !== "ok") return;
+    // An answer that now needs consent again (the notice changed in between) is kept back too, so the "Sent" sheet is
+    // not swept away; the next request the page makes, or the next load, shows the consent screen.
+    if (keepOnFailure && (next.kind !== "ok" || next.page.consentNeeded)) return;
     setView("fee");
     setState(fromOutcome(next));
   }, [tokenSource]);

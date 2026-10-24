@@ -103,7 +103,7 @@ test.describe("/p/ is English while only English is unlocked (criteria 1, 4 and 
       const sheet = page.getByRole("dialog");
       await expect(sheet).toContainText(text("en", "payPage.claim.refHint"));
       await expectEnglish(page, "fee");
-      await sheet.locator("input").fill("628104739915");
+      await sheet.getByRole("textbox").fill("628104739915");
       await sheet.locator('button[type="submit"]').click();
       await expect(sheet).toContainText(text("en", "payPage.claim.duplicate"));
       await expectEnglish(page, "fee");

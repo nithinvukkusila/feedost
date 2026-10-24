@@ -167,7 +167,6 @@ export function ClaimSheet({ words, monthWords, page, send, onStale, onClose }: 
           <div className="flex flex-col gap-1">
             <Field
               ref={field}
-              type="text"
               inputMode="numeric"
               autoComplete="off"
               autoCorrect="off"

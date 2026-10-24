@@ -22,7 +22,7 @@ const APP_ROUTES = ["language", "sign-in", "auth/callback", "home", "more", "stu
 // Button, Sheet, Banner and its own screens), so 151 KB leaves room for Part C's QR button (the encoder is loaded on tap and
 // is never in this number). The spec's 100 KB target (criterion 41) cannot be reached with the Next 16 runtime; the 200 KB limit holds.
 // R1-10 Part C (2026-10-25) added the "I've paid" button and pending note to the first load: 143.5 KB on main before,
-// 144.7 KB after (+1.2 KB). The claim sheet itself is a chunk fetched on tap. Still inside 151 KB, so it is not raised.
+// 144.8 KB after (+1.3 KB, measured with the review fixes). The claim sheet itself is a chunk fetched on tap. Still inside 151 KB, so it is not raised.
 const SHELL_BUDGETS = { "r/index.html": 145 * 1024, "p/index.html": 151 * 1024 };
 const REQUIRED = [
   "index.html",

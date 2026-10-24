@@ -35,7 +35,7 @@ function show(
   const view = render(
     <ClaimSheet words={en.payPage} monthWords={en.receipt} page={{ ...base, ...options.page }} send={send} onStale={onStale} onClose={onClose} />,
   );
-  const field = screen.getByLabelText(REF_LABEL) as HTMLInputElement;
+  const field = screen.getByLabelText(REF_LABEL) as HTMLTextAreaElement;
   const sendButton = () => screen.getByRole("button", { name: /Send to|Sending/ });
   return { ...view, send, onStale, onClose, field, sendButton };
 }
@@ -84,7 +84,9 @@ describe("ClaimSheet: what it says (criterion 31)", () => {
 describe("ClaimSheet: the reference field (criterion 32)", () => {
   it("is a numeric, mono field with the hint, focused when the sheet opens", () => {
     const { field } = show();
-    expect(field.tagName).toBe("INPUT");
+    // The wrapping one-row textarea, so a grouped reference is never cut at large text (criterion 40).
+    expect(field.tagName).toBe("TEXTAREA");
+    expect(field.getAttribute("aria-multiline")).toBe("false");
     expect(field.getAttribute("inputmode")).toBe("numeric");
     expect(field.getAttribute("autocomplete")).toBe("off");
     expect(field.hasAttribute("data-autofocus")).toBe(true);

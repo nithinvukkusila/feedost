@@ -97,7 +97,7 @@ for (const lang of langs) {
       await main.locator("[data-claim=ask] button").click();
       const sheet = page.getByRole("dialog");
       await expect(sheet).toBeVisible();
-      await sheet.locator("input").fill("6281 0473 9915");
+      await sheet.getByRole("textbox").fill("6281 0473 9915");
       const send = sheet.locator('button[type="submit"]');
       await send.click();
       await expect(sheet.locator("[data-claim=problem]")).not.toBeEmpty();
@@ -114,9 +114,28 @@ for (const lang of langs) {
         expect(await sheet.textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
         await expect(sheet.locator('[translate="no"]', { hasText: "T".repeat(80) }).first()).toBeAttached();
       };
+      // The reference is never cut (criterion 40, "nothing cut"): the field shows the whole grouped value, wrapping onto
+      // another line rather than scrolling it out of sight, at every size and in the needs-fixing state too.
+      const input = sheet.getByRole("textbox");
+      const fieldWhole = async (value: string, label: string) => {
+        await expect(input).toHaveValue(value);
+        const fits = await input.evaluate((el) => ({ width: el.scrollWidth <= el.clientWidth, height: el.scrollHeight <= el.clientHeight + 1 }));
+        expect(fits, `the reference "${value}" is whole ${label}`).toEqual({ width: true, height: true });
+      };
       for (const size of sizes) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
         await fontsSettled(page);
+        await fieldWhole("6281 0473 9915", `at ${size}`);
+        // The needs-fixing state: 11 digits refused on the phone (no request), with its words and mark beside the field.
+        await input.fill("6281 0473 991");
+        await send.click();
+        await expect(input).toHaveAttribute("aria-invalid", "true");
+        await fieldWhole("6281 0473 991", `in the error state at ${size}`);
+        if (size === "100%") {
+          await sheet.evaluate((el) => el.querySelectorAll("*").forEach((node) => void (node.scrollTop = 0)));
+          expect(await textProblems(page, "dialog"), `text problems in the error state at ${size}`).toEqual([]);
+        }
+        await input.fill("6281 0473 9915");
         await check(`at ${size}`, size === "100%");
         await send.scrollIntoViewIfNeeded();
         await expect(send).toBeInViewport();
@@ -124,7 +143,7 @@ for (const lang of langs) {
       }
       // The keypad open: half the screen. The panel scrolls inside itself and Send is still reachable.
       await page.setViewportSize({ width: 360, height: 400 });
-      await sheet.locator("input").focus();
+      await sheet.getByRole("textbox").focus();
       await send.scrollIntoViewIfNeeded();
       await expect(send).toBeInViewport();
       // At 200% an 80-character name makes Send taller than this half screen, so the tap is checked in the middle of
