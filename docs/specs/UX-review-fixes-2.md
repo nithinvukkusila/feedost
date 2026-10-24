@@ -12,7 +12,7 @@ The tutor can trust what Home says about who owes what (no false "Overdue", part
 
 ## 2. Users and moment
 
-The tutor, on a low-end Android at 360 to 412px, between classes: opening Home to see who to chase, recording a part payment a parent handed over, adding a batch of students one after another, or fixing a parent's number. Every item here came from the founder using the live app as that tutor. The parent's pages (`/p/`, `/r/`) are not changed apart from one shared constant (item 1), which has no visible effect.
+The tutor, on a low-end Android at 360 to 412px, between classes: opening Home to see who to chase, recording a part payment a parent handed over, adding a batch of students one after another, or fixing a parent's number. Every item here came from the founder using the live app as that tutor. The parent's pages (`/p/`, `/r/`) are not changed in PR1 to PR3 apart from one shared constant (item 1), which has no visible effect. PR4's global tokens do reach them visually: the label size and colour (22.1, 22.2), the error banner's shadow colour (21.1) and the 60% sheet backdrop from 768px on the claim sheet (25.1). No parent-facing wording changes in any PR, so the signed language review records stay valid (question 10).
 
 ## 3. What I found before writing (code and specs read on `main` at `fdeb962`)
 
@@ -87,12 +87,13 @@ Four pull requests, each releasable alone, in this order. PR1 must merge first (
 
 5.1 [e2e] When there is no other month to go to (no monthly fee before this month), the month switcher shows the month label with no arrow buttons.
 5.2 [e2e] When only one direction can move, the other arrow is still 44px, has `disabled`, `cursor-not-allowed`, no shadow, a dashed outline (dashed is the disabled mark, item 21), and its icon in a muted token (`rule`). The enabled arrow is `ink`. Inactive controls are exempt from WCAG 1.4.11, but the disabled state is never shown by colour alone (the dashed outline carries it).
-5.3 [unit] Every disabled `Button` variant: no shadow, dashed outline, no fill, does not move when pressed, `cursor-not-allowed` (pinned by the existing button tests, extended to the new muted text token).
+5.3 [unit] Every disabled `Button` variant: no shadow, dashed outline, no fill, does not move when pressed, `cursor-not-allowed`, and its text in the existing `ink-label` token (today `ink-soft`; no new token is added). Pinned by the existing button tests, extended to the text colour. The difference from 5.2 is deliberate: a disabled Button keeps readable `ink-label` text because its label is a word the tutor must still read, while a disabled month arrow is an icon only, so it uses the fainter `rule`.
 
 **Item 6. Buttons do not move after "Save and add another".**
 
-6.1 [e2e] After "Save and add another", the "Saved {name}." line appears at the top of the form, above the "Who" heading, next to the name field that now has focus. The two buttons stay exactly where they were: their bounding boxes before and after differ by 0px.
-6.2 [e2e] The line is `role="status"`, is announced once, and is cleared when the next save starts.
+6.1 [e2e] After "Save and add another", the "Saved {name}." message (12.3 wording) appears as a toast pinned at the foot of the screen through `AppScreen above`, the same place and pattern as the Undo banner; it is not in the form's flow. Focus moves to the student's name field. The two buttons stay exactly where they were: their bounding boxes in page coordinates before and after the save differ by 0px, checked at 360px with the default font and again at the largest system font with an 80-character name with no spaces.
+6.2 [e2e] The toast is `role="status"`, is announced once, and goes when the next save starts, after 10 seconds (the Undo banner's `BANNER_MS`), or when the tutor leaves the screen. Its appearing and going never move anything on the page.
+6.4 [e2e] While the toast shows, the page keeps room at its foot equal to the toast's height, so "Save student" and "Save and add another" can always be scrolled fully into view above it and are never covered. At 360px and largest font in Hindi the toast's text wraps, is never cut, and stays inside the screen.
 6.3 [e2e] Double-tapping "Save and add another" quickly creates one student and does not trigger "Save student" (the existing one-id-per-fill rule holds).
 
 **Item 7. Permission tick on edit.** (R1-3 criterion 24 is amended for edit; decision 17, "not stored", stands.)
@@ -107,7 +108,7 @@ Four pull requests, each releasable alone, in this order. PR1 must merge first (
 
 12.1 [e2e] The phone field shows "+91" as a fixed prefix inside the field's line, before the typed digits, in DM Mono with 0 to 9 digits; it is not part of the value and cannot be deleted. The prefix is announced with the field (part of its accessible description). This needs a `prefix` option on `ui/Field` with its states on `/dev/components` (src/CLAUDE.md rule).
 12.2 [unit] While typing, ten digits are shown as "98765 43210" (a space after the fifth). Pasting "+91 98765-43210", "098765 43210" or Hindi, Kannada or Telugu digits ends as "98765 43210". The caret stays after the last typed digit. The saved value is still E.164 `+919876543210`.
-12.3 [e2e] After "Save and add another", batch, fee day, fee and message language are kept, and the "Saved {name}." line says so: "Saved {name}. Batch, fee, due day and language kept for the next one." (founder's "or shows it carried over").
+12.3 [e2e] After "Save and add another", batch, fee day, fee and message language are kept, and the "Saved {name}." toast (6.1) says so: "Saved {name}. Batch, fee, due day and language kept for the next one." (founder's "or shows it carried over").
 12.4 [e2e] The three section headings (Who, Fee, Opening balance) are visibly stronger than field labels (headline face, at least 20px, ink) with 32px space above each (except the first). They remain `<legend>`s of their fieldsets.
 12.5 [e2e] A select (Batch, Fee due on) shows the 3px blue focus ring (offset 4px) around its line when focused by keyboard, in addition to the blue line, and keeps its chevron so it never looks exactly like a text field.
 
@@ -214,7 +215,7 @@ Also not done here: a grace-days setting screen; late fees; changing when dues a
 - **Empty:** no students → empty Home unchanged; students but nothing due → round 1's "next fee" line unchanged; no bar drawn. Students screen with no dues read yet → rows without chips.
 - **Offline:** Collected (3.3) comes from a payments read; offline it shows the last cached value with the existing stale note, or is omitted from the bar's Collected label with "—" if never read. The Language list (18.4) works offline for the screen but the saved language syncs when back online. Unticking consent offline (7.3) uses the existing offline save path and banner.
 - **Slow network:** the payments read for Collected never blocks the board: the board draws with Collected pending (label shows a skeleton block), then fills in.
-- **Very long names:** 80-character name with no spaces on Home rows with two tags (3.2), in the Move sheet with search, and in "Saved {name}." at the top of the form: wraps, nothing cut, no sideways scroll.
+- **Very long names:** 80-character name with no spaces on Home rows with two tags (3.2), in the Move sheet with search, and in the "Saved {name}." toast at the foot of the add form: wraps, nothing cut, no sideways scroll, and the form's buttons do not move (6.1).
 - **Large font:** two tags plus the round Remind button plus Mark paid at 360px largest font in Hindi; the summary bar labels; tab top bar; "Soon" under Attendance in the side and bottom nav.
 - **Second language:** every new key in four files; plural forms for "{n} of {m} students still owe", "{n} results", "Select all shown ({n})"; Indic labels have no capitals and no letter-spacing; amounts and dates always 0 to 9 digits.
 - **Partial payment:** late and not late (3.2); part payment on an earlier balance (3.4); part payment then undo (3.5); a student with two part-paid fees (two rows, chip on Students is "Overdue ₹X" with the sum).
@@ -239,7 +240,7 @@ No new PostHog events and no change to the PRD section 4 list. `payment_marked`,
 4. Read the line under the amount with Show = All, then a batch: "{n} of {m} students still owe" matches the filter's count.
 5. The bar under the hero: three labelled amounts you can read without colour.
 6. Month arrows: with only this month, no arrows; with older months, Next is clearly dead (dashed, faint) in the current month.
-7. Add students quickly with "Save and add another": the buttons never move; the top line says what was kept.
+7. Add students quickly with "Save and add another", once at normal text and once at the largest system font with a very long name: the buttons never move; a message at the foot of the screen says who was saved and what was kept, and it never covers a button (scroll down: both buttons sit above it).
 8. Type a phone: "+91" stays in front, digits group as 98765 43210.
 9. Edit a student with a number: the tick is on. Untick: the warning says the number will go. Save: Home offers "Add number".
 10. Make a field wrong, tap into it: it stays red.
@@ -262,6 +263,7 @@ No new PostHog events and no change to the PRD section 4 list. `payment_marked`,
 7. **Receipt number format "FD-0002".** PRD says only "sequential number per tutor". The prefix would come from the brand constant. Confirm for the receipt slice (R1-7 Part C), not this one.
 8. **Label size.** Default: Latin labels 15px (from 14px) and darker, which updates DESIGN.md. OK to change the design system's table?
 9. **Still open from before:** "she" for the tutor in `payPage.claim.help`, `payPage.claim.sent` and `payPage.claim.pending`. Default: keep until you decide; not touched here.
+10. **Global or app-only tokens for the parent pages?** PR4's label size and colour, error-banner shadow colour and 768px+ sheet backdrop are global tokens, so `/p/` and `/r/` change visually too (no wording change). Default: global, one design system; `preprod-qa` checks `/p/` and `/r/` at 360 and 768px before release, and because no parent wording changes, the signed language review records stay valid. Alternative: scope those tokens to the signed-in app, which leaves two label sizes in the product.
 
 ## 11. Specs this amends
 
@@ -366,7 +368,7 @@ I chose this over a PostgREST embed (`dues!inner(student_id)`). It adds no new q
   - On a phone change, if the normalized value differs from the saved one, set `permission` to false (7.2). The 7.3 warning sits under the tick, tied by `aria-describedby`.
   - The phone `TextField` gets `prefix="+91"`, the `onChange` runs `formatPhoneTyping` and sets the caret in a layout effect, and the `+91` helper goes.
   - Section legends: `type-headline` at ≥20px in `text-ink`; the form gap goes from `gap-6` to `gap-8` (12.4).
-  - "Saved…" uses `students.form.savedKept` (12.3) and moves to the top. See 13.8 item 1.
+  - "Saved…" uses `students.form.savedKept` (12.3) and leaves the form: it is a toast passed to `AppScreen above` by `student-new-screen.tsx` (the form reports the saved name upward), drawn at the foot like the Undo banner, `role="status"`, cleared on the next save, after `BANNER_MS` or on leaving the screen. While it shows, the content keeps foot room equal to its height (6.4). The in-form status paragraph is removed. See 13.8 item 1.
 - `src/components/app/text-field.tsx`: passes `prefix` through (it already spreads props).
 - `src/components/batches/move-sheet.tsx`:
   - Remove the foot Cancel (17.1).
@@ -381,7 +383,7 @@ I chose this over a PostgREST embed (`dues!inner(student_id)`). It adds no new q
 
 **Size.** `/students/new` 166.8 and `/students/edit` 169.7 KB: +about 1 KB (the formatter and prefix). `/batches/edit` 166.6: +about 1 KB (search and Check, if Check is not already in the chunk). `/home`: about 0. All are well inside 200.
 
-**Tests.** Unit: `phone.test.ts` for `formatPhoneTyping` (typing digit by digit, caret mid-string, the three paste vectors from 12.2, Indic digits, 11+ digits left alone); `student-form.test.ts` for the removal branch, new number unticked = error, and add mode unchanged; `field.test.tsx` for the prefix markup and describedby, error + typing classes (no `border-blue` and no `text-blue` in error, 24.2), and the default render unchanged (snapshot of the class list without `prefix`); `select-field.test.tsx` for the focus ring class; `button.test.tsx` for disabled `text-ink-label` (5.3); `month-switcher` unit tests for no arrows, one disabled arrow and `text-rule`. e2e: 5.1, 5.2, 6.1 to 6.3, 7.1 to 7.3, 7.5, 12.1 to 12.5, 17.1 to 17.4, 24.1, A.1 to A.4 (one new `a11y-forms.spec.ts` that walks the listed screens with `getByRole(..., { name })` and a bounding-box check of 44px).
+**Tests.** Unit: `phone.test.ts` for `formatPhoneTyping` (typing digit by digit, caret mid-string, the three paste vectors from 12.2, Indic digits, 11+ digits left alone); `student-form.test.ts` for the removal branch, new number unticked = error, and add mode unchanged; `field.test.tsx` for the prefix markup and describedby, error + typing classes (no `border-blue` and no `text-blue` in error, 24.2), and the default render unchanged (snapshot of the class list without `prefix`); `select-field.test.tsx` for the focus ring class; `button.test.tsx` for disabled `text-ink-label` (5.3); `month-switcher` unit tests for no arrows, one disabled arrow and `text-rule`. e2e: 5.1, 5.2, 6.1 to 6.4 (the 0px check at default font and at the largest font with an 80-character name), 7.1 to 7.3, 7.5, 12.1 to 12.5, 17.1 to 17.4, 24.1, A.1 to A.4 (one new `a11y-forms.spec.ts` that walks the listed screens with `getByRole(..., { name })` and a bounding-box check of 44px).
 
 ### 13.6 PR3: lists, navigation, loading (items 8-undo, 11, 13, 16, 18, 19, 20)
 
@@ -432,7 +434,7 @@ I chose this over a PostgREST embed (`dues!inner(student_id)`). It adds no new q
 
 ### 13.8 Spec points that need an answer (sent back to `product-manager`; each has a default this plan builds)
 
-1. **Item 6 (6.1) cannot be met as written.** A "Saved…" line that appears *in the flow* above the "Who" heading pushes the two buttons down by its own height, in page coordinates, so "differ by 0px" fails. The founder's item allows "toast or fixed-height slot". **Default built:** the line sits at the top in a slot reserved from the first render (`reserve-lines-3`, a sibling of `reserve-line` in `states.css`). The 0px e2e runs at 360px, default font, ordinary name. At the largest font with an 80-character name the line can exceed three lines and move the buttons. **Alternative (cleaner, guarantees 0px everywhere):** render the line as a toast pinned at the foot through `AppScreen above`, the same place and pattern as the Undo banner. Question for PM: top reserved slot (default) or foot toast?
+1. **Item 6 (6.1) as first written could not guarantee 0px.** Any "Saved…" message drawn in the form's flow moves the buttons by its own height at some font size. The founder's item allows "toast or fixed-height slot". **Resolved (see "Answered" below):** a toast pinned at the foot through `AppScreen above`, the same place and pattern as the Undo banner, out of the flow, so the 0px check holds at every font size (6.1, 6.2, 6.4).
 2. **Item 21.2's stitch exception is too narrow.** The cloth stitch is also on the tool header, the language picker, `ClothGround` (sign-in, setup), and the parent's pay page frame and receipt footer. Removing it there would change the parent pages, which section 2 says are unchanged, and would contradict DESIGN.md ("Cloth surfaces carry a 2px dashed stitch"). **Default built:** the exception is "every cloth surface's stitch" (any `outline-stitch outline-dashed`). More loses its stitch only because item 18.3 removes its cloth.
 3. **PR4 changes the parent pages visually.** `--label-size`, the label colour, `--shadow-banner-error` and the Sheet backdrop at 768+ are global tokens, and `/p/` and `/r/` use them (labels, the error banner, the claim sheet). Section 2's "the parent's pages are not changed" holds for PR1 to PR3, not for PR4. **Default built:** apply them globally (one design system). `preprod-qa` checks `/p/` and `/r/` at 360 and 768, and no parent wording changes, so the signed language review records are unaffected. The alternative is to scope the tokens to the app, which would create two label sizes. Question for PM and the founder: global (default) or app-only?
 4. **18.3 "a small label line"** above "More" has no content defined. **Default built:** the tutor's name is already the profile slip's headline, so the label line is the brand-free word "Settings" (`more.kicker`). PM to confirm the words.
