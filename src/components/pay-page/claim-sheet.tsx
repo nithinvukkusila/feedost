@@ -22,10 +22,11 @@ export type ClaimSheetProps = {
   words: PayPageWords;
   monthWords: MonthWords;
   page: FeePage;
-  /** Sends the normalised reference to `submit-claim` (the page reads the token). Never throws. */
+  /**
+   * Sends the normalised reference to `submit-claim` (the page reads the token). Never throws. When the claim is taken
+   * the page re-reads itself (to show the pending note) whether or not this sheet is still open; the sheet only says so.
+   */
   send: (ref: string) => Promise<ClaimOutcome>;
-  /** The claim was taken: the page reads itself again (it then shows the pending note); the sheet stays to say so. */
-  onSent: () => void;
   /** The page is out of date (nothing owed, a claim already waiting, not agreed, link gone): close and read again. */
   onStale: () => void;
   onClose: () => void;
@@ -35,7 +36,7 @@ type Problem = "duplicate" | "rateLimited" | "failed" | "offline";
 
 const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
 
-export function ClaimSheet({ words, monthWords, page, send, onSent, onStale, onClose }: Readonly<ClaimSheetProps>) {
+export function ClaimSheet({ words, monthWords, page, send, onStale, onClose }: Readonly<ClaimSheetProps>) {
   const w = words.claim;
   const [typed, setTyped] = useState("");
   const [badRef, setBadRef] = useState(false);
@@ -104,7 +105,6 @@ export function ClaimSheet({ words, monthWords, page, send, onSent, onStale, onC
     switch (outcome.kind) {
       case "ok":
         setSent(true);
-        onSent();
         return;
       case "bad_reference":
       case "no_proof":

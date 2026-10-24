@@ -149,25 +149,31 @@ export function PublicPayPage({ words, tokenSource = "path" }: Readonly<{ words:
 
   // Reads the page again without the opening state (R1-10 Part C): after a claim is taken, so the pending note shows;
   // and when a claim was refused because the page is out of date (nothing owed, a claim already waiting, not agreed).
-  const reread = useCallback(async () => {
+  // `keepOnFailure`: after a claim was taken, a re-read that does not come back keeps the page (and the sheet that says
+  // "Sent") as it is; the claim is saved, so the parent must not be shown "Couldn't open this page." for it.
+  const reread = useCallback(async (keepOnFailure = false) => {
     const signal = leaving.current?.signal;
     const token = tokenFromLocation(window.location, tokenSource);
     if (token === null) {
-      setState({ kind: "not_found" });
+      if (!keepOnFailure) setState({ kind: "not_found" });
       return;
     }
     const next = await fetchPayPage(token, signal);
     if (signal?.aborted) return;
+    if (keepOnFailure && next.kind !== "ok") return;
     setView("fee");
     setState(fromOutcome(next));
   }, [tokenSource]);
 
-  // The claim: the token read afresh from the address, the reference only in the body of this one call.
+  // The claim: the token read afresh from the address, the reference only in the body of this one call. When it is
+  // taken, the page re-reads here, not in the sheet, so it happens even if the sheet was closed while "Sending…".
   const sendClaim = useCallback(async (ref: string): Promise<ClaimOutcome> => {
     const token = tokenFromLocation(window.location, tokenSource);
     if (token === null) return { kind: "not_found" };
-    return postClaim(token, ref, leaving.current?.signal);
-  }, [tokenSource]);
+    const outcome = await postClaim(token, ref, leaving.current?.signal);
+    if (outcome.kind === "ok") void reread(true);
+    return outcome;
+  }, [tokenSource, reread]);
 
   // The frame's header: the tutor, what they teach, and the language button once there is a page to be in a language.
   let header: ReactNode;

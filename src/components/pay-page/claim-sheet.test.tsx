@@ -30,15 +30,14 @@ function show(
   options: { page?: Partial<FeePage>; send?: (ref: string) => Promise<ClaimOutcome> } = {},
 ) {
   const send = vi.fn(options.send ?? (async () => ({ kind: "ok" }) as ClaimOutcome));
-  const onSent = vi.fn();
   const onStale = vi.fn();
   const onClose = vi.fn();
   const view = render(
-    <ClaimSheet words={en.payPage} monthWords={en.receipt} page={{ ...base, ...options.page }} send={send} onSent={onSent} onStale={onStale} onClose={onClose} />,
+    <ClaimSheet words={en.payPage} monthWords={en.receipt} page={{ ...base, ...options.page }} send={send} onStale={onStale} onClose={onClose} />,
   );
   const field = screen.getByLabelText(REF_LABEL) as HTMLInputElement;
   const sendButton = () => screen.getByRole("button", { name: /Send to|Sending/ });
-  return { ...view, send, onSent, onStale, onClose, field, sendButton };
+  return { ...view, send, onStale, onClose, field, sendButton };
 }
 
 const dialogText = () => screen.getByRole("dialog").textContent ?? "";
@@ -136,10 +135,10 @@ describe("ClaimSheet: sending (criteria 33 to 36)", () => {
   });
 
   it("on success says it was sent and that the receipt comes later, with Close, and never says 'paid' (criterion 34)", async () => {
-    const { field, onSent, sendButton, onClose } = show();
+    const { field, send, sendButton, onClose } = show();
     await userEvent.type(field, "628104739915");
     await userEvent.click(sendButton());
-    expect(onSent).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledTimes(1);
     const text = dialogText();
     expect(text).toContain("Sent to Meena Iyer. She will check and confirm it.");
     expect(text).toContain("Open this link again later to see your receipt.");
@@ -159,22 +158,20 @@ describe("ClaimSheet: sending (criteria 33 to 36)", () => {
     ["failed", "Couldn't send. Nothing was saved. Try again."],
   ];
   it.each(kept)("on %s keeps what she typed and says so beside the button or field (criterion 35)", async (kind, words) => {
-    const { field, sendButton, onStale, onSent } = show({ send: async () => ({ kind }) as ClaimOutcome });
+    const { field, sendButton, onStale } = show({ send: async () => ({ kind }) as ClaimOutcome });
     await userEvent.type(field, "6281 0473 9915");
     await userEvent.click(sendButton());
     expect(dialogText()).toContain(words);
     expect(field.value).toBe("6281 0473 9915");
     expect(sendButton().textContent).toBe("Send to Meena Iyer");
     expect(onStale).not.toHaveBeenCalled();
-    expect(onSent).not.toHaveBeenCalled();
   });
 
   it.each(["nothing_owed", "already_pending", "consent_needed", "not_found"] as const)("on %s asks the page to read itself again", async (kind) => {
-    const { field, sendButton, onStale, onSent } = show({ send: async () => ({ kind }) });
+    const { field, sendButton, onStale } = show({ send: async () => ({ kind }) });
     await userEvent.type(field, "628104739915");
     await userEvent.click(sendButton());
     expect(onStale).toHaveBeenCalledTimes(1);
-    expect(onSent).not.toHaveBeenCalled();
   });
 
   it("a 403 after a 422 still asks the page to read again (it never assumes consent)", async () => {

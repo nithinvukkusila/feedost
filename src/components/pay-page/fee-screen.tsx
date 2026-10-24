@@ -60,9 +60,12 @@ type Props = {
   monthWords: MonthWords;
   page: FeePage;
   onOpenNotice: () => void;
-  /** Sends a claim (R1-10 Part C): the page reads the token and calls `submit-claim`. Never throws. */
+  /**
+   * Sends a claim (R1-10 Part C): the page reads the token and calls `submit-claim`. Never throws. On "ok" the page
+   * re-reads itself to show the pending note, even if the sheet was closed meanwhile.
+   */
   sendClaim: (ref: string) => Promise<ClaimOutcome>;
-  /** Reads the page again, quietly (after a claim, or when a claim was refused because the page is out of date). */
+  /** Reads the page again, quietly, when a claim was refused because the page is out of date. */
   onReread: () => void;
 };
 
@@ -74,12 +77,14 @@ export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice, 
   const [ClaimSheetView, setClaimSheetView] = useState<LoadedSheet | null>(null);
   const [claimOpen, setClaimOpen] = useState(false);
   const [loadProblem, setLoadProblem] = useState<string | null>(null);
+  const [claimPage, setClaimPage] = useState<FeePage | null>(null);
   const loading = useRef(false);
 
   async function openClaim() {
     if (loading.current) return;
     setLoadProblem(null);
     if (ClaimSheetView !== null) {
+      setClaimPage(page);
       setClaimOpen(true);
       return;
     }
@@ -87,6 +92,7 @@ export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice, 
     try {
       const loaded = await import("./claim-sheet");
       setClaimSheetView(() => loaded.ClaimSheet);
+      setClaimPage(page);
       setClaimOpen(true);
     } catch {
       // The code could not be fetched (most often no connection). Nothing was sent.
@@ -143,9 +149,9 @@ export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice, 
         <ClaimSheetView
           words={words}
           monthWords={monthWords}
-          page={page}
+          // The page as it was when the sheet opened: its header keeps the amount she claimed after the page re-reads.
+          page={claimPage ?? page}
           send={sendClaim}
-          onSent={onReread}
           onStale={() => {
             setClaimOpen(false);
             onReread();
