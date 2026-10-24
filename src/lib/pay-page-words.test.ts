@@ -34,8 +34,37 @@ describe("the English words", () => {
     expect(fill(en.payPage.consent.intro, { tutor: "Meena Iyer" })).toBe("Meena Iyer uses this service to share fee details with you. This is what is kept:");
   });
 
+  it("say the R1-10 claim words as the spec writes them (section 9), with R1-9's sentence replaced (criterion 37)", () => {
+    expect(en.payPage.paidAlready).toBe("Paid already? Tell {tutor}.");
+    expect(fill(en.payPage.paidAlready, { tutor: en.payPage.claim.yourTutor })).toBe("Paid already? Tell your tutor.");
+    expect(fill(en.payPage.claim.heading, { amount: "₹1,200", tutor: "Meena Iyer" })).toBe("₹1,200 to Meena Iyer");
+    expect(fill(en.payPage.claim.pending, { tutor: "Meena Iyer", date: "11 Oct 2026", amount: "₹1,200" })).toBe(
+      "You told Meena Iyer on 11 Oct 2026 that you paid ₹1,200. She will confirm it.",
+    );
+    expect(en.payPage.claim).toMatchObject({
+      button: "I've paid",
+      title: "Paid already? Tell {tutor}.",
+      help: "Give {tutor} one proof so she can match it. Your receipt comes once she confirms.",
+      refLabel: "UPI reference number · 12 digits",
+      refHint: "In your UPI app it is shown as UTR or UPI Ref No.",
+      private: "Only {tutor} can see it.",
+      send: "Send to {tutor}",
+      sending: "Sending…",
+      noMoney: "This does not move any money. It only tells the tutor.",
+      sent: "Sent to {tutor}. She will check and confirm it.",
+      sentLater: "Open this link again later to see your receipt.",
+      badRef: "Check the 12 digits and try again.",
+      duplicate: "This reference was already sent.",
+      failed: "Couldn't send. Nothing was saved. Try again.",
+      offline: "You are offline. Nothing was sent.",
+    });
+  });
+
   it("never say paid, done or success about a payment the page has not seen, outside the words that are about receipts", () => {
-    const allowed = new Set(["paidAlready", "allPaid", "receipt.paid", "receipt.part", "line.alreadyPaid"]);
+    // R1-10 Part C adds three that are the parent's own words about her payment, never the page's verdict (criterion
+    // 34): the "I've paid" button, the sheet's title ("Paid already? Tell {tutor}.") and the pending note ("You told
+    // {tutor} ... that you paid {amount}"). The sheet's success words are not on this list: they must not say paid.
+    const allowed = new Set(["paidAlready", "allPaid", "receipt.paid", "receipt.part", "line.alreadyPaid", "claim.button", "claim.title", "claim.pending"]);
     const walk = (node: Record<string, unknown>, path = ""): string[] =>
       Object.entries(node).flatMap(([key, value]) =>
         typeof value === "string" ? [`${path}${key}|${value}`] : walk(value as Record<string, unknown>, `${path}${key}.`),

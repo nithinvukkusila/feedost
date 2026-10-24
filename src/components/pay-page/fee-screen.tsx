@@ -2,17 +2,22 @@
 
 // The parent's fee page after they have agreed (spec R1-9 criteria 22 to 31; canvas "PayPage"): the slip with "for
 // {student}", the total as the headline, one line per open fee, then the Pay area, earlier receipts, the privacy
-// notice link. The total is what the Pay button asks for. Overdue is a word and a mark (StatusTag), never colour alone.
+// notice link. Below the Pay area: "I've paid" or the pending note (R1-10 Part C), with the claim sheet loaded on tap.
+// The total is what the Pay button asks for. Overdue is a word and a mark (StatusTag), never colour alone.
+import { useRef, useState, type ReactNode } from "react";
 import { Slip } from "@/components/ui/slip";
 import { Stamp } from "@/components/ui/stamp";
 import { StatusTag } from "@/components/ui/status-tag";
 import type { Locale } from "@/config/locales";
 import { amountFit } from "@/lib/amount-fit";
 import { formatDate, formatRupees } from "@/lib/format";
-import type { FeePage } from "@/lib/pay-page-public";
+import type { ClaimOutcome, FeePage } from "@/lib/pay-page-public";
 import { feeLine, payArea, type FeeLine } from "@/lib/pay-page-view";
 import type { PayPageWords } from "@/lib/pay-page-words";
 import { monthLabel, type MonthWords } from "@/lib/receipt-words";
+import { ClaimArea } from "./claim-area";
+// A type only: the sheet's code is not in this file's bundle; it is imported on tap.
+import type { ClaimSheetProps } from "./claim-sheet";
 import { EarlierReceipts } from "./earlier-receipts";
 import { Filled } from "./filled";
 import { PayActions } from "./pay-actions";
@@ -55,9 +60,48 @@ type Props = {
   monthWords: MonthWords;
   page: FeePage;
   onOpenNotice: () => void;
+  /**
+   * Sends a claim (R1-10 Part C): the page reads the token and calls `submit-claim`. Never throws. On "ok" the page
+   * re-reads itself to show the pending note, even if the sheet was closed meanwhile.
+   */
+  sendClaim: (ref: string) => Promise<ClaimOutcome>;
+  /** Reads the page again, quietly, when a claim was refused because the page is out of date. */
+  onReread: () => void;
 };
 
-export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice }: Readonly<Props>) {
+type LoadedSheet = (props: ClaimSheetProps) => ReactNode;
+
+export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice, sendClaim, onReread }: Readonly<Props>) {
+  // The claim sheet's code is fetched only when "I've paid" is tapped (R1-10 criterion 42). It stays mounted here, not
+  // under the button, so it can still say "Sent" after the page re-reads and the button gives way to the pending note.
+  const [ClaimSheetView, setClaimSheetView] = useState<LoadedSheet | null>(null);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [loadProblem, setLoadProblem] = useState<string | null>(null);
+  const [claimPage, setClaimPage] = useState<FeePage | null>(null);
+  const loading = useRef(false);
+
+  async function openClaim() {
+    if (loading.current) return;
+    setLoadProblem(null);
+    if (ClaimSheetView !== null) {
+      setClaimPage(page);
+      setClaimOpen(true);
+      return;
+    }
+    loading.current = true;
+    try {
+      const loaded = await import("./claim-sheet");
+      setClaimSheetView(() => loaded.ClaimSheet);
+      setClaimPage(page);
+      setClaimOpen(true);
+    } catch {
+      // The code could not be fetched (most often no connection). Nothing was sent.
+      setLoadProblem(typeof navigator !== "undefined" && navigator.onLine === false ? words.claim.offline : words.claim.failed);
+    } finally {
+      loading.current = false;
+    }
+  }
+
   const area = payArea(page);
   const paidUp = page.totalRemaining === 0;
   const figures = formatRupees(page.totalRemaining);
@@ -96,9 +140,25 @@ export function FeeScreen({ words, consentLang, monthWords, page, onOpenNotice }
               ) : null}
             </ul>
             <PayActions words={words} area={area} total={page.totalRemaining} />
+            <ClaimArea words={words} page={page} onOpen={() => void openClaim()} problem={loadProblem} />
           </>
         )}
       </Slip>
+
+      {claimOpen && ClaimSheetView !== null ? (
+        <ClaimSheetView
+          words={words}
+          monthWords={monthWords}
+          // The page as it was when the sheet opened: its header keeps the amount she claimed after the page re-reads.
+          page={claimPage ?? page}
+          send={sendClaim}
+          onStale={() => {
+            setClaimOpen(false);
+            onReread();
+          }}
+          onClose={() => setClaimOpen(false)}
+        />
+      ) : null}
 
       <EarlierReceipts words={words} monthWords={monthWords} receipts={page.receipts} more={page.receiptsMore} />
 

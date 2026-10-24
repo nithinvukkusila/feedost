@@ -246,6 +246,19 @@
   letter-spacing: 0em;
 }
 
+/*
+ * A typed value that is a number to read digit by digit: the UPI reference on the parent's claim sheet (R1-10,
+ * canvas "Claim-sheet": DM Mono 500 at 30px, in blue). Always DM Mono with 0-9 digits, whatever the page language;
+ * the line-height follows the script so the field keeps its room in hi, kn and te.
+ */
+@utility type-value-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: var(--value-leading);
+  letter-spacing: 0em;
+}
+
 /* The word on a stamp. Size comes from a text-* class beside it. */
 @utility type-stamp {
   font-family: var(--script-font);

@@ -3,7 +3,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { feeBody } from "./pay-page.test-util";
 import { readPage, type FeePage, type OpenDue } from "./pay-page-public";
-import { dayNumber, feeLine, lateness, payArea, payeeName, upiNote } from "./pay-page-view";
+import { claimButtonVisible, dayNumber, feeLine, lateness, payArea, payeeName, upiNote } from "./pay-page-view";
 import { PAY_PAGE_MAX_PAISE } from "./upi-link";
 
 const due = (change: Partial<OpenDue> = {}): OpenDue => ({ kind: "monthly", month: "2026-10-01", dueDate: "2026-10-01", amount: 120000, amountPaid: 0, remaining: 120000, ...change });
@@ -146,10 +146,32 @@ describe("payArea", () => {
     const area = payArea(fee({ totalRemaining: 123456 }));
     expect(area.kind === "pay" && area.href).toContain("&am=1234.56&");
   });
+  it("does not change while a claim waits: the Pay button stays (R1-10 criterion 38, question 10)", () => {
+    expect(payArea(fee({ pendingClaim: { amount: 340000, submittedOn: "2026-10-11" } })).kind).toBe("pay");
+  });
   it("encodes a tutor name with an ampersand and a Hindi name", () => {
     const amp = payArea(fee({ tutorName: "Rao & Sons" }));
     expect(amp.kind === "pay" && amp.href).toContain("&pn=Rao%20%26%20Sons&");
     const hi = payArea(fee({ tutorName: "मीना अय्यर" }));
     expect(hi.kind === "pay" && new URL(hi.href).searchParams.get("pn")).toBe("मीना अय्यर");
+  });
+});
+
+// Spec R1-10 Part C, criterion 30: the one place the "I've paid" rule lives.
+describe("claimButtonVisible", () => {
+  const notice = readPage({ code: "ok", page: { ...feeBody, consent_needed: true } });
+
+  it("is true after consent, with something owed and no claim waiting", () => {
+    expect(claimButtonVisible(fee())).toBe(true);
+    expect(claimButtonVisible(fee({ totalRemaining: 1 }))).toBe(true);
+    expect(claimButtonVisible(fee({ upiId: null }))).toBe(true);
+    expect(claimButtonVisible(fee({ totalRemaining: PAY_PAGE_MAX_PAISE + 1 }))).toBe(true);
+  });
+
+  it("is false before consent, when all is paid, and while a claim waits", () => {
+    expect(notice?.consentNeeded).toBe(true);
+    expect(claimButtonVisible(notice!)).toBe(false);
+    expect(claimButtonVisible(fee({ totalRemaining: 0, openDues: [] }))).toBe(false);
+    expect(claimButtonVisible(fee({ pendingClaim: { amount: 340000, submittedOn: "2026-10-11" } }))).toBe(false);
   });
 });

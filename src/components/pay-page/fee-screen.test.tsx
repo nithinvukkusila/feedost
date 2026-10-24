@@ -1,10 +1,10 @@
 // The fee page after consent (spec R1-9 Part B, criteria 22 to 28), with Pay, Copy and the fallbacks.
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import { feeBody } from "@/lib/pay-page.test-util";
-import { readPage, type FeePage } from "@/lib/pay-page-public";
+import { readPage, type ClaimOutcome, type FeePage } from "@/lib/pay-page-public";
 import { FeeScreen } from "./fee-screen";
 
 /** A paragraph or list item by its whole text, whatever spans a filled-in name is wrapped in. */
@@ -15,9 +15,32 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+// jsdom does not open modal dialogs: these stand-ins flip `open` and fire `close` (as in sheet.test.tsx).
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.setAttribute("open", "");
+  };
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    if (!this.hasAttribute("open")) return;
+    this.removeAttribute("open");
+    this.dispatchEvent(new Event("close"));
+  };
+});
+
 const page = (change: Partial<FeePage> = {}): FeePage => ({ ...(readPage({ code: "ok", page: feeBody }) as FeePage), ...change });
-const show = (change: Partial<FeePage> = {}, onOpenNotice = () => {}) =>
-  render(<FeeScreen words={en.payPage} consentLang="en" monthWords={en.receipt} page={page(change)} onOpenNotice={onOpenNotice} />);
+type Claim = { sendClaim?: (ref: string) => Promise<ClaimOutcome>; onReread?: () => void };
+const show = (change: Partial<FeePage> = {}, onOpenNotice = () => {}, claim: Claim = {}) =>
+  render(
+    <FeeScreen
+      words={en.payPage}
+      consentLang="en"
+      monthWords={en.receipt}
+      page={page(change)}
+      onOpenNotice={onOpenNotice}
+      sendClaim={claim.sendClaim ?? (async () => ({ kind: "failed" }))}
+      onReread={claim.onReread ?? (() => {})}
+    />,
+  );
 const clipboard = (writeText: (text: string) => Promise<void>) => vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
 
 describe("FeeScreen", () => {
@@ -58,7 +81,14 @@ describe("FeeScreen", () => {
     expect(amount.getAttribute("translate")).toBe("no");
     expect(amount.className).toContain("type-amount-row");
     expect(text("Your UPI app opens with the amount filled in. It goes straight to meena.tuitions@okhdfc.")).toBeTruthy();
-    expect(screen.getByText("Paid already? Your tutor marks it paid and sends you a receipt.")).toBeTruthy();
+    // R1-9's sentence, changed by R1-10 criterion 37 (not deleted): it now points to the "I've paid" button.
+    expect(text("Paid already? Tell Meena Iyer.")).toBeTruthy();
+    expect(screen.queryByText(/Your tutor marks it paid/)).toBeNull();
+  });
+
+  it("says 'your tutor' in that sentence when the tutor has no name (criterion 37)", () => {
+    show({ tutorName: null });
+    expect(text("Paid already? Tell your tutor.")).toBeTruthy();
   });
 
   it("shows no Pay button for no UPI ID, a zero total or a total over the ceiling, and says why", () => {
@@ -110,10 +140,52 @@ describe("FeeScreen", () => {
     expect(screen.getByRole("button", { name: "Copy UPI ID" })).toBeTruthy();
   });
 
-  it("has no QR button (Part C) and no 'I've paid' button", () => {
-    show();
+  it("has no QR button, and the 'I've paid' button below the Pay area (R1-10 criterion 30)", () => {
+    const { container } = show();
     expect(screen.queryByRole("button", { name: /QR/i })).toBeNull();
-    expect(screen.queryByText(/I've paid|I've already paid/i)).toBeNull();
+    const button = screen.getByRole("button", { name: "I've paid" });
+    expect(button.className).toContain("min-h-control");
+    expect(button.className).toContain("bg-slip");
+    // Below the Pay link and the fallbacks, in the order of the page.
+    const pay = screen.getByRole("link", { name: "Pay ₹3,400 with UPI" });
+    expect(pay.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(container.querySelector("[data-claim=pending]")).toBeNull();
+  });
+
+  it("draws the button with no UPI ID and above the ceiling too (something is owed), and not when all is paid", () => {
+    show({ upiId: null });
+    expect(screen.getByRole("button", { name: "I've paid" })).toBeTruthy();
+    cleanup();
+    show({ totalRemaining: 100_000_001 });
+    expect(screen.getByRole("button", { name: "I've paid" })).toBeTruthy();
+    cleanup();
+    show({ totalRemaining: 0, openDues: [] });
+    expect(screen.queryByRole("button", { name: "I've paid" })).toBeNull();
+    expect(screen.queryByText(/Paid already/)).toBeNull();
+  });
+
+  it("replaces the button with the pending note while a claim waits, and keeps Pay (criterion 38)", () => {
+    const { container } = show({ pendingClaim: { amount: 340000, submittedOn: "2026-10-11" } });
+    expect(screen.queryByRole("button", { name: "I've paid" })).toBeNull();
+    expect(screen.queryByText(/Paid already/)).toBeNull();
+    const note = container.querySelector("[data-claim=pending]")!;
+    expect(note.textContent).toBe("You told Meena Iyer on 11 Oct 2026 that you paid ₹3,400. She will confirm it.");
+    const amount = Array.from(note.querySelectorAll("span")).find((el) => el.textContent === "₹3,400")!;
+    expect(amount.className).toContain("type-amount-row");
+    expect(amount.getAttribute("translate")).toBe("no");
+    expect(screen.getByRole("link", { name: "Pay ₹3,400 with UPI" })).toBeTruthy();
+  });
+
+  it("opens the claim sheet on tap, with no request, and sends only through sendClaim", async () => {
+    const sendClaim = vi.fn(async () => ({ kind: "ok" }) as ClaimOutcome);
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    show({}, () => {}, { sendClaim });
+    await userEvent.click(screen.getByRole("button", { name: "I've paid" }));
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(screen.getByLabelText("UPI reference number · 12 digits")).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(sendClaim).not.toHaveBeenCalled();
   });
 
   it("opens the privacy notice from its link", async () => {

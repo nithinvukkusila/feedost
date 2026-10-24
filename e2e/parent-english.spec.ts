@@ -90,6 +90,32 @@ test.describe("/p/ is English while only English is unlocked (criteria 1, 4 and 
     });
   }
 
+  // R1-10 Part C: the "I've paid" sheet with its states, and the pending note, are part of S1.
+  for (const language of ["hi", "kn", "te"] as const) {
+    test(`a ${language} student: the claim sheet, a refusal, the sent words and the pending note are English`, async ({ page }) => {
+      await stubPayPage(page, {
+        pay: (call) => (call === 1 ? fee({ ...names, language }) : fee({ ...names, language, pending_claim: { amount: 340000, submitted_on: "2026-10-12" } })),
+        claim: (call) => (call === 1 ? { status: 409, body: { code: "duplicate_reference" } } : { status: 200, body: { code: "ok" } }),
+      });
+      await page.goto(payLink());
+      await expectEnglish(page, "fee");
+      await page.locator("main").getByRole("button", { name: text("en", "payPage.claim.button") }).click();
+      const sheet = page.getByRole("dialog");
+      await expect(sheet).toContainText(text("en", "payPage.claim.refHint"));
+      await expectEnglish(page, "fee");
+      await sheet.getByRole("textbox").fill("628104739915");
+      await sheet.locator('button[type="submit"]').click();
+      await expect(sheet).toContainText(text("en", "payPage.claim.duplicate"));
+      await expectEnglish(page, "fee");
+      await sheet.locator('button[type="submit"]').click();
+      await expect(sheet).toContainText(text("en", "payPage.claim.sentLater"));
+      await expectEnglish(page, "fee");
+      await sheet.getByRole("button", { name: text("en", "payPage.claim.close") }).last().click();
+      await expect(page.locator("main [data-claim=pending]")).toBeVisible();
+      await expectEnglish(page, "fee");
+    });
+  }
+
   for (const [lang, locale] of Object.entries(browsers)) {
     test.describe(`with the browser in ${locale}`, () => {
       test.use({ locale });

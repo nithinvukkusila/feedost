@@ -81,6 +81,95 @@ for (const lang of langs) {
       }
     });
 
+    // Spec R1-10 Part C, criterion 40: the claim sheet with 80-character names, a refusal and the success words, at
+    // 100%, 130% and 200%, then with half the screen taken by the keypad: no sideways scroll, every control 44px (Send
+    // 62px), nothing under 14px, nothing cut, the sheet scrolls and Send can be reached. Digits and ₹ stay 0-9.
+    test("the claim sheet with the longest names, a refusal and the keypad open", async ({ page }) => {
+      test.setTimeout(150_000);
+      await stubPayPage(page, {
+        pay: { status: 200, body: { code: "ok", page: { ...feeBody, ...heavy(lang) } } },
+        claim: (call) => (call === 1 ? { status: 409, body: { code: "duplicate_reference" } } : { status: 200, body: { code: "ok" } }),
+      });
+      await page.goto(pageLink(lang));
+      const main = page.locator("main");
+      await expect(main).toHaveAttribute("data-state", "fee");
+      await expect(main).toHaveAttribute("lang", lang);
+      await main.locator("[data-claim=ask] button").click();
+      const sheet = page.getByRole("dialog");
+      await expect(sheet).toBeVisible();
+      await sheet.getByRole("textbox").fill("6281 0473 9915");
+      const send = sheet.locator('button[type="submit"]');
+      await send.click();
+      await expect(sheet.locator("[data-claim=problem]")).not.toBeEmpty();
+      await fontsSettled(page);
+      await page.addStyleTag({ content: "html { filter: grayscale(1); }" });
+      // As pay-layout.spec.ts does for the Mark paid sheet: measured from the top of the sheet (a scrolled sheet has
+      // content behind its pinned title, which is not a fault), and the text checks at the default size; at the larger
+      // sizes the header scrolls inside itself and the checks are reachability, controls and sideways scroll.
+      const check = async (label: string, text: boolean) => {
+        expect(await sidewaysScroll(page), `sideways scroll ${label}`).toBe(0);
+        await sheet.evaluate((el) => el.querySelectorAll("*").forEach((node) => void (node.scrollTop = 0)));
+        for (const el of await sheet.locator("a:visible, button:visible").all()) expect((await box(el)).height, `control ${label}`).toBeGreaterThanOrEqual(44);
+        if (text) expect(await textProblems(page, "dialog"), `text problems ${label}`).toEqual([]);
+        expect(await sheet.textContent()).not.toMatch(/[०-९౦-౯೦-೯]/);
+        await expect(sheet.locator('[translate="no"]', { hasText: "T".repeat(80) }).first()).toBeAttached();
+      };
+      // The reference is never cut (criterion 40, "nothing cut"): the field shows the whole grouped value, wrapping onto
+      // another line rather than scrolling it out of sight, at every size and in the needs-fixing state too.
+      const input = sheet.getByRole("textbox");
+      const fieldWhole = async (value: string, label: string) => {
+        await expect(input).toHaveValue(value);
+        const fits = await input.evaluate((el) => ({ width: el.scrollWidth <= el.clientWidth, height: el.scrollHeight <= el.clientHeight + 1 }));
+        expect(fits, `the reference "${value}" is whole ${label}`).toEqual({ width: true, height: true });
+      };
+      for (const size of sizes) {
+        await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
+        await fontsSettled(page);
+        await fieldWhole("6281 0473 9915", `at ${size}`);
+        // The needs-fixing state: 11 digits refused on the phone (no request), with its words and mark beside the field.
+        await input.fill("6281 0473 991");
+        await send.click();
+        await expect(input).toHaveAttribute("aria-invalid", "true");
+        await fieldWhole("6281 0473 991", `in the error state at ${size}`);
+        if (size === "100%") {
+          await sheet.evaluate((el) => el.querySelectorAll("*").forEach((node) => void (node.scrollTop = 0)));
+          expect(await textProblems(page, "dialog"), `text problems in the error state at ${size}`).toEqual([]);
+        }
+        await input.fill("6281 0473 9915");
+        await check(`at ${size}`, size === "100%");
+        await send.scrollIntoViewIfNeeded();
+        await expect(send).toBeInViewport();
+        expect((await box(send)).height, `Send at ${size}`).toBeGreaterThanOrEqual(62);
+      }
+      // The keypad open: half the screen. The panel scrolls inside itself and Send is still reachable.
+      await page.setViewportSize({ width: 360, height: 400 });
+      await sheet.getByRole("textbox").focus();
+      await send.scrollIntoViewIfNeeded();
+      await expect(send).toBeInViewport();
+      // At 200% an 80-character name makes Send taller than this half screen, so the tap is checked in the middle of
+      // the part of it that is on screen: Send is what is there, nothing pinned sits over it.
+      const tappable = await send.evaluate((el) => {
+        // The panel that scrolls clips Send: the part that can be tapped is inside both the panel and the window.
+        let panel: Element | null = el.parentElement;
+        while (panel && getComputedStyle(panel).overflowY !== "auto") panel = panel.parentElement;
+        const r = el.getBoundingClientRect();
+        const clip = panel?.getBoundingClientRect() ?? { top: 0, bottom: innerHeight };
+        const top = Math.max(r.top, clip.top, 0);
+        const bottom = Math.min(r.bottom, clip.bottom, innerHeight);
+        if (bottom - top < 44) return false;
+        return document.elementFromPoint(r.x + r.width / 2, (top + bottom) / 2)?.closest("button") === el;
+      });
+      expect(tappable, "Send has at least 44px on screen and nothing covers it").toBe(true);
+      // The success words, laid out the same way.
+      await send.click();
+      await expect(sheet.locator("[data-claim=sent]")).toBeVisible();
+      await page.setViewportSize({ width: 360, height: 800 });
+      await check("after sending, at 200%", false);
+      await page.evaluate(() => document.documentElement.style.setProperty("font-size", "100%"));
+      await fontsSettled(page);
+      await check("after sending, at 100%", true);
+    });
+
     test("the consent screen with a Telugu tutor name and a Hindi student name", async ({ page }) => {
       test.setTimeout(90_000);
       await stubPayPage(page, { pay: notice({ language: lang, tutor_name: "మీనా అయ్యర్ ట్యూషన్స్", student_name: "रवि कुमार शर्मा", tutor_subjects: subjects }) });

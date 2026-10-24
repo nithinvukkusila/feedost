@@ -56,6 +56,12 @@ export type FieldProps = Stated & {
    */
   latinValue?: boolean;
   /**
+   * For a number read digit by digit, such as the UPI reference on the parent's claim sheet: the typed value and the
+   * placeholder are drawn larger in the mono face (DM Mono, 0-9 digits) whatever the page language. Wins over
+   * `latinValue`. The label, the helper and the message keep the page's own face.
+   */
+  monoValue?: boolean;
+  /**
    * Set to draw a single-line <input> of this type (for example "tel") instead of the wrapping
    * textarea. Same line, label, states and tokens. A value wider than the line scrolls, so use it
    * only for short values such as a phone number. Leave it off for everything else.
@@ -171,6 +177,7 @@ export function Field(props: FieldProps) {
     placeholder,
     ref,
     latinValue = false,
+    monoValue = false,
     type: givenType,
     id: givenId,
     "aria-describedby": describedBy,
@@ -188,7 +195,7 @@ export function Field(props: FieldProps) {
   const note = showMessage ? message : helper;
   const hasNote = note != null;
   // One role or the other, never both: the two differ only in the face, and the control and its copy share it.
-  const valueRole = latinValue ? "type-value-latin" : "type-value";
+  const valueRole = monoValue ? "type-value-mono" : latinValue ? "type-value-latin" : "type-value";
 
   const controlled = value !== undefined;
   const element = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);

@@ -3,6 +3,7 @@
 // Under the headline: the Pay button, what it does, and the fallbacks (spec R1-9 criteria 24 to 26). The Pay button is
 // a real link to `upi://pay?...` built on the parent's phone; it records nothing, because the page cannot know whether
 // the payment happened. Copy UPI ID is drawn only when the browser can copy. There is no QR button in Part B.
+// "Paid already? Tell {tutor}." and the "I've paid" button sit below this, in fee-screen.tsx (R1-10 Part C).
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { formatRupees } from "@/lib/format";
@@ -103,7 +104,6 @@ export function PayActions({ words, area, total }: Readonly<{ words: PayPageWord
           <p className="type-caption text-ink-soft wrap-anywhere">{words.fallback}</p>
         </div>
       ) : null}
-      <p className="type-body-sm mt-3 text-ink-soft wrap-anywhere">{words.paidAlready}</p>
     </div>
   );
 }

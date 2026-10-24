@@ -276,7 +276,9 @@ test.describe("the fee page (criteria 22 to 25)", () => {
     await openFee(page);
     const main = page.locator("main");
     await expect(main).toContainText(`Your UPI app opens with the amount filled in. It goes straight to ${UPI_ID}.`);
-    await expect(main).toContainText("Paid already? Your tutor marks it paid and sends you a receipt.");
+    // R1-9's sentence, changed by R1-10 criterion 37 (not deleted): it now points to the "I've paid" button below it.
+    await expect(main).toContainText("Paid already? Tell Meena Iyer.");
+    await expect(main).not.toContainText("Your tutor marks it paid");
     await expect(main).toContainText("UPI app did not open? Use one of these.");
     const copy = main.getByRole("button", { name: "Copy UPI ID" });
     expect((await box(copy)).height).toBeGreaterThanOrEqual(48);
