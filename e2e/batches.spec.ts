@@ -345,7 +345,8 @@ test.describe("44: move students", () => {
     const sheet = page.getByRole("dialog");
     await expect(sheet.getByText("Move students to Class 10 Maths")).toBeVisible();
     // Not those already here, and not the archived one.
-    await expect(sheet.getByRole("checkbox")).toHaveCount(2);
+    // Two students, beside the "Select all shown" tick (UX-review-fixes-2, 17.3).
+    await expect(sheet.getByRole("checkbox", { name: /^(?!Select all shown)/ })).toHaveCount(2);
     await expect(sheet.getByText("In Class 8 Science")).toBeVisible();
     await expect(sheet.getByText("No batch", { exact: true })).toBeVisible();
     // Nothing ticked: nothing to send.
