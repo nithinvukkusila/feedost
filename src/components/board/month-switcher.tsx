@@ -19,8 +19,11 @@ export function useMonthWords() {
   return { name, label };
 }
 
+// A dead arrow (UX-review-fixes-2, 5.2): still 44px and announced as disabled, no shadow, the dashed outline that is
+// the disabled mark, and its icon in the faint `rule` so it is plainly not the live `ink` one. The dash, not the
+// colour, carries the state. When neither way can move the arrows are not drawn at all (5.1).
 const arrow =
-  "flex size-tap shrink-0 items-center justify-center border-2 border-transparent text-ink ring:ground-ring disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-label disabled:text-ink-label";
+  "flex size-tap shrink-0 items-center justify-center border-2 border-transparent text-ink ring:ground-ring disabled:cursor-not-allowed disabled:border-dashed disabled:border-ink-label disabled:text-rule";
 
 export type MonthSwitcherProps = {
   label: string;
@@ -34,18 +37,24 @@ export type MonthSwitcherProps = {
 
 export function MonthSwitcher({ label, canPrev, canNext, onPrev, onNext, trailing }: Readonly<MonthSwitcherProps>) {
   const t = useTranslations("board");
+  // No other month to go to: the month alone, at the arrows' height so the row does not change when one appears.
+  const moves = canPrev || canNext;
   return (
     <div className="flex flex-wrap items-center justify-between gap-y-1 px-2 pt-1.5">
-      <div className="flex min-w-0 max-w-full items-center">
-        <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
-          <BackIcon />
-        </button>
+      <div className="flex min-h-tap min-w-0 max-w-full items-center">
+        {moves ? (
+          <button type="button" aria-label={t("prev")} disabled={!canPrev} onClick={onPrev} className={arrow}>
+            <BackIcon />
+          </button>
+        ) : null}
         <p aria-live="polite" aria-atomic="true" className="type-label min-w-0 px-1 text-center text-ink">
           {label}
         </p>
-        <button type="button" aria-label={t("next")} disabled={!canNext} onClick={onNext} className={arrow}>
-          <NextIcon />
-        </button>
+        {moves ? (
+          <button type="button" aria-label={t("next")} disabled={!canNext} onClick={onNext} className={arrow}>
+            <NextIcon />
+          </button>
+        ) : null}
       </div>
       {trailing}
     </div>

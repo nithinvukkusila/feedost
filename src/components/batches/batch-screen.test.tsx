@@ -304,3 +304,67 @@ describe("Move students (44, review)", () => {
     expect(push).toHaveBeenCalledWith("/en/batches/");
   });
 });
+
+describe("Move students sheet (UX-review-fixes-2, item 17)", () => {
+  const others = () => [
+    student("a", "b1", 120000),
+    { ...student("d", "b2", 100000), name: "Asha Rao" },
+    { ...student("e", null, 100000), name: "Ravi Kumar" },
+    { ...student("f", "b2", 100000), name: "Rahul Shetty" },
+  ];
+  const sheet = () => within(screen.getByRole("dialog"));
+  const openSheet = async () => {
+    roster({ students: others() });
+    renderWithWords(<BatchScreen />);
+    await userEvent.click(await screen.findByRole("button", { name: "Move students" }));
+  };
+  const confirm = () => sheet().getByRole("button", { name: /^Move/ });
+
+  it("17.1: has one Cancel, the sheet's own close at the top", async () => {
+    await openSheet();
+    expect(sheet().getAllByRole("button", { name: "Cancel" })).toHaveLength(1);
+  });
+
+  it("17.2: a labelled search filters the list by name, as the Students search does; no match says so and clears", async () => {
+    await openSheet();
+    const search = sheet().getByRole("textbox", { name: "Search student or parent" });
+    await userEvent.type(search, "ra");
+    expect(sheet().queryByRole("checkbox", { name: /Asha Rao/ })).toBeTruthy();
+    expect(sheet().getByRole("checkbox", { name: /Ravi Kumar/ })).toBeTruthy();
+    await userEvent.type(search, "h");
+    expect(sheet().queryByRole("checkbox", { name: /Ravi Kumar/ })).toBeNull();
+    expect(sheet().getByRole("checkbox", { name: /Rahul Shetty/ })).toBeTruthy();
+    await userEvent.clear(search);
+    await userEvent.type(search, "zzz");
+    expect(sheet().getByText("No student matches “zzz”.")).toBeTruthy();
+    await userEvent.click(sheet().getByRole("button", { name: "Clear search" }));
+    expect((search as HTMLTextAreaElement).value).toBe("");
+    expect(sheet().getAllByRole("checkbox")).toHaveLength(4);
+  });
+
+  it("17.3: Select all shown ticks and clears every student the search shows, with its state as a word", async () => {
+    await openSheet();
+    const all = () => sheet().getByRole("checkbox", { name: /Select all shown \(3\)/ }) as HTMLInputElement;
+    expect(sheet().getByText("Not selected")).toBeTruthy();
+    await userEvent.click(all());
+    expect(all().checked).toBe(true);
+    expect(sheet().getByText("Selected")).toBeTruthy();
+    expect(confirm().textContent).toBe("Move 3 students here");
+    await userEvent.click(all());
+    expect(confirm().textContent).toBe("Move here");
+    expect((confirm() as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("17.4: ticks hidden by the search still count; select all under a search adds only those shown", async () => {
+    moveStudents.mockResolvedValue({ ok: true, students: [] });
+    await openSheet();
+    await userEvent.click(sheet().getByRole("checkbox", { name: /Asha Rao/ }));
+    await userEvent.type(sheet().getByRole("textbox", { name: "Search student or parent" }), "rahul");
+    expect(sheet().queryByRole("checkbox", { name: /Asha Rao/ })).toBeNull();
+    expect(confirm().textContent).toBe("Move 1 student here");
+    await userEvent.click(sheet().getByRole("checkbox", { name: /Select all shown \(1\)/ }));
+    expect(confirm().textContent).toBe("Move 2 students here");
+    await userEvent.click(confirm());
+    await waitFor(() => expect(moveStudents).toHaveBeenCalledWith(["d", "f"], "b1"));
+  });
+});

@@ -378,7 +378,6 @@
       "save": "TODO-translate: Save student",
       "saveChanges": "TODO-translate: Save changes",
       "saveAnother": "TODO-translate: Save and add another",
-      "saved": "TODO-translate: Saved {name}.",
       "feeFromNextMonth": "TODO-translate: A new fee applies from the next month.",
       "sameNumber": "TODO-translate: This number is already saved for {name}. Siblings can share a number.",
       "saveFailed": "TODO-translate: Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
@@ -389,7 +388,9 @@
       "groupFee": "TODO-translate: Fee",
       "groupOwes": "TODO-translate: Opening balance",
       "owesHint": "TODO-translate: What they owed before you started, or for this month if it is not paid yet. It shows on Home as an earlier balance.",
-      "permissionHint": "TODO-translate: Tick once you have the parent's OK to keep their number here and message it on WhatsApp."
+      "permissionHint": "TODO-translate: Tick once you have the parent's OK to keep their number here and message it on WhatsApp.",
+      "savedKept": "TODO-translate: Saved {name}. Batch, fee, due day and language kept for the next one.",
+      "permissionRemove": "TODO-translate: Without the parent's OK the number can't be kept. Saving will remove it, and you won't be able to send reminders to this parent until you add it again."
     },
     "state": {
       "missing": "TODO-translate: Missing",
@@ -483,7 +484,14 @@
       "failed": "TODO-translate: Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
       "confirmNone": "TODO-translate: Move here",
       "gone": "यह बैच अब मौजूद नहीं है। कोई छात्र नहीं हटाया गया।",
-      "goneBack": "बैचों पर वापस जाएँ"
+      "goneBack": "बैचों पर वापस जाएँ",
+      "searchLabel": "TODO-translate: Search student or parent",
+      "searchPlaceholder": "TODO-translate: Search student or parent",
+      "noMatch": "TODO-translate: No student matches “{text}”.",
+      "clearSearch": "TODO-translate: Clear search",
+      "selectAll": "TODO-translate: {n, plural, one {Select all shown (#)} other {Select all shown (#)}}",
+      "selected": "TODO-translate: Selected",
+      "notSelected": "TODO-translate: Not selected"
     }
   },
   "board": {

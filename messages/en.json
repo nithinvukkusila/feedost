@@ -378,7 +378,6 @@
       "save": "Save student",
       "saveChanges": "Save changes",
       "saveAnother": "Save and add another",
-      "saved": "Saved {name}.",
       "feeFromNextMonth": "A new fee applies from the next month.",
       "sameNumber": "This number is already saved for {name}. Siblings can share a number.",
       "saveFailed": "Couldn't save just now. Nothing was saved. Check your connection and tap Save again.",
@@ -389,7 +388,9 @@
       "groupFee": "Fee",
       "groupOwes": "Opening balance",
       "owesHint": "What they owed before you started, or for this month if it is not paid yet. It shows on Home as an earlier balance.",
-      "permissionHint": "Tick once you have the parent's OK to keep their number here and message it on WhatsApp."
+      "permissionHint": "Tick once you have the parent's OK to keep their number here and message it on WhatsApp.",
+      "savedKept": "Saved {name}. Batch, fee, due day and language kept for the next one.",
+      "permissionRemove": "Without the parent's OK the number can't be kept. Saving will remove it, and you won't be able to send reminders to this parent until you add it again."
     },
     "state": {
       "missing": "Missing",
@@ -483,7 +484,14 @@
       "failed": "Couldn't move just now. Nothing was moved. Check your connection and tap Move again.",
       "confirmNone": "Move here",
       "gone": "That batch no longer exists. Nothing was moved.",
-      "goneBack": "Back to batches"
+      "goneBack": "Back to batches",
+      "searchLabel": "Search student or parent",
+      "searchPlaceholder": "Search student or parent",
+      "noMatch": "No student matches “{text}”.",
+      "clearSearch": "Clear search",
+      "selectAll": "{n, plural, one {Select all shown (#)} other {Select all shown (#)}}",
+      "selected": "Selected",
+      "notSelected": "Not selected"
     }
   },
   "board": {
