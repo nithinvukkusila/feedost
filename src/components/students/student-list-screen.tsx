@@ -2,18 +2,22 @@
 
 // The Students screen (spec R1-3, criteria 4 to 12; canvas "Students"): the count, the title and Add, a
 // search, the batch filter, the rows, the "Batches" link and the archived students folded at the foot.
-// It reads the cached roster and filters it on the phone; nothing here loads anything.
+// It reads the cached roster and filters it on the phone. Each active row has a status chip from this month's fees
+// (UX-review-fixes-2, criterion 10), read through the dues board's own store and cache (`ensureCurrent`): rows show
+// at once and the chips join them when the fees arrive; if the read fails the rows stay without chips.
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { PlusIcon, SearchIcon } from "@/components/app/icons";
 import { AppScreen } from "@/components/app/app-screen";
 import { useRoster } from "@/components/app/roster";
 import { RosterGate } from "@/components/app/roster-states";
 import { useSoftLink } from "@/components/app/use-soft-link";
+import { useBoard } from "@/components/board/board-state";
 import { Button } from "@/components/ui/button";
 import { Slip } from "@/components/ui/slip";
 import type { Locale } from "@/config/locales";
 import { batchesPath, localeHref, studentNewPath } from "@/config/routes";
+import { currentMonth, indiaToday, nextDueDate, studentChips } from "@/lib/dues-board";
 import {
   activeStudents,
   archivedStudents,
@@ -38,6 +42,15 @@ function ListBody() {
   const [filter, setFilter] = useState<BatchFilterValue>("all");
   const panelId = useId();
   const searchId = useId();
+  const board = useBoard();
+  const { ensureCurrent } = board;
+  // Today in India, read once when the screen opens.
+  const [today] = useState(() => indiaToday(Date.now()));
+  useEffect(() => ensureCurrent(today), [ensureCurrent, today]);
+  const own = board.months[currentMonth(today)]?.rows;
+  const carried = board.unpaid?.rows;
+  // Null until both reads are in: no chip is better than a wrong one.
+  const chips = useMemo(() => (own && carried ? studentChips([...own, ...carried], roster.students, today) : null), [own, carried, roster.students, today]);
 
   const active = activeStudents(roster.students);
   const archived = archivedStudents(roster.students);
@@ -122,7 +135,14 @@ function ListBody() {
               ) : (
                 <ul>
                   {shown.map((student, index) => (
-                    <StudentRow key={student.id} student={student} number={index + 1} batchName={student.batchId ? (names.get(student.batchId) ?? null) : null} />
+                    <StudentRow
+                      key={student.id}
+                      student={student}
+                      number={index + 1}
+                      batchName={student.batchId ? (names.get(student.batchId) ?? null) : null}
+                      chip={chips?.get(student.id) ?? null}
+                      nextFee={chips === null ? null : nextDueDate(student.dueDay, today)}
+                    />
                   ))}
                 </ul>
               )}
