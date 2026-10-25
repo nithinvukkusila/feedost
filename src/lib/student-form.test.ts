@@ -1,6 +1,6 @@
 // Spec R1-3, criteria 18 to 24, 28 and 33: the whole form checked at once, the same-number note, and the edit patch.
 import { describe, expect, it } from "vitest";
-import { changedFields, checkStudent, firstError, samePhone, type StudentDraft } from "./student-form";
+import { changedFields, checkStudent, firstError, permissionWarning, samePhone, type StudentDraft } from "./student-form";
 import type { Student } from "./students";
 
 const draft = (over: Partial<StudentDraft> = {}): StudentDraft => ({
@@ -142,6 +142,22 @@ describe("checkStudent: the fee and the opening balance (23)", () => {
   });
 });
 
+describe("permissionWarning (UX-review-fixes-2, 7.3)", () => {
+  const saved = "+919845012345";
+  it("warns only when the field still holds the saved number and the tick is off", () => {
+    expect(permissionWarning({ phone: "98450 12345", permission: false }, saved)).toBe(true);
+    expect(permissionWarning({ phone: "+91 9845012345", permission: false }, saved)).toBe(true);
+    expect(permissionWarning({ phone: "98450 12345", permission: true }, saved)).toBe(false);
+  });
+
+  it("does not warn for a changed, an empty or an unfinished number, or when nothing was saved", () => {
+    expect(permissionWarning({ phone: "98860 44321", permission: false }, saved)).toBe(false);
+    expect(permissionWarning({ phone: "", permission: false }, saved)).toBe(false);
+    expect(permissionWarning({ phone: "98450", permission: false }, saved)).toBe(false);
+    expect(permissionWarning({ phone: "98450 12345", permission: false }, null)).toBe(false);
+  });
+});
+
 describe("checkStudent: the permission tick (24)", () => {
   it("is required when a phone is typed", () => {
     expect(errorsOf({ permission: false }).permission).toEqual({ tag: "missing", message: "permissionNeeded" });
@@ -155,6 +171,36 @@ describe("checkStudent: the permission tick (24)", () => {
     expect(checkStudent(draft({ permission: false }), { savedPhone: "+919845012345" }).ok).toBe(true);
     expect(errorsOf({ permission: false, phone: "98860 44321" }, { savedPhone: "+919845012345" }).permission).toBeDefined();
     expect(errorsOf({ permission: false }, { savedPhone: null }).permission).toBeDefined();
+  });
+
+  it("UX-review-fixes-2 7.3: the saved number with the tick off is not an error; it is saved as no number", () => {
+    const check = checkStudent(draft({ permission: false }), { savedPhone: "+919845012345" });
+    expect(check.ok && check.fields.parentPhone).toBeNull();
+    // Re-ticked, the number is kept.
+    const kept = checkStudent(draft({ permission: true }), { savedPhone: "+919845012345" });
+    expect(kept.ok && kept.fields.parentPhone).toBe("+919845012345");
+  });
+
+  it("UX-review-fixes-2 7.4: the only change sent is the number set to empty, the same patch as clearing the field", () => {
+    const saved = student();
+    const unticked = checkStudent(draft({ permission: false }), { savedPhone: saved.parentPhone });
+    const cleared = checkStudent(draft({ phone: "", permission: false }), { savedPhone: saved.parentPhone });
+    if (!unticked.ok || !cleared.ok) throw new Error("expected ok");
+    expect(changedFields(saved, unticked.fields)).toEqual({ parentPhone: null });
+    expect(changedFields(saved, unticked.fields)).toEqual(changedFields(saved, cleared.fields));
+  });
+
+  it("UX-review-fixes-2 7.2: a changed number without the tick is still an error, not a removal", () => {
+    expect(errorsOf({ permission: false, phone: "98860 44321" }, { savedPhone: "+919845012345" }).permission).toEqual({
+      tag: "missing",
+      message: "permissionNeeded",
+    });
+  });
+
+  it("add mode is unchanged: a typed number without the tick is an error", () => {
+    expect(errorsOf({ permission: false }).permission).toBeDefined();
+    const check = checkStudent(draft({ permission: true }));
+    expect(check.ok && check.fields.parentPhone).toBe("+919845012345");
   });
 
   it("is not asked about a number that cannot be saved anyway: the number's own error comes first", () => {
