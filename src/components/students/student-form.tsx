@@ -194,15 +194,23 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const permissionRemoveId = `${formId}-permission-remove`;
   const permissionDescribed = cx(permissionHintId, permissionError && permissionErrorId, removing && permissionRemoveId);
   // Each language by its own name, and for a screen reader also by its name in the page's language
-  // ("ಕನ್ನಡ, Kannada"), so a voice set to English does not skip or spell out the script (A.2).
+  // ("ಕನ್ನಡ, Kannada"), so a voice set to English does not skip or spell out the script (A.2). The words read out are
+  // one screen-reader-only phrase, and the drawn name is hidden from the reader: a visible name followed by a separate
+  // sr-only ", Kannada" is read with a stray space before the comma, because the sr-only box is taken out of the line.
   const languageOption = (code: Locale) => {
+    const own = localeNames[code];
     const inPage = languageWords(`name.${code}`);
+    if (inPage === own) return { value: code, label: <span lang={code}>{own}</span> };
     return {
       value: code,
       label: (
         <>
-          <span lang={code}>{localeNames[code]}</span>
-          {inPage === localeNames[code] ? null : <span className="sr-only">, {inPage}</span>}
+          <span aria-hidden="true" lang={code}>
+            {own}
+          </span>
+          <span className="sr-only">
+            <span lang={code}>{own}</span>, {inPage}
+          </span>
         </>
       ),
     };
@@ -246,7 +254,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
               onChange={(e) => set("permission", e.currentTarget.checked)}
               aria-invalid={permissionError ? "true" : undefined}
               aria-describedby={permissionDescribed}
-              className="mt-0.5 size-6 shrink-0 accent-blue"
+              className="mt-0.5 size-6 shrink-0 accent-blue ring:ground-ring"
             />
             <span className="type-body-sm wrap-anywhere">{t("form.permission")}</span>
           </label>

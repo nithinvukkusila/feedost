@@ -156,7 +156,7 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
                           type="checkbox"
                           checked={ticked.has(student.id)}
                           onChange={(event) => toggle(student.id, event.currentTarget.checked)}
-                          className="size-6 shrink-0 accent-blue"
+                          className="size-6 shrink-0 accent-blue ring:ground-ring"
                         />
                         <span className="flex min-w-0 flex-1 flex-col items-start">
                           <span translate="no" className="type-name wrap-anywhere">

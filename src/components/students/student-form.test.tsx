@@ -324,6 +324,9 @@ describe("UX-review-fixes-2, item 12 and A.2: the add form", () => {
     expect(screen.getByRole("radio", { name: "हिन्दी, Hindi" })).toBeTruthy();
     // The page's own language is not said twice.
     expect(screen.getByRole("radio", { name: "English" })).toBeTruthy();
-    expect(screen.getByText(", Kannada").className).toContain("sr-only");
+    // The extra name is screen-reader text only; the drawn name is not read twice.
+    const extra = screen.getByText((_, el) => el?.className === "sr-only" && el.textContent === "ಕನ್ನಡ, Kannada");
+    expect(extra).toBeTruthy();
+    expect(screen.getAllByText("ಕನ್ನಡ").some((el) => el.getAttribute("aria-hidden") === "true")).toBe(true);
   });
 });
