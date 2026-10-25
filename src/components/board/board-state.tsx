@@ -1,8 +1,9 @@
 "use client";
 
-// The dues board's data and the tutor's view of it, for the home screen (spec R1-6, decision 12). The
-// store itself is in board-store.ts; it is created the first time the home screen asks and kept in the
-// box that board-holder.tsx provides, so it survives opening a student and coming back.
+// The dues board's data and the tutor's view of it, for the home screen (spec R1-6, decision 12) and the
+// Students screen's status chips (UX-review-fixes-2, criterion 10.3, through `ensureCurrent`). The store
+// itself is in board-store.ts; it is created the first time either screen asks and kept in the box that
+// board-holder.tsx provides, so it survives moving between them.
 import { useMemo, useSyncExternalStore } from "react";
 import type { Tab } from "@/lib/dues-board";
 import type { BatchFilterValue } from "@/lib/student-list";
@@ -11,6 +12,7 @@ import { BoardStore, type BoardSnapshot } from "./board-store";
 
 export type Board = BoardSnapshot & {
   open: (today: string) => void;
+  ensureCurrent: (today: string) => void;
   selectMonth: (month: string, today: string) => void;
   setTab: (tab: Tab) => void;
   setFilter: (filter: BatchFilterValue) => void;
@@ -31,6 +33,7 @@ export function useBoard(): Board {
     () => ({
       ...snapshot,
       open: store.open,
+      ensureCurrent: store.ensureCurrent,
       selectMonth: store.selectMonth,
       setTab: store.setTab,
       setFilter: store.setFilter,

@@ -3,8 +3,9 @@
 // Where the dues board's memory lives while the tutor is inside the book (spec R1-6, decision 12 and the
 // plan's bundle cut line). The provider sits in the book layout, so every book route loads it, and it is
 // deliberately tiny: it holds an empty box. The board's code (the reader, the arithmetic, the store) is in
-// board-state.tsx, which only the home screen imports; the first time the home screen opens it puts the
-// store in the box. Open a student and come back, and the same store is found: same month, tab and filter.
+// board-state.tsx, which only the home screen and the Students screen import (Students reads the current
+// month's fees for its status chips, UX-review-fixes-2 criterion 10.3); whichever opens first puts the store
+// in the box. Open a student and come back, and the same store is found: same month, tab and filter.
 // Leave the book (sign-out, More) and this provider unmounts with the box, so everything resets. It lives
 // in memory only: never in storage, and not in a module-level variable, which would outlive sign-out.
 import { createContext, useContext, useState, type ReactNode } from "react";
