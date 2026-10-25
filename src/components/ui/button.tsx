@@ -38,8 +38,9 @@ const rest: Record<ButtonVariant, string> = {
   outline: "border-ink bg-slip text-ink shadow-button ground-shadow pressed:press-button",
 };
 
-// Not merely pale: dashed outline, no fill, no shadow, and it does not move.
-const unavailable = "cursor-not-allowed border-dashed border-ink-label bg-transparent text-ink-soft";
+// Not merely pale: dashed outline, no fill, no shadow, and it does not move. The text is the muted label token, still
+// readable (a word the tutor must read), and the dashed outline carries the state, never colour alone (UX-review-fixes-2, 5.3).
+const unavailable = "cursor-not-allowed border-dashed border-ink-label bg-transparent text-ink-label";
 
 type Shared = {
   variant: ButtonVariant;

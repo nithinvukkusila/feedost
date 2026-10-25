@@ -54,10 +54,14 @@ export function SelectField(props: SelectFieldProps) {
       <label htmlFor={id} className="type-label text-ink-label wrap-anywhere group-typing/field:text-blue">
         {label}
       </label>
-      {/* The line. It has a minimum height, not a fixed one: a long name at a large font takes a second line. */}
+      {/*
+        The line. It has a minimum height, not a fixed one: a long name at a large font takes a second line.
+        By keyboard it also draws the 3px blue ring 4px around itself (UX-review-fixes-2, 12.5): the blue line alone
+        made a focused select look like a text field being typed in. The chevron stays for the same reason.
+      */}
       <div
         className={cx(
-          "relative grid min-h-control grid-cols-[minmax(0,1fr)_auto] items-center field-line-2 group-typing/field:field-line-4 group-typing/field:border-blue",
+          "relative grid min-h-control grid-cols-[minmax(0,1fr)_auto] items-center field-line-2 group-typing/field:field-line-4 group-typing/field:border-blue ring-within:ground-ring",
           // Unavailable is a dashed line as well as a paler value, never the colour alone.
           disabled ? "border-dashed border-ink-label" : "border-ink",
         )}

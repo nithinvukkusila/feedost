@@ -760,3 +760,88 @@ describe("Field review notes N3 and N4", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });
+
+describe("Field default render is pinned (UX-review-fixes-2, 13.10: eleven call sites, the claim sheet among them)", () => {
+  // Recorded before `prefix` and the error-over-focus change, against the old Field. Without `prefix`, the idle and
+  // correct fields must render byte for byte as before. Only the error state may change (criterion 24.1).
+  it("renders the idle, helper, correct, tel and mono fields exactly as before", () => {
+    const { container } = render(
+      <div>
+        <Field id="a" label="Your UPI ID" placeholder="name@bank" />
+        <Field id="b" label="Your UPI ID" defaultValue="asha@okaxis" helper="Parents pay you directly." latinValue />
+        <Field id="c" label="Your UPI ID" defaultValue="asha@okaxis" state="correct" stateLabel="looks right" message="Saved." />
+        <Field id="d" label="Phone" type="tel" defaultValue="98765" />
+        <Field id="e" label="Reference" defaultValue="123456789012" monoValue aria-describedby="x" />
+      </div>,
+    );
+    expect(container.innerHTML).toMatchSnapshot();
+  });
+});
+
+describe("Field needs fixing wins over focus (UX-review-fixes-2, 24.1 and 24.2)", () => {
+  const renderError = () =>
+    render(<Field label="Your UPI ID" state="error" stateLabel="needs fixing" message="Add the part after @." />);
+
+  it("draws no blue line, blue label or blue value in needs fixing, focused or not", () => {
+    renderError();
+    const input = screen.getByRole("textbox");
+    const label = screen.getByText("Your UPI ID", { exact: false, selector: "label" });
+    for (const el of [lineOf(input), input, label]) {
+      expect(el.className).not.toMatch(/border-blue|text-blue/);
+    }
+  });
+
+  it("keeps the red line and grows it to 4px while focused", () => {
+    renderError();
+    const line = classes(lineOf(screen.getByRole("textbox")));
+    expect(line).toEqual(expect.arrayContaining(["field-line-3", "border-cloth", "group-typing/field:field-line-4"]));
+  });
+
+  it("keeps the red label and its state words", () => {
+    renderError();
+    const label = screen.getByText("Your UPI ID", { exact: false, selector: "label" });
+    expect(classes(label)).toContain("text-cloth");
+    expect(label.textContent).toContain("needs fixing");
+  });
+
+  it("still turns blue while typing when the field is not in needs fixing", () => {
+    render(<Field label="Your UPI ID" />);
+    expect(classes(lineOf(screen.getByRole("textbox")))).toContain("group-typing/field:border-blue");
+  });
+});
+
+describe("Field prefix (UX-review-fixes-2, 12.1)", () => {
+  it("draws the prefix before the value, outside the control, in the mono face, kept from translation", () => {
+    render(<Field label="Phone" prefix="+91" defaultValue="98765 43210" />);
+    const input = screen.getByLabelText("Phone") as HTMLTextAreaElement;
+    expect(input.value).toBe("98765 43210");
+    const prefix = screen.getByText("+91");
+    expect(input.contains(prefix)).toBe(false);
+    expect(prefix.parentElement).toBe(lineOf(input));
+    expect(classes(prefix)).toEqual(expect.arrayContaining(["type-value-prefix", "col-start-1"]));
+    expect(prefix.getAttribute("translate")).toBe("no");
+    expect(classes(lineOf(input))).toContain("grid-cols-[auto_minmax(0,1fr)_auto]");
+    expect(classes(input)).toContain("col-start-2");
+    expect(classes(input.parentElement!.querySelector("[data-field-mirror]")!)).toContain("col-start-2");
+  });
+
+  it("is read with the field: its id leads the description, before the caller's and the note", () => {
+    render(<Field id="p" label="Phone" prefix="+91" helper="Ten digits" aria-describedby="extra" />);
+    expect(screen.getByLabelText("Phone").getAttribute("aria-describedby")).toBe("p-prefix extra p-note");
+  });
+
+  it("moves the tick and the error mark to the third column", () => {
+    render(<Field label="Phone" prefix="+91" state="error" stateLabel="check" message="Ten digits" />);
+    const mark = lineOf(screen.getByRole("textbox")).querySelector("svg")!;
+    expect(mark.getAttribute("class")).toContain("col-start-3");
+  });
+
+  it("is not part of the value when typing", async () => {
+    render(<Field label="Phone" prefix="+91" />);
+    const input = screen.getByLabelText("Phone") as HTMLTextAreaElement;
+    await userEvent.type(input, "98");
+    await userEvent.type(input, "{Backspace}{Backspace}{Backspace}");
+    expect(input.value).toBe("");
+    expect(screen.getByText("+91")).toBeTruthy();
+  });
+});

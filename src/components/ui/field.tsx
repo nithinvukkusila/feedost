@@ -67,6 +67,12 @@ export type FieldProps = Stated & {
    * only for short values such as a phone number. Leave it off for everything else.
    */
   type?: "tel" | "text";
+  /**
+   * Fixed text before the value on the same line, for example "+91" before a phone number. It is not part of the
+   * value, cannot be deleted, and is read with the field (its id leads the control's description). Drawn in DM Mono
+   * with 0-9 digits. Off by default: without it the field renders exactly as before.
+   */
+  prefix?: ReactNode;
 } & Native;
 
 const labelTone: Record<FieldState, string> = {
@@ -95,6 +101,15 @@ const messageTone: Record<FieldState, string> = {
 
 // The text box shared by the control and its mirror: they must wrap at exactly the same places.
 const textBox = "col-start-1 row-start-1 min-h-tap min-w-0 py-2 whitespace-pre-wrap wrap-anywhere";
+// The same box one column along, when a prefix takes the first column.
+const textBoxAfterPrefix = "col-start-2 row-start-1 min-h-tap min-w-0 py-2 whitespace-pre-wrap wrap-anywhere";
+
+// While typing, the label, the line and the value turn blue. Not in needs fixing: there the line stays red (and
+// grows to 4px while focused) and the label keeps its red words, so focus never hides an error (UX-review-fixes-2, 24.1).
+const labelTyping = " group-typing/field:text-blue";
+const lineTyping = " group-typing/field:field-line-4 group-typing/field:border-blue";
+const lineTypingError = " group-typing/field:field-line-4";
+const valueTyping = " group-typing/field:text-blue";
 
 /** A field holds one line of text however it arrives: line breaks become single spaces. */
 export function oneLine(text: string): string {
@@ -127,7 +142,7 @@ export function submitOnEnter(form: HTMLFormElement): void {
   form.requestSubmit(submitter);
 }
 
-function Tick() {
+function Tick({ column = "col-start-2" }: { column?: string }) {
   return (
     <svg
       aria-hidden="true"
@@ -138,14 +153,14 @@ function Tick() {
       strokeWidth={3}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="col-start-2 row-start-1 ml-2 size-6 shrink-0 self-center text-stamp"
+      className={`${column} row-start-1 ml-2 size-6 shrink-0 self-center text-stamp`}
     >
       <path d="M4 12.5l5 5L20 6.5" />
     </svg>
   );
 }
 
-function ErrorMark() {
+function ErrorMark({ column = "col-start-2" }: { column?: string }) {
   return (
     <svg
       aria-hidden="true"
@@ -156,7 +171,7 @@ function ErrorMark() {
       strokeWidth={2.6}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="col-start-2 row-start-1 ml-2 size-6 shrink-0 self-center text-cloth"
+      className={`${column} row-start-1 ml-2 size-6 shrink-0 self-center text-cloth`}
     >
       <path d="M12 3 2.5 20h19L12 3z" />
       <path d="M12 10v4.5" />
@@ -179,6 +194,7 @@ export function Field(props: FieldProps) {
     latinValue = false,
     monoValue = false,
     type: givenType,
+    prefix,
     id: givenId,
     "aria-describedby": describedBy,
     onChange,
@@ -194,6 +210,13 @@ export function Field(props: FieldProps) {
   const showMessage = state !== "idle" && message != null;
   const note = showMessage ? message : helper;
   const hasNote = note != null;
+  const prefixId = `${id}-prefix`;
+  const hasPrefix = prefix != null;
+  const box = hasPrefix ? textBoxAfterPrefix : textBox;
+  const markColumn = hasPrefix ? "col-start-3" : undefined;
+  const erring = state === "error";
+  // The prefix is read first, then the caller's description, then the note beneath.
+  const description = cx(hasPrefix && prefixId, describedBy, hasNote && noteId) || undefined;
   // One role or the other, never both: the two differ only in the face, and the control and its copy share it.
   const valueRole = monoValue ? "type-value-mono" : latinValue ? "type-value-latin" : "type-value";
 
@@ -305,7 +328,7 @@ export function Field(props: FieldProps) {
     <div data-state={state} className="group/field flex flex-col">
       <label
         htmlFor={id}
-        className={cx("type-label wrap-anywhere group-typing/field:text-blue", labelTone[state])}
+        className={cx(`type-label wrap-anywhere${erring ? "" : labelTyping}`, labelTone[state])}
       >
         {label}
         {state === "error" ? (
@@ -317,13 +340,20 @@ export function Field(props: FieldProps) {
         ) : null}
         {state === "correct" ? <span className="sr-only"> {stateLabel}</span> : null}
       </label>
-      {/* The line. Column one holds the value, column two the tick or error mark beside it. */}
+      {/* The line. Column one holds the value, column two the tick or error mark beside it. A prefix takes a column before them. */}
       <div
         className={cx(
-          "grid min-h-control grid-cols-[minmax(0,1fr)_auto] group-typing/field:field-line-4 group-typing/field:border-blue",
+          `grid min-h-control ${hasPrefix ? "grid-cols-[auto_minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto]"}${erring ? lineTypingError : lineTyping}`,
           line[state],
         )}
       >
+        {hasPrefix ? (
+          // Fixed text before the value, as the canvas draws "+91": DM Mono, outside the control, so it cannot be
+          // deleted and is never part of the value. Its id leads the control's description, so it is read with it.
+          <span id={prefixId} translate="no" className="type-value-prefix col-start-1 row-start-1 self-start py-2 pr-2 text-ink-soft">
+            {prefix}
+          </span>
+        ) : null}
         {/*
           An invisible copy of the value in the same grid cell as the control. It wraps as the control
           does and sets the cell's height, so the control grows with its value by layout alone and
@@ -339,7 +369,7 @@ export function Field(props: FieldProps) {
           translate="no"
           data-ph-no-capture=""
           data-sentry-mask=""
-          className={cx(valueRole, textBox, "invisible")}
+          className={cx(valueRole, box, "invisible")}
         >
           {shown === "" ? placeholder : shown}
           {"​"}
@@ -358,11 +388,11 @@ export function Field(props: FieldProps) {
             onChange={handleChange as unknown as (event: ChangeEvent<HTMLInputElement>) => void}
             onKeyDown={handleKeyDown as unknown as (event: KeyboardEvent<HTMLInputElement>) => void}
             aria-invalid={state === "error" ? "true" : undefined}
-            aria-describedby={cx(describedBy, hasNote && noteId) || undefined}
+            aria-describedby={description}
             className={cx(
               valueRole,
-              textBox,
-              "block w-full bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label group-typing/field:text-blue",
+              box,
+              `block w-full bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label${erring ? "" : valueTyping}`,
               valueTone[state],
             )}
           />
@@ -382,18 +412,19 @@ export function Field(props: FieldProps) {
           // One line of text that happens to wrap: tell screen readers it is not a multi-line box.
           aria-multiline="false"
           aria-invalid={state === "error" ? "true" : undefined}
-          aria-describedby={cx(describedBy, hasNote && noteId) || undefined}
-          // The thick blue line and blue label are the focus indicator, so the default outline is removed.
+          aria-describedby={description}
+          // The thick blue line and blue label are the focus indicator (the thick red line in needs fixing), so the
+          // default outline is removed.
           className={cx(
             valueRole,
-            textBox,
-            "block w-full resize-none overflow-hidden bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label group-typing/field:text-blue",
+            box,
+            `block w-full resize-none overflow-hidden bg-transparent outline-none placeholder:font-normal placeholder:text-ink-label${erring ? "" : valueTyping}`,
             valueTone[state],
           )}
         />
         )}
-        {state === "correct" ? <Tick /> : null}
-        {state === "error" ? <ErrorMark /> : null}
+        {state === "correct" ? <Tick column={markColumn} /> : null}
+        {state === "error" ? <ErrorMark column={markColumn} /> : null}
       </div>
       <p
         id={hasNote ? noteId : undefined}

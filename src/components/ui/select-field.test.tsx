@@ -134,3 +134,17 @@ describe("SelectField", () => {
     expect(findOwnWords(source, "select-field.tsx")).toEqual([]);
   });
 });
+
+describe("SelectField focus ring (UX-review-fixes-2, 12.5)", () => {
+  it("draws the 3px blue ring around its line when the select is focused by keyboard, and keeps its chevron", () => {
+    render(<Harness />);
+    const line = (screen.getByLabelText("Month") as HTMLElement).parentElement!;
+    expect(classes(line)).toEqual(expect.arrayContaining(["ring-within:ground-ring", "group-typing/field:border-blue"]));
+    expect(line.querySelector("svg")).not.toBeNull();
+  });
+
+  it("declares the ring-within variant on keyboard focus and on the forced example", () => {
+    const css = readFileSync(join(process.cwd(), "src", "styles", "states.css"), "utf8");
+    expect(css).toContain('@custom-variant ring-within (&:has(:focus-visible), &:has([data-force~="focus"]));');
+  });
+});
