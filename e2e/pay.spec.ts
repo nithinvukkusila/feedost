@@ -256,13 +256,16 @@ test.describe("16, 17: failure and offline", () => {
   test("offline: the button is tappable, says so, sends nothing, keeps the values; back online Try again works", async ({ page, context }) => {
     const { pay } = await board(page);
     await page.goto("/en/home/");
+    // The board's own read of the month's payments for Collected (UX-review-fixes-2, 3.3) lands first; after it, nothing.
+    await expect(page.locator("[data-label='collected']")).toHaveText("Collected ₹0");
+    const before = pay.requests.length;
     await openSheet(page);
     await amount(page).fill("300");
     await context.setOffline(true);
     await markPaid(page).click();
     await expect(sheet(page).getByText("You are offline. Payments need a connection for now. Nothing was saved.")).toBeVisible();
     await expect(amount(page)).toHaveValue("300");
-    expect(pay.requests).toEqual([]);
+    expect(pay.requests.slice(before)).toEqual([]);
     await context.setOffline(false);
     await markPaid(page).click();
     await expect(sheet(page)).toHaveCount(0);
