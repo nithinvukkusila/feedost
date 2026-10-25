@@ -310,8 +310,9 @@ test.describe("21, 22, 23: nothing, nothing in this batch, and all paid", () => 
     await expect(page.locator("h1")).toHaveText("Nothing is due yet.");
     await expect(page.getByText("Fees appear on each student's due day.")).toBeVisible();
     await expect(page.getByRole("link", { name: "See your students" })).toHaveAttribute("href", "/en/students/");
-    await expect(prev(page)).toBeDisabled();
-    await expect(next(page)).toBeDisabled();
+    // No other month to go to: the month alone, no arrow buttons (UX-review-fixes-2, 5.1; was two disabled arrows).
+    await expect(prev(page)).toHaveCount(0);
+    await expect(next(page)).toHaveCount(0);
   });
 
   test("everyone paid: the stamp, the three lines and the tabs below", async ({ page }) => {
