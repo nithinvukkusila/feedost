@@ -8,6 +8,7 @@ import { useSoftLink } from "@/components/app/use-soft-link";
 import { Banner } from "@/components/ui/banner";
 import { Button } from "@/components/ui/button";
 import { Stamp } from "@/components/ui/stamp";
+import { SummaryPending } from "@/components/ui/summary-bar";
 import type { Locale } from "@/config/locales";
 import { localeHref, studentsPath } from "@/config/routes";
 import { formatDate, formatRupees } from "@/lib/format";
@@ -91,13 +92,19 @@ export function NothingInBatch({ batch, month, onShowAll }: Readonly<{ batch: st
   );
 }
 
-/** Every fee in view is paid (canvas "State-allpaid"): the stamp replaces the amount. */
+/**
+ * What was collected in the month (UX-review-fixes-2, criterion 3.3), as the screen knows it: paise, "pending" while
+ * the first read is out, or null when it could not be read and nothing is saved.
+ */
+export type CollectedFigure = number | "pending" | null;
+
+/** Every fee in view is paid (canvas "State-allpaid"): the stamp replaces the amount. Collected is the same figure as the summary bar's (criterion 3.6). */
 export function AllPaid({
   month,
   nextMonth,
   collected,
   students,
-}: Readonly<{ month: string; nextMonth: string | null; collected: number; students: number }>) {
+}: Readonly<{ month: string; nextMonth: string | null; collected: CollectedFigure; students: number }>) {
   const t = useTranslations("board");
   return (
     <section className="px-5 pt-3 pr-5.5">
@@ -112,7 +119,7 @@ export function AllPaid({
         <div className="min-w-fit grow basis-32">
           <p className="type-label text-ink-label wrap-anywhere">{t("allPaid.collected")}</p>
           <p translate="no" className="type-amount text-3xl text-stamp">
-            {formatRupees(collected)}
+            {collected === "pending" ? <SummaryPending label={t("summary.pending")} /> : collected === null ? t("summary.unknown") : formatRupees(collected)}
           </p>
         </div>
         <div className="min-w-0 grow basis-32">

@@ -2,9 +2,10 @@
 // under test is made with the CI's made-up Supabase address (auth-helpers.ts). The clock is fixed at
 // 2026-10-12 05:00 UTC (10:30 in India) unless a test says otherwise.
 import { expect, test, type Page } from "@playwright/test";
-import { watchOtherHosts } from "./auth-helpers";
+import { USER_ID, watchOtherHosts } from "./auth-helpers";
 import { BATCHES, DUES, MATHS, NOW, S, STUDENTS, signedIn } from "./board-fixture";
 import { box } from "./helpers";
+import { stubPayments, type PaymentRow } from "./pay-helpers";
 
 const ORIGIN = process.env.E2E_BASE_URL ?? "http://localhost:4173";
 const rows = (page: Page) => page.locator('main li > a[href*="/students/edit/"]').filter({ visible: true });
@@ -40,14 +41,34 @@ test.describe("10: no active students", () => {
 });
 
 test.describe("11, 13, 14, 16, 17, 24: the board", () => {
-  test("top to bottom, with the amount, the strip, the tabs and a row for each fee", async ({ page }) => {
-    await signedIn(page);
+  test("top to bottom, with the amount, the summary bar, the tabs and a row for each fee", async ({ page }) => {
+    const { dues } = await signedIn(page);
+    // The month's payments, as the table holds them (UX-review-fixes-2, 3.3): Dev's ₹1,000 and Imran's ₹500 in
+    // October, and one dated 30 September that October does not count.
+    const payments = await stubPayments(page, dues);
+    const fee = (student: string, day: string) => dues.dues.find((d) => d.student_id === student && d.due_date === day)!.id;
+    const row = (n: number, due_id: string, amount: number, paid_on: string): PaymentRow => ({
+      id: `00000000-0000-4000-8000-${String(900 + n).padStart(12, "0")}`,
+      tutor_id: USER_ID,
+      due_id,
+      amount,
+      method: "cash",
+      paid_on,
+      receipt_no: n,
+      receipt_token: "t".repeat(24),
+      request_id: `r${n}`,
+      balance_after: 0,
+      created_at: NOW.toISOString(),
+      voided_at: null,
+    });
+    payments.payments.push(row(1, fee(S.dev, "2026-10-01"), 100000, "2026-10-01"), row(2, fee(S.imran, "2026-10-07"), 50000, "2026-10-08"), row(3, fee(S.asha, "2026-09-12"), 150000, "2026-09-30"));
     await page.goto("/en/home/");
     await expect(page.locator("h1")).toHaveText("Still to come in");
     await expect(month(page)).toHaveText(/october 2026/i);
     await expect(page.getByText("₹7,800", { exact: true })).toBeVisible();
-    await expect(page.getByText("from 4 of 5 students")).toBeVisible();
-    await expect(page.getByText("₹1,500 collected")).toBeVisible();
+    // 2.2: the five active students, whether or not they have a fee, of whom four owe.
+    await expect(page.getByText("4 of 5 students still owe")).toBeVisible();
+    await expect(page.getByText("from 4 of 5 students")).toHaveCount(0);
 
     // The order on the screen.
     const y = async (locator: ReturnType<Page["locator"]>) => (await box(locator.first())).y;
@@ -55,17 +76,25 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
       await y(page.getByRole("button", { name: "Previous month" })),
       await y(page.getByText("Still to come in")),
       await y(page.getByRole("combobox", { name: "Show" })),
-      await y(page.getByRole("img", { name: /students: .* paid/ })),
+      await y(page.locator("[data-label='collected']")),
       await y(page.getByRole("tablist")),
       await y(rows(page)),
     ];
     expect([...order].sort((a, b) => a - b)).toEqual(order);
 
-    // The strip, its words and its alternative text.
-    await expect(page.getByRole("img", { name: "5 students: 1 paid, 1 due, 3 overdue" })).toBeVisible();
-    await expect(page.getByText("1 paid", { exact: true })).toBeVisible();
-    await expect(page.getByText("1 due, hollow")).toBeVisible();
-    await expect(page.getByText("3 overdue, tall")).toBeVisible();
+    // 4.1, 4.2, 4.4: no strip and no legend; the bar's three labels, in order, each a word, an amount and a mark.
+    await expect(page.getByText(/hollow|tall/)).toHaveCount(0);
+    await expect(page.locator("[data-kind]")).toHaveCount(0);
+    await expect(page.getByRole("list").filter({ has: page.locator("[data-label]") }).getByRole("listitem")).toHaveText(["Collected ₹1,500", "Due ₹2,500", "Overdue ₹5,300"]);
+    const bar = page.locator("[data-summary-bar]");
+    await expect(bar).toHaveAttribute("aria-hidden", "true");
+    await expect(bar.locator("[data-part]")).toHaveCount(3);
+    const widths = await bar.locator("[data-part]").evaluateAll((parts) => parts.map((p) => p.getBoundingClientRect().width));
+    // Widths follow the paise: 1,500 : 2,500 : 5,300 (the gaps aside).
+    expect(widths[2]).toBeGreaterThan(widths[1]);
+    expect(widths[1]).toBeGreaterThan(widths[0]);
+    const amounts = await page.locator("[data-label] .type-amount-row").evaluateAll((spans) => spans.map((s) => getComputedStyle(s).fontFamily));
+    for (const family of amounts) expect(family.split(",")[0]).toBe('"DM Mono"');
 
     // Tabs with their counts; Overdue is open because it has rows.
     await expect(page.getByRole("tab")).toHaveText(["Overdue 4", "Due 2", "Paid 1"]);
@@ -74,7 +103,8 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
     await expect(rows(page)).toHaveCount(4);
     await expect(rows(page).nth(0)).toContainText("Meena Shetty");
     await expect(rows(page).nth(0)).toContainText("Overdue");
-    await expect(rows(page).nth(0)).toContainText("Earlier balance");
+    await expect(rows(page).nth(0)).toContainText("Earlier balance · Added 30 Sep 2026");
+    await expect(rows(page).nth(0)).not.toContainText("Due 30 Sep 2026");
     await expect(rows(page).nth(0)).toContainText("₹2,400");
     await expect(rows(page).nth(0)).not.toContainText("days");
     await expect(rows(page).nth(1)).toContainText("Overdue 37 days");
@@ -86,7 +116,7 @@ test.describe("11, 13, 14, 16, 17, 24: the board", () => {
     await expect(rows(page).nth(2)).toContainText("₹1,200");
     await expect(rows(page).nth(3)).toContainText("Imran Ali");
     await expect(rows(page).nth(3)).toContainText("Overdue 5 days");
-    await expect(rows(page).nth(3)).toContainText("Part paid ₹500");
+    await expect(rows(page).nth(3).locator("[data-status]")).toHaveText(["Overdue 5 days", "Part paid ₹500"]);
     await expect(rows(page).nth(3)).toContainText("₹500");
     // Ravi has two rows (17: one row per fee). The archived student's fee is nowhere.
     await expect(page.getByText("Old Student")).toHaveCount(0);
@@ -183,7 +213,7 @@ test.describe("12: the month switcher", () => {
     await expect(month(page)).toHaveText(/september 2026/i);
     // September: Ravi's unpaid fee and Asha's paid one, and no carried rows.
     await expect(page.getByText("₹1,200", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("from 1 of 2 students")).toBeVisible();
+    await expect(page.getByText("1 of 5 students still owe")).toBeVisible();
     await expect(prev(page)).toBeDisabled();
     expect((await box(prev(page))).height).toBeGreaterThanOrEqual(44);
     await expect(next(page)).toBeEnabled();
@@ -236,7 +266,7 @@ test.describe("18, 19: the batch select and the remembered view", () => {
     await select.selectOption(MATHS);
     // Ravi's two fees (₹1,200 + ₹1,200) and Dev's paid one.
     await expect(page.getByText("₹2,400", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("from 1 of 2 students")).toBeVisible();
+    await expect(page.getByText("1 of 2 students still owe")).toBeVisible();
     await expect(page.getByRole("tab")).toHaveText(["Overdue 2", "Due 0", "Paid 1"]);
     await expect(rows(page)).toHaveCount(2);
     await select.selectOption("none");
@@ -315,15 +345,19 @@ test.describe("21, 22, 23: nothing, nothing in this batch, and all paid", () => 
   });
 
   test("everyone paid: the stamp, the three lines and the tabs below", async ({ page }) => {
-    await signedIn(page, { dues: [
+    const { dues } = await signedIn(page, { dues: [
       { student_id: S.ravi, status: "paid", amount: 120000, amount_paid: 120000 },
       { student_id: S.dev, status: "paid", amount: 100000, amount_paid: 100000 },
     ] });
+    // 3.6: Collected is the month's payments, the same figure as the bar's.
+    const payments = await stubPayments(page, dues);
+    for (const due of dues.dues) payments.seed({ due_id: due.id, amount: due.amount, paid_on: "2026-10-05" });
     await page.goto("/en/home/");
     await expect(page.locator("h1")).toHaveText("Nothing left to collect.");
     await expect(page.getByRole("img", { name: "ALL PAID" })).toContainText("OCTOBER 2026".replace("OCTOBER", "October"));
-    await expect(page.getByText("₹2,200", { exact: true })).toBeVisible();
+    await expect(page.locator("p.type-amount").getByText("₹2,200", { exact: true })).toBeVisible();
     await expect(page.getByText("2 of 2")).toBeVisible();
+    await expect(page.locator("[data-label]")).toHaveText(["Collected ₹2,200", "Due ₹0", "Overdue ₹0"]);
     await expect(page.getByText("November fees will appear here on each student's due day. You do not need to do anything.")).toBeVisible();
     await expect(page.getByText("Still to come in")).toHaveCount(0);
     await expect(page.getByRole("tab")).toHaveText(["Overdue 0", "Due 0", "Paid 2"]);

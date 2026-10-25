@@ -1,8 +1,10 @@
 // Spec R1-6, criteria 34 and 35: the board in en, hi, kn and te at 360px and with larger text, with 60
 // students, an 80-character name with no spaces, Hindi, Kannada and Telugu names, a 60-character batch
 // name, a part paid row, an earlier balance, ₹10,00,000 on a row and ₹1,00,00,000 in total: no sideways
-// scroll, nothing cut or tiny, every button, link and tab at least 44px, the strip wrapping with no block
-// under 8px. And with the colour taken away, every row still says its word and has its mark.
+// scroll, nothing cut or tiny, every button, link and tab at least 44px. The 80-character name is part paid and
+// late, so its row has two tags (UX-review-fixes-2, 3.2), and the summary bar's labels wrap (4.4). The strip and its
+// "no block under 8px" check are gone: R1-6 criteria 14 and 34 were amended by UX-review-fixes-2 item 4. And with
+// the colour taken away, every row still says its word and has its mark.
 import { expect, test } from "@playwright/test";
 import { MATHS, signedIn } from "./board-fixture";
 import { box, langs, messageText, sidewaysScroll, textProblems } from "./helpers";
@@ -22,11 +24,13 @@ const students: Partial<StudentRow>[] = Array.from({ length: 60 }, (_, i) => ({
   due_day: 5,
 }));
 
-// Eight students owe ₹10,00,000 each (the last a little less), two owe an earlier balance of ₹10,00,000, and
-// one has part paid and is not late. The total is exactly ₹1,00,00,000. The other students have paid.
+// Eight students owe ₹10,00,000 each (the last a little less; the first has part paid ₹500 and is late), two owe an
+// earlier balance of ₹10,00,000, and one has part paid and is not late. The total is exactly ₹1,00,00,000. The other
+// students have paid.
 const paid = (i: number) => ({ student_id: students[i].id as string, amount: 120000, amount_paid: 120000, status: "paid" as const, due_date: "2026-10-01" });
 const dues: (Partial<DueRow> & { student_id: string })[] = students.map((s, i) => {
   const student_id = s.id as string;
+  if (i === 0) return { student_id, amount: 100050000, amount_paid: 50000, status: "partial" as const, due_date: "2026-10-05" };
   if (i < 7) return { student_id, amount: 100000000, due_date: "2026-10-05" };
   if (i === 7) return { student_id, amount: 99930000, due_date: "2026-10-05" };
   if (i === 10) return { student_id, amount: 120000, amount_paid: 50000, status: "partial" as const, due_date: "2026-10-25" };
@@ -48,10 +52,14 @@ test.describe("34: 60 students in each language, at 360px and with larger text",
       await page.evaluate(() => document.fonts.ready);
       await page.addStyleTag({ content: "[data-sticky-nav] { position: static !important; }" });
 
-      // The strip: 60 blocks wrap onto three rows of 20, none under 8px.
-      const blocks = page.locator("[data-kind]");
-      expect(await blocks.count()).toBeGreaterThan(28);
-      for (const block of await blocks.all()) expect((await box(block)).width).toBeGreaterThanOrEqual(8);
+      // No strip; the summary bar's three labels are there, inside the screen.
+      await expect(page.locator("[data-kind]")).toHaveCount(0);
+      await expect(page.locator("[data-label]")).toHaveCount(3);
+      for (const label of await page.locator("[data-label]").all()) expect((await box(label)).x + (await box(label)).width).toBeLessThanOrEqual(360.5);
+      // The long name's row has its two tags, side by side or wrapped, never cut.
+      const longRow = page.locator('main li > a[href*="/students/edit/"]').filter({ hasText: LONG });
+      await expect(longRow.locator("[data-status]")).toHaveCount(2);
+      await expect(longRow.locator("[data-status='part-paid']")).toContainText("₹500");
 
       for (const size of ["100%", "130%"]) {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
@@ -102,7 +110,11 @@ test.describe("35: status is never colour alone", () => {
         }),
       );
 
-    const overdue = await marks();
+    const all = await marks();
+    // The one late part-paid row has a second tag, Part paid, with its dashed mark.
+    const extra = all.filter((tag) => tag.status === "part-paid");
+    expect(extra.map((tag) => [tag.text, tag.border])).toEqual([["Part paid ₹500", "dashed"]]);
+    const overdue = all.filter((tag) => tag.status !== "part-paid");
     expect(overdue.length).toBeGreaterThan(5);
     for (const tag of overdue) {
       expect(tag.status).toBe("overdue");
@@ -112,9 +124,10 @@ test.describe("35: status is never colour alone", () => {
 
     await page.getByRole("tab", { name: /^Due/ }).click();
     const due = await marks();
-    expect(due.map((t) => t.status).sort()).toEqual(["part-paid"]);
-    expect(due[0].text).toBe("Part paid");
-    expect(due[0].border).toBe("dashed");
+    expect(due.map((t) => t.status)).toEqual(["due", "part-paid"]);
+    expect(due[0].text).toBe("Due");
+    expect(due[1].text).toBe("Part paid ₹500");
+    expect(due[1].border).toBe("dashed");
 
     await page.getByRole("tab", { name: /^Paid/ }).click();
     const paidTags = await marks();

@@ -425,7 +425,15 @@
       "archive": "TODO-translate: Archive student",
       "archiveNote": "TODO-translate: Hidden from your list and from reminders. Their history stays. You can restore them.",
       "restore": "TODO-translate: Restore student"
-    }
+    },
+    "chip": {
+      "overdue": "TODO-translate: Overdue {amount}",
+      "dueToday": "TODO-translate: Due today",
+      "partPaid": "TODO-translate: Part paid {amount}",
+      "due": "TODO-translate: Due {date}",
+      "paid": "TODO-translate: Paid"
+    },
+    "nextFee": "TODO-translate: Next fee {date}"
   },
   "batches": {
     "noStudents": "TODO-translate: No students in this batch yet.",
@@ -506,8 +514,7 @@
     "monthYear": "TODO-translate: {month} {year}",
     "hero": {
       "label": "TODO-translate: Still to come in",
-      "from": "TODO-translate: {m, plural, one {from {n} of {m} student} other {from {n} of {m} students}}",
-      "collected": "TODO-translate: {amount} collected"
+      "owe": "TODO-translate: {m, plural, one {{n} of {m} student still owes} other {{n} of {m} students still owe}}"
     },
     "tab": {
       "overdue": "TODO-translate: Overdue",
@@ -515,27 +522,19 @@
       "paid": "TODO-translate: Paid"
     },
     "tabsLabel": "TODO-translate: Fees by status",
-    "legend": {
-      "paid": "TODO-translate: {n} paid",
-      "due": "TODO-translate: {n} due, hollow",
-      "overdue": "TODO-translate: {n} overdue, tall"
-    },
-    "strip": {
-      "label": "TODO-translate: {total} students: {paid} paid, {due} due, {overdue} overdue"
-    },
     "tag": {
       "overdue": "TODO-translate: Overdue {n, plural, one {{n} day} other {{n} days}}",
       "overdueOpening": "TODO-translate: Overdue",
       "due": "TODO-translate: Due",
       "dueToday": "TODO-translate: Due today",
-      "partPaid": "TODO-translate: Part paid",
-      "paid": "TODO-translate: Paid"
+      "paid": "TODO-translate: Paid",
+      "partPaidAmount": "TODO-translate: Part paid {amount}"
     },
     "row": {
       "dueOn": "TODO-translate: Due {date}",
-      "partPaid": "TODO-translate: Part paid {amount}",
       "monthFee": "TODO-translate: {month} fee",
-      "earlier": "TODO-translate: Earlier balance"
+      "earlier": "TODO-translate: Earlier balance",
+      "addedOn": "TODO-translate: Added {date}"
     },
     "empty": {
       "tab": {
@@ -574,7 +573,14 @@
       "retry": "TODO-translate: Try again"
     },
     "stale": "TODO-translate: Showing what was saved on this phone.",
-    "offlineMonth": "TODO-translate: Can't open {month} without a network."
+    "offlineMonth": "TODO-translate: Can't open {month} without a network.",
+    "summary": {
+      "collected": "TODO-translate: Collected {amount}",
+      "due": "TODO-translate: Due {amount}",
+      "overdue": "TODO-translate: Overdue {amount}",
+      "pending": "TODO-translate: Reading what was collected",
+      "unknown": "—"
+    }
   },
   "waitlistForm": {
     "name": {
