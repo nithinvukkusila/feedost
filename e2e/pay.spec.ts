@@ -259,6 +259,9 @@ test.describe("16, 17: failure and offline", () => {
     // The board's own read of the month's payments for Collected (UX-review-fixes-2, 3.3) lands first; after it, nothing.
     await expect(page.locator("[data-label='collected']")).toHaveText("Collected ₹0");
     const before = pay.requests.length;
+    // What came before going offline is only that read: a GET of the month's payments, never a function call.
+    expect(pay.requests.length).toBeGreaterThan(0);
+    for (const r of pay.requests) expect([r.method, r.path, r.query]).toEqual(["GET", "/rest/v1/payments", expect.stringContaining("paid_on=gte.")]);
     await openSheet(page);
     await amount(page).fill("300");
     await context.setOffline(true);
@@ -266,10 +269,13 @@ test.describe("16, 17: failure and offline", () => {
     await expect(sheet(page).getByText("You are offline. Payments need a connection for now. Nothing was saved.")).toBeVisible();
     await expect(amount(page)).toHaveValue("300");
     expect(pay.requests.slice(before)).toEqual([]);
+    expect(pay.calls("record_payment")).toEqual([]);
+    expect(pay.payments).toEqual([]);
     await context.setOffline(false);
     await markPaid(page).click();
     await expect(sheet(page)).toHaveCount(0);
     expect(pay.payments).toHaveLength(1);
+    expect(pay.calls("record_payment")).toHaveLength(1);
   });
 });
 
