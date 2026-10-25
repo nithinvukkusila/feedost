@@ -5,6 +5,8 @@ import { feeBody } from "./pay-page.test-util";
 import { readPage, type FeePage, type OpenDue } from "./pay-page-public";
 import { claimButtonVisible, dayNumber, feeLine, lateness, payArea, payeeName, upiNote } from "./pay-page-view";
 import { PAY_PAGE_MAX_PAISE } from "./upi-link";
+import { dueState, shiftDay } from "./dues-board";
+import { GRACE_DAYS } from "./grace";
 
 const due = (change: Partial<OpenDue> = {}): OpenDue => ({ kind: "monthly", month: "2026-10-01", dueDate: "2026-10-01", amount: 120000, amountPaid: 0, remaining: 120000, ...change });
 const fee = (change: Partial<FeePage> = {}): FeePage => {
@@ -43,6 +45,26 @@ describe.each(zones)("day logic with the process time zone set to %s", (zone, ja
     expect(lateness("2028-02-28", "2028-02-29")).toBe("later");
     expect(lateness("2027-01-01", "2026-12-31")).toBe("overdue");
     expect(lateness("2026-12-31", "2027-01-01")).toBe("later");
+  });
+
+  it("reads the board's grace constant, and a grace passed in moves overdue by that many days (UX-review-fixes-2, 1.2 and 1.6)", () => {
+    expect(lateness("2026-10-12", "2026-10-11")).toBe(lateness("2026-10-12", "2026-10-11", GRACE_DAYS));
+    expect(lateness("2026-10-12", "2026-10-10", 2)).toBe("later");
+    expect(lateness("2026-10-12", "2026-10-09", 2)).toBe("overdue");
+    expect(lateness("2026-10-12", "2026-10-12", 2)).toBe("today");
+    expect(lateness("2026-10-12", "2026-10-13", 2)).toBe("later");
+  });
+
+  it("agrees with the board's dueState on every day around the due date", () => {
+    for (const grace of [0, 2]) {
+      for (let delta = -3; delta <= 4; delta += 1) {
+        const dueDate = shiftDay("2026-10-12", -delta);
+        const board = dueState({ id: "x", studentId: "s", kind: "monthly", month: "2026-10-01", amount: 1, amountPaid: 0, status: "due", dueDate }, "2026-10-12", grace);
+        const page = lateness("2026-10-12", dueDate, grace);
+        expect(page === "overdue", `${grace} ${delta}`).toBe(board.tab === "overdue");
+        expect(page === "today", `${grace} ${delta}`).toBe(board.isToday);
+      }
+    }
   });
 
   it("marks an earlier balance as an earlier balance, whatever the day", () => {
