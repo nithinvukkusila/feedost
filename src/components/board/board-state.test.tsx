@@ -12,8 +12,11 @@ const lib = vi.hoisted(() => ({
   readUnpaid: vi.fn(),
   readEarliestMonth: vi.fn(),
   ensureMyDues: vi.fn(),
+  readDuesByIds: vi.fn(),
 }));
 vi.mock("@/lib/dues", () => lib);
+const pay = vi.hoisted(() => ({ readPaymentsInMonth: vi.fn() }));
+vi.mock("@/lib/payments", () => pay);
 const rem = vi.hoisted(() => ({ readLastReminders: vi.fn() }));
 vi.mock("@/lib/reminders", () => rem);
 
@@ -61,6 +64,8 @@ beforeEach(() => {
   lib.readEarliestMonth.mockReset().mockResolvedValue("2026-09-01");
   lib.ensureMyDues.mockReset().mockResolvedValue(0);
   rem.readLastReminders.mockReset().mockResolvedValue({ a: { dueId: "a", lastAt: 5, times: 1 } });
+  lib.readDuesByIds.mockReset().mockResolvedValue([]);
+  pay.readPaymentsInMonth.mockReset().mockResolvedValue([]);
 });
 afterEach(() => {
   cleanup();
@@ -357,5 +362,195 @@ describe("the reminders read (R1-8, criterion 29)", () => {
     await flush();
     expect(held.board.reminders?.byDue.a.times).toBe(1);
     expect(held.board.failed).toBe(false);
+  });
+});
+
+describe("Collected and ensureCurrent (UX-review-fixes-2, 3.3 to 3.5 and 10.3)", () => {
+  const payment = (over: Partial<import("@/lib/payments").Payment> = {}): import("@/lib/payments").Payment => ({
+    id: "p1",
+    dueId: "a",
+    amount: 40,
+    method: "upi",
+    paidOn: TODAY,
+    receiptNo: 3,
+    balanceAfter: 60,
+    createdAt: Date.now(),
+    voidedAt: null,
+    ...over,
+  });
+  const ids = (month = "2026-10-01") => held.board.collected[month]?.payments.map((p) => p.id);
+
+  it("reads the month's payments on open and maps each to its student, held fees first, the rest by id in chunks of 100", async () => {
+    const many = Array.from({ length: 150 }, (_, i) => payment({ id: `q${i}`, dueId: `gone${i}`, amount: 1 }));
+    pay.readPaymentsInMonth.mockResolvedValue([payment(), ...many]);
+    lib.readDuesByIds.mockImplementation(async (list: string[]) => list.map((id) => ({ ...due(id), studentId: "S9" })));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    expect(pay.readPaymentsInMonth).toHaveBeenCalledWith("2026-10-01");
+    expect(lib.readDuesByIds).toHaveBeenCalledTimes(2);
+    expect(lib.readDuesByIds.mock.calls.map(([list]) => (list as string[]).length)).toEqual([100, 50]);
+    const slice = held.board.collected["2026-10-01"];
+    expect(slice?.payments).toHaveLength(151);
+    expect(slice?.studentOf.a).toBe("S1");
+    expect(slice?.studentOf.gone149).toBe("S9");
+  });
+
+  it("a failed read is not a failure of the board: nothing saved gives null, something saved is kept", async () => {
+    pay.readPaymentsInMonth.mockRejectedValue(new Error("down"));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(held.board.failed).toBe(false);
+    expect(held.board.collected["2026-10-01"]).toBeNull();
+    pay.readPaymentsInMonth.mockResolvedValue([payment()]);
+    act(() => held.board.refresh(TODAY));
+    await flush();
+    await flush();
+    expect(ids()).toEqual(["p1"]);
+    pay.readPaymentsInMonth.mockRejectedValue(new Error("down"));
+    act(() => held.board.refresh(TODAY));
+    await flush();
+    expect(ids()).toEqual(["p1"]);
+    expect(held.board.failed).toBe(false);
+  });
+
+  it("does not count as a read for the roster: a month switch that only reads Collected leaves `reads` alone", async () => {
+    // The first Collected read fails, so the month's fees are fresh and Collected is not.
+    pay.readPaymentsInMonth.mockRejectedValueOnce(new Error("down"));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    const before = held.board.reads;
+    lib.readMonth.mockClear();
+    pay.readPaymentsInMonth.mockClear();
+    act(() => held.board.selectMonth("2026-10-01", TODAY));
+    await flush();
+    await flush();
+    expect(lib.readMonth).not.toHaveBeenCalled();
+    expect(pay.readPaymentsInMonth).toHaveBeenCalledTimes(1);
+    expect(held.board.collected["2026-10-01"]?.payments).toEqual([]);
+    expect(held.board.reads).toBe(before);
+  });
+
+  it("applyPayment adds the payment to the month of its paid-on date, not the month on screen, and marks it old", async () => {
+    pay.readPaymentsInMonth.mockImplementation(async (month: string) => (month === "2026-09-01" ? [payment({ id: "s1", paidOn: "2026-09-20" })] : []));
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    act(() => held.board.selectMonth("2026-09-01", TODAY));
+    await flush();
+    await flush();
+    expect(ids("2026-09-01")).toEqual(["s1"]);
+    act(() => held.board.applyPayment(payment({ id: "p2", paidOn: "2026-09-30" })));
+    expect(ids("2026-09-01")).toEqual(["s1", "p2"]);
+    expect(ids()).toEqual([]);
+    expect(held.board.collected["2026-09-01"]?.at).toBe(0);
+    expect(held.board.collected["2026-09-01"]?.studentOf.a).toBe("S1");
+    act(() => held.board.applyPayment(payment({ id: "p3" })));
+    expect(ids()).toEqual(["p3"]);
+    // The same payment twice is counted once.
+    act(() => held.board.applyPayment(payment({ id: "p3" })));
+    expect(ids()).toEqual(["p3"]);
+  });
+
+  it("applyVoid takes the payment out of Collected and marks it old, and a read already on its way cannot put it back", async () => {
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    act(() => held.board.applyPayment(payment()));
+    const slow = deferred<import("@/lib/payments").Payment[]>();
+    pay.readPaymentsInMonth.mockReturnValue(slow.promise);
+    act(() => held.board.refresh(TODAY));
+    act(() => held.board.applyVoid(payment({ voidedAt: Date.now() })));
+    expect(ids()).toEqual([]);
+    expect(held.board.collected["2026-10-01"]?.at).toBe(0);
+    slow.resolve([payment()]);
+    await flush();
+    await flush();
+    expect(ids()).toEqual([]);
+  });
+
+  it("ensureCurrent reads the current month and the unpaid fees only when they are missing or old, with no ensure_my_dues, reminders or Collected", async () => {
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(lib.readMonth).toHaveBeenCalledWith("2026-10-01");
+    expect(lib.readUnpaid).toHaveBeenCalledTimes(1);
+    expect(lib.ensureMyDues).not.toHaveBeenCalled();
+    expect(rem.readLastReminders).not.toHaveBeenCalled();
+    expect(lib.readEarliestMonth).not.toHaveBeenCalled();
+    expect(pay.readPaymentsInMonth).not.toHaveBeenCalled();
+    expect(held.board.months["2026-10-01"].rows.map((d) => d.id)).toEqual(["a"]);
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(lib.readMonth).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(new Date("2026-10-12T05:02:00Z"));
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(lib.readMonth).toHaveBeenCalledTimes(2);
+  });
+
+  it("ensureCurrent offline: nothing sent; failed only when nothing is saved", async () => {
+    onLine(false);
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(lib.readMonth).not.toHaveBeenCalled();
+    expect(held.board.failed).toBe(true);
+  });
+
+  it("ensureCurrent's failed read sets failed in the shared snapshot (true when Home opens next)", async () => {
+    lib.readMonth.mockRejectedValue(new Error("down"));
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(held.board.failed).toBe(true);
+  });
+
+  it("Students first, then Home offline: the month's fees are saved but Collected was never read, so it is missing, not reading", async () => {
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(held.board.months["2026-10-01"]).toBeDefined();
+    expect(held.board.collected["2026-10-01"]).toBeUndefined();
+    onLine(false);
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(pay.readPaymentsInMonth).not.toHaveBeenCalled();
+    expect(held.board.failed).toBe(true);
+    expect(held.board.months["2026-10-01"].rows.map((d) => d.id)).toEqual(["a"]);
+    expect(held.board.collected["2026-10-01"]).toBeNull();
+  });
+
+  it("offline open keeps a Collected figure already saved", async () => {
+    pay.readPaymentsInMonth.mockResolvedValue([]);
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    const saved = held.board.collected["2026-10-01"];
+    expect(saved).toBeTruthy();
+    onLine(false);
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(held.board.collected["2026-10-01"]).toBe(saved);
+  });
+
+  it("selectMonth offline onto a month whose fees came from ensureCurrent: Collected is missing, not reading", async () => {
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    onLine(false);
+    act(() => held.board.selectMonth("2026-10-01", TODAY));
+    await flush();
+    expect(pay.readPaymentsInMonth).not.toHaveBeenCalled();
+    expect(held.board.blocked).toBeNull();
+    expect(held.board.settings.month).toBeNull();
+    expect(held.board.collected["2026-10-01"]).toBeNull();
   });
 });

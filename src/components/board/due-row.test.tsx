@@ -88,15 +88,40 @@ describe("DueRow", () => {
     expect(rowLink().textContent).toContain("September fee");
   });
 
-  it("a part paid fee shows what was paid and the amount still owed, and keeps Overdue when late", () => {
+  it("a part paid fee shows two tags, lateness and Part paid with the amount in mono, and what is still owed (UX-review-fixes-2, 3.2)", () => {
     show({ amountPaid: 50000, status: "partial", amount: 100000 });
-    const link = rowLink();
-    expect(link.textContent).toContain("Overdue 7 days");
-    expect(link.textContent).toContain("Part paid ₹500");
-    expect(link.textContent?.endsWith("₹500")).toBe(true);
+    const tags = [...document.querySelectorAll("[data-status]")];
+    expect(tags.map((tag) => [tag.getAttribute("data-status"), tag.textContent])).toEqual([
+      ["overdue", "Overdue 7 days"],
+      ["part-paid", "Part paid ₹500"],
+    ]);
+    expect(tags[1].querySelector(".type-amount-row")?.textContent).toBe("₹500");
+    // Side by side in one wrapping line.
+    expect(tags[0].parentElement).toBe(tags[1].parentElement);
+    expect(tags[0].parentElement?.className).toMatch(/\bflex-wrap\b/);
+    // The old blue caption line is gone: "Part paid" appears once.
+    expect(rowLink().textContent?.match(/Part paid/g)).toHaveLength(1);
+    expect(document.querySelector(".text-blue.type-caption")).toBeNull();
+    expect(rowLink().textContent?.endsWith("₹500")).toBe(true);
     cleanup();
     show({ amountPaid: 50000, status: "partial", amount: 100000, dueDate: "2026-10-20" });
-    expect(document.querySelector("[data-status]")?.textContent).toBe("Part paid");
+    expect([...document.querySelectorAll("[data-status]")].map((tag) => tag.textContent)).toEqual(["Due", "Part paid ₹500"]);
+  });
+
+  it("a fee with nothing paid has one tag", () => {
+    show({});
+    expect(document.querySelectorAll("[data-status]")).toHaveLength(1);
+  });
+
+  it("an earlier balance says when it was added, not Due; a monthly fee keeps Due (1.4)", () => {
+    show({ kind: "opening", month: null, amount: 50000, dueDate: "2026-10-12" });
+    expect(rowLink().textContent).toContain("Earlier balance · Added 12 Oct 2026");
+    expect(rowLink().textContent).not.toContain("Due 12 Oct 2026");
+    expect(document.querySelector("[data-status]")?.textContent).toBe("Overdue");
+    cleanup();
+    show({ dueDate: "2026-10-12" });
+    expect(rowLink().textContent).toContain("Due 12 Oct 2026");
+    expect(rowLink().textContent).not.toContain("Added");
   });
 
   it("a paid fee shows the whole amount and the word Paid", () => {

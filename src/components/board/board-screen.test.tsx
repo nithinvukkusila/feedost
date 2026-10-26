@@ -51,6 +51,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     unpaid: { rows: [], at: 1 },
     earliest: { month: "2026-10-01", at: 1 },
     reminders: null,
+    collected: { "2026-10-01": { payments: [], studentOf: {}, at: 1 } },
     failed: false,
     blocked: null,
     reads: 1,
@@ -67,6 +68,7 @@ function setup(over: Partial<Board> = {}, students = [student("s1", "Ravi")]) {
     setTab: vi.fn(),
     setFilter: vi.fn(),
     retry: vi.fn(),
+    ensureCurrent: vi.fn(),
     ...over,
   };
 }
@@ -199,3 +201,43 @@ describe("no timer in the board (no polling for the day change)", () => {
   });
 });
 
+
+describe("the hero line and the summary bar (UX-review-fixes-2, 2.2, 3.3, 4.2 to 4.5)", () => {
+  const pay = (id: string, dueId: string, amount: number) => ({ id, dueId, amount, method: "cash" as const, paidOn: "2026-10-12", receiptNo: 1, balanceAfter: 0, createdAt: 0, voidedAt: null });
+  const labels = () => [...document.querySelectorAll("[data-label]")].map((li) => li.textContent);
+
+  it("says how many of the students in the filter still owe, counting students with no fee this month", () => {
+    setup({}, [student("s1", "Ravi"), student("s2", "Asha"), student("s3", "Kiran")]);
+    renderWithWords(<BoardScreen />);
+    expect(screen.getByText("1 of 3 students still owe")).toBeTruthy();
+  });
+
+  it("shows Collected from the month's payments (an earlier balance's too), and Due and Overdue from what is owed", () => {
+    setup({
+      months: { "2026-10-01": { rows: [due("d1", "s1", "2026-10-12"), due("d2", "s2", "2026-10-05")], at: 1 } },
+      collected: { "2026-10-01": { payments: [pay("p1", "old", 25000), pay("p2", "d9", 10000)], studentOf: { old: "s1", d9: "s2" }, at: 1 } },
+    }, [student("s1", "Ravi"), student("s2", "Asha")]);
+    renderWithWords(<BoardScreen />);
+    expect(labels()).toEqual(["Collected ₹350", "Due ₹1,000", "Overdue ₹1,000"]);
+    expect(document.querySelector("[data-summary-bar]")?.getAttribute("aria-hidden")).toBe("true");
+    // The strip and its legend are gone.
+    expect(document.body.textContent).not.toMatch(/hollow|tall/);
+  });
+
+  it("while Collected is read the label has a grey block; if it failed with nothing saved, a dash", () => {
+    setup({ collected: {} });
+    const { unmount } = renderWithWords(<BoardScreen />);
+    expect(document.querySelector('[data-label="collected"] [data-pending]')).not.toBeNull();
+    unmount();
+    setup({ collected: { "2026-10-01": null } });
+    renderWithWords(<BoardScreen />);
+    expect(labels()[0]).toBe("Collected —");
+    expect(document.querySelector('[data-part="collected"]')).toBeNull();
+  });
+
+  it("draws nothing when the month has no rows", () => {
+    setup({ months: { "2026-10-01": { rows: [], at: 1 } } });
+    renderWithWords(<BoardScreen />);
+    expect(document.querySelector("[data-label]")).toBeNull();
+  });
+});

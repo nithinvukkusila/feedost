@@ -66,12 +66,12 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 | `Field` | label above, value written on a 2px line; states empty, typing (4px blue), correct (green + tick), needs fixing (3px red + message that says how to fix) |
 | `Slip` | `slip` surface, 2px border, hard shadow |
 | `Row` | ledger row, min-height 64px, name + meta left, mono amount right, optional action |
-| `StatusTag` | Overdue (red solid outline), Due (highlight fill), Part paid (blue dashed outline), Paid (green double outline) |
+| `StatusTag` | Overdue (red solid outline), Due (highlight fill), Part paid (blue dashed outline), Paid (green double outline). Two tags may sit side by side in a wrapping line: lateness plus "Part paid ₹X" on a part-paid fee |
 | `Stamp` | double-ring circle, sizes sm/md/lg, text PAID / SENT / ALL PAID plus optional date |
 | `IndexTabs` | folder tabs joined to the slip below; selected tab is taller and `slip` coloured |
 | `Segmented` | 2px bordered group; selected segment is black |
 | `Sheet` | bottom sheet on a dark ground `#2A0709` |
-| `StudentStrip` | one block per student: paid short and filled, due short and hollow, overdue tall and red; always with a text legend |
+| `SummaryBar` | one bar for the month in three parts, Collected (short, solid `stamp`), Due (short, `highlight` with an ink edge) and Overdue (tall, `cloth`), each as wide as its paise, a non-zero part at least 4px; a zero part is not drawn. Hidden from screen readers; always with three labels, each a word, an amount (DM Mono) and its part's mark (UX-review-fixes-2, item 4; replaced StudentStrip) |
 | `Switch` | square, 76×44, ON in green |
 | `Check` | (R1-8) one tick box in a list for choosing several rows: a real `<input type="checkbox">` in its `<label>`, 28px box with a 2px border, black fill and a tick when selected; the row says the state in a word beside it ("Selected" / "Not selected"), so colour never carries it; the whole row is the target, min-height 44px, and grows with its words; focus ring 3px blue offset 4px |
 | `BottomNav` | Home, Students, Attendance, More; selected item has a 5px red bar on top |

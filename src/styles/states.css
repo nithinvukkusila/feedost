@@ -92,19 +92,6 @@
   min-height: 1lh;
 }
 
-/*
- * The student strip: one column per block, bottoms aligned, 3px apart. `--cols` is the number of
- * blocks in a row (stripColumns() in src/components/ui/student-strip.tsx). A block is never wider
- * than 24px, so one student is not a bar across the screen. The gap stays in px, like borders.
- */
-@utility strip-grid {
-  display: grid;
-  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1.5rem));
-  grid-auto-rows: 1.5rem;
-  gap: 3px;
-  align-items: end;
-}
-
 /* Room for the phone's gesture bar under something pinned to the bottom of the screen. */
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);

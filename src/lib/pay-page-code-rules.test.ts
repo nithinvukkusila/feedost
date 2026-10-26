@@ -86,6 +86,13 @@ describe("the pay page's code", () => {
     for (const line of imports) for (const bad of forbiddenImports) expect(line.includes(bad), `${bad} in ${_name}: ${line}`).toBe(false);
   });
 
+  // UX-review-fixes-2 plan 13.2: the pay page shares the grace constant with the board through a file with no imports,
+  // so the parent's shell can never grow through it.
+  it("shares GRACE_DAYS through src/lib/grace.ts, which imports nothing", () => {
+    expect(source(join(root, "src", "lib", "pay-page-view.ts"))).toMatch(/import \{ GRACE_DAYS \} from "@\/lib\/grace";/);
+    expect(stripComments(source(join(root, "src", "lib", "grace.ts")))).not.toMatch(/\bimport\b|\brequire\(/);
+  });
+
   it("builds the UPI link in one place: only upi-link.ts writes `upi://`", () => {
     for (const path of files) {
       if (path.endsWith("upi-link.ts")) continue;

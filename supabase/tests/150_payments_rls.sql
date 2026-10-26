@@ -5,7 +5,7 @@
 -- owner). Cross-tutor reads run as the attacker (B).
 begin;
 select tests.assert_ready();
-select plan(42);
+select plan(44);
 
 insert into auth.users (id, email) values
   (tests.tutor_a(), 'tutor-a@example.test'),
@@ -40,6 +40,14 @@ select is((select count(*) from public.payments where due_id = 'a2000000-0000-40
 select is((select count(*) from public.payments where id = 'a3000000-0000-4000-8000-000000000001')::int, 0, 'B reads none of A payments by id');
 select is((select count(*) from public.payments p join public.dues d on d.id = p.due_id where d.tutor_id = tests.tutor_a())::int, 0, 'B reads none of A payments through a join');
 select is((select count(*) from public.payments where receipt_no = 1)::int, 1, 'B sees only its own number 1 (the same number exists for A)');
+-- UX-review-fixes-2 13.3: the exact filter readPaymentsInMonth sends (paid_on=gte.2026-10-01&paid_on=lt.2026-11-01&voided_at=is.null)
+-- A's payment is in that month and stands, yet B gets only its own row back.
+select is((select string_agg(id::text, ',' order by paid_on, id) from public.payments where paid_on >= '2026-10-01' and paid_on < '2026-11-01' and voided_at is null), 'b3000000-0000-4000-8000-000000000001', 'B reads none of A payments with the month range filter the app sends, only its own');
+select tests.reset();
+select tests.act_as(tests.tutor_a());
+select is((select count(*) from public.payments where paid_on >= '2026-10-01' and paid_on < '2026-11-01' and voided_at is null)::int, 1, 'A reads own payment with the same month range filter (the filter itself matches)');
+select tests.reset();
+select tests.act_as(tests.tutor_b());
 
 -- B cannot write (the privilege check comes before row-level security)
 select throws_ok($$insert into public.payments (tutor_id, due_id, amount, method, paid_on, receipt_no, request_id, balance_after) values (tests.tutor_b(), 'b2000000-0000-4000-8000-000000000001', 1, 'cash', '2026-10-06', 9, gen_random_uuid(), 0)$$, '42501', null, 'B cannot insert a payment, not even for own due');

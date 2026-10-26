@@ -1,7 +1,8 @@
 "use client";
 
-// One fee in the list (spec R1-6, criteria 16 and 17; canvas "Home"): the status tag (a word and a mark), the
-// student's name, a line with the due date, the batch and what was part paid, and on the right what is
+// One fee in the list (spec R1-6, criteria 16 and 17; canvas "Home"): the status tag (a word and a mark), and on a
+// part-paid fee a second one, "Part paid ₹X" (UX-review-fixes-2, criterion 3.2), the student's name, a line with
+// the due date (an earlier balance says when it was added, criterion 1.4) and the batch, and on the right what is
 // still owed (or the whole amount on a paid fee). The link to the student's edit screen holds no control; the
 // buttons sit beside it, not inside it (spec R1-7, criterion 12): "Mark paid" on a fee with something still
 // owed, "Receipt" on a fee with something paid. Beside it when there is room, below it when the text is
@@ -52,12 +53,13 @@ export function DueRow({
         : t("tag.overdue", { n: state.daysLate })
       : state.tag === "due"
         ? t(state.isToday ? "tag.dueToday" : "tag.due")
-        : state.tag === "part-paid"
-          ? t("tag.partPaid")
-          : t("tag.paid");
+        : t("tag.paid");
 
-  // An earlier balance, or a fee from an earlier month that is still unpaid, says what it is.
-  const kind = due.kind === "opening" ? t("row.earlier") : due.month !== month && due.month !== null ? t("row.monthFee", { month: months.name(due.month) }) : null;
+  // An earlier balance, or a fee from an earlier month that is still unpaid, says what it is. An earlier balance
+  // is dated the day it was entered, so it says "Added", not "Due" (criterion 1.4).
+  const opening = due.kind === "opening";
+  const kind = opening ? t("row.earlier") : due.month !== month && due.month !== null ? t("row.monthFee", { month: months.name(due.month) }) : null;
+  const when = opening ? t("row.addedOn", { date: formatDate(due.dueDate) }) : t("row.dueOn", { date: formatDate(due.dueDate) });
   const owed = state.tab === "paid" ? due.amount : remaining(due);
   const canPay = due.status !== "paid";
   const hasReceipt = due.amountPaid > 0;
@@ -71,7 +73,19 @@ export function DueRow({
     <li className="flex flex-wrap items-center gap-x-2 border-b border-rule">
       <a href={href} onClick={soft(href)} className="flex min-h-16.5 min-w-0 grow basis-40 items-center gap-3 py-2 text-ink ring:ground-ring">
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-          <StatusTag status={state.tag}>{tag}</StatusTag>
+          <span className="flex max-w-full flex-wrap gap-2">
+            <StatusTag status={state.tag}>{tag}</StatusTag>
+            {state.partPaid ? (
+              <StatusTag status="part-paid">
+                {withNode(
+                  (amount) => t("tag.partPaidAmount", { amount }),
+                  <span translate="no" className="type-amount-row">
+                    {formatRupees(due.amountPaid)}
+                  </span>,
+                )}
+              </StatusTag>
+            ) : null}
+          </span>
           <span translate="no" className="type-name wrap-anywhere">
             {student.name}
           </span>
@@ -82,7 +96,7 @@ export function DueRow({
                 <span aria-hidden="true"> · </span>
               </>
             ) : null}
-            {t("row.dueOn", { date: formatDate(due.dueDate) })}
+            {when}
             {batchName ? (
               <>
                 <span aria-hidden="true"> · </span>
@@ -94,16 +108,6 @@ export function DueRow({
             <span className="type-caption flex items-center gap-1.5 font-semibold text-ink">
               <RemindedIcon />
               <span className="min-w-0 wrap-anywhere">{reminded.key === "days" ? r("last.days", { n: reminded.n }) : r(`last.${reminded.key}`)}</span>
-            </span>
-          ) : null}
-          {due.status === "partial" ? (
-            <span className="type-caption text-blue wrap-anywhere">
-              {withNode(
-                (amount) => t("row.partPaid", { amount }),
-                <span translate="no" className="type-amount-row">
-                  {formatRupees(due.amountPaid)}
-                </span>,
-              )}
             </span>
           ) : null}
         </span>

@@ -1,8 +1,8 @@
 "use client";
 
 // The dues board (spec R1-6; canvas "Home"): the home of a tutor with students. Top to bottom: the month
-// switcher, the amount still to come in, the batch select (only with batches), the strip with its words,
-// the three tabs and the rows. It reads the cached roster and the board's cached dues and works out the view
+// switcher, the amount still to come in, the batch select (only with batches), the summary bar with its three
+// labels (UX-review-fixes-2, item 4), the three tabs and the rows. It reads the cached roster and the board's cached dues and works out the view
 // on the phone; the only thing it asks the network for is through the board store, on opening and on a day
 // change. Its one write is Mark paid (R1-7): the sheet is a lazy chunk, loaded on the first tap, and what it
 // records goes through src/lib/payments.ts. Remind (R1-8) only queues the fee in memory and opens the Remind screen; nothing of that screen is loaded here.
@@ -16,19 +16,21 @@ import { useRoster } from "@/components/app/roster";
 import { UndoBanner } from "@/components/pay/undo-banner";
 import { ClaimsChip } from "@/components/claims/claims-chip";
 import { useRemind } from "@/components/remind/remind-provider";
+import { withNode } from "@/components/app/with-node";
 import { BatchFilter, effectiveFilter } from "@/components/students/batch-filter";
 import { Slip } from "@/components/ui/slip";
-import { StudentStrip } from "@/components/ui/student-strip";
+import { SummaryBar, SummaryPending } from "@/components/ui/summary-bar";
 import { Tabs, tabId } from "@/components/ui/tabs";
 import type { Locale } from "@/config/locales";
 import { localeHref, remindPath } from "@/config/routes";
 import type { Due } from "@/lib/dues";
-import { currentMonth, defaultTab, earliestNextDue, indiaToday, monthMoves, shiftMonth, type Tab } from "@/lib/dues-board";
+import { collectedInMonth, currentMonth, defaultTab, earliestNextDue, indiaToday, monthMoves, shiftMonth, type Tab } from "@/lib/dues-board";
+import { formatRupees } from "@/lib/format";
 import { pickList, queueItem, tutorReady } from "@/lib/reminder-rules";
 import { activeStudents, batchCounts, sortBatches } from "@/lib/student-list";
 import { BoardList } from "./board-list";
 import { useBoard } from "./board-state";
-import { AllPaid, BoardError, BoardLoading, InlineState, NothingInBatch, NothingYet } from "./board-states";
+import { AllPaid, BoardError, type CollectedFigure, BoardLoading, InlineState, NothingInBatch, NothingYet } from "./board-states";
 import { HeroAmount } from "./hero-amount";
 import { MonthSwitcher, useMonthWords } from "./month-switcher";
 import { useBoardView } from "./use-board-view";
@@ -40,6 +42,13 @@ const PaySheet = dynamic(() => import("@/components/pay/pay-sheet"), { ssr: fals
 const clockNow = () => Date.now();
 
 const NONE: readonly Due[] = [];
+
+// An amount in a label: DM Mono, 0 to 9 digits, never translated.
+const money = (paise: number) => (
+  <span translate="no" className="type-amount-row">
+    {formatRupees(paise)}
+  </span>
+);
 
 const TABS: readonly Tab[] = ["overdue", "due", "paid"];
 
@@ -101,6 +110,12 @@ export function BoardScreen() {
   const ready = own !== null && carried !== null;
 
   const { view, filteredOut } = useBoardView(ready ? own : null, carried ?? NONE, roster.students, month, today, filter);
+
+  // Collected (criterion 3.3): the month's payments by paid-on date, through the filter. Pending while the first read
+  // is out; null when it failed with nothing saved, or was never read and the phone is offline (the store sets it).
+  const collectedSlice = board.collected[month];
+  const collected: CollectedFigure =
+    collectedSlice === undefined ? "pending" : collectedSlice === null ? null : collectedInMonth(collectedSlice.payments, collectedSlice.studentOf, roster.students, filter);
 
   // A fee for a student this phone has not seen: read the roster again, once per read of the dues.
   const reloadedAt = useRef(-1);
@@ -179,7 +194,7 @@ export function BoardScreen() {
           <NothingYet isCurrent={isCurrent} month={months.label(month)} nextDue={earliestNextDue(active, today)} />
         )
       ) : allPaid ? (
-        <AllPaid month={months.label(month)} nextMonth={isCurrent ? months.name(shiftMonth(month, 1)) : null} collected={view.collected} students={view.studentsInView} />
+        <AllPaid month={months.label(month)} nextMonth={isCurrent ? months.name(shiftMonth(month, 1)) : null} collected={collected} students={view.studentsInView} />
       ) : (
         <HeroAmount view={view} />
       )}
@@ -209,10 +224,18 @@ export function BoardScreen() {
       {empty ? null : (
         <>
           <div className="px-5 pt-3.5 pr-5.5">
-            <StudentStrip
-              blocks={view.blocks}
-              legend={{ paid: t("legend.paid", { n: view.legend.paid }), due: t("legend.due", { n: view.legend.due }), overdue: t("legend.overdue", { n: view.legend.overdue }) }}
-              label={t("strip.label", { total: view.blocks.length, paid: view.legend.paid, due: view.legend.due, overdue: view.legend.overdue })}
+            <SummaryBar
+              collected={typeof collected === "number" ? collected : null}
+              due={view.dueOwed}
+              overdue={view.overdueOwed}
+              labels={{
+                collected: withNode(
+                  (amount) => t("summary.collected", { amount }),
+                  collected === "pending" ? <SummaryPending label={t("summary.pending")} /> : collected === null ? t("summary.unknown") : money(collected),
+                ),
+                due: withNode((amount) => t("summary.due", { amount }), money(view.dueOwed)),
+                overdue: withNode((amount) => t("summary.overdue", { amount }), money(view.overdueOwed)),
+              }}
             />
           </div>
 

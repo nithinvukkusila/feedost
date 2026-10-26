@@ -4,12 +4,12 @@
 // arithmetic is on whole numbers of days, so no phone's time zone or ICU data can change an answer.
 // Money stays integer paise; every sum is an integer sum.
 import type { Due } from "./dues";
+import { GRACE_DAYS } from "./grace";
+import type { Payment } from "./payments";
 import type { BatchFilterValue } from "./student-list";
 import type { Student } from "./students";
 
 export type Tab = "overdue" | "due" | "paid";
-export type Mark = "overdue" | "due" | "part-paid" | "paid";
-export type Block = "paid" | "due" | "overdue";
 
 const DAY_MS = 86_400_000;
 const INDIA_OFFSET_MS = 19_800_000; // UTC+5:30, no daylight saving
@@ -81,16 +81,26 @@ export function shiftMonth(month: string, delta: number): string {
   return `${pad(y, 4)}-${pad(index - y * 12 + 1, 2)}-01`;
 }
 
-export type DueState = { tab: Tab; tag: Mark; daysLate: number | null; isToday: boolean };
+/**
+ * `tag` is the lateness only (it is always the tab). `partPaid` is a second, separate fact: something is paid and
+ * something is still owed, late or not, so a row can show both tags (UX-review-fixes-2, criterion 3.2).
+ */
+export type DueState = { tab: Tab; tag: Tab; partPaid: boolean; daysLate: number | null; isToday: boolean };
 
-/** What the board says about a due on `today`. Overdue is never stored: it is worked out here. */
-export function dueState(due: Due, today: string): DueState {
-  if (due.status === "paid") return { tab: "paid", tag: "paid", daysLate: null, isToday: false };
-  // An earlier balance is late from the start, and has no day count.
-  if (due.kind === "opening") return { tab: "overdue", tag: "overdue", daysLate: null, isToday: false };
+/**
+ * What the board says about a due on `today`. Overdue is never stored: it is worked out here. A monthly fee is
+ * overdue when it is more than `grace` days late, and then `daysLate` is the whole count from the due date; inside
+ * the grace days it is still Due and never "late" (criterion 1.2). `grace` is an argument only so a test can pass
+ * another value; every caller takes the default.
+ */
+export function dueState(due: Due, today: string, grace: number = GRACE_DAYS): DueState {
+  if (due.status === "paid") return { tab: "paid", tag: "paid", partPaid: false, daysLate: null, isToday: false };
+  const partPaid = due.status === "partial";
+  // An earlier balance is late from the start, has no day count and no grace (criterion 1.3).
+  if (due.kind === "opening") return { tab: "overdue", tag: "overdue", partPaid, daysLate: null, isToday: false };
   const late = daysBetween(due.dueDate, today);
-  if (late > 0) return { tab: "overdue", tag: "overdue", daysLate: late, isToday: false };
-  return { tab: "due", tag: due.status === "partial" ? "part-paid" : "due", daysLate: 0, isToday: late === 0 };
+  if (late > grace) return { tab: "overdue", tag: "overdue", partPaid, daysLate: late, isToday: false };
+  return { tab: "due", tag: "due", partPaid, daysLate: 0, isToday: late === 0 };
 }
 
 /** What is still owed on a due, in paise. */
@@ -102,17 +112,18 @@ export type BoardView = {
   rows: Row[];
   tabs: Record<Tab, Row[]>;
   counts: Record<Tab, number>;
-  /** Paise still to come in. */
+  /** Paise still to come in: `dueOwed + overdueOwed`. */
   pending: number;
-  /** Paise paid on this month's own dues. */
-  collected: number;
+  /** Paise still owed on the fees in the Due tab. */
+  dueOwed: number;
+  /** Paise still owed on the fees in the Overdue tab. */
+  overdueOwed: number;
   /** Students with something unpaid. */
   students: number;
-  /** Students with any row. */
+  /** Students with any row (the "All paid" stamp's "{n} of {m}"). */
   studentsInView: number;
-  /** One per student in view, paid first, then due, then overdue. */
-  blocks: Block[];
-  legend: Record<Block, number>;
+  /** Active students in the batch filter, with or without a fee this month (the hero's "{n} of {m}", criterion 2.1). */
+  studentsInFilter: number;
   /** Ids of students that a due names and the roster does not hold. */
   missing: string[];
 };
@@ -188,41 +199,96 @@ export function boardView(dues: readonly Due[], students: readonly Student[], mo
   // `rows` is the three tabs in order, so it never depends on the order the dues were read in.
   const sorted = [...tabs.overdue, ...tabs.due, ...tabs.paid];
 
-  let pending = 0;
-  let collected = 0;
-  const kinds = new Map<string, Block>();
+  let dueOwed = 0;
+  let overdueOwed = 0;
+  const inView = new Set<string>();
   const owing = new Set<string>();
   for (const row of rows) {
-    if (row.state.tab !== "paid") {
-      pending += remaining(row.due);
-      owing.add(row.student.id);
-    }
-    if (row.due.kind === "monthly" && row.due.month === month) collected += row.due.amountPaid;
-    const before = kinds.get(row.student.id);
-    const here: Block = row.state.tab;
-    kinds.set(row.student.id, before === "overdue" || here === "overdue" ? "overdue" : before === "due" || here === "due" ? "due" : "paid");
+    inView.add(row.student.id);
+    if (row.state.tab === "paid") continue;
+    if (row.state.tab === "due") dueOwed += remaining(row.due);
+    else overdueOwed += remaining(row.due);
+    owing.add(row.student.id);
   }
-
-  const legend: Record<Block, number> = { paid: 0, due: 0, overdue: 0 };
-  for (const kind of kinds.values()) legend[kind] += 1;
-  const blocks: Block[] = [
-    ...Array<Block>(legend.paid).fill("paid"),
-    ...Array<Block>(legend.due).fill("due"),
-    ...Array<Block>(legend.overdue).fill("overdue"),
-  ];
+  let studentsInFilter = 0;
+  for (const student of students) if (student.active && inFilter(student, filter)) studentsInFilter += 1;
 
   return {
     rows: sorted,
     tabs,
     counts: { overdue: tabs.overdue.length, due: tabs.due.length, paid: tabs.paid.length },
-    pending,
-    collected,
+    pending: dueOwed + overdueOwed,
+    dueOwed,
+    overdueOwed,
     students: owing.size,
-    studentsInView: kinds.size,
-    blocks,
-    legend,
+    studentsInView: inView.size,
+    studentsInFilter,
     missing: [...missing],
   };
+}
+
+/**
+ * "Collected" for a month (UX-review-fixes-2, criterion 3.3): the money received, by paid-on date, whatever fee it
+ * paid: part payments, earlier balances and earlier months' fees all count. `payments` is the month's read (or its
+ * local copy after a payment or an Undo), and a voided one is never counted. `studentOf` maps a fee's id to its
+ * student. The batch filter goes through the student's current batch, archived students included. A payment whose
+ * fee or student is not known counts under All only. Integer paise.
+ */
+export function collectedInMonth(
+  payments: readonly Payment[],
+  studentOf: Readonly<Record<string, string>>,
+  students: readonly Student[],
+  filter: BatchFilterValue,
+): number {
+  const byId = new Map(students.map((student) => [student.id, student]));
+  let total = 0;
+  for (const payment of payments) {
+    if (payment.voidedAt !== null) continue;
+    const id = studentOf[payment.dueId];
+    const student = id === undefined ? undefined : byId.get(id);
+    if (student === undefined ? filter === "all" : inFilter(student, filter)) total += payment.amount;
+  }
+  return total;
+}
+
+/** One status chip on a Students row (criterion 10.1). Amounts are paise; the date is `YYYY-MM-DD`. */
+export type Chip =
+  | { kind: "overdue"; amount: number }
+  | { kind: "dueToday" }
+  | { kind: "partPaid"; amount: number }
+  | { kind: "due"; date: string }
+  | { kind: "paid" };
+
+/**
+ * One chip per active student who has something in the current month's view (their own fees plus the unpaid earlier
+ * ones), by the board's own rules (`boardView`, so the same `dueState` and grace). In order of precedence: what is
+ * still owed on overdue fees (part-paid ones included), then "Due today", then what is paid so far on a part-paid
+ * fee that is not late, then the soonest open fee's date, then "Paid" when this month's fee is fully paid and nothing
+ * is open. A student with nothing in view (no fee yet, or archived) has no chip.
+ */
+export function studentChips(dues: readonly Due[], students: readonly Student[], today: string): Map<string, Chip> {
+  const month = currentMonth(today);
+  const view = boardView(dues, students, month, today, "all");
+  const facts = new Map<string, { overdue: number; today: boolean; partPaid: number; soonest: string | null; paid: boolean }>();
+  for (const { due, student, state } of view.rows) {
+    const f = facts.get(student.id) ?? { overdue: 0, today: false, partPaid: 0, soonest: null, paid: false };
+    if (state.tab === "overdue") f.overdue += remaining(due);
+    else if (state.tab === "due") {
+      if (state.isToday) f.today = true;
+      if (state.partPaid) f.partPaid += due.amountPaid;
+      if (f.soonest === null || due.dueDate < f.soonest) f.soonest = due.dueDate;
+    } else if (due.kind === "monthly" && due.month === month) f.paid = true;
+    facts.set(student.id, f);
+  }
+  const chips = new Map<string, Chip>();
+  for (const [id, f] of facts) {
+    if (f.overdue > 0) chips.set(id, { kind: "overdue", amount: f.overdue });
+    else if (f.today) chips.set(id, { kind: "dueToday" });
+    else if (f.partPaid > 0) chips.set(id, { kind: "partPaid", amount: f.partPaid });
+    else if (f.soonest !== null) chips.set(id, { kind: "due", date: f.soonest });
+    else if (f.paid) chips.set(id, { kind: "paid" });
+  }
+  return chips;
 }
 
 /** The tab to open on: Overdue if it has rows, else Due, else Paid; Overdue when there is nothing at all. */
