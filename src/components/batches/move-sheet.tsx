@@ -4,17 +4,20 @@
 // each with a tick and the name of their present batch. A black "Move {n} here" puts the ticked ones in this
 // batch in one update. Nothing is sent while none is ticked. The rows the database answered with go into the
 // roster; a failure keeps the sheet and the ticks and says nothing was moved.
+// UX-review-fixes-2, item 17: one Cancel (the sheet's own close), a search by name, and "Select all shown".
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useRoster } from "@/components/app/roster";
 import { WriteNotice, type WriteProblem } from "@/components/app/write-notice";
 import { Button } from "@/components/ui/button";
+import { Check } from "@/components/ui/check";
+import { Field } from "@/components/ui/field";
 import type { Locale } from "@/config/locales";
 import { batchesPath, localeHref } from "@/config/routes";
 import { Sheet } from "@/components/ui/sheet";
 import type { Batch } from "@/lib/batches";
-import { activeStudents, sortStudents } from "@/lib/student-list";
+import { activeStudents, searchStudents, sortStudents } from "@/lib/student-list";
 import { moveStudents } from "@/lib/students";
 
 export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; open: boolean; onClose: () => void }>) {
@@ -28,10 +31,27 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
   const [problem, setProblem] = useState<WriteProblem>(null);
   const [gone, setGone] = useState(false);
 
+  const [text, setText] = useState("");
+
   const others = sortStudents(activeStudents(roster.students).filter((student) => student.batchId !== batch.id));
   const batchName = (id: string | null) => roster.batches.find((item) => item.id === id)?.name ?? null;
+  // The same matching as the Students search (17.2). Searching never clears a tick: a ticked student hidden by the
+  // search still counts on the button (17.4).
+  const shown = searchStudents(others, text);
   // Ticks for students who have since moved or been archived do not count.
   const chosen = others.filter((student) => ticked.has(student.id));
+  const allShownTicked = shown.length > 0 && shown.every((student) => ticked.has(student.id));
+
+  function tickShown(on: boolean) {
+    setTicked((now) => {
+      const next = new Set(now);
+      for (const student of shown) {
+        if (on) next.add(student.id);
+        else next.delete(student.id);
+      }
+      return next;
+    });
+  }
 
   function toggle(id: string, on: boolean) {
     setTicked((now) => {
@@ -46,6 +66,7 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
     setProblem(null);
     setGone(false);
     setTicked(new Set());
+    setText("");
     onClose();
   }
 
@@ -97,46 +118,74 @@ export function MoveSheet({ batch, open, onClose }: Readonly<{ batch: Batch; ope
       ) : (
         <>
           <p className="type-body-sm text-ink-soft">{t("move.hint")}</p>
-          <ul className="mt-3 border-2 border-ink bg-slip px-3">
-            {others.map((student) => {
-              const from = batchName(student.batchId);
-              return (
-                <li key={student.id} className="border-b border-rule last:border-b-0">
-                  <label className="flex min-h-15 items-center gap-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={ticked.has(student.id)}
-                      onChange={(event) => toggle(student.id, event.currentTarget.checked)}
-                      className="size-6 shrink-0 accent-blue"
-                    />
-                    <span className="flex min-w-0 flex-1 flex-col items-start">
-                      <span translate="no" className="type-name wrap-anywhere">
-                        {student.name}
-                      </span>
-                      <span className="type-caption text-ink-soft wrap-anywhere">
-                        {from === null ? t("move.noBatch") : <span translate="no">{t("move.inBatch", { name: from })}</span>}
-                      </span>
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="mt-3">
+            <Field
+              label={t("move.searchLabel")}
+              placeholder={t("move.searchPlaceholder")}
+              value={text}
+              onChange={(event) => setText(event.currentTarget.value)}
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              data-ph-no-capture=""
+              data-sentry-mask=""
+            />
+          </div>
+          {shown.length === 0 ? (
+            <div className="mt-1 flex flex-col items-start gap-3">
+              <p className="type-body text-ink-soft wrap-anywhere">{t("move.noMatch", { text: text.trim() })}</p>
+              <Button variant="outline" onClick={() => setText("")}>
+                {t("move.clearSearch")}
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Ticks or clears every student the search shows; its state is a word and the tick, as Check (17.3). */}
+              <div className="mt-1 border-2 border-b-0 border-ink bg-slip px-3">
+                <Check checked={allShownTicked} onChange={tickShown} onText={t("move.selected")} offText={t("move.notSelected")}>
+                  <span className="type-body font-semibold wrap-anywhere">{t("move.selectAll", { n: shown.length })}</span>
+                </Check>
+              </div>
+              <ul className="border-2 border-ink bg-slip px-3">
+                {shown.map((student) => {
+                  const from = batchName(student.batchId);
+                  return (
+                    <li key={student.id} className="border-b border-rule last:border-b-0">
+                      <label className="flex min-h-15 items-center gap-3 py-2">
+                        <input
+                          type="checkbox"
+                          checked={ticked.has(student.id)}
+                          onChange={(event) => toggle(student.id, event.currentTarget.checked)}
+                          className="size-6 shrink-0 accent-blue ring:ground-ring"
+                        />
+                        <span className="flex min-w-0 flex-1 flex-col items-start">
+                          <span translate="no" className="type-name wrap-anywhere">
+                            {student.name}
+                          </span>
+                          <span className="type-caption text-ink-soft wrap-anywhere">
+                            {from === null ? t("move.noBatch") : <span translate="no">{t("move.inBatch", { name: from })}</span>}
+                          </span>
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
         </>
       )}
       <div className="mt-4">
         <WriteNotice problem={problem} failed={t("move.failed")} offline={form("offline")} />
       </div>
-      <div className="mt-5 flex flex-col gap-4 pr-1.5 pb-1.5">
-        {others.length === 0 ? null : (
+      {/* One Cancel only: the sheet's own close at the top (17.1). */}
+      {others.length === 0 ? null : (
+        <div className="mt-5 pr-1.5 pb-1.5">
           <Button variant="record" full busy={moving} busyLabel={t("move.confirm", { n: chosen.length })} disabled={chosen.length === 0} onClick={move}>
             {chosen.length === 0 ? t("move.confirmNone") : t("move.confirm", { n: chosen.length })}
           </Button>
-        )}
-        <Button variant="outline" full onClick={close}>
-          {t("move.cancel")}
-        </Button>
-      </div>
+        </div>
+      )}
     </Sheet>
   );
 }

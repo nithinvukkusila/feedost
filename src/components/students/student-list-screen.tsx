@@ -113,7 +113,7 @@ function ListBody() {
                 value={text}
                 onChange={(event) => setText(event.currentTarget.value)}
                 placeholder={t("searchPlaceholder")}
-                className="type-body-lg min-w-0 flex-1 bg-transparent py-2 text-ink outline-none placeholder:text-ink-label"
+                className="type-body-lg min-h-tap min-w-0 flex-1 bg-transparent py-2 text-ink outline-none placeholder:text-ink-label"
               />
             </div>
           </div>

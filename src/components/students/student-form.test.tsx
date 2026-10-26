@@ -122,11 +122,17 @@ describe("add (16, 17, 24 to 28)", () => {
 
   it("save and add another keeps batch, day, language and fee, clears the rest and says what it saved", async () => {
     createStudent.mockResolvedValue({ ok: true, student: saved });
-    renderWithWords(<StudentForm mode="add" initialBatchId="b1" />);
+    const onSaved = vi.fn();
+    renderWithWords(<StudentForm mode="add" initialBatchId="b1" onSaved={onSaved} />);
     await fill("Student's name", "Ravi");
     await fill(/Monthly fee/, "1200");
     await userEvent.click(screen.getByRole("button", { name: "Save and add another" }));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Saved Ravi Kumar."));
+    // UX-review-fixes-2, 6.1, 6.2 and 12.3: the words go up to the screen's foot toast, cleared when a save starts,
+    // and say what was kept. Nothing is drawn in the form's flow.
+    await waitFor(() => expect(onSaved).toHaveBeenLastCalledWith("Saved Ravi Kumar. Batch, fee, due day and language kept for the next one."));
+    expect(onSaved.mock.calls[0]).toEqual([null]);
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(document.activeElement).toBe(field("Student's name"));
     expect(field("Student's name").value).toBe("");
     expect(field(/Monthly fee/).value).toBe("1,200");
     expect((screen.getByLabelText("Batch") as HTMLSelectElement).value).toBe("b1");
@@ -221,5 +227,145 @@ describe("Already owes once a payment has been recorded (R1-7, criterion 20)", (
     renderWithWords(<StudentForm mode="edit" student={{ ...saved, openingBalance: 100000 }} />);
     expect((screen.getByLabelText("Already owes ₹") as HTMLTextAreaElement).readOnly).toBe(false);
     expect(screen.queryByText(/A payment has been recorded/)).toBeNull();
+  });
+});
+
+describe("UX-review-fixes-2, item 7: the permission tick on edit", () => {
+  const tick = () => screen.getByRole("checkbox", { name: /permission/ }) as HTMLInputElement;
+  const warning = /Saving will remove it/;
+
+  it("7.1: starts ticked for a saved number, unticked for none", () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    expect(tick().checked).toBe(true);
+    cleanup();
+    renderWithWords(<StudentForm mode="edit" student={{ ...saved, parentPhone: null }} />);
+    expect(tick().checked).toBe(false);
+  });
+
+  it("7.1: with no saved number the tick is not required unless a number is typed", async () => {
+    updateStudent.mockResolvedValue({ ok: true, student: saved });
+    renderWithWords(<StudentForm mode="edit" student={{ ...saved, parentPhone: null }} />);
+    await userEvent.type(field("Student's name"), "!");
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(updateStudent).toHaveBeenCalledTimes(1));
+  });
+
+  it("7.2: changing the number unticks it and asks for the tick again before Save", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.clear(phone);
+    await userEvent.type(phone, "9886044321");
+    expect(tick().checked).toBe(false);
+    expect(screen.queryByText(warning)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(updateStudent).not.toHaveBeenCalled();
+    expect(tick().getAttribute("aria-invalid")).toBe("true");
+  });
+
+  it("7.2: a slip away from the saved number and back turns the tick on again, with no warning and nothing to save", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.type(phone, "9");
+    expect(tick().checked).toBe(false);
+    await userEvent.type(phone, "{Backspace}");
+    expect(phone.value).toBe("98450 12345");
+    expect(tick().checked).toBe(true);
+    expect(screen.queryByText(warning)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(updateStudent).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalled();
+  });
+
+  it("7.2 and 7.3: after a hand untick, typing the saved number back leaves the tick off and warns", async () => {
+    updateStudent.mockResolvedValue({ ok: true, student: { ...saved, parentPhone: null } });
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.click(tick());
+    await userEvent.type(phone, "9");
+    await userEvent.type(phone, "{Backspace}");
+    expect(phone.value).toBe("98450 12345");
+    expect(tick().checked).toBe(false);
+    expect(screen.getByText(warning)).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(updateStudent).toHaveBeenCalledWith("s1", { parentPhone: null }));
+  });
+
+  it("7.2: an automatic untick ticked and unticked by hand is a hand untick: the saved number back does not re-tick", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.type(phone, "9");
+    await userEvent.click(tick());
+    await userEvent.click(tick());
+    await userEvent.type(phone, "{Backspace}");
+    expect(tick().checked).toBe(false);
+    expect(screen.getByText(warning)).toBeTruthy();
+  });
+
+  it("7.3: unticking the saved number warns under the tick, and Save sends the number as empty", async () => {
+    updateStudent.mockResolvedValue({ ok: true, student: { ...saved, parentPhone: null } });
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    await userEvent.click(tick());
+    const note = screen.getByText(warning);
+    expect(tick().getAttribute("aria-describedby")).toContain(note.id);
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(updateStudent).toHaveBeenCalledWith("s1", { parentPhone: null }));
+  });
+
+  it("7.3: ticking again before Save removes the warning and keeps the number", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    await userEvent.click(tick());
+    await userEvent.click(tick());
+    expect(screen.queryByText(warning)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    // Nothing changed: no update at all.
+    expect(updateStudent).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalled();
+  });
+});
+
+describe("UX-review-fixes-2, item 12 and A.2: the add form", () => {
+  it("12.1 and 12.2: +91 is a fixed prefix read with the field; digits group as they are typed; saved as E.164", async () => {
+    createStudent.mockResolvedValue({ ok: true, student: saved });
+    renderWithWords(<StudentForm mode="add" />);
+    const phone = field("Parent's WhatsApp number");
+    const prefix = screen.getByText("+91");
+    expect(phone.getAttribute("aria-describedby")?.split(" ")[0]).toBe(prefix.id);
+    await userEvent.type(phone, "9876543210");
+    expect(phone.value).toBe("98765 43210");
+    expect(phone.selectionStart).toBe(11);
+    await fill("Student's name", "Ravi");
+    await fill(/Monthly fee/, "1200");
+    await userEvent.click(screen.getByRole("checkbox", { name: /permission/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Save student" }));
+    await waitFor(() => expect(createStudent).toHaveBeenCalledTimes(1));
+    expect(createStudent.mock.calls[0][1].parentPhone).toBe("+919876543210");
+  });
+
+  it("12.2: a pasted number with +91 and a dash ends grouped", async () => {
+    renderWithWords(<StudentForm mode="add" />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.click(phone);
+    await userEvent.paste("+91 98765-43210");
+    expect(phone.value).toBe("98765 43210");
+  });
+
+  it("12.4: the three section headings are headline words in ink, stronger than the labels, 32px apart", () => {
+    const { container } = renderWithWords(<StudentForm mode="add" />);
+    const legends = Array.from(container.querySelectorAll("form > fieldset > legend"));
+    expect(legends.map((l) => l.textContent)).toEqual(["Who", "Fee", "Opening balance"]);
+    for (const l of legends) expect(l.className.split(" ")).toEqual(expect.arrayContaining(["type-headline", "text-2xl", "text-ink"]));
+    expect(container.querySelector("form")!.className.split(" ")).toContain("gap-8");
+  });
+
+  it("A.2: each message language is read with its own name and its name in the page's language", () => {
+    renderWithWords(<StudentForm mode="add" />);
+    expect(screen.getByRole("radio", { name: "ಕನ್ನಡ, Kannada" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: "हिन्दी, Hindi" })).toBeTruthy();
+    // The page's own language is not said twice.
+    expect(screen.getByRole("radio", { name: "English" })).toBeTruthy();
+    // The extra name is screen-reader text only; the drawn name is not read twice.
+    const extra = screen.getByText((_, el) => el?.className === "sr-only" && el.textContent === "ಕನ್ನಡ, Kannada");
+    expect(extra).toBeTruthy();
+    expect(screen.getAllByText("ಕನ್ನಡ").some((el) => el.getAttribute("aria-hidden") === "true")).toBe(true);
   });
 });

@@ -66,6 +66,12 @@
 @custom-variant typing (&:focus-within, &:has([data-force~="focus"]));
 
 /*
+ * A box whose control inside is focused by keyboard, or the forced example. For a control that cannot draw its own
+ * ring because it lies invisibly over the box (SelectField's select): the box draws it, as `ring-within:ground-ring`.
+ */
+@custom-variant ring-within (&:has(:focus-visible), &:has([data-force~="focus"]));
+
+/*
  * The line a field's value is written on. The line is 2, 3 or 4px; padding makes up the rest of a
  * fixed 4px slot, so the field's height is the same in every state.
  */

@@ -259,6 +259,20 @@
   letter-spacing: 0em;
 }
 
+/*
+ * Fixed text before a field's value, such as "+91" before a phone number (UX-review-fixes-2, 12.1; canvas "Add-student":
+ * DM Mono 18px). Always DM Mono with 0-9 digits, whatever the page language. The value's line-height, so it sits on
+ * the same line as the value beside it.
+ */
+@utility type-value-prefix {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: var(--value-leading);
+  letter-spacing: 0em;
+  text-transform: none;
+}
+
 /* The word on a stamp. Size comes from a text-* class beside it. */
 @utility type-stamp {
   font-family: var(--script-font);

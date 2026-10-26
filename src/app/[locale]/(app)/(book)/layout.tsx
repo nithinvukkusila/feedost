@@ -7,7 +7,9 @@ import { RosterProvider } from "@/components/app/roster";
 import { BoardProvider } from "@/components/board/board-holder";
 import { RemindProvider } from "@/components/remind/remind-provider";
 
-const namespaces = ["appState", "home", "nav", "students", "batches", "attendance", "remind"] as const;
+// "language": the four language names in the page's language, read out beside each language's own name on the
+// student form's "Send messages in" choice (UX-review-fixes-2, A.2). A few short strings.
+const namespaces = ["appState", "home", "nav", "students", "batches", "attendance", "remind", "language"] as const;
 
 export default function BookLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

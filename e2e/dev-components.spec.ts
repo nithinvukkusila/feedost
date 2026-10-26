@@ -898,7 +898,8 @@ test.describe("Button: criteria 17, 18, 20, 21, 22, 23, 25", () => {
       "border-top-color": rgb("ink-label"),
       "background-color": "rgba(0, 0, 0, 0)",
       "box-shadow": "none",
-      color: rgb("ink-soft"),
+      // The muted label token since UX-review-fixes-2, 5.3 (was ink-soft).
+      color: rgb("ink-label"),
       translate: "none",
     });
     await expect(disabled).toHaveAccessibleDescription("Add a parent's phone number first.");
@@ -1065,6 +1066,8 @@ test.describe("Field: criteria 26 to 32", () => {
       const lineWant = {
         idle: { "border-bottom-width": "2px", "border-bottom-color": rgb("ink") },
         typing: { "border-bottom-width": "4px", "border-bottom-color": rgb("blue") },
+        // Needs fixing while focused stays red, 4px (UX-review-fixes-2, 24.1).
+        errorTyping: { "border-bottom-width": "4px", "border-bottom-color": rgb("cloth") },
         correct: { "border-bottom-width": "2px", "border-bottom-color": rgb("stamp") },
         error: { "border-bottom-width": "3px", "border-bottom-color": rgb("cloth") },
       };
@@ -1112,9 +1115,9 @@ test.describe("Field: criteria 26 to 32", () => {
         const control = root.getByRole("textbox");
         const before = { field: (await docBox(root)).height, control: (await docBox(control)).height };
         await control.fill(LONG_VALUE);
-        // Still focused after filling: this is the typing look, whatever the field's own state.
+        // Still focused after filling: the typing look, except that needs fixing stays red (UX-review-fixes-2, 24.1).
         await expect(control).toBeFocused();
-        await check(root, "typing", state !== "idle", before);
+        await check(root, state === "error" ? "errorTyping" : "typing", state !== "idle", before);
         await control.blur();
         await check(root, state, state !== "idle", before);
       }

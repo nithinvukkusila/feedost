@@ -63,7 +63,7 @@ All text pairs in use pass WCAG AA. Red and green are close in lightness, so nev
 | Component | Notes |
 | --- | --- |
 | `Button` | variants `send` (blue), `record` (black), `outline`; height ≥48px; press moves it 5px into its shadow in 80ms; focus ring 3px blue offset 4px (yellow on dark grounds); `busy` keeps it pressed and changes the label |
-| `Field` | label above, value written on a 2px line; states empty, typing (4px blue), correct (green + tick), needs fixing (3px red + message that says how to fix) |
+| `Field` | label above, value written on a 2px line; states empty, typing (4px blue), correct (green + tick), needs fixing (3px red + message that says how to fix; focused it stays red, 4px, never blue); optional fixed `prefix` before the value ("+91", DM Mono, read with the field) |
 | `Slip` | `slip` surface, 2px border, hard shadow |
 | `Row` | ledger row, min-height 64px, name + meta left, mono amount right, optional action |
 | `StatusTag` | Overdue (red solid outline), Due (highlight fill), Part paid (blue dashed outline), Paid (green double outline). Two tags may sit side by side in a wrapping line: lateness plus "Part paid ₹X" on a part-paid fee |

@@ -111,6 +111,10 @@ export function checkStudent(draft: StudentDraft, context: FormContext = {}): Fo
   if (phone.ok && phone.value !== null && phone.value !== (context.savedPhone ?? null) && !draft.permission) {
     errors.permission = { tag: "missing", message: "permissionNeeded" };
   }
+  // The saved number with the tick taken off (UX-review-fixes-2, 7.3): not an error. Without the parent's OK the
+  // number cannot be kept, so it is saved as no number, the same update as clearing the field. Nothing is stored
+  // about the tick itself (R1-3 decision 17).
+  const dropSaved = permissionWarning(draft, context.savedPhone ?? null);
 
   if (Object.keys(errors).length > 0 || !name.ok || !fee.ok || !owes.ok || !phone.ok || (parent && !parent.ok)) {
     return { ok: false, errors };
@@ -121,13 +125,24 @@ export function checkStudent(draft: StudentDraft, context: FormContext = {}): Fo
       batchId: draft.batchId === "" ? null : draft.batchId,
       name: name.value,
       parentName: parent ? parent.value : null,
-      parentPhone: phone.value,
+      parentPhone: dropSaved ? null : phone.value,
       parentLanguage: draft.parentLanguage,
       monthlyFee: fee.paise,
       openingBalance: owes.paise,
       dueDay: draft.dueDay,
     },
   };
+}
+
+/**
+ * Whether the form should warn that saving will remove the parent's number (UX-review-fixes-2, 7.3): the field still
+ * holds the number as saved, and the tick has been taken off. A new or changed number without the tick is an error
+ * instead (permissionNeeded), and an empty field has nothing to remove.
+ */
+export function permissionWarning(draft: Pick<StudentDraft, "phone" | "permission">, savedPhone: string | null): boolean {
+  if (draft.permission || savedPhone === null) return false;
+  const phone = normalizePhone(draft.phone);
+  return phone.ok && phone.value !== null && phone.value === savedPhone;
 }
 
 /** The first field with an error, in screen order. */

@@ -75,7 +75,9 @@ test.describe("51: the Move students sheet", () => {
         await page.evaluate((value) => document.documentElement.style.setProperty("font-size", value), size);
         expect(await sidewaysScroll(page), `sideways scroll at ${size}`).toBe(0);
         expect(await textProblems(page, "dialog"), `text problems at ${size}`).toEqual([]);
-        for (const el of await sheet.locator("button:visible, label").all()) {
+        // The tick rows are labels around their tick; the search field's label is a caption above its line, and the
+        // line (the control) is checked instead (UX-review-fixes-2, 17.2).
+        for (const el of await sheet.locator("button:visible, label:has(input), textarea").all()) {
           expect((await box(el)).height, `a control at ${size}`).toBeGreaterThanOrEqual(44);
         }
       }

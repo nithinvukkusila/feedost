@@ -69,7 +69,7 @@ export function MoreScreen() {
               </p>
             ) : null}
           </div>
-          <a href={edit} onClick={soft(edit)} className="type-control-sm flex min-h-tap shrink-0 items-center px-1 text-ink underline ring:ground-ring">
+          <a href={edit} onClick={soft(edit)} className="type-control-sm flex min-h-tap min-w-tap shrink-0 items-center justify-center px-1 text-ink underline ring:ground-ring">
             {t("edit")}
           </a>
         </Slip>

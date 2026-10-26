@@ -38,6 +38,37 @@ export function FieldSection() {
           />
         </Example>
       </div>
+      {/* UX-review-fixes-2, 24.1: focus does not turn a field that needs fixing blue. */}
+      <Example caption={copy.field.errorFocus} testId="field-error-focus">
+        <Field
+          label={en.label}
+          defaultValue={en.wrong}
+          state="error"
+          stateLabel={en.errorLabel}
+          message={en.errorShort}
+          data-force="focus"
+          {...upi}
+        />
+      </Example>
+      {/* UX-review-fixes-2, 12.1: fixed text before the value, outside it, read with the field. */}
+      <Example caption={copy.field.prefix} testId="field-prefix">
+        <Field label={copy.field.prefixLabel} prefix="+91" defaultValue={copy.field.prefixValue} inputMode="tel" latinValue />
+      </Example>
+      <Example caption={copy.field.prefixTyping} testId="field-prefix-typing">
+        <Field label={copy.field.prefixLabel} prefix="+91" defaultValue={copy.field.prefixShort} inputMode="tel" latinValue data-force="focus" />
+      </Example>
+      <Example caption={copy.field.prefixError} testId="field-prefix-error">
+        <Field
+          label={copy.field.prefixLabel}
+          prefix="+91"
+          defaultValue={copy.field.prefixShort}
+          inputMode="tel"
+          latinValue
+          state="error"
+          stateLabel={copy.field.prefixErrorLabel}
+          message={copy.field.prefixErrorMessage}
+        />
+      </Example>
       <Example caption={copy.field.helper} testId="field-helper">
         <Field label={en.label} placeholder={en.placeholder} helper={en.helper} {...upi} />
       </Example>

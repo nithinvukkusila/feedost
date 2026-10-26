@@ -286,13 +286,28 @@ describe("Button disabled (criterion 23)", () => {
     expect(button.hasAttribute("disabled")).toBe(true);
     const names = classes(button);
     expect(names).toEqual(
-      expect.arrayContaining(["border-dashed", "border-ink-label", "bg-transparent", "text-ink-soft"]),
+      expect.arrayContaining(["border-dashed", "border-ink-label", "bg-transparent", "text-ink-label"]),
     );
     expect(names.join(" ")).not.toMatch(/shadow-|bg-blue|press-/);
     await user.click(button);
     await user.tab();
     expect(document.activeElement).not.toBe(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  // UX-review-fixes-2, 5.3: every variant, every size, and the text in the existing muted token (no new token).
+  it.each(["send", "record", "outline"] as const)("%s: dashed, no fill, no shadow, no press, not-allowed cursor, ink-label text", (variant) => {
+    for (const size of ["compact", "default", "large", "xl", "sheet", "pay", "card"] as const) {
+      cleanup();
+      render(
+        <Button variant={variant} size={size} disabled>
+          Go
+        </Button>,
+      );
+      const names = classes(screen.getByRole("button", { name: "Go" }));
+      expect(names).toEqual(expect.arrayContaining(["cursor-not-allowed", "border-dashed", "border-ink-label", "bg-transparent", "text-ink-label"]));
+      expect(names.join(" ")).not.toMatch(/shadow-|bg-blue|bg-ink\b|bg-slip|pressed:|text-slip|text-ink-soft/);
+    }
   });
 
   it("ties the reason to the button for screen readers", () => {
