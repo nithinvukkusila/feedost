@@ -72,6 +72,12 @@ function knownStudents(s: BoardSnapshot): Map<string, string> {
   return known;
 }
 
+// Offline, a month whose Collected was never read has nothing to wait for: it shows "—", not the reading block
+// (spec §6, plan 13.4). A saved figure, or one already marked missing, is kept.
+function noCollected(s: BoardSnapshot, month: string): BoardSnapshot {
+  return s.collected[month] === undefined ? { ...s, collected: { ...s.collected, [month]: null } } : s;
+}
+
 export class BoardStore {
   private snapshot: BoardSnapshot = {
     months: {},
@@ -194,7 +200,11 @@ export class BoardStore {
    */
   readonly open = (today: string): void => {
     this.change((s) => ({ ...s, blocked: null }));
-    if (isOffline()) return this.fail();
+    if (isOffline()) {
+      const month = this.viewMonth(today);
+      this.change((s) => noCollected({ ...s, failed: true }, month));
+      return;
+    }
     const reread = () => {
       const month = this.viewMonth(today);
       this.read(month, { month: true, unpaid: month === currentMonth(today), earliest: true, reminders: true, collected: true });
@@ -219,21 +229,25 @@ export class BoardStore {
       collected: needsRead(held.collected[month], now),
     };
     const unread = held.months[month] === undefined || (month === current && held.unpaid === null);
+    const offline = isOffline();
     // Offline and nothing saved for that month: stay where we are and say so, rather than land on an error.
-    if (isOffline() && unread) {
+    if (offline && unread) {
       this.change((s) => ({ ...s, blocked: month }));
       return;
     }
     const reading = want.month || want.unpaid;
     want.reminders = reading;
-    this.change((s) => ({
-      ...s,
-      blocked: null,
-      // Online, a new view starts clean (an uncached month shows loading, not an old error); offline, a stale month is saved data.
-      failed: isOffline() ? s.failed || reading : false,
-      settings: { ...s.settings, month: month === current ? null : month },
-    }));
-    if ((reading || want.collected) && !isOffline()) this.read(month, want);
+    this.change((s) => {
+      const next: BoardSnapshot = {
+        ...s,
+        blocked: null,
+        // Online, a new view starts clean (an uncached month shows loading, not an old error); offline, a stale month is saved data.
+        failed: offline ? s.failed || reading : false,
+        settings: { ...s.settings, month: month === current ? null : month },
+      };
+      return offline ? noCollected(next, month) : next;
+    });
+    if ((reading || want.collected) && !offline) this.read(month, want);
   };
 
   /** Read again what the view shows. */

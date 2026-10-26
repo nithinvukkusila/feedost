@@ -511,4 +511,46 @@ describe("Collected and ensureCurrent (UX-review-fixes-2, 3.3 to 3.5 and 10.3)",
     await flush();
     expect(held.board.failed).toBe(true);
   });
+
+  it("Students first, then Home offline: the month's fees are saved but Collected was never read, so it is missing, not reading", async () => {
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    expect(held.board.months["2026-10-01"]).toBeDefined();
+    expect(held.board.collected["2026-10-01"]).toBeUndefined();
+    onLine(false);
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(pay.readPaymentsInMonth).not.toHaveBeenCalled();
+    expect(held.board.failed).toBe(true);
+    expect(held.board.months["2026-10-01"].rows.map((d) => d.id)).toEqual(["a"]);
+    expect(held.board.collected["2026-10-01"]).toBeNull();
+  });
+
+  it("offline open keeps a Collected figure already saved", async () => {
+    pay.readPaymentsInMonth.mockResolvedValue([]);
+    mount();
+    act(() => held.board.open(TODAY));
+    await flush();
+    await flush();
+    const saved = held.board.collected["2026-10-01"];
+    expect(saved).toBeTruthy();
+    onLine(false);
+    act(() => held.board.open(TODAY));
+    await flush();
+    expect(held.board.collected["2026-10-01"]).toBe(saved);
+  });
+
+  it("selectMonth offline onto a month whose fees came from ensureCurrent: Collected is missing, not reading", async () => {
+    mount();
+    act(() => held.board.ensureCurrent(TODAY));
+    await flush();
+    onLine(false);
+    act(() => held.board.selectMonth("2026-10-01", TODAY));
+    await flush();
+    expect(pay.readPaymentsInMonth).not.toHaveBeenCalled();
+    expect(held.board.blocked).toBeNull();
+    expect(held.board.settings.month).toBeNull();
+    expect(held.board.collected["2026-10-01"]).toBeNull();
+  });
 });

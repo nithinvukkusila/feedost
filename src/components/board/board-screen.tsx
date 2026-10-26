@@ -112,7 +112,7 @@ export function BoardScreen() {
   const { view, filteredOut } = useBoardView(ready ? own : null, carried ?? NONE, roster.students, month, today, filter);
 
   // Collected (criterion 3.3): the month's payments by paid-on date, through the filter. Pending while the first read
-  // is out; null when it failed with nothing saved (the stale note covers it).
+  // is out; null when it failed with nothing saved, or was never read and the phone is offline (the store sets it).
   const collectedSlice = board.collected[month];
   const collected: CollectedFigure =
     collectedSlice === undefined ? "pending" : collectedSlice === null ? null : collectedInMonth(collectedSlice.payments, collectedSlice.studentOf, roster.students, filter);

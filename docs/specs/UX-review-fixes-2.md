@@ -251,6 +251,7 @@ No new PostHog events and no change to the PRD section 4 list. `payment_marked`,
 15. Close the tab and open Home on mobile data: a Home-shaped skeleton, no "Opening your book…" flash.
 16. Labels look larger and darker; tabs: inactive lighter, active has a black bar on top; a sheet on a tablet shows the page dimmed behind it.
 17. Turn on TalkBack: language radios say the language names; the summary bar is read as three labelled amounts; "Saved" is announced.
+18. Open Home online, wait over a minute, then open Students on a connection that fails without the phone being offline (mobile data on, no signal): its re-read of this month fails, yet the status chips still show from the older saved fees and Students itself shows no stale note (Home shows it when opened next). Check the chips match the saved data and note whether that is acceptable.
 
 ## 10. Open questions for the founder (each has a default that will be built if you do not answer)
 
