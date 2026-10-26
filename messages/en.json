@@ -218,6 +218,7 @@
     "register": "Fee register",
     "title": "Choose your language",
     "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "spoken": "<own>{name}</own>, {inPage}",
     "chosen": "Chosen",
     "continue": "Continue",
     "name": {

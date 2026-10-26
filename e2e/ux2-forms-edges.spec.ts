@@ -96,7 +96,7 @@ test.describe("item 7 edges", () => {
     expect(roster.bodies("PATCH", "students")).toEqual([{ parent_phone: "+919886044321" }]);
   });
 
-  test("7.2: no warning while the number is changed; typing the saved one back leaves the tick off and warns it will go", async ({ page }) => {
+  test("7.2: a number changed and then typed back to the saved one turns the tick on again; no warning, nothing sent", async ({ page }) => {
     const roster = await signedIn(page, { students: [ravi] });
     await page.goto(`/en/students/edit/?id=${RAVI}`);
     await expect(phone(page)).toHaveValue("98450 12345");
@@ -105,12 +105,28 @@ test.describe("item 7 edges", () => {
     await expect(page.getByText(WARNING)).toHaveCount(0);
     await phone(page).fill("9845012345");
     await expect(phone(page)).toHaveValue("98450 12345");
-    await expect(tick(page)).not.toBeChecked();
-    await expect(page.getByText(WARNING)).toBeVisible();
-    await tick(page).check();
+    await expect(tick(page)).toBeChecked();
+    await expect(page.getByText(WARNING)).toHaveCount(0);
     await page.getByRole("button", { name: "Save changes" }).click();
     await expect(page).toHaveURL(/\/en\/students\/$/);
     expect(roster.bodies("PATCH", "students")).toEqual([]);
+  });
+
+  test("7.2 and 7.3: unticked by hand, then the number changed and typed back: the tick stays off and warns it will go", async ({ page }) => {
+    const roster = await signedIn(page, { students: [ravi] });
+    await page.goto(`/en/students/edit/?id=${RAVI}`);
+    await tick(page).uncheck();
+    await expect(page.getByText(WARNING)).toBeVisible();
+    await phone(page).fill("9886044321");
+    await expect(tick(page)).not.toBeChecked();
+    await expect(page.getByText(WARNING)).toHaveCount(0);
+    await phone(page).fill("9845012345");
+    await expect(phone(page)).toHaveValue("98450 12345");
+    await expect(tick(page)).not.toBeChecked();
+    await expect(page.getByText(WARNING)).toBeVisible();
+    await page.getByRole("button", { name: "Save changes" }).click();
+    await expect(page).toHaveURL(/\/en\/students\/$/);
+    expect(roster.bodies("PATCH", "students")).toEqual([{ parent_phone: null }]);
   });
 
   test("7.3 offline: unticking and saving while offline says so and sends nothing; back online the number is removed", async ({ page, context }) => {

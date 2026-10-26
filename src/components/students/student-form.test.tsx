@@ -262,6 +262,45 @@ describe("UX-review-fixes-2, item 7: the permission tick on edit", () => {
     expect(tick().getAttribute("aria-invalid")).toBe("true");
   });
 
+  it("7.2: a slip away from the saved number and back turns the tick on again, with no warning and nothing to save", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.type(phone, "9");
+    expect(tick().checked).toBe(false);
+    await userEvent.type(phone, "{Backspace}");
+    expect(phone.value).toBe("98450 12345");
+    expect(tick().checked).toBe(true);
+    expect(screen.queryByText(warning)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(updateStudent).not.toHaveBeenCalled();
+    expect(push).toHaveBeenCalled();
+  });
+
+  it("7.2 and 7.3: after a hand untick, typing the saved number back leaves the tick off and warns", async () => {
+    updateStudent.mockResolvedValue({ ok: true, student: { ...saved, parentPhone: null } });
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.click(tick());
+    await userEvent.type(phone, "9");
+    await userEvent.type(phone, "{Backspace}");
+    expect(phone.value).toBe("98450 12345");
+    expect(tick().checked).toBe(false);
+    expect(screen.getByText(warning)).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() => expect(updateStudent).toHaveBeenCalledWith("s1", { parentPhone: null }));
+  });
+
+  it("7.2: an automatic untick ticked and unticked by hand is a hand untick: the saved number back does not re-tick", async () => {
+    renderWithWords(<StudentForm mode="edit" student={saved} />);
+    const phone = field("Parent's WhatsApp number");
+    await userEvent.type(phone, "9");
+    await userEvent.click(tick());
+    await userEvent.click(tick());
+    await userEvent.type(phone, "{Backspace}");
+    expect(tick().checked).toBe(false);
+    expect(screen.getByText(warning)).toBeTruthy();
+  });
+
   it("7.3: unticking the saved number warns under the tick, and Save sends the number as empty", async () => {
     updateStudent.mockResolvedValue({ ok: true, student: { ...saved, parentPhone: null } });
     renderWithWords(<StudentForm mode="edit" student={saved} />);

@@ -218,6 +218,7 @@
     "register": "TODO-translate: Fee register",
     "title": "TODO-translate: Choose your language",
     "subtitle": "अपनी भाषा चुनें · ನಿಮ್ಮ ಭಾಷೆ ಆಯ್ಕೆಮಾಡಿ · మీ భాషను ఎంచుకోండి",
+    "spoken": "<own>{name}</own>, {inPage}",
     "chosen": "TODO-translate: Chosen",
     "continue": "आगे बढ़ें",
     "name": {

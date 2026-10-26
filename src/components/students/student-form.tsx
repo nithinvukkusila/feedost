@@ -99,6 +99,9 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
   const feeRef = useRef<HTMLTextAreaElement>(null);
   const owesRef = useRef<HTMLTextAreaElement>(null);
   const permissionRef = useRef<HTMLInputElement>(null);
+  // True while the tick is off only because the number moved away from the saved one (7.2), not because the tutor
+  // unticked it. Typing the saved number back then turns it on again; a hand untick never comes back by itself (7.3).
+  const autoUnticked = useRef(false);
   const focusField = (field: FieldName) => {
     const target = { name: nameRef, parentName: parentNameRef, phone: phoneRef, fee: feeRef, owes: owesRef, permission: permissionRef }[field];
     target.current?.focus();
@@ -128,15 +131,27 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
     const el = event.currentTarget;
     const next = formatPhoneTyping(el.value, el.selectionStart ?? el.value.length);
     phoneCaret.current = next.caret;
-    setDraft((now) => {
+    // Worked out here from this render's draft, not inside the updater: React may run an updater twice, and the
+    // ref below must change once per keystroke.
+    let permission = draft.permission;
+    if (savedPhone !== null) {
       const isSaved = (text: string) => {
         const check = normalizePhone(text);
         return check.ok && check.value === savedPhone;
       };
-      // Moving away from the saved number asks for the tick again (7.2): a different number needs its own OK.
-      const leaving = savedPhone !== null && isSaved(now.phone) && !isSaved(next.text);
-      return { ...now, phone: next.text, permission: leaving ? false : now.permission };
-    });
+      const wasSaved = isSaved(draft.phone);
+      const isSavedNow = isSaved(next.text);
+      if (wasSaved && !isSavedNow && permission) {
+        // Moving away from the saved number asks for the tick again (7.2): a different number needs its own OK.
+        permission = false;
+        autoUnticked.current = true;
+      } else if (!wasSaved && isSavedNow && autoUnticked.current) {
+        // Back to the saved number after only a slip of the finger: the OK it was saved with stands again (7.2).
+        permission = true;
+        autoUnticked.current = false;
+      }
+    }
+    setDraft((now) => ({ ...now, phone: next.text, permission }));
   }
 
   const problemOf = (field: FieldName, name: string): { tag: string; message: string } | undefined => {
@@ -209,7 +224,7 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
             {own}
           </span>
           <span className="sr-only">
-            <span lang={code}>{own}</span>, {inPage}
+            {languageWords.rich("spoken", { name: own, inPage, own: (chunks) => <span lang={code}>{chunks}</span> })}
           </span>
         </>
       ),
@@ -251,7 +266,10 @@ export function StudentForm(props: Readonly<StudentFormProps>) {
               ref={permissionRef}
               type="checkbox"
               checked={draft.permission}
-              onChange={(e) => set("permission", e.currentTarget.checked)}
+              onChange={(e) => {
+                autoUnticked.current = false;
+                set("permission", e.currentTarget.checked);
+              }}
               aria-invalid={permissionError ? "true" : undefined}
               aria-describedby={permissionDescribed}
               className="mt-0.5 size-6 shrink-0 accent-blue ring:ground-ring"

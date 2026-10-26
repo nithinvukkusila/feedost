@@ -99,7 +99,7 @@ Four pull requests, each releasable alone, in this order. PR1 must merge first (
 **Item 7. Permission tick on edit.** (R1-3 criterion 24 is amended for edit; decision 17, "not stored", stands.)
 
 7.1 [e2e] Editing a student who has a saved number: the tick starts **ticked**. Editing a student with no number: it starts unticked and is not required unless a number is typed.
-7.2 [e2e] Changing the saved number to a different one unticks the tick and requires it again before Save (the existing rule for a new or changed number).
+7.2 [e2e] Changing the saved number to a different one unticks the tick and requires it again before Save (the existing rule for a new or changed number). If the field is then changed back so it again normalizes to the saved number, and the tick was taken off only by this rule (the tutor did not untick it by hand), the tick turns back on: no 7.3 warning, and Save changes nothing. After a hand untick it stays off and 7.3 applies.
 7.3 [e2e] Unticking while the saved number is unchanged shows, under the tick: "Without the parent's OK the number can't be kept. Saving will remove it, and you won't be able to send reminders to this parent until you add it again." Save then saves the student with **no parent number** (the same update as clearing the field). Re-ticking before Save removes the warning and keeps the number.
 7.4 [unit] No migration and no new column. The stored number is either kept (tick on) or set to empty (tick off); nothing else in the database changes. The parent's own pay-page consent (`consents` table) is untouched.
 7.5 [e2e] After the number is removed, the board row offers "Add number" instead of Remind (existing R1-8 behaviour).
