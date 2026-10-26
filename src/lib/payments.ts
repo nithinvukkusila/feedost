@@ -12,6 +12,7 @@
 // whole read or call: better an error than a wrong amount on a money screen.
 import { getClient } from "./supabase";
 import { readOpeningDueId } from "./dues";
+import { shiftMonth } from "./dues-board";
 import { isOffline } from "./students";
 
 export type PaymentMethod = "upi" | "cash";
@@ -190,6 +191,55 @@ export async function readPaymentsByReceipt(first: number, count: number): Promi
   }
   if (result.error) throw new PaymentError("failed");
   return ((result.data as unknown[] | null) ?? []).map(paymentFromRow);
+}
+
+// The server's own cap on rows per answer (`max_rows` in supabase/config.toml), as in dues.ts.
+const PAGE = 1000;
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])-01$/;
+
+/**
+ * Every payment that stands (not undone) with `month <= paid_on < the next month`, for "Collected" on the
+ * board (UX-review-fixes-2, 13.4). `month` is `YYYY-MM-01`. `paid_on` is a `date` set on the India day, so
+ * the range is on text and no time zone is involved. Ordered by `paid_on, id` and read a page at a time, so
+ * no row repeats or is skipped across pages. RLS (`payments_select`) limits it to the signed-in tutor.
+ * Throws PaymentError: `invalid_argument` for a month that is not `YYYY-MM-01` (no request is sent);
+ * `failed` for a network or database error, or for any row that cannot be right (including an undone one
+ * or one outside the month). Nothing partial is returned.
+ */
+export async function readPaymentsInMonth(month: string): Promise<Payment[]> {
+  if (typeof month !== "string" || !MONTH.test(month)) throw new PaymentError("invalid_argument");
+  const next = shiftMonth(month, 1);
+  let client;
+  try {
+    client = await getClient();
+  } catch {
+    throw new PaymentError("failed");
+  }
+  const out: Payment[] = [];
+  for (let from = 0; ; from += PAGE) {
+    let result;
+    try {
+      result = await client
+        .from("payments")
+        .select(PAYMENT_COLUMNS)
+        .gte("paid_on", month)
+        .lt("paid_on", next)
+        .is("voided_at", null)
+        .order("paid_on")
+        .order("id")
+        .range(from, from + PAGE - 1);
+    } catch {
+      throw new PaymentError("failed");
+    }
+    if (result.error) throw new PaymentError("failed");
+    const rows = (result.data as unknown[] | null) ?? [];
+    for (const row of rows) {
+      const payment = paymentFromRow(row);
+      if (payment.voidedAt !== null || payment.paidOn < month || payment.paidOn >= next) throw new PaymentError("failed");
+      out.push(payment);
+    }
+    if (rows.length < PAGE) return out;
+  }
 }
 
 /**

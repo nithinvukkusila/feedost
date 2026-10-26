@@ -7,7 +7,7 @@ import { makeFake } from "./db-fake.test-util";
 const fake = makeFake();
 vi.mock("./supabase", () => ({ getClient: () => Promise.resolve(fake.client) }));
 
-import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readOpeningPaid, readPaymentsByReceipt, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
+import { errorOf, PAYMENT_COLUMNS, PaymentError, paymentFromRow, readOpeningPaid, readPaymentsByReceipt, readPaymentsInMonth, readPaymentsOfDue, recordPayment, voidPayment } from "./payments";
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: "p1",
@@ -209,5 +209,67 @@ describe("readOpeningPaid", () => {
     fake.reset();
     fake.state.throwOnQuery = true;
     expect(await readOpeningPaid("S1")).toBe(true);
+  });
+});
+
+describe("readPaymentsInMonth (Collected, UX-review-fixes-2 13.4)", () => {
+  it("sends the named columns, the month range, voided_at is null, a total order and the first page", async () => {
+    fake.answer(ok([row({ paid_on: "2026-10-01" }), row({ id: "p2", paid_on: "2026-10-31", receipt_no: 8 })]));
+    const payments = await readPaymentsInMonth("2026-10-01");
+    expect(payments.map((p) => [p.id, p.paidOn])).toEqual([
+      ["p1", "2026-10-01"],
+      ["p2", "2026-10-31"],
+    ]);
+    expect(fake.calls.map((c) => [c.op, ...c.args])).toEqual([
+      ["from", "payments"],
+      ["select", PAYMENT_COLUMNS],
+      ["gte", "paid_on", "2026-10-01"],
+      ["lt", "paid_on", "2026-11-01"],
+      ["is", "voided_at", null],
+      ["order", "paid_on"],
+      ["order", "id"],
+      ["range", 0, 999],
+    ]);
+  });
+
+  it("December runs to the first of January", async () => {
+    fake.answer(ok([]));
+    expect(await readPaymentsInMonth("2026-12-01")).toEqual([]);
+    expect(fake.calls.find((c) => c.op === "lt")?.args).toEqual(["paid_on", "2027-01-01"]);
+  });
+
+  it("reads page after page until a short page", async () => {
+    const page = (n: number, prefix: string) => Array.from({ length: n }, (_, i) => row({ id: `${prefix}${i}` }));
+    fake.answer(ok(page(1000, "a")), ok(page(1000, "b")), ok(page(3, "c")));
+    const payments = await readPaymentsInMonth("2026-10-01");
+    expect(payments).toHaveLength(2003);
+    expect(fake.calls.filter((c) => c.op === "range").map((c) => c.args)).toEqual([
+      [0, 999],
+      [1000, 1999],
+      [2000, 2999],
+    ]);
+  });
+
+  it("refuses a month that is not YYYY-MM-01 without a request", async () => {
+    for (const bad of ["2026-10", "2026-10-02", "2026-13-01", "2026-00-01", "", "01-10-2026"]) {
+      await expect(readPaymentsInMonth(bad)).rejects.toMatchObject({ code: "invalid_argument" });
+    }
+    expect(fake.calls).toEqual([]);
+  });
+
+  it("fails whole: an error, a dead network, a later failed page, a bad row, an undone row or one outside the month", async () => {
+    fake.answer({ data: null, error: { code: "500" } });
+    await expect(readPaymentsInMonth("2026-10-01")).rejects.toMatchObject({ code: "failed" });
+    fake.reset();
+    fake.state.throwOnQuery = true;
+    await expect(readPaymentsInMonth("2026-10-01")).rejects.toMatchObject({ code: "failed" });
+    fake.reset();
+    fake.answer(ok(Array.from({ length: 1000 }, (_, i) => row({ id: `a${i}` }))), { data: null, error: { code: "500" } });
+    await expect(readPaymentsInMonth("2026-10-01")).rejects.toMatchObject({ code: "failed" });
+    for (const bad of [row({ amount: 12.5 }), row({ voided_at: "2026-10-12T06:00:00Z" }), row({ paid_on: "2026-09-30" }), row({ paid_on: "2026-11-01" })]) {
+      fake.reset();
+      fake.answer(ok([row(), bad]));
+      await expect(readPaymentsInMonth("2026-10-01")).rejects.toMatchObject({ code: "failed" });
+    }
   });
 });

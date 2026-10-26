@@ -132,8 +132,8 @@ export type Sample = {
   };
   select: { month: string; helper: string };
   switch: { name: string; on: string; off: string; longOn: string; longOff: string; visibleLabel: string };
-  /** `{n}`, `{t}`, `{p}`, `{d}` and `{o}` are filled with counts by the strip section. */
-  strip: { paid: string; due: string; overdue: string; label: string; longPaid: string; longDue: string; longOverdue: string };
+  /** `{a}` is filled with a sample amount by the summary bar section. */
+  summary: { collected: string; due: string; overdue: string; pending: string; longCollected: string; longDue: string; longOverdue: string };
   nav: { label: string; home: string; students: string; attendance: string; more: string; longStudents: string; longAttendance: string };
   /** `{amount}` in `undoMessage` is filled with a sample amount by the banner section. */
   banner: {
@@ -261,14 +261,14 @@ export const sample: Record<Lang, Sample> = {
       longOff: "PAUSED",
       visibleLabel: "Monthly report to parents",
     },
-    strip: {
-      paid: "{n} paid",
-      due: "{n} due, hollow",
-      overdue: "{n} overdue, tall",
-      label: "{t} students: {p} paid, {d} due, {o} overdue",
-      longPaid: "{n} paid and confirmed this month",
-      longDue: "{n} due this week, hollow",
-      longOverdue: "{n} overdue by more than a week, tall",
+    summary: {
+      collected: "Collected {a}",
+      due: "Due {a}",
+      overdue: "Overdue {a}",
+      pending: "Reading",
+      longCollected: "Collected this month so far {a}",
+      longDue: "Still due, not late yet {a}",
+      longOverdue: "Overdue by a day or more {a}",
     },
     nav: {
       label: "Main",
@@ -402,14 +402,14 @@ export const sample: Record<Lang, Sample> = {
       longOff: "रोका गया",
       visibleLabel: "अभिभावकों को मासिक रिपोर्ट",
     },
-    strip: {
-      paid: "{n} जमा",
-      due: "{n} बाकी, खाली",
-      overdue: "{n} देर से, ऊँचा",
-      label: "{t} छात्र: {p} जमा, {d} बाकी, {o} देर से",
-      longPaid: "{n} इस महीने जमा और पुष्ट",
-      longDue: "{n} इस हफ़्ते बाकी, खाली",
-      longOverdue: "{n} एक हफ़्ते से ज़्यादा देर, ऊँचा",
+    summary: {
+      collected: "जमा {a}",
+      due: "बाकी {a}",
+      overdue: "देर से {a}",
+      pending: "पढ़ रहे हैं",
+      longCollected: "इस महीने अब तक जमा {a}",
+      longDue: "अभी बाकी, देर नहीं हुई {a}",
+      longOverdue: "एक दिन या ज़्यादा देर से {a}",
     },
     nav: {
       label: "मुख्य",
@@ -543,14 +543,14 @@ export const sample: Record<Lang, Sample> = {
       longOff: "ನಿಲ್ಲಿಸಿದೆ",
       visibleLabel: "ಪೋಷಕರಿಗೆ ಮಾಸಿಕ ವರದಿ",
     },
-    strip: {
-      paid: "{n} ಪಾವತಿ",
-      due: "{n} ಬಾಕಿ, ಖಾಲಿ",
-      overdue: "{n} ತಡ, ಎತ್ತರ",
-      label: "{t} ವಿದ್ಯಾರ್ಥಿಗಳು: {p} ಪಾವತಿ, {d} ಬಾಕಿ, {o} ತಡ",
-      longPaid: "{n} ಈ ತಿಂಗಳು ಪಾವತಿಸಿ ದೃಢೀಕರಿಸಲಾಗಿದೆ",
-      longDue: "{n} ಈ ವಾರ ಬಾಕಿ, ಖಾಲಿ",
-      longOverdue: "{n} ಒಂದು ವಾರಕ್ಕಿಂತ ಹೆಚ್ಚು ತಡ, ಎತ್ತರ",
+    summary: {
+      collected: "ಸಂಗ್ರಹ {a}",
+      due: "ಬಾಕಿ {a}",
+      overdue: "ತಡ {a}",
+      pending: "ಓದುತ್ತಿದೆ",
+      longCollected: "ಈ ತಿಂಗಳು ಇಲ್ಲಿಯವರೆಗೆ ಸಂಗ್ರಹ {a}",
+      longDue: "ಇನ್ನೂ ಬಾಕಿ, ತಡವಾಗಿಲ್ಲ {a}",
+      longOverdue: "ಒಂದು ದಿನ ಅಥವಾ ಹೆಚ್ಚು ತಡ {a}",
     },
     nav: {
       label: "ಮುಖ್ಯ",
@@ -684,14 +684,14 @@ export const sample: Record<Lang, Sample> = {
       longOff: "ఆపివేశారు",
       visibleLabel: "తల్లిదండ్రులకు నెలవారీ నివేదిక",
     },
-    strip: {
-      paid: "{n} చెల్లింపు",
-      due: "{n} బాకీ, ఖాళీ",
-      overdue: "{n} ఆలస్యం, పొడవు",
-      label: "{t} మంది విద్యార్థులు: {p} చెల్లింపు, {d} బాకీ, {o} ఆలస్యం",
-      longPaid: "{n} ఈ నెల చెల్లించి నిర్ధారించారు",
-      longDue: "{n} ఈ వారం బాకీ, ఖాళీ",
-      longOverdue: "{n} వారం కంటే ఎక్కువ ఆలస్యం, పొడవు",
+    summary: {
+      collected: "వసూలు {a}",
+      due: "బాకీ {a}",
+      overdue: "ఆలస్యం {a}",
+      pending: "చదువుతోంది",
+      longCollected: "ఈ నెల ఇప్పటివరకు వసూలు {a}",
+      longDue: "ఇంకా బాకీ, ఆలస్యం కాలేదు {a}",
+      longOverdue: "ఒక రోజు లేదా ఎక్కువ ఆలస్యం {a}",
     },
     nav: {
       label: "ముఖ్య",
@@ -878,14 +878,15 @@ export const copy = {
     focus: "Keyboard focus",
     long: "A longer word: the switch grows wider, and is the same width on and off",
   },
-  strip: {
-    title: "Student strip",
-    note: "One block per student. Paid is short and filled, due is short and hollow, overdue is tall. The words underneath always say the same.",
-    one: "1 student",
-    typical: "23 students, as on the home screen",
-    many: "60 students: three rows of 20",
-    long: "Long legend",
-    none: "No students: the strip draws nothing. The box below is empty on purpose.",
+  summary: {
+    title: "Summary bar",
+    note: "One bar for the month: collected, due and overdue, each as wide as its money. Collected is short and solid, due is short with an edge, overdue is tall. The words underneath always say the same, and a zero part is not drawn.",
+    typical: "All three, as on the home screen",
+    long: "Long labels",
+    oneZero: "Nothing overdue: no overdue part, its label says ₹0",
+    allZero: "All zero: no bar, three labels",
+    pending: "Collected still being read: a grey block in its label",
+    tiny: "A very small part is still 4px wide",
     onSlip: "On a slip",
   },
   nav: {

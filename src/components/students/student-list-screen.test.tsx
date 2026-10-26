@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Roster } from "@/components/app/roster";
 import type { Batch } from "@/lib/batches";
+import type { Due } from "@/lib/dues";
 import type { Student } from "@/lib/students";
 import { renderWithWords } from "@/test-utils/render-with-words";
 
@@ -13,6 +14,9 @@ vi.mock("@/components/app/app-gate", () => ({ useTutor: () => ({ tutor: { id: "u
 
 const held: { roster: Roster } = { roster: undefined as unknown as Roster };
 vi.mock("@/components/app/roster", () => ({ useRoster: () => held.roster }));
+// The status chips read this month's fees through the dues board's store (UX-review-fixes-2, criterion 10.3).
+const board = vi.hoisted(() => ({ value: { months: {} as Record<string, { rows: Due[]; at: number }>, unpaid: null as { rows: Due[]; at: number } | null, ensureCurrent: vi.fn() } }));
+vi.mock("@/components/board/board-state", () => ({ useBoard: () => board.value }));
 
 import { StudentListScreen } from "./student-list-screen";
 
@@ -42,6 +46,7 @@ beforeEach(() => {
   push.mockReset();
   reload.mockReset();
   roster();
+  board.value = { months: {}, unpaid: null, ensureCurrent: vi.fn() };
 });
 afterEach(cleanup);
 
@@ -271,5 +276,66 @@ describe("the other languages", () => {
     expect(document.body.textContent).not.toContain("TODO-translate");
     expect(document.body.textContent).not.toMatch(/students\.\w+/);
     expect(document.body.textContent).toContain("₹1,200");
+  });
+});
+
+describe("status chips (UX-review-fixes-2, 10.1 to 10.3)", () => {
+  const fee = (id: string, studentId: string, over: Partial<Due> = {}): Due => ({ id, studentId, kind: "monthly", month: "2026-10-01", amount: 120000, amountPaid: 0, status: "due", dueDate: "2026-10-05", ...over });
+  const rowOf = (name: string) => screen.getByText(name).closest("li") as HTMLElement;
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-12T05:00:00Z"));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("asks the board for the current month's fees once, with the India day", () => {
+    roster({ students: [student("Ravi")] });
+    renderWithWords(<StudentListScreen />);
+    expect(board.value.ensureCurrent).toHaveBeenCalledTimes(1);
+    expect(board.value.ensureCurrent).toHaveBeenCalledWith("2026-10-12");
+  });
+
+  it("until the fees are read, rows show with no chip and no next-fee line", () => {
+    roster({ students: [student("Ravi")] });
+    renderWithWords(<StudentListScreen />);
+    expect(rowOf("Ravi").querySelector("[data-status]")).toBeNull();
+    expect(rowOf("Ravi").textContent).not.toContain("Next fee");
+  });
+
+  it("gives each active student one chip, a word plus a mark; no chip and a next-fee line when there is no fee yet; none when archived", () => {
+    const ravi = student("Ravi");
+    const asha = student("Asha", { dueDay: 12 });
+    const dev = student("Dev");
+    const imran = student("Imran", { dueDay: 20 });
+    const kiran = student("Kiran", { dueDay: 25 });
+    const old = student("Old", { active: false });
+    roster({ students: [ravi, asha, dev, imran, kiran, old] });
+    board.value = {
+      months: {
+        "2026-10-01": {
+          rows: [
+            fee("d1", ravi.id, { amountPaid: 20000, status: "partial" }),
+            fee("d2", asha.id, { dueDate: "2026-10-12" }),
+            fee("d3", dev.id, { amountPaid: 120000, status: "paid" }),
+            fee("d4", imran.id, { dueDate: "2026-10-20", amountPaid: 50000, status: "partial" }),
+            fee("d5", old.id),
+          ],
+          at: 1,
+        },
+      },
+      unpaid: { rows: [], at: 1 },
+      ensureCurrent: vi.fn(),
+    };
+    renderWithWords(<StudentListScreen />);
+    const chip = (name: string) => rowOf(name).querySelector("[data-status]");
+    expect([chip("Ravi")?.getAttribute("data-status"), chip("Ravi")?.textContent]).toEqual(["overdue", "Overdue ₹1,000"]);
+    expect([chip("Asha")?.getAttribute("data-status"), chip("Asha")?.textContent]).toEqual(["due", "Due today"]);
+    expect([chip("Dev")?.getAttribute("data-status"), chip("Dev")?.textContent]).toEqual(["paid", "Paid"]);
+    expect([chip("Imran")?.getAttribute("data-status"), chip("Imran")?.textContent]).toEqual(["part-paid", "Part paid ₹500"]);
+    expect(chip("Kiran")).toBeNull();
+    expect(rowOf("Kiran").textContent).toContain("Next fee 25 Oct 2026");
+    expect(rowOf("Ravi").textContent).not.toContain("Next fee");
+    // The amount in a chip is in the mono face.
+    expect(chip("Ravi")?.querySelector(".type-amount-row")?.textContent).toBe("₹1,000");
   });
 });

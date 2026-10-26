@@ -2,6 +2,7 @@
 // which fees are late, the UPI note and the link, and what the Pay area shows. Integer arithmetic only. The phone's
 // clock is never read: "today" is the India day the function returned.
 import { formatDate } from "@/lib/format";
+import { GRACE_DAYS } from "@/lib/grace";
 import type { FeePage, OpenDue, PayPageData } from "@/lib/pay-page-public";
 import { buildUpiLink, PAY_PAGE_MAX_PAISE, UPI_ID } from "@/lib/upi-link";
 
@@ -25,11 +26,15 @@ export function dayNumber(day: string): number {
 
 export type Lateness = "overdue" | "today" | "later";
 
-/** Before today is overdue, today is due today, after is not late yet. Both are `YYYY-MM-DD`. */
-export function lateness(today: string, dueDate: string): Lateness {
-  const difference = dayNumber(dueDate) - dayNumber(today);
-  if (difference < 0) return "overdue";
-  return difference === 0 ? "today" : "later";
+/**
+ * More than `grace` days after the due date is overdue, the due date itself is due today, anything else is not late
+ * yet. Both are `YYYY-MM-DD`. `grace` is the board's own constant (UX-review-fixes-2, criteria 1.2 and 1.6), so the
+ * parent and the tutor always see the same lateness; it is an argument only so a test can pass another value.
+ */
+export function lateness(today: string, dueDate: string, grace: number = GRACE_DAYS): Lateness {
+  const late = dayNumber(today) - dayNumber(dueDate);
+  if (late > grace) return "overdue";
+  return late === 0 ? "today" : "later";
 }
 
 export type FeeLine = {
@@ -45,11 +50,13 @@ export type FeeLine = {
 };
 
 export function feeLine(due: OpenDue, today: string): FeeLine {
+  const earlier = due.kind === "opening" || due.month === null;
   return {
-    earlier: due.kind === "opening" || due.month === null,
+    earlier,
     month: due.month,
     dueDate: due.dueDate,
-    late: lateness(today, due.dueDate),
+    // Grace never applies to an earlier balance (criterion 1.3).
+    late: lateness(today, due.dueDate, earlier ? 0 : GRACE_DAYS),
     remaining: due.remaining,
     alreadyPaid: due.amountPaid,
   };
